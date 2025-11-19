@@ -1,0 +1,5 @@
+{
+  "titleRegExp": "^(feat|fix|refactor|docs|chore|test|perf|style)(\\([^)]+\\))?\: .{1,72}$",
+  "ignoredUsers": []
+}
+

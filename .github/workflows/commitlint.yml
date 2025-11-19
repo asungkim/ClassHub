@@ -1,0 +1,26 @@
+name: Commitlint
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited, reopened]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Run commitlint on PR commits
+        uses: wagoid/commitlint-github-action@v5
+        with:
+          configFile: commitlint.config.cjs
+      - name: Validate PR title follows Conventional Commits
+        uses: JulienKode/pull-request-name-linter-action@v0.5.0
+        with:
+          configuration-path: .github/commit-title-lint.json
+

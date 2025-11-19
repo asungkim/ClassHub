@@ -1,0 +1,201 @@
+## [2025-11-19 21:30] 개발 규칙 초안 정리(BaseEntity/UUID 포함)
+
+### Type
+DESIGN
+
+### Summary
+- 백엔드/프런트엔드 스타일 가이드 초안을 추가하고, BaseEntity(및 UUID/createdAt/modifiedAt)를 스펙과 일치하도록 반영했다.
+
+### Details
+- 작업 사유
+  - 첫 TODO(코드 컨벤션 정의)를 구현하고 `docs/spec/v1.0.md`의 BaseEntity + UUID 결정을 문서에 반영하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/dev-standards_plan.md (BaseEntity/UUID 정책 추가)
+  - docs/standards/java-style.md (신규)
+  - docs/standards/ts-react-style.md (신규)
+  - docs/todo/v1.0.md (작업 상태를 In Progress로 설정)
+- 다음 단계
+  - 스타일 가이드 초안을 리뷰/승인
+  - 승인 후 포매터/린터(Spotless/Checkstyle, ESLint/Prettier)를 별도 작업으로 추가
+
+## [2025-11-19 21:45] domain/global 패키징으로 기준 정렬
+
+### Type
+DESIGN
+
+### Summary
+- `global`과 `domain`만 최상위 패키지로 사용하도록 dev-standards 계획과 Java 스타일 가이드를 수정했다.
+
+### Details
+- 작업 사유
+  - 모놀리식 계층화를 피하고 `domain`/`global` 기반으로 표준화하자는 사용자 결정을 반영.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/dev-standards_plan.md
+  - docs/standards/java-style.md
+- 다음 단계
+  - 조정된 패키징 규칙을 리뷰하고 `domain.<feature>` 하위 패키지(web, application, model, repository)를 확정
+
+## [2025-11-19 22:00] 한국어 README 추가
+
+### Type
+DESIGN
+
+### Summary
+- 프로젝트 개요, 아키텍처, 워크플로, 현재 코드 규칙을 담은 README.md(한국어)를 추가했다.
+
+### Details
+- 작업 사유
+  - 이해관계자가 목표/스택/규칙/문서 위치를 한눈에 확인할 수 있는 진입점을 제공하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - README.md (신규)
+- 다음 단계
+  - 작업 진행에 따라 README를 동기화하고, 설치/실행, API 링크, 스크린샷을 추후 추가
+
+## [2025-11-19 22:05] TODO 업데이트: 코드 컨벤션 완료, 커밋/브랜치 시작
+
+### Type
+TODO_UPDATE
+
+### Summary
+- "Define code conventions (Java, TS)"를 완료(✅)하고 "Define commit convention / branch strategy"를 진행 중(🔄)으로 설정, 대응 계획을 작성했다.
+
+### Details
+- 작업 사유
+  - Phase 1 순서를 따라 다음 작업으로 넘어가기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.0.md (상태 업데이트)
+  - docs/plan/commit-standards_plan.md (신규)
+- 다음 단계
+  - 커밋/브랜치 계획을 리뷰/승인 후 `docs/standards/commit-branch.md` 작성
+
+## [2025-11-19 22:15] Commitlint 워크플로와 MCP-GitHub 가이드 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- GitHub Actions에 Conventional Commits 검증을 추가하고, MCP + GitHub 연동 가이드를 문서화했다.
+
+### Details
+- 작업 사유
+  - PR 단에서 커밋 규칙을 강제하고, MCP 에이전트가 브랜치/PR을 만들 수 있도록 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - commitlint.config.cjs (신규)
+  - .github/workflows/commitlint.yml (신규)
+  - .github/commit-title-lint.json (신규)
+  - .github/PULL_REQUEST_TEMPLATE.md (신규)
+  - docs/setup/mcp-github-setup.md (신규)
+  - README.md (CI + MCP 안내 링크 추가)
+- 다음 단계
+  - GH 인증 수단(PAT 혹은 App)과 시크릿을 제공하고, 필요 시 스코프 목록을 확정
+
+## [2025-11-19 22:25] 커밋/브랜치 기준 문서 추가
+
+### Type
+DESIGN
+
+### Summary
+- `docs/standards/commit-branch.md`를 작성하고 README에 링크했다.
+
+### Details
+- 작업 사유
+  - 다음 TODO(커밋 컨벤션 & 브랜치 전략)를 완료하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/standards/commit-branch.md (신규)
+  - README.md (링크 추가)
+- 다음 단계
+  - GH PAT이 준비되면 Conventional Commits 제목으로 PR 생성
+
+## [2025-11-19 22:29] TODO 업데이트: GitHub Issue 템플릿 작업 시작
+
+### Type
+TODO_UPDATE
+
+### Summary
+- 커밋/브랜치 작업을 완료 처리하고, "Create GitHub Issue template"을 진행 중(🔄)으로 이동했다.
+
+### Details
+- 작업 사유
+  - 커밋/브랜치 기준과 툴링이 완료되어 다음 TODO를 시작해야 함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.0.md (상태 업데이트)
+- 다음 단계
+  - GitHub Issue 템플릿 계획을 작성해 리뷰를 준비
+
+## [2025-11-19 22:30] GitHub Issue 템플릿 계획 초안
+
+### Type
+DESIGN
+
+### Summary
+- 버그/기능/작업 이슈 폼 요구사항과 검증 전략을 정의한 계획 문서를 추가했다.
+
+### Details
+- 작업 사유
+  - `.github/ISSUE_TEMPLATE` 자산을 작성하기 전에 계획을 수립한다는 AGENT 프로세스를 따르기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/github-issue-template_plan.md (신규)
+- 다음 단계
+  - 계획을 리뷰/승인한 뒤 YAML Issue Form과 관련 문서 업데이트를 진행
+
+## [2025-11-19 22:40] 저장소 지침 한국어화
+
+### Type
+DESIGN
+
+### Summary
+- 루트/백엔드 AGENTS.md를 한국어로 재작성하고 모든 Markdown을 한국어로 작성하도록 지침을 갱신했다.
+
+### Details
+- 작업 사유
+  - 사용자가 영어 지침을 제거하고 한국어 모드로 전환할 것을 요구함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - AGENTS.md
+  - backend/AGENTS.md
+- 다음 단계
+  - 하위 문서를 모두 한국어로 정비하고 새 지침을 준수한다.
+
+## [2025-11-19 22:41] 기존 문서 한국어 번역
+
+### Type
+DESIGN
+
+### Summary
+- TODO/스펙/설계/규칙/세팅 문서를 전부 한국어로 번역하고 최신 상태로 맞췄다.
+
+### Details
+- 작업 사유
+  - “모든 문서를 한국어로 작성” 요구를 충족하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/standards/ts-react-style.md
+  - docs/standards/java-style.md
+  - docs/standards/commit-branch.md
+  - docs/history/AGENT_LOG.md (기존 로그 번역 + 신규 기록)
+  - docs/todo/v1.0.md
+  - docs/spec/v1.0.md
+  - docs/setup/mcp-github-setup.md
+  - docs/plan/dev-standards_plan.md
+  - docs/plan/commit-standards_plan.md
+  - docs/plan/github-issue-template_plan.md
+- 다음 단계
+  - 향후 생성되는 모든 문서도 한국어로 유지한다.
