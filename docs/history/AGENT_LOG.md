@@ -193,9 +193,28 @@ DESIGN
   - docs/history/AGENT_LOG.md (기존 로그 번역 + 신규 기록)
   - docs/todo/v1.0.md
   - docs/spec/v1.0.md
-  - docs/setup/mcp-github-setup.md
-  - docs/plan/dev-standards_plan.md
-  - docs/plan/commit-standards_plan.md
-  - docs/plan/github-issue-template_plan.md
+- docs/setup/mcp-github-setup.md
+- docs/plan/dev-standards_plan.md
+- docs/plan/commit-standards_plan.md
+- docs/plan/github-issue-template_plan.md
 - 다음 단계
   - 향후 생성되는 모든 문서도 한국어로 유지한다.
+
+## [2025-11-24 23:11] AGENT 지침 정리 및 MCP 가이드 제거
+
+### Type
+DESIGN
+
+### Summary
+- 루트 AGENTS.md의 중복 규칙을 정리하고, 더 이상 필요 없는 MCP + GitHub 연동 가이드를 제거했다.
+
+### Details
+- 작업 사유
+  - 최신 지침과 중복되는 내용을 줄이고, 외부 연동 가이드가 다른 문서와 겹쳐 혼동을 주는 문제를 해소하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - AGENTS.md
+  - docs/setup/mcp-github-setup.md (삭제)
+- 다음 단계
+  - MCP 설정 안내가 필요하면 README 등 다른 문서에서 최신 흐름으로 재작성한다.
