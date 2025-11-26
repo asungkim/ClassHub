@@ -386,3 +386,43 @@ DESIGN
   - docs/plan/backend-spring-setup_plan.md (신규)
 - 다음 단계
   - 계획을 기준으로 백엔드 초기 설정을 구현하고 TODO 상태를 업데이트한다.
+
+## [2025-11-26 21:26] 스프링 부트 초기 설정 및 글로벌 골격 구성
+
+### Type
+STRUCTURAL
+
+### Summary
+- backend 모듈을 Spring Boot 4.0.0 / Java21 기준으로 재구성하고 global/domain 패키지, BaseEntity, 예외/설정, 샘플 API, 프로필·로그 설정을 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 1 TODO(백엔드 Spring 초기 설정) 요구를 충족하고 이후 엔티티 작업을 시작할 수 있는 공용 골격이 필요했음.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/build.gradle, settings.gradle
+  - backend/src/main/java/com/classhub/** (main 클래스, global/common/config/error, domain sample 패키지 등)
+  - backend/src/main/resources/application*.yml, logback-spring.xml, .env.example
+  - backend/src/test/java/com/classhub/** (context, health, auditing 테스트)
+  - .gitignore
+- 다음 단계
+  - global 도메인 공통 구성 정의 TODO를 마무리하며 필요 시 추가 공통 컴포넌트를 확장한다.
+
+## [2025-11-26 21:26] TODO 상태: Spring 초기 설정 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.3.md`에서 "백엔드 Spring 초기 설정"을 ✅, "global 도메인 공통 구성 정의"를 🔄로 갱신했다.
+
+### Details
+- 작업 사유
+  - 초기 설정 작업이 완료되어 다음 TODO(글로벌 도메인 구성)으로 넘어가기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - 글로벌 공통 모듈 세부 구성을 확정하고 TODO를 완료 처리한다.
