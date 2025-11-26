@@ -58,11 +58,10 @@ flowchart TD
   - 상세: `docs/standards/ts-react-style.md`
 
 ## 문서 구조
-- 스펙: `docs/spec/v1.0.md`
+- 스펙: `docs/spec/v1.2.md`
 - 설계: `docs/plan/*_plan.md` (Task 단위), 예: `dev-standards_plan.md`
-- 규칙: `docs/standards/java-style.md`, `docs/standards/ts-react-style.md`
-      , `docs/standards/commit-branch.md`
-- TODO: `docs/todo/v1.0.md`
+- 규칙: `docs/standards/java-style.md`, `docs/standards/ts-react-style.md`, `docs/standards/commit-branch.md`
+- TODO: `docs/todo/v1.3.md`
 - 로그: `docs/history/AGENT_LOG.md`
 
 ## 작업 방식(요약)
