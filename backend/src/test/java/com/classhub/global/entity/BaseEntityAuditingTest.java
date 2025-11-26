@@ -1,4 +1,4 @@
-package com.classhub.global.common;
+package com.classhub.global.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

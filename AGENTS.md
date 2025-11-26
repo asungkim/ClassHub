@@ -181,3 +181,11 @@ docs/
 ## 5.4 커뮤니케이션
 
 - 새로운 설계 문서를 만들거나 수정할 때마다 계획 의도와 범위를 한국어로 간결히 요약해 전달한다.
+
+# 6. 백엔드 공통 규칙 (global/domain)
+
+- 패키지 최상위는 `global`과 `domain`만 사용한다. 기능별 패키지는 `domain.<feature>.web|application|model|repository` 구조를 따른다.
+- 모든 엔티티는 `global.entity.BaseEntity`를 상속해 `UUID id`, `createdAt`, `updatedAt` 필드를 공유하며, Spring Data JPA Auditing을 활성화한다.
+- 예외와 응답은 `global.response.RsData` + `global.response.RsCode` 포맷을 사용한다. `ResponseAspect`가 RsData의 코드로 HTTP Status를 설정하고, `global.exception.BusinessException/GlobalExceptionHandler`가 비즈니스/일반 예외를 일관되게 처리한다.
+- Controller는 가능한 한 `RsData`를 직접 반환하고, 서비스/도메인 로직은 `domain.<feature>.application` 계층에서 조율한다.
+- 공통 설정(`global.config`)에는 Locale/Timezone, CORS, JPA Auditing 등을 포함하고, 프로필별 설정(`application*.yml`, `.env.example`)을 통해 환경을 분리한다.

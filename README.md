@@ -5,7 +5,7 @@
 ## 프로젝트 개요
 - 목표: 강사 업무(반/세션/학생/조교/공지/근무기록/초대)를 통합 관리하고, 효율적인 커뮤니케이션을 제공
 - 아키텍처: Next.js 프런트엔드 ↔ Spring Boot 백엔드 ↔ MySQL/Redis (Docker), 배포는 GitHub Actions + AWS EC2
-- 주요 문서: `docs/spec/v1.0.md` (테크스펙), `docs/todo/v1.0.md` (TODO), `docs/plan/*_plan.md` (설계), `docs/standards/*.md`(코드 규칙), `docs/history/AGENT_LOG.md`(히스토리)
+- 주요 문서: `docs/spec/v1.2.md` (테크스펙), `docs/todo/v1.3.md` (TODO), `docs/plan/*_plan.md` (설계), `docs/standards/*.md`(코드 규칙), `docs/history/AGENT_LOG.md`(히스토리)
 
 ```mermaid
 flowchart TD
@@ -27,7 +27,7 @@ flowchart TD
 
 ## 기술 스택
 - Frontend: Next.js 16, React 19, TypeScript 5, Tailwind CSS 4
-- Backend: Spring Boot 3.5, Java 21, Gradle 8, Spring Data JPA/Hibernate, Spring Security, JWT, SpringDoc OpenAPI
+- Backend: Spring Boot 4.0.0, Java 21, Gradle 8, Spring Data JPA/Hibernate, Spring Security, JWT, SpringDoc OpenAPI, Testcontainers
 - Infra: Docker/Compose, GitHub Actions, AWS EC2, Nginx Proxy Manager
 
 ## 현재 상태 요약
@@ -38,10 +38,11 @@ flowchart TD
  - CI: PR에서 커밋/제목을 Conventional Commits로 검증(Commitlint). MCP+GitHub 연동 가이드는 `docs/setup/mcp-github-setup.md` 참고
 
 ## 코드 규칙 요약
-- 공통(BaseEntity/ID/Auditing)
-  - 모든 엔티티는 `BaseEntity` 상속: `UUID id`, `LocalDateTime createdAt`, `LocalDateTime modifiedAt`
+- 공통(BaseEntity/ID/Auditing/응답)
+  - 모든 엔티티는 `global.entity.BaseEntity` 상속: `UUID id`, `LocalDateTime createdAt`, `LocalDateTime modifiedAt`
   - Hibernate `@UuidGenerator`로 UUID 생성, Spring Data JPA Auditing(`@CreatedDate`, `@LastModifiedDate`)
   - DB 저장은 `BINARY(16)` 권장(공간/인덱스 효율), API에서는 문자열 UUID 노출
+  - 전역 응답 포맷은 `global.response.RsData`이며 ResponseAspect가 HTTP 상태 코드를 자동 반영한다.
 - 백엔드(Java + Spring)
   - 패키지 최상위는 `global`, `domain`
     - `global`: 설정/보안/에러/공통 유틸 등 횡단 관심사

@@ -426,3 +426,41 @@ TODO_UPDATE
   - docs/todo/v1.3.md
 - 다음 단계
   - 글로벌 공통 모듈 세부 구성을 확정하고 TODO를 완료 처리한다.
+
+## [2025-11-26 21:54] Sample API 응답을 RsData 포맷으로 통일
+
+### Type
+STRUCTURAL
+
+### Summary
+- `SampleController`가 `RsData`를 직접 반환하도록 수정해 ResponseAspect/Global 응답 규칙과 일치시켰다.
+
+### Details
+- 작업 사유
+  - 기존 ResponseEntity 기반 응답이 전역 RsData 포맷과 달라 일관성이 필요했음.
+- 영향받은 테스트
+  - `./backend/gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/sample/web/SampleController.java
+- 다음 단계
+  - 추후 구현되는 도메인 API도 동일한 RsData 규칙을 사용한다.
+
+## [2025-11-26 21:57] 문서 동기화: Spring 초기 설정/응답 규칙
+
+### Type
+DESIGN
+
+### Summary
+- README, AGENTS, backend-spring-setup 계획 문서를 최신 스택(boot 4.0.0, RsData 응답, global/entity 패키지) 기준으로 갱신했다.
+
+### Details
+- 작업 사유
+  - 코드 구조와 전역 응답 포맷을 문서와 일치시키고, 새 TODO/PLAN 흐름을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - README.md
+  - AGENTS.md
+  - docs/plan/backend-spring-setup_plan.md
+- 다음 단계
+  - 문서 기준에 맞춰 global 공통 구성 TODO를 마저 진행한다.

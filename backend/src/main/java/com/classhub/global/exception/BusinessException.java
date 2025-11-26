@@ -1,8 +1,15 @@
 package com.classhub.global.exception;
 
-public class BusinessException extends RuntimeException {
+import com.classhub.global.response.RsCode;
+import lombok.Getter;
 
-    public BusinessException(String message) {
-        super(message);
+@Getter
+public class BusinessException extends RuntimeException {
+    private final RsCode rsCode;
+
+    public BusinessException(RsCode rsCode) {
+        super(rsCode.getMessage());
+
+        this.rsCode = rsCode;
     }
 }

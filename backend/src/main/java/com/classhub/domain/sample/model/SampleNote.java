@@ -1,6 +1,6 @@
 package com.classhub.domain.sample.model;
 
-import com.classhub.global.common.BaseEntity;
+import com.classhub.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;

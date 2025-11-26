@@ -9,13 +9,14 @@
 
 ### Functional
 
-- Spring Boot 4.0.0 / Java 21 기반 Gradle 프로젝트를 초기화한다 (settings.gradle, build.gradle 포함). not using kts
-- Configuration YAML 사용
+- Spring Boot 4.0.0 / Java 21 기반 Gradle 프로젝트를 초기화한다(settings.gradle, build.gradle 포함, Groovy DSL 유지).
+- Configuration YAML(`application*.yml`)을 사용해 프로필별 환경을 분리한다.
 - `backend/domain`과 `backend/global`만 최상위 패키지로 사용하고, Domain Feature별 하위 구조(domain.<feature>.web/app/model/repository)를 위한 샘플 패키지를 만든다.
 - 공통 설정(global):
-  - `global.config`에 Spring `@Configuration` (CORS, Jackson, Locale, Timezone)을 정의.
-  - `global.error` 패키지에 `ApiErrorResponse`, `GlobalExceptionHandler` 골격을 추가.
-  - `global.common.BaseEntity`와 `BaseTimeEntity` 등 추상 클래스/인터페이스를 정의.
+  - `global.config`에 Spring `@Configuration` (CORS, Locale/Timezone, Jpa Auditing 등)을 정의.
+  - `global.entity.BaseEntity/BaseTimeEntity`로 UUID + Auditing 필드를 공통화한다.
+  - `global.response`(`RsData`, `RsCode`, `RsConstant`)와 `global.aspect.ResponseAspect`를 구성해 모든 Rest 응답이 동일 포맷을 따르도록 한다.
+  - `global.exception` 패키지에 `BusinessException`, `GlobalExceptionHandler`를 두고 RsData 응답을 일괄 처리한다.
 - 환경 관리:
   - `application.yml` + `application-local.yml` + `.env.example` 작성, DB/Redis 접속 정보는 Placeholder로 둔다.
   - `SPRING_PROFILES_ACTIVE`를 `.env`로 제어하고, `docker-compose` 연동을 고려한 `local` 프로필을 기본값으로 설정.
@@ -23,10 +24,11 @@
   - `Actuator` 의존성 추가 후 `/actuator/health` 만 기본 노출.
   - `Slf4j` + `logback-spring.xml` 기본 패턴 구성.
   - `Testcontainers` 의존성(선택) 혹은 H2 in-memory profile로 테스트 환경을 준비.
+  - `/api/v1/sample/ping`과 같은 CSR 샘플 흐름을 만들어 build 검증 및 응답 포맷 예시를 제공한다.
 
 ### Non-functional
 
-- Kotlin 대신 Java 기반, Gradle Kotlin DSL을 사용한다.
+- Kotlin 대신 Java 기반, Gradle **Groovy DSL**을 사용한다.
 - CI(Commitlint)와 충돌 없도록 Gradle wrapper를 포함하고, 빌드 시 `./gradlew build` 기준으로 통과해야 한다.
 - 설정/도메인 파일은 모두 한국어 주석이 아닌 의미 있는 클래스/패키지명으로 설명한다.
 - 보안 비밀값(DB, JWT 등)은 `.env`/프로필에 Placeholder만 두고 깃에 실데이터를 포함하지 않는다.
@@ -38,10 +40,11 @@
 
 ## 4. Domain Model (Draft)
 
-- `global.common.BaseEntity` : `id (UUID)`, `createdAt`, `updatedAt`.
-- `global.common.BaseTimeEntity` : `createdAt`, `updatedAt`만 관리하는 추상 클래스.
-- `global.error.ApiErrorResponse` : `{code, message, detail}`.
+- `global.entity.BaseEntity` : `id (UUID)`, `createdAt`, `updatedAt`.
+- `global.entity.BaseTimeEntity` : `createdAt`, `updatedAt`만 관리하는 추상 클래스.
+- `global.response.RsData` : `{code, message, data}` 형태의 공통 응답.
 - `global.config.JpaConfig` : Auditing 활성화.
+- `global.aspect.ResponseAspect` : `RsData` 응답의 HTTP Status를 세팅.
 - `domain.sample` : Controller + Service + DTO 골격 (빌드/테스트 검증용) – 최종 기능 구현 시 제거 가능.
 
 ## 5. TDD Plan

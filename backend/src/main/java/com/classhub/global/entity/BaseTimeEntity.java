@@ -1,4 +1,4 @@
-package com.classhub.global.common;
+package com.classhub.global.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
