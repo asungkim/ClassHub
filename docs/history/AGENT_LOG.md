@@ -464,3 +464,39 @@ DESIGN
   - docs/plan/backend-spring-setup_plan.md
 - 다음 단계
   - 문서 기준에 맞춰 global 공통 구성 TODO를 마저 진행한다.
+
+## [2025-11-26 23:33] Global 공통 구성 계획 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 1 TODO(글로벌 도메인 공통 구성 정의)를 위해 `docs/plan/global-domain-common_plan.md`를 작성하고 공통 엔티티/응답/예외/CSR 요구사항을 정리했다.
+
+### Details
+- 작업 사유
+  - Phase 2 도메인 구현 전에 통합된 global 모듈 계약을 명문화하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/global-domain-common_plan.md (신규)
+- 다음 단계
+  - 계획에 따라 global 패키지를 검증/정리하고 TODO 상태를 업데이트한다.
+
+## [2025-11-26 23:36] TODO 상태: 글로벌 공통 구성 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.3.md`에서 "global 도메인 공통 구성 정의"를 완료(✅) 처리했다.
+
+### Details
+- 작업 사유
+  - global 모듈(BaseEntity/RsData/ResponseAspect/예외) 검증과 테스트(`./backend/gradlew test`)를 통해 계획 요구 사항을 충족했기 때문.
+- 영향받은 테스트
+  - `./backend/gradlew test`
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - Phase 2 엔티티 작업으로 진입하거나 추가 PLAN을 작성한다.
