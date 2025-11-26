@@ -238,3 +238,21 @@ DESIGN
   - docs/spec/v1.2.md (신규)
 - 다음 단계
   - 스펙에 맞춘 PLAN 문서를 작성하고 구현 단계의 우선순위를 정한다.
+
+## [2025-11-26 18:36] TODO v1.2 구조 업데이트
+
+### Type
+TODO_UPDATE
+
+### Summary
+- spec v1.2 내용을 반영한 새 TODO 버전(`docs/todo/v1.2.md`)을 작성해 엔티티/기능/프런트 계획을 재정렬했다.
+
+### Details
+- 작업 사유
+  - 문서화된 요구사항/스펙 1.2에 맞춰 Phase/Epic/Task 구성을 최신화하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.2.md (신규)
+- 다음 단계
+  - Phase 1 진행 중인 \"GitHub Issue 템플릿 생성\" 작업을 계속 진행한다.
