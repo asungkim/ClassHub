@@ -332,3 +332,57 @@ TODO_UPDATE
   - docs/todo/v1.2.md
 - 다음 단계
   - Phase 2 착수 전, 필요 시 PLAN 문서/우선순위를 재검토한다.
+
+## [2025-11-26 18:48] TODO v1.3: Phase 1 작업 추가
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 1 요구에 따라 `백엔드 Spring 초기 설정`, `global 도메인 공통 구성 정의` 작업을 포함한 `docs/todo/v1.3.md`를 생성했다.
+
+### Details
+- 작업 사유
+  - Phase 2로 넘어가기 전 백엔드 초기화와 global 도메인 설계 작업이 필요하다는 요청을 반영.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.3.md (신규)
+- 다음 단계
+  - 새로 추가된 작업을 우선 수행한 뒤 Phase 2를 시작한다.
+
+## [2025-11-26 18:49] TODO 상태: Spring 초기 설정 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 1의 `백엔드 Spring 초기 설정` 작업을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - TODO v1.3 순서를 따라 Phase 1의 다음 작업을 수행하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - Spring 초기 설정에 대한 PLAN 문서를 작성하고 승인 과정을 거친 뒤 구현을 진행한다.
+
+## [2025-11-26 18:50] Spring 초기 설정 계획 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 1 TODO(백엔드 Spring 초기 설정)를 위해 요구사항/구조/TDD를 정의한 `docs/plan/backend-spring-setup_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - backend/global 구조, 환경 설정, 기본 테스트 범위를 명확히 한 뒤 구현 단계로 넘어가기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend-spring-setup_plan.md (신규)
+- 다음 단계
+  - 계획을 기준으로 백엔드 초기 설정을 구현하고 TODO 상태를 업데이트한다.

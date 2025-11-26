@@ -13,11 +13,11 @@
 
 ## 2.2 백엔드
 
-- **프레임워크**: Spring Boot **3.5.7**
+- **프레임워크**: Spring Boot **4.0.0**
 - **언어**: Java **21 (LTS)**
 - **빌드 도구**: Gradle **8.10**
 - **ORM**: Spring Data JPA **3.3.x**, Hibernate **6.6.x**
-- **데이터베이스**: MySQL **8.0.44 (8.0 LTS 최신 안정판)**
+- **데이터베이스**: MySQL **8.4.5**
 - **보안**: Spring Security **6.3.x**, JWT **0.12.x**
 - **API 문서화**: SpringDoc OpenAPI **2.7.x**
 - **캐시 / 메시징**: Redis **7.4.x**
