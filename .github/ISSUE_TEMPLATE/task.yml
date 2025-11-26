@@ -1,0 +1,47 @@
+name: "🧰 Task / Chore"
+description: "운영/문서/잡무 작업"
+title: "chore: <요약>"
+labels:
+  - chore
+body:
+  - type: markdown
+    attributes:
+      value: "작업 범위와 완료 조건을 명확히 작성해주세요."
+  - type: checkboxes
+    id: checklist-search
+    attributes:
+      label: "사전 확인"
+      options:
+        - label: "해당 작업이 TODO 목록 또는 운영 요청과 연계됨을 확인했습니다."
+          required: true
+        - label: "중복 작업 여부를 검토했습니다."
+          required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: "작업 범위"
+      description: "수행할 구체적 내용"
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: "Definition of Done"
+      description: "완료 조건 체크리스트"
+      placeholder: "- [ ] 문서 업데이트\n- [ ] 테스트 보고"
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: "참고 링크"
+      description: "스펙/PLAN/AGENT_LOG/TODO 등"
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: "추가 메모"
+      description: "배포, 리스크, 담당자"
+    validations:
+      required: false

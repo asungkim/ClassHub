@@ -1,0 +1,74 @@
+name: "🐞 Bug Report"
+description: "버그/오류 제보"
+title: "bug: <컴포넌트 또는 요약>"
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        문제 상황을 빠르게 파악할 수 있도록 아래 항목을 모두 채워주세요.
+  - type: checkboxes
+    id: checklist-search
+    attributes:
+      label: "사전 확인"
+      options:
+        - label: "유사 이슈를 검색했고 중복이 아님을 확인했습니다."
+          required: true
+        - label: "필요한 로그/스크린샷을 첨부할 준비가 되었습니다."
+          required: true
+  - type: input
+    id: summary
+    attributes:
+      label: "요약"
+      description: "두세 줄로 문제를 설명해주세요."
+      placeholder: "예) Assistant 근무일지 저장 시 500 에러 발생"
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "심각도"
+      options:
+        - Blocker
+        - Critical
+        - Major
+        - Minor
+        - Trivial
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "환경 정보"
+      description: "브라우저/OS/백엔드 버전 등"
+      placeholder: "예) macOS 14.4 / Chrome 130 / backend 1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "재현 단계"
+      description: "최소 3단계 이상으로 작성"
+      placeholder: "1. ...\n2. ...\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "기대 동작"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: "실제 동작"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "로그 / 스크린샷"
+      description: "관련 로그, 캡처, 추가 메모"
+    validations:
+      required: false

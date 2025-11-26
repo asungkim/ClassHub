@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "프로젝트 문서 (README)"
+    url: https://github.com/asungkim/classhub#readme
+    about: "이슈 생성 전 프로젝트 개요/규칙을 다시 확인하세요."

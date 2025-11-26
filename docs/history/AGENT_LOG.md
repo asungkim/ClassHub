@@ -256,3 +256,79 @@ TODO_UPDATE
   - docs/todo/v1.2.md (신규)
 - 다음 단계
   - Phase 1 진행 중인 \"GitHub Issue 템플릿 생성\" 작업을 계속 진행한다.
+
+## [2025-11-26 18:40] TODO 상태: Issue 템플릿 완료, PR 템플릿 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 1에서 `GitHub Issue 템플릿 생성`을 완료 처리하고, 다음 작업인 `GitHub PR 템플릿 생성`을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - 사용자가 Issue 템플릿 작업을 마무리했다고 알렸고, TODO 우선순위에 따라 PR 템플릿 작업을 즉시 시작해야 함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.2.md
+- 다음 단계
+  - `GitHub PR 템플릿 생성`에 대한 PLAN 문서를 작성하고 승인 절차를 진행한다.
+
+## [2025-11-26 18:42] GitHub PR 템플릿 계획 초안
+
+### Type
+DESIGN
+
+### Summary
+- Phase 1의 다음 TODO를 위해 `docs/plan/github-pr-template_plan.md`를 작성하고 섹션/체크리스트 요건을 정의했다.
+
+### Details
+- 작업 사유
+  - Issue 템플릿에 이어 PR 템플릿도 AGENT 프로세스를 강제하도록 설계가 필요했기 때문.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/github-pr-template_plan.md (신규)
+- 다음 단계
+  - 계획을 리뷰/승인받은 뒤 실제 `.github/PULL_REQUEST_TEMPLATE.md`를 업데이트한다.
+
+## [2025-11-26 18:44] Issue/PR 템플릿 적용
+
+### Type
+STRUCTURAL
+
+### Summary
+- GitHub Issue Form 3종(버그/기능/작업)과 PR 템플릿을 AGENT 계획에 맞춰 추가해 리포지토리 규칙을 자동화했다.
+
+### Details
+- 작업 사유
+  - 리포트/PR 단계에서 PLAN→TODO→LOG 검증과 필수 정보를 일관되게 수집하기 위함.
+- 영향받은 테스트
+  - N/A (템플릿 작업)
+- 수정한 파일
+  - .github/ISSUE_TEMPLATE/bug-report.yml (신규)
+  - .github/ISSUE_TEMPLATE/feature-request.yml (신규)
+  - .github/ISSUE_TEMPLATE/task.yml (신규)
+  - .github/ISSUE_TEMPLATE/config.yml (신규)
+  - .github/PULL_REQUEST_TEMPLATE.md
+- 다음 단계
+  - 템플릿을 사용해 실제 Issue/PR을 생성하며 개선점을 피드백한다.
+
+## [2025-11-26 18:44] TODO 상태: PR 템플릿 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 1의 `GitHub PR 템플릿 생성` 작업을 완료(✅) 처리하고, 남은 작업 없이 다음 Phase로 넘어갈 수 있도록 갱신했다.
+
+### Details
+- 작업 사유
+  - 새 템플릿을 레포에 반영했으므로 TODO 진행 상황을 최신화하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.2.md
+- 다음 단계
+  - Phase 2 착수 전, 필요 시 PLAN 문서/우선순위를 재검토한다.
