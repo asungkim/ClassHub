@@ -218,3 +218,23 @@ DESIGN
   - docs/setup/mcp-github-setup.md (삭제)
 - 다음 단계
   - MCP 설정 안내가 필요하면 README 등 다른 문서에서 최신 흐름으로 재작성한다.
+
+## [2025-11-26 18:30] 요구사항 및 스펙 v1.2 작성
+
+### Type
+DESIGN
+
+### Summary
+- 리서치·요구사항을 정리해 `docs/requirement/v1.2.md`를 초안으로 추가했다.
+- 요구사항을 토대로 `docs/spec/v1.2.md`를 작성해 아키텍처, 도메인, API 명세를 1.2 버전으로 확장했다.
+
+### Details
+- 작업 사유
+  - Phase 1 설계 흐름에 따라 최신 요구사항과 이를 반영한 스펙 버전을 준비하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/requirement/v1.2.md (신규)
+  - docs/spec/v1.2.md (신규)
+- 다음 단계
+  - 스펙에 맞춘 PLAN 문서를 작성하고 구현 단계의 우선순위를 정한다.
