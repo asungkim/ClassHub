@@ -198,3 +198,20 @@ docs/
 4. **Logging**: Requirement → Spec → TODO 순으로 변경할 때마다 `docs/history/AGENT_LOG.md`에 DESIGN/TODO_UPDATE 이벤트를 남기고, 변경된 문서/버전을 기록한다.
 5. **Implementation Gate**: PLAN/TODO가 최신 Requirement/Spec 버전을 참조하지 않으면 구현에 착수할 수 없다.
 6. Requirement 문서는 사용자/Use Case/비기능 중심으로 유지하고, 세부 Functional Requirement는 각 PLAN 문서에서 정의한다.
+
+# 8. 브랜치 전략
+
+- 기본 브랜치: `main` (직접 push 금지, PR을 통해서만 merge)
+- 작업 브랜치 네이밍
+  - 기능: `feature/<area>-<short-desc>`
+  - 버그: `fix/<area>-<short-desc>`
+  - 리팩터링: `refactor/<area>-<short-desc>`
+  - 문서/잡무: `docs/<short-desc>`, `chore/<short-desc>`
+  - 예: `feature/member-entity`, `fix/auth-refresh-token`
+- 브랜치 생성은 항상 최신 `main`에서 시작 (`git fetch && git checkout main && git pull && git switch -c feature/...`)
+- 각 브랜치는 하나의 PLAN/TODO 단위에 집중하고, 관련 없는 변경은 분리
+- PR 규칙
+  - 최소 1명의 리뷰 + CI 통과
+  - PR 제목은 Conventional Commits 형식
+  - PR 본문은 `.github/PULL_REQUEST_TEMPLATE.md` 사용
+- 머지 후 브랜치 삭제(원격/로컬) 권장
