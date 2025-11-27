@@ -2,9 +2,11 @@ package com.classhub.global.exception;
 
 import com.classhub.global.response.RsData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import static com.classhub.global.response.RsCode.BAD_REQUEST;
 import static com.classhub.global.response.RsCode.INTERNAL_SERVER;
 
 @RestControllerAdvice
@@ -14,6 +16,19 @@ public class GlobalExceptionHandler {
     private static final String EXCEPTION_FORMAT = "[EXCEPTION]                   -----> ";
     private static final String EXCEPTION_MESSAGE_FORMAT = "[EXCEPTION] EXCEPTION_MESSAGE -----> [{}]";
     private static final String EXCEPTION_TYPE_FORMAT = "[EXCEPTION] EXCEPTION_TYPE    -----> [{}]";
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public RsData<?> handleValidationException(MethodArgumentNotValidException ex) {
+        logWarn(ex);
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(error -> String.format("[%s] %s", error.getField(), error.getDefaultMessage()))
+                .orElse(BAD_REQUEST.getMessage());
+        return RsData.builder()
+                .code(BAD_REQUEST.getCode())
+                .message(message)
+                .build();
+    }
 
     @ExceptionHandler(Exception.class)
     public RsData<?> handleAllExceptions(Exception e) {

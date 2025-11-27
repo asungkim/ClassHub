@@ -53,7 +53,7 @@ class SecurityIntegrationTest {
     @Test
     @DisplayName("permitAll 경로는 토큰 없이 접근된다")
     void authEndpointIsAccessibleWithoutToken() throws Exception {
-        mockMvc.perform(get("/auth/login")
+        mockMvc.perform(get("/api/v1/auth/login")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string("login-ok"));
@@ -84,12 +84,12 @@ class SecurityIntegrationTest {
     void adminEndpointRequiresSuperAdminAuthority() throws Exception {
         String teacherToken = jwtProvider.generateAccessToken(UUID.randomUUID(), "TEACHER");
 
-        mockMvc.perform(get("/api/admin/panel")
+        mockMvc.perform(get("/api/v1/admin/panel")
                         .header("Authorization", "Bearer " + teacherToken))
                 .andExpect(status().isForbidden());
 
         String adminToken = jwtProvider.generateAccessToken(UUID.randomUUID(), "SUPERADMIN");
-        mockMvc.perform(get("/api/admin/panel")
+        mockMvc.perform(get("/api/v1/admin/panel")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(content().string("admin-ok"));
@@ -97,7 +97,7 @@ class SecurityIntegrationTest {
 
     @RestController
     static class AuthController {
-        @GetMapping("/auth/login")
+        @GetMapping("/api/v1/auth/login")
         public String login() {
             return "login-ok";
         }
@@ -113,7 +113,7 @@ class SecurityIntegrationTest {
 
     @RestController
     static class AdminController {
-        @GetMapping("/api/admin/panel")
+        @GetMapping("/api/v1/admin/panel")
         public String admin() {
             return "admin-ok";
         }

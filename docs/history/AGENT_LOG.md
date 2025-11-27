@@ -892,3 +892,233 @@ TODO_UPDATE
   - docs/todo/v1.4.md
 - 다음 단계
   - 다음 작업(Teacher 회원가입 API) 착수 여부를 결정하고 PLAN/구현을 준비한다.
+
+## [2025-11-27 23:35] Teacher 회원가입 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Teacher self-onboarding 흐름을 다루는 `docs/plan/auth-teacher-register_plan.md`를 추가해 API/검증/TDD 절차를 정의했다.
+
+### Details
+- 작업 사유
+  - Phase 2에서 다음 TODO(Teacher 회원가입 API)를 착수하기 전에 요구/테스트 범위를 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/auth-teacher-register_plan.md (신규)
+- 다음 단계
+  - PLAN을 기준으로 Controller/Service/DTO/Test를 구현하고 TODO 상태를 업데이트한다.
+
+## [2025-11-27 23:38] Teacher 회원가입 PLAN 보완
+
+### Type
+DESIGN
+
+### Summary
+- Teacher register PLAN의 응답을 Member 요약으로 한정하고, DTO Validation(특수문자 포함 8자 이상 패스워드 등) 요구사항을 명시했다.
+
+### Details
+- 작업 사유
+  - 사용자 피드백에 따라 회원가입 응답에는 토큰을 포함하지 않고, Bean Validation 규칙을 구체적으로 정의해야 했음.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-teacher-register_plan.md
+- 다음 단계
+  - 갱신된 PLAN에 맞춰 구현/TDD를 진행한다.
+
+## [2025-11-27 23:40] TODO 상태: Teacher 회원가입 작업 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2 - Auth 서비스 세부 작업 중 "Teacher 회원가입 API"를 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - PLAN 승인 후 실제 구현/TDD를 시작하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - Teacher 회원가입 API를 PLAN에 따라 구현한다.
+
+## [2025-11-28 00:30] Teacher 회원가입 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/auth/register/teacher` 엔드포인트를 추가해 이메일 형식/비밀번호 정책을 검증하고 Role=TEACHER 계정을 생성한 뒤 요약 정보를 반환하도록 구현했다.
+- 등록, 중복 이메일, 비밀번호 검증 실패를 다루는 통합 테스트를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 2 Auth TODO 중 Teacher self-onboarding 흐름을 제공해 이후 기능 검증에 사용할 계정을 만들기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/web/AuthController.java
+  - backend/src/main/java/com/classhub/domain/auth/application/AuthApplicationService.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/TeacherRegisterRequest.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/TeacherRegisterResponse.java
+  - backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/main/java/com/classhub/global/exception/GlobalExceptionHandler.java
+  - backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+- 다음 단계
+  - TODO에 반영하고 다음 Auth 세부 작업(로그인 등)을 준비한다.
+
+## [2025-11-28 00:31] TODO 상태: Teacher 회원가입 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2 "Teacher 회원가입 API" 항목을 완료(✅) 처리했다.
+
+### Details
+- 작업 사유
+  - 엔드포인트 및 TDD 검증이 끝났기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - 다음 Auth 세부 작업(로그인 API 등)으로 진행한다.
+
+## [2025-11-28 00:36] Auth 서비스 계층 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- AuthApplicationService에 대한 단위 테스트를 추가해 Teacher 등록 성공/중복 이메일 예외를 검증했다.
+
+### Details
+- 작업 사유
+  - Service 계층에서 비즈니스 로직을 독립적으로 검증해야 한다는 규칙을 반영하기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/test/java/com/classhub/domain/auth/application/AuthApplicationServiceTest.java
+- 다음 단계
+  - 같은 기준을 다른 기능에도 적용한다.
+
+## [2025-11-28 00:37] 백엔드 AGENT 테스트 계층 지침 추가
+
+### Type
+DESIGN
+
+### Summary
+- backend/AGENTS.md에 Repository→Service→Controller 순서로 테스트를 작성하고 각 계층의 책임을 명시하는 규칙을 추가했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청에 따라 테스트 작성 순서와 책임 분리를 명문화하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - backend/AGENTS.md
+- 다음 단계
+  - 새 규칙을 모든 향후 작업에 적용한다.
+
+## [2025-11-28 00:39] AuthService 네이밍 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- Service 클래스 명을 `AuthService`로 통일하고 Controller/Test 참조를 모두 갱신했다.
+
+### Details
+- 작업 사유
+  - 도메인명+Service 패턴을 유지하겠다는 요구 사항을 반영.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/application/AuthService.java
+  - backend/src/main/java/com/classhub/domain/auth/web/AuthController.java
+  - backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java
+- 다음 단계
+  - 동일한 명명 규칙을 향후 서비스에도 적용한다.
+
+## [2025-11-28 01:20] 백엔드 AGENT 테스트 규칙 보완
+
+### Type
+DESIGN
+
+### Summary
+- Service 테스트는 Mockito 기반 순수 단위 테스트로 작성하고, SpringBootTest/통합테스트는 Controller에서만 사용한다는 지침을 AGENTS에 추가했다.
+
+### Details
+- 작업 사유
+  - 테스트 계층별 책임을 명확히 하고, Service 테스트에서 불필요한 컨텍스트 로딩을 방지하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - backend/AGENTS.md
+- 다음 단계
+  - 규칙을 다른 기능에도 일관되게 적용한다.
+
+## [2025-11-28 01:22] AuthService 단위 테스트 Mock 기반 전환
+
+### Type
+STRUCTURAL
+
+### Summary
+- `AuthServiceTest`를 Mockito Extension 기반으로 바꿔 Repository/PasswordEncoder를 Mock하고, 저장 시 Reflection으로 ID/타임스탬프를 주입하도록 수정했다.
+
+### Details
+- 작업 사유
+  - Service 테스트는 Spring Context 없이 Mock으로만 작성해야 한다는 신규 규칙을 적용하기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java
+- 다음 단계
+  - 동일 방식으로 다른 Service 테스트도 정비한다.
+
+## [2025-11-28 01:32] Service 테스트 전략 롤백
+
+### Type
+STRUCTURAL
+
+### Summary
+- 사용자 요청에 따라 Service 테스트를 다시 SpringBootTest 통합 방식으로 되돌리고, AGENT 지침도 원상복구했다.
+
+### Details
+- 작업 사유
+  - 당장 컨텍스트를 띄운 테스트가 필요하다는 요구 반영.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java
+  - backend/AGENTS.md
+- 다음 단계
+  - 필요 시 추후 다시 분리한다.
+
+## [2025-11-28 01:55] API Base Path를 /api/v1로 통일
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 모든 엔드포인트를 `/api/v1` prefix로 노출하도록 AuthController, Security 설정, 통합 테스트를 수정했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청에 따라 API 경로 규칙을 `/api/v1`로 일관되게 맞추기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/web/AuthController.java
+  - backend/src/main/java/com/classhub/global/config/SecurityConfig.java
+  - backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+  - backend/src/test/java/com/classhub/global/config/SecurityIntegrationTest.java
+- 다음 단계
+  - 향후 추가되는 Controller도 동일한 prefix 규칙을 따른다.
