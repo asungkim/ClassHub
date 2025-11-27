@@ -537,3 +537,41 @@ TODO_UPDATE
   - docs/todo/v1.3.md
 - 다음 단계
   - Phase 2 착수 시 해당 FR 태그를 참고해 구현 우선순위를 정한다.
+
+## [2025-11-27 21:40] Requirement/Spec/AGENT 동기화
+
+### Type
+DESIGN
+
+### Summary
+- Requirement v1.2에 PLAN 기반 기능 정의 방식을 명시하고, spec v1.2 및 AGENTS 규칙을 동일한 프로세스로 정리했다.
+
+### Details
+- 작업 사유
+  - 기능 요구사항을 TODO/PLAN에서 세분화하는 현 방식과 문서를 일치시키기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/requirement/v1.2.md
+  - docs/spec/v1.2.md
+  - AGENTS.md
+- 다음 단계
+  - TODO를 새 요구사항 설명에 맞춰 유지한다.
+
+## [2025-11-27 21:40] TODO 메타 정보 정비
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.3.md`에 Requirement/Spec 버전 설명을 갱신하고, 작업 설명에서 구 FR ID를 제거했다.
+
+### Details
+- 작업 사유
+  - TODO 항목이 PLAN 기반으로 변화될 때 혼선을 줄이기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - Phase 2 작업 시 PLAN 문서에서 기능 요구를 정의한다.

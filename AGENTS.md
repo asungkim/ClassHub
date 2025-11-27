@@ -197,3 +197,4 @@ docs/
 3. **TODO Update**: 스펙이 확정되면 `docs/todo/vX.Y.md`를 새 버전으로 만들어 Phase/Epic/Task를 재정렬한다. 각 Task에 대응하는 FR/스펙 섹션을 적어두어야 한다.
 4. **Logging**: Requirement → Spec → TODO 순으로 변경할 때마다 `docs/history/AGENT_LOG.md`에 DESIGN/TODO_UPDATE 이벤트를 남기고, 변경된 문서/버전을 기록한다.
 5. **Implementation Gate**: PLAN/TODO가 최신 Requirement/Spec 버전을 참조하지 않으면 구현에 착수할 수 없다.
+6. Requirement 문서는 사용자/Use Case/비기능 중심으로 유지하고, 세부 Functional Requirement는 각 PLAN 문서에서 정의한다.
