@@ -854,3 +854,41 @@ TODO_UPDATE
   - docs/todo/v1.4.md
 - 다음 단계
   - Spring Security Config + JWT Provider 구현을 진행한다.
+
+## [2025-11-27 23:28] Spring Security 구성 TDD 검증
+
+### Type
+STRUCTURAL
+
+### Summary
+- JwtProvider 단위 테스트, Security 통합 테스트, PasswordEncoder Bean 테스트를 추가해 PLAN의 검증 항목을 충족했다.
+
+### Details
+- 작업 사유
+  - Auth Security PLAN에서 정의한 토큰/필터/암호화 요구사항을 코드로 검증하기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/test/java/com/classhub/global/jwt/JwtProviderTest.java
+  - backend/src/test/java/com/classhub/global/config/SecurityIntegrationTest.java
+  - backend/src/test/java/com/classhub/global/config/PasswordEncoderBeanTest.java
+- 다음 단계
+  - Auth 서비스 세부 API(회원가입/로그인 등)를 PLAN 순서에 따라 구현한다.
+
+## [2025-11-27 23:29] TODO 상태: Security Config 검증 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2 - Auth 서비스 세부 작업 중 "Spring Security Config + PasswordEncoder + JWT Provider 뼈대"를 완료(✅)로 표시했다.
+
+### Details
+- 작업 사유
+  - Security 구성과 테스트를 마무리해 PLAN 기준을 충족했기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - 다음 작업(Teacher 회원가입 API) 착수 여부를 결정하고 PLAN/구현을 준비한다.

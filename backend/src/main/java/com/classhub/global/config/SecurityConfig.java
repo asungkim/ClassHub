@@ -60,10 +60,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of("*")); // 모든 도메인에서의 요청 허용
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 사용
         configuration.setAllowCredentials(true); // 헤더에 인증정보 포함 허용
-        configuration.setExposedHeaders(List.of("Authorization", "EntryAuth")); // 브라우저가 지정한 헤더를 읽을 수 있음
+        configuration.setExposedHeaders(List.of("Authorization")); // 브라우저가 지정한 헤더를 읽을 수 있음
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // 모든 엔드포인트에 대해 CORS 설정 적용
