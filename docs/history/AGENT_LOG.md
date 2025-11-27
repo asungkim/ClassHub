@@ -575,3 +575,79 @@ TODO_UPDATE
   - docs/todo/v1.3.md
 - 다음 단계
   - Phase 2 작업 시 PLAN 문서에서 기능 요구를 정의한다.
+
+## [2025-11-27 21:43] Member 엔티티 PLAN 초안
+
+### Type
+DESIGN
+
+### Summary
+- Member 엔티티 속성/제약/테스트 계획을 정의한 `docs/plan/member-entity_plan.md`를 작성했다.
+
+### Details
+- 작업 사유
+  - Phase 2 첫 작업으로 Member 엔티티 구현을 준비하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/member-entity_plan.md (신규)
+- 다음 단계
+  - PLAN을 검토/승인받고 실제 Member 엔티티를 구현한다.
+
+## [2025-11-27 21:50] TODO 상태: Member 엔티티 작업 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.3.md`에서 Member 엔티티 작업을 🔄로 전환하고, PLAN을 최신 조건(전화번호 제외, Lombok 생성자 규칙)으로 갱신했다.
+
+### Details
+- 작업 사유
+  - Phase 2 첫 작업(Member 엔티티 구현)을 시작하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/todo/v1.3.md
+  - docs/plan/member-entity_plan.md
+- 다음 단계
+  - PLAN에 맞춰 Member 엔티티를 구현하고 테스트를 작성한다.
+
+## [2025-11-27 21:52] Member 엔티티 구현
+
+### Type
+STRUCTURAL
+
+### Summary
+- Member 엔티티/Role/Repository를 추가하고, unique email 제약·teacherId 필드를 포함한 테스트를 작성했다.
+
+### Details
+- 작업 사유
+  - Phase 2 첫 엔티티 작업(사용자 관리)을 코드에 반영하기 위함.
+- 영향받은 테스트
+  - `./backend/gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/model/Member.java
+  - backend/src/main/java/com/classhub/domain/member/model/MemberRole.java
+  - backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java
+  - backend/src/test/java/com/classhub/domain/member/MemberRepositoryTest.java
+- 다음 단계
+  - Member 관련 서비스/DTO/Controller PLAN을 작성하고 구현을 확장한다.
+
+## [2025-11-27 21:52] TODO 상태: Member 엔티티 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Member 엔티티 작업을 ✅로 전환했다.
+
+### Details
+- 작업 사유
+  - Member 엔티티 및 테스트가 마무리되었기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - 다음 엔티티(Invitation 등) PLAN/구현을 진행한다.
