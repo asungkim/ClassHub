@@ -818,3 +818,39 @@ TODO_UPDATE
   - docs/todo/v1.4.md
 - 다음 단계
   - 세분화된 순서대로 PLAN/구현을 진행한다.
+
+## [2025-11-27 22:29] Spring Security Config PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- JWT Provider, Security Filter Chain, PasswordEncoder 구성을 다루는 `docs/plan/auth-security_config_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - Auth 작업을 세분화한 첫 단계로 Security/Token 레이어 요구사항을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-security_config_plan.md (신규)
+- 다음 단계
+  - 해당 PLAN을 바탕으로 Security 구성을 구현하고, 이어서 회원가입/로그인/초대 검증 PLAN을 작성한다.
+
+## [2025-11-27 22:29] TODO 상태: Auth PLAN 보완 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Auth 세분화 작업 중 첫 항목(PLAN 보완)을 ✅로 표시했다.
+
+### Details
+- 작업 사유
+  - Security/Token PLAN을 작성했으므로 다음 구현 단계로 이동하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - Spring Security Config + JWT Provider 구현을 진행한다.
