@@ -500,3 +500,40 @@ TODO_UPDATE
   - docs/todo/v1.3.md
 - 다음 단계
   - Phase 2 엔티티 작업으로 진입하거나 추가 PLAN을 작성한다.
+
+## [2025-11-27 21:31] 요구사항-스펙-프로세스 정비
+
+### Type
+DESIGN
+
+### Summary
+- `docs/spec/v1.2.md`에 Requirement v1.2 대응 표(FR-001~FR-027)를 추가하고, AGENTS.md에 Requirement→Spec→TODO 절차 규칙을 명문화했다.
+
+### Details
+- 작업 사유
+  - Requirement 문서와 스펙/PLAN/TODO 간 일관된 버전 관리가 필요했음.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/spec/v1.2.md
+  - AGENTS.md
+- 다음 단계
+  - TODO를 스펙의 FR 매핑에 맞춰 갱신한다.
+
+## [2025-11-27 21:31] TODO v1.3 요구사항 매핑
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.3.md`에 Requirement/Spec 버전 주석을 추가하고, 각 Task에 해당 FR ID를 명시했다.
+
+### Details
+- 작업 사유
+  - TODO 항목이 어떤 요구사항을 충족하는지 추적하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - Phase 2 착수 시 해당 FR 태그를 참고해 구현 우선순위를 정한다.

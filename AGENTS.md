@@ -189,3 +189,11 @@ docs/
 - 예외와 응답은 `global.response.RsData` + `global.response.RsCode` 포맷을 사용한다. `ResponseAspect`가 RsData의 코드로 HTTP Status를 설정하고, `global.exception.BusinessException/GlobalExceptionHandler`가 비즈니스/일반 예외를 일관되게 처리한다.
 - Controller는 가능한 한 `RsData`를 직접 반환하고, 서비스/도메인 로직은 `domain.<feature>.application` 계층에서 조율한다.
 - 공통 설정(`global.config`)에는 Locale/Timezone, CORS, JPA Auditing 등을 포함하고, 프로필별 설정(`application*.yml`, `.env.example`)을 통해 환경을 분리한다.
+
+# 7. 요구사항 → 스펙 → TODO 동기화 절차
+
+1. **Requirements First**: 기능 요구 변경 시 `docs/requirement/vX.Y.md`를 우선 업데이트/리뷰한다. Requirement 버전은 단일 출처(Single Source of Truth)다.
+2. **Spec Update**: 요구사항 확정 후 `docs/spec/vX.Y.md`를 같은 버전으로 올리고, 어떤 Requirement 버전에서 파생되었는지 명시한다(FR ID 매핑 포함).
+3. **TODO Update**: 스펙이 확정되면 `docs/todo/vX.Y.md`를 새 버전으로 만들어 Phase/Epic/Task를 재정렬한다. 각 Task에 대응하는 FR/스펙 섹션을 적어두어야 한다.
+4. **Logging**: Requirement → Spec → TODO 순으로 변경할 때마다 `docs/history/AGENT_LOG.md`에 DESIGN/TODO_UPDATE 이벤트를 남기고, 변경된 문서/버전을 기록한다.
+5. **Implementation Gate**: PLAN/TODO가 최신 Requirement/Spec 버전을 참조하지 않으면 구현에 착수할 수 없다.
