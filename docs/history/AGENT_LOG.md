@@ -746,3 +746,21 @@ TODO_UPDATE
   - docs/todo/v1.3.md
 - 다음 단계
   - 다음 엔티티(Notice 등) PLAN/구현을 진행한다.
+
+## [2025-11-27 22:16] TODO v1.4 재구성
+
+### Type
+TODO_UPDATE
+
+### Summary
+- 엔티티 일괄 구현 방식에서 기능 중심(Member/Auth → Teacher/Assistant → Student/Lesson → Course)으로 전환한 `docs/todo/v1.4.md`를 작성했다.
+
+### Details
+- 작업 사유
+  - 기능 진행 상황에 맞춰 필요한 엔티티/관계를 단계적으로 설계하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md (신규)
+- 다음 단계
+  - Phase 2 작업을 v1.4 순서대로 진행한다.
