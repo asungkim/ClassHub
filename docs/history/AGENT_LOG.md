@@ -651,3 +651,98 @@ TODO_UPDATE
   - docs/todo/v1.3.md
 - 다음 단계
   - 다음 엔티티(Invitation 등) PLAN/구현을 진행한다.
+
+## [2025-11-27 21:59] Invitation 엔티티 PLAN 초안
+
+### Type
+DESIGN
+
+### Summary
+- 초대 도메인 요구사항을 정의한 `docs/plan/invitation-entity_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 2 두 번째 엔티티(Invitation) 구현을 준비하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/invitation-entity_plan.md (신규)
+- 다음 단계
+  - PLAN 검토 후 Invitation 엔티티/테스트를 구현한다.
+
+## [2025-11-27 22:10] Invitation PLAN 업데이트
+
+### Type
+DESIGN
+
+### Summary
+- Invitation 엔티티에서 courseId를 제거하고 Teacher→Assistant 초대는 senderId로만 표현하도록 PLAN을 수정했다.
+
+### Details
+- 작업 사유
+  - 실제 요구(Teacher에 종속)와 PLAN의 필드 구성을 일치시키기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/invitation-entity_plan.md
+- 다음 단계
+  - PLAN 기반으로 Invitation 엔티티를 구현한다.
+
+## [2025-11-27 22:13] TODO 상태: Invitation 엔티티 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Invitation 엔티티 작업을 🔄로 설정해 Phase 2 두 번째 작업을 시작했다.
+
+### Details
+- 작업 사유
+  - Member 엔티티 완료 후 다음 우선순위인 Invitation 구현을 진행하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - PLAN에 따라 Invitation 엔티티를 구현한다.
+
+## [2025-11-27 22:14] Invitation 엔티티 구현
+
+### Type
+STRUCTURAL
+
+### Summary
+- Invitation 엔티티/Role/Status/Repository를 추가하고 초대 코드 고유값, 상태 전환(expire/accept/revoke) 로직을 구현했다.
+
+### Details
+- 작업 사유
+  - 초대 기반 Auth/조직 연결을 위한 도메인 모델을 마련하기 위함.
+- 영향받은 테스트
+  - `./backend/gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/invitation/model/Invitation.java
+  - backend/src/main/java/com/classhub/domain/invitation/model/InvitationRole.java
+  - backend/src/main/java/com/classhub/domain/invitation/model/InvitationStatus.java
+  - backend/src/main/java/com/classhub/domain/invitation/repository/InvitationRepository.java
+  - backend/src/test/java/com/classhub/domain/invitation/InvitationRepositoryTest.java
+  - docs/spec/v1.2.md (Invitation 필드 갱신)
+- 다음 단계
+  - 초대 서비스/컨트롤러 PLAN을 작성하고 흐름(accept/revoke)을 구현한다.
+
+## [2025-11-27 22:14] TODO 상태: Invitation 엔티티 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Invitation 엔티티 작업을 ✅로 전환했다.
+
+### Details
+- 작업 사유
+  - Invitation 도메인/테스트 구현이 완료되었기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.3.md
+- 다음 단계
+  - 다음 엔티티(Notice 등) PLAN/구현을 진행한다.
