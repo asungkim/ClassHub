@@ -764,3 +764,57 @@ TODO_UPDATE
   - docs/todo/v1.4.md (신규)
 - 다음 단계
   - Phase 2 작업을 v1.4 순서대로 진행한다.
+
+## [2025-11-27 22:22] Auth 코어 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Spring Security + JWT 기반 로그인/회원가입/초대 검증 흐름을 정의한 `docs/plan/auth-core_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - Member/Invitation을 활용할 인증 서비스를 설계하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-core_plan.md (신규)
+- 다음 단계
+  - PLAN을 기준으로 Auth 서비스를 구현하고 TODO 상태를 갱신한다.
+
+## [2025-11-27 22:23] TODO 상태: Auth 서비스 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2에서 "Auth 서비스 (Spring Security + JWT + 초대 검증)" 작업을 🔄로 전환했다.
+
+### Details
+- 작업 사유
+  - Auth PLAN이 준비되어 구현을 바로 이어가기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - PLAN에 따라 Auth 서비스를 구현한다.
+
+## [2025-11-27 22:27] TODO 세분화: Auth 작업 분할
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.4.md`의 Auth 작업을 PLAN 보완, Security 구성, 회원가입/로그인/토큰/초대 검증 등 세부 단계로 쪼갰다.
+
+### Details
+- 작업 사유
+  - Auth 범위를 작은 단위로 나눠 진행 상황을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - 세분화된 순서대로 PLAN/구현을 진행한다.
