@@ -3,6 +3,7 @@ package com.classhub.domain.auth.web;
 import com.classhub.domain.auth.application.AuthService;
 import com.classhub.domain.auth.dto.LoginRequest;
 import com.classhub.domain.auth.dto.LoginResponse;
+import com.classhub.domain.auth.dto.LogoutRequest;
 import com.classhub.domain.auth.dto.RefreshRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterResponse;
@@ -44,5 +45,13 @@ public class AuthController {
     ) {
         LoginResponse response = authService.refresh(request);
         return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @PostMapping("/logout")
+    public RsData<Void> logout(
+            @Valid @RequestBody LogoutRequest request
+    ) {
+        authService.logout(request);
+        return RsData.from(RsCode.SUCCESS, null);
     }
 }

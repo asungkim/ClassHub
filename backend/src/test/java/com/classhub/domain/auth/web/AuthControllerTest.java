@@ -186,6 +186,46 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(401));
     }
 
+    @Test
+    @DisplayName("로그아웃 요청이 성공하면 200을 반환하고 해당 토큰은 재사용할 수 없다")
+    void logout_success() throws Exception {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        String loginPayload = objectMapper.writeValueAsString(new LoginPayload("teacher@classhub.com", "Classhub!1"));
+        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginPayload))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String refreshToken = objectMapper.readTree(loginResponse).get("data").get("refreshToken").asText();
+
+        String logoutPayload = objectMapper.writeValueAsString(new LogoutPayload(refreshToken, false));
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(logoutPayload))
+                .andExpect(status().isOk());
+
+        String refreshPayload = objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken));
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(refreshPayload))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청 Validation 실패 시 400을 반환한다")
+    void logout_validationFailure() throws Exception {
+        String payload = objectMapper.writeValueAsString(new LogoutPayload("", false));
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
     private void createTeacher(String email, String rawPassword) {
         Member member = Member.builder()
                 .email(email)
@@ -200,5 +240,8 @@ class AuthControllerTest {
     }
 
     private record LoginPayload(String email, String password) {
+    }
+
+    private record LogoutPayload(String refreshToken, boolean logoutAll) {
     }
 }

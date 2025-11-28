@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -126,6 +128,11 @@ public class JwtProvider {
     public UUID getUserId(String token) {
         Claims claims = getClaims(token);
         return UUID.fromString(claims.get("id", String.class));
+    }
+
+    public LocalDateTime getExpiration(String token) {
+        Date expiration = getClaims(token).getExpiration();
+        return LocalDateTime.ofInstant(expiration.toInstant(), ZoneOffset.UTC);
     }
 
     /**

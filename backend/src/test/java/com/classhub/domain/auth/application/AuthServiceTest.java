@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classhub.domain.auth.dto.LoginRequest;
 import com.classhub.domain.auth.dto.LoginResponse;
+import com.classhub.domain.auth.dto.LogoutRequest;
 import com.classhub.domain.auth.dto.RefreshRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterResponse;
+import com.classhub.domain.auth.token.InMemoryRefreshTokenStore;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
@@ -34,9 +36,13 @@ class AuthServiceTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private InMemoryRefreshTokenStore refreshTokenStore;
+
     @BeforeEach
     void cleanUp() {
         memberRepository.deleteAll();
+        refreshTokenStore.clear();
     }
 
     @Test
@@ -133,6 +139,19 @@ class AuthServiceTest {
         RefreshRequest request = new RefreshRequest("invalid.token.value");
 
         assertThatThrownBy(() -> authService.refresh(request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(RsCode.UNAUTHENTICATED.getMessage());
+    }
+
+    @Test
+    @DisplayName("로그아웃하면 해당 Refresh 토큰으로 재발급을 차단한다")
+    void logout_blacklistsToken() {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        LoginResponse login = authService.login(new LoginRequest("teacher@classhub.com", "Classhub!1"));
+
+        authService.logout(new LogoutRequest(login.refreshToken(), false));
+
+        assertThatThrownBy(() -> authService.refresh(new RefreshRequest(login.refreshToken())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(RsCode.UNAUTHENTICATED.getMessage());
     }

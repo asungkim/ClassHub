@@ -1220,3 +1220,85 @@ TODO_UPDATE
   - docs/todo/v1.4.md
 - 다음 단계
   - 다음 세부 작업(Refresh 재발급/로그아웃 처리 등)을 계획한다.
+
+## [2025-11-28 13:05] Refresh/로그아웃 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Refresh 토큰 블랙리스트 기반 로그아웃 요구사항을 정의한 `docs/plan/auth-refresh_logout_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - TODO 항목(Refresh 토큰 재발급/로그아웃 처리)을 구현하기 전 엔티티/서비스/API/TDD 범위를 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-refresh_logout_plan.md (신규)
+- 다음 단계
+  - PLAN을 기준으로 RefreshToken 엔티티/서비스/컨트롤러를 구현한다.
+
+## [2025-11-28 13:05] TODO 상태: Refresh/로그아웃 작업 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 "Refresh 토큰 재발급/로그아웃 처리" 작업을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - PLAN 작성과 함께 실제 구현 준비를 시작하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - PLAN에 맞춰 RefreshToken 저장소/로그아웃 API를 구현한다.
+
+## [2025-11-28 23:15] Refresh 블랙리스트 + 로그아웃 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- In-Memory RefreshTokenStore를 추가하고, `/api/v1/auth/logout` API와 Refresh 블랙리스트 검사 로직을 구현했다.
+- 로그아웃 이후 해당 Refresh 토큰으로는 재발급이 불가능하며, Controller/Service 테스트로 검증했다.
+
+### Details
+- 작업 사유
+  - TODO 항목(Refresh 토큰 재발급/로그아웃 처리)을 완료하고, 명시적 로그아웃 시 토큰을 폐기하기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/application/AuthService.java
+  - backend/src/main/java/com/classhub/domain/auth/web/AuthController.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/LogoutRequest.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/RefreshRequest.java (재사용)
+  - backend/src/main/java/com/classhub/domain/auth/token/RefreshTokenStore.java (신규)
+  - backend/src/main/java/com/classhub/domain/auth/token/InMemoryRefreshTokenStore.java (신규)
+  - backend/src/main/java/com/classhub/global/jwt/JwtProvider.java
+  - backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java
+  - backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+  - backend/src/test/java/com/classhub/domain/auth/token/InMemoryRefreshTokenStoreTest.java (신규)
+- 다음 단계
+  - logoutAll/Redis 기반 확장은 후속 작업으로 남겨둔다.
+
+## [2025-11-28 23:16] TODO 상태: Refresh/로그아웃 작업 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2 - Auth 서비스 세부 작업 중 "Refresh 토큰 재발급/로그아웃 처리"를 완료(✅)로 표시했다.
+
+### Details
+- 작업 사유
+  - 블랙리스트/로그아웃 기능 구현 및 테스트가 완료되었기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - 초대 코드 검증/가입 흐름 등 남은 Auth 작업을 진행한다.

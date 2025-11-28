@@ -2,19 +2,18 @@ package com.classhub.domain.auth.application;
 
 import com.classhub.domain.auth.dto.LoginRequest;
 import com.classhub.domain.auth.dto.LoginResponse;
+import com.classhub.domain.auth.dto.LogoutRequest;
 import com.classhub.domain.auth.dto.RefreshRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterResponse;
+import com.classhub.domain.auth.token.RefreshTokenStore;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.global.exception.BusinessException;
-import com.classhub.global.jwt.JwtProperties;
 import com.classhub.global.jwt.JwtProvider;
 import com.classhub.global.response.RsCode;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
-    private final JwtProperties jwtProperties;
+    private final RefreshTokenStore refreshTokenStore;
 
     @Transactional
     public TeacherRegisterResponse registerTeacher(TeacherRegisterRequest request) {
@@ -62,6 +61,9 @@ public class AuthService {
     @Transactional(readOnly = true)
     public LoginResponse refresh(RefreshRequest request) {
         String token = request.refreshToken();
+        if (refreshTokenStore.isBlacklisted(token)) {
+            throw new BusinessException(RsCode.UNAUTHENTICATED);
+        }
         if (!jwtProvider.isValidToken(token)) {
             throw new BusinessException(RsCode.UNAUTHENTICATED);
         }
@@ -72,12 +74,25 @@ public class AuthService {
         return issueTokens(member);
     }
 
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String token = request.refreshToken();
+        if (!jwtProvider.isValidToken(token)) {
+            return;
+        }
+
+        if (request.logoutAll()) {
+            refreshTokenStore.blacklistAllForMember(jwtProvider.getUserId(token));
+        } else if (!refreshTokenStore.isBlacklisted(token)) {
+            refreshTokenStore.blacklist(token, jwtProvider.getExpiration(token));
+        }
+    }
+
     private LoginResponse issueTokens(Member member) {
         String accessToken = jwtProvider.generateAccessToken(member.getId(), member.getRole().name());
         String refreshToken = jwtProvider.generateRefreshToken(member.getId());
-        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-        LocalDateTime accessExpiresAt = now.plus(Duration.ofMillis(jwtProperties.getAccessTokenExpirationMillis()));
-        LocalDateTime refreshExpiresAt = now.plus(Duration.ofMillis(jwtProperties.getRefreshTokenExpirationMillis()));
+        LocalDateTime accessExpiresAt = jwtProvider.getExpiration(accessToken);
+        LocalDateTime refreshExpiresAt = jwtProvider.getExpiration(refreshToken);
 
         return new LoginResponse(
                 member.getId(),
