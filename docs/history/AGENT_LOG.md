@@ -1302,3 +1302,86 @@ TODO_UPDATE
   - docs/todo/v1.4.md
 - 다음 단계
   - 초대 코드 검증/가입 흐름 등 남은 Auth 작업을 진행한다.
+
+## [2025-11-28 23:18] 초대 코드 검증/가입 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- 초대 코드 검증 및 초대 기반 회원가입 API 요구사항을 정의한 `docs/plan/auth-invitation_signup_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 2 Auth TODO의 다음 항목(초대 코드 검증/가입)을 구현하기 전 문제 정의/테스트 전략을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-invitation_signup_plan.md (신규)
+- 다음 단계
+  - PLAN을 기준으로 Service/Controller/Repository 변경을 진행한다.
+
+## [2025-11-28 23:18] TODO 상태: 초대 코드 검증 작업 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- "초대 코드 검증 API + 초대 기반 회원가입" 작업을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - PLAN 작성이 완료되어 구현 단계를 시작하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - Invitation 검증/가입 API를 PLAN에 따라 개발한다.
+
+## [2025-11-29 00:04] 초대 코드 검증/가입 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/api/v1/auth/invitations/verify`와 `/api/v1/auth/register/invited` 엔드포인트를 추가하고, InvitationAuthService/DTO/테스트를 통해 초대 기반 회원가입 흐름을 완성했다.
+
+### Details
+- 작업 사유
+  - Phase 2 Auth TODO의 마지막 세부 작업(초대 코드 검증 + 가입)을 완료해 Teacher→Assistant, Assistant→Student 초대 플로우를 지원하기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/application/InvitationAuthService.java (신규)
+  - backend/src/main/java/com/classhub/domain/auth/application/AuthService.java
+  - backend/src/main/java/com/classhub/domain/auth/web/AuthController.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/InvitationVerifyRequest.java (신규)
+  - backend/src/main/java/com/classhub/domain/auth/dto/InvitationVerifyResponse.java (신규)
+  - backend/src/main/java/com/classhub/domain/auth/dto/InvitationRegisterRequest.java (신규)
+  - backend/src/main/java/com/classhub/domain/auth/dto/LoginRequest.java (재사용)
+  - backend/src/main/java/com/classhub/domain/invitation/repository/InvitationRepository.java
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/test/java/com/classhub/domain/auth/application/InvitationAuthServiceTest.java (신규)
+  - backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+  - docs/plan/auth-invitation_signup_plan.md (기존 계획에 부합)
+- 다음 단계
+  - 초대 생성/관리 API 필요 시 별도 PLAN으로 진행한다.
+
+## [2025-11-29 00:05] TODO 상태: 초대 코드 검증 작업 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- "초대 코드 검증 API + 초대 기반 회원가입" 작업을 완료(✅)로 표시했다.
+
+### Details
+- 작업 사유
+  - 초대 검증/가입 API 및 테스트가 완료되었기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - Phase 2 완료 후 다음 Phase로 넘어갈 준비를 한다.

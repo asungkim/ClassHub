@@ -1,6 +1,10 @@
 package com.classhub.domain.auth.web;
 
 import com.classhub.domain.auth.application.AuthService;
+import com.classhub.domain.auth.application.InvitationAuthService;
+import com.classhub.domain.auth.dto.InvitationRegisterRequest;
+import com.classhub.domain.auth.dto.InvitationVerifyRequest;
+import com.classhub.domain.auth.dto.InvitationVerifyResponse;
 import com.classhub.domain.auth.dto.LoginRequest;
 import com.classhub.domain.auth.dto.LoginResponse;
 import com.classhub.domain.auth.dto.LogoutRequest;
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final InvitationAuthService invitationAuthService;
 
     @PostMapping("/register/teacher")
     public RsData<TeacherRegisterResponse> registerTeacher(
@@ -53,5 +58,21 @@ public class AuthController {
     ) {
         authService.logout(request);
         return RsData.from(RsCode.SUCCESS, null);
+    }
+
+    @PostMapping("/invitations/verify")
+    public RsData<InvitationVerifyResponse> verifyInvitation(
+            @Valid @RequestBody InvitationVerifyRequest request
+    ) {
+        InvitationVerifyResponse response = invitationAuthService.verify(request);
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @PostMapping("/register/invited")
+    public RsData<LoginResponse> registerInvited(
+            @Valid @RequestBody InvitationRegisterRequest request
+    ) {
+        LoginResponse response = invitationAuthService.registerInvited(request);
+        return RsData.from(RsCode.SUCCESS, response);
     }
 }

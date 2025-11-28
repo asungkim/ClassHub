@@ -18,7 +18,8 @@ public enum RsCode {
     UNAUTHENTICATED(RsConstant.UNAUTHORIZED, "인증이 실패했습니다."),
     UNAUTHORIZED(RsConstant.FORBIDDEN, "접근 권한이 없습니다."),
     TOO_MANY_REQUESTS(RsConstant.TOO_MANY_REQUESTS, "너무 많은 요청입니다."),
-    DUPLICATE_EMAIL(RsConstant.CONFLICT, "이미 사용 중인 이메일입니다.");
+    DUPLICATE_EMAIL(RsConstant.CONFLICT, "이미 사용 중인 이메일입니다."),
+    INVALID_INVITATION(RsConstant.BAD_REQUEST, "유효하지 않은 초대입니다.");
 
     private final Integer code;
     private final String message;
