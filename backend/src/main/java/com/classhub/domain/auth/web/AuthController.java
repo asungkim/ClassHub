@@ -1,6 +1,9 @@
 package com.classhub.domain.auth.web;
 
 import com.classhub.domain.auth.application.AuthService;
+import com.classhub.domain.auth.dto.LoginRequest;
+import com.classhub.domain.auth.dto.LoginResponse;
+import com.classhub.domain.auth.dto.RefreshRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterResponse;
 import com.classhub.global.response.RsCode;
@@ -25,5 +28,21 @@ public class AuthController {
     ) {
         TeacherRegisterResponse response = authService.registerTeacher(request);
         return RsData.from(RsCode.CREATED, response);
+    }
+
+    @PostMapping("/login")
+    public RsData<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResponse response = authService.login(request);
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @PostMapping("/refresh")
+    public RsData<LoginResponse> refresh(
+            @Valid @RequestBody RefreshRequest request
+    ) {
+        LoginResponse response = authService.refresh(request);
+        return RsData.from(RsCode.SUCCESS, response);
     }
 }

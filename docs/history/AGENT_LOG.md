@@ -1122,3 +1122,101 @@ BEHAVIORAL
   - backend/src/test/java/com/classhub/global/config/SecurityIntegrationTest.java
 - 다음 단계
   - 향후 추가되는 Controller도 동일한 prefix 규칙을 따른다.
+
+## [2025-11-28 02:00] 로그인/토큰 발급 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- 로그인 및 Access/Refresh 토큰 발급·재발급 흐름을 정의한 `docs/plan/auth-login_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 2 Auth TODO의 다음 항목(로그인 API)을 진행하기 전에 요구사항/테스트 전략을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-login_plan.md (신규)
+- 다음 단계
+  - PLAN 승인 후 로그인/Refresh API를 TDD로 구현한다.
+
+## [2025-11-28 02:01] TODO 상태: 로그인 API 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Auth 서비스 세부 작업 중 "로그인 API + Access/Refresh 발급" 항목을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - PLAN 작성이 완료되어 다음 구현 단계에 착수하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - PLAN에 따라 로그인 API와 Refresh 발급을 구현한다.
+
+## [2025-11-28 02:05] 로그인 PLAN 업데이트 (응답/테스트 범위 보완)
+
+### Type
+DESIGN
+
+### Summary
+- LoginResponse에서 email/authority를 제외하고, Controller/Service 테스트 책임을 명확히 한 PLAN으로 갱신했다.
+
+### Details
+- 작업 사유
+  - 사용자 피드백에 따라 로그인 응답을 토큰/만료 정보에 집중시키고 테스트 전략을 재정의해야 했음.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-login_plan.md
+- 다음 단계
+  - 갱신된 PLAN에 맞춰 구현/TDD를 진행한다.
+
+## [2025-11-28 13:00] 로그인/Refresh API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/api/v1/auth/login`과 `/api/v1/auth/refresh`를 추가해 이메일/비밀번호 검증, JWT Access/Refresh 발급·재발급, 만료 시간 응답을 구현했다.
+- Service/Controller 테스트를 작성해 성공/실패, Validation, Refresh 흐름을 검증했다.
+
+### Details
+- 작업 사유
+  - Phase 2 Auth TODO에서 로그인/토큰 발급 기능을 제공해야 이후 도메인 API 접근이 가능하기 때문.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/application/AuthService.java
+  - backend/src/main/java/com/classhub/domain/auth/web/AuthController.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/LoginRequest.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/LoginResponse.java
+  - backend/src/main/java/com/classhub/domain/auth/dto/RefreshRequest.java
+  - backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java
+  - backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+  - backend/src/test/java/com/classhub/global/config/SecurityIntegrationTest.java (경로 검증 반영 시 이미 수정됨)
+- 다음 단계
+  - Refresh 토큰 저장/로그아웃 처리, 초대 기반 가입 등 남은 Auth 작업을 이어간다.
+
+## [2025-11-28 13:01] TODO 상태: 로그인 API 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 "로그인 API + Access/Refresh 발급" 작업을 완료(✅) 처리했다.
+
+### Details
+- 작업 사유
+  - LOGIN/REFRESH API 구현 및 테스트가 마무리되었기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - 다음 세부 작업(Refresh 재발급/로그아웃 처리 등)을 계획한다.

@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import java.util.Map;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,8 +20,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-@SpringBootTest
+@SpringBootTest(properties = "JWT_SECRET_KEY=0123456789012345678901234567890123456789012345678901234567890123")
 @ActiveProfiles("test")
 class AuthControllerTest {
 
@@ -32,6 +34,9 @@ class AuthControllerTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private MockMvc mockMvc;
 
@@ -103,6 +108,97 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(400));
     }
 
+    @Test
+    @DisplayName("로그인 성공 시 토큰과 만료 정보가 포함된 응답을 반환한다")
+    void login_success() throws Exception {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        String payload = objectMapper.writeValueAsString(new LoginPayload("teacher@classhub.com", "Classhub!1"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.memberId").isNotEmpty())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.accessTokenExpiresAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshTokenExpiresAt").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("잘못된 비밀번호면 401을 반환한다")
+    void login_invalidPassword() throws Exception {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        String payload = objectMapper.writeValueAsString(new LoginPayload("teacher@classhub.com", "Wrong!2"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    @DisplayName("LoginRequest Validation 실패 시 400을 반환한다")
+    void login_validationFailure() throws Exception {
+        String payload = objectMapper.writeValueAsString(new LoginPayload("invalid-email", ""));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    @DisplayName("유효한 Refresh 토큰으로 Access/Refresh 재발급을 받는다")
+    void refresh_success() throws Exception {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        String loginPayload = objectMapper.writeValueAsString(new LoginPayload("teacher@classhub.com", "Classhub!1"));
+        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginPayload))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String refreshToken = objectMapper.readTree(loginResponse).get("data").get("refreshToken").asText();
+
+        String refreshPayload = objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(refreshPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("잘못된 Refresh 토큰이면 401을 반환한다")
+    void refresh_invalidToken() throws Exception {
+        String payload = objectMapper.writeValueAsString(Map.of("refreshToken", "invalid-token"));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+    }
+
+    private void createTeacher(String email, String rawPassword) {
+        Member member = Member.builder()
+                .email(email)
+                .password(passwordEncoder.encode(rawPassword))
+                .name("선생님")
+                .role(MemberRole.TEACHER)
+                .build();
+        memberRepository.save(member);
+    }
+
     private record RegisterRequest(String email, String password, String name) {
+    }
+
+    private record LoginPayload(String email, String password) {
     }
 }

@@ -3,6 +3,9 @@ package com.classhub.domain.auth.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classhub.domain.auth.dto.LoginRequest;
+import com.classhub.domain.auth.dto.LoginResponse;
+import com.classhub.domain.auth.dto.RefreshRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterResponse;
 import com.classhub.domain.member.model.Member;
@@ -18,7 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
+@SpringBootTest(properties = "JWT_SECRET_KEY=0123456789012345678901234567890123456789012345678901234567890123")
 @ActiveProfiles("test")
 class AuthServiceTest {
 
@@ -73,5 +76,74 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.registerTeacher(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(RsCode.DUPLICATE_EMAIL.getMessage());
+    }
+
+    @Test
+    @DisplayName("올바른 자격 증명으로 로그인하면 Access/Refresh 토큰을 발급한다")
+    void login_success() {
+        Member member = createTeacher("teacher@classhub.com", "Classhub!1");
+        LoginRequest request = new LoginRequest("teacher@classhub.com", "Classhub!1");
+
+        LoginResponse response = authService.login(request);
+
+        assertThat(response.memberId()).isEqualTo(member.getId());
+        assertThat(response.accessToken()).isNotBlank();
+        assertThat(response.refreshToken()).isNotBlank();
+        assertThat(response.accessTokenExpiresAt()).isNotNull();
+        assertThat(response.refreshTokenExpiresAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("비밀번호가 다르면 로그인에 실패한다")
+    void login_invalidPassword() {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        LoginRequest request = new LoginRequest("teacher@classhub.com", "Wrong!2");
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(RsCode.UNAUTHENTICATED.getMessage());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일이면 로그인에 실패한다")
+    void login_unknownEmail() {
+        LoginRequest request = new LoginRequest("unknown@classhub.com", "Classhub!1");
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(RsCode.UNAUTHENTICATED.getMessage());
+    }
+
+    @Test
+    @DisplayName("유효한 Refresh 토큰으로 Access/Refresh를 재발급한다")
+    void refresh_success() {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        LoginResponse login = authService.login(new LoginRequest("teacher@classhub.com", "Classhub!1"));
+
+        LoginResponse refreshed = authService.refresh(new RefreshRequest(login.refreshToken()));
+
+        assertThat(refreshed.accessToken()).isNotBlank();
+        assertThat(refreshed.refreshToken()).isNotBlank();
+        assertThat(refreshed.memberId()).isEqualTo(login.memberId());
+    }
+
+    @Test
+    @DisplayName("잘못된 Refresh 토큰이면 재발급을 거부한다")
+    void refresh_invalidToken() {
+        RefreshRequest request = new RefreshRequest("invalid.token.value");
+
+        assertThatThrownBy(() -> authService.refresh(request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(RsCode.UNAUTHENTICATED.getMessage());
+    }
+
+    private Member createTeacher(String email, String rawPassword) {
+        Member member = Member.builder()
+                .email(email)
+                .password(passwordEncoder.encode(rawPassword))
+                .name("Teacher")
+                .role(MemberRole.TEACHER)
+                .build();
+        return memberRepository.save(member);
     }
 }
