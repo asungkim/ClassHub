@@ -1,9 +1,9 @@
 package com.classhub.domain.invitation.web;
 
 import com.classhub.domain.invitation.application.InvitationService;
-import com.classhub.domain.invitation.dto.AssistantInvitationCreateRequest;
-import com.classhub.domain.invitation.dto.InvitationResponse;
-import com.classhub.domain.invitation.dto.StudentInvitationCreateRequest;
+import com.classhub.domain.invitation.dto.request.AssistantInvitationCreateRequest;
+import com.classhub.domain.invitation.dto.request.StudentInvitationCreateRequest;
+import com.classhub.domain.invitation.dto.response.InvitationResponse;
 import com.classhub.domain.invitation.model.InvitationRole;
 import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;

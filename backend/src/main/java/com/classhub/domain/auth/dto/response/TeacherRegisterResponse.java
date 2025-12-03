@@ -1,4 +1,4 @@
-package com.classhub.domain.auth.dto;
+package com.classhub.domain.auth.dto.response;
 
 import com.classhub.domain.member.model.Member;
 import java.time.LocalDateTime;

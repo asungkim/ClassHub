@@ -68,14 +68,6 @@ public class SwaggerConfig {
     }
 
     @Bean
-    public GroupedOpenApi sampleApi() {
-        return GroupedOpenApi.builder()
-                .group("Sample")
-                .pathsToMatch("/api/v1/sample/**")
-                .build();
-    }
-
-    @Bean
     public GroupedOpenApi allApi() {
         return GroupedOpenApi.builder()
                 .group("All")

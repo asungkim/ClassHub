@@ -3,12 +3,12 @@ package com.classhub.domain.auth.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classhub.domain.auth.dto.LoginRequest;
-import com.classhub.domain.auth.dto.LoginResponse;
-import com.classhub.domain.auth.dto.LogoutRequest;
-import com.classhub.domain.auth.dto.RefreshRequest;
-import com.classhub.domain.auth.dto.TeacherRegisterRequest;
-import com.classhub.domain.auth.dto.TeacherRegisterResponse;
+import com.classhub.domain.auth.dto.request.LoginRequest;
+import com.classhub.domain.auth.dto.request.LogoutRequest;
+import com.classhub.domain.auth.dto.request.RefreshRequest;
+import com.classhub.domain.auth.dto.request.TeacherRegisterRequest;
+import com.classhub.domain.auth.dto.response.LoginResponse;
+import com.classhub.domain.auth.dto.response.TeacherRegisterResponse;
 import com.classhub.domain.auth.token.InMemoryRefreshTokenStore;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;

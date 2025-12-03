@@ -1,4 +1,4 @@
-package com.classhub.domain.invitation.dto;
+package com.classhub.domain.invitation.dto.response;
 
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;

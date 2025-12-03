@@ -3,9 +3,9 @@ package com.classhub.domain.invitation.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classhub.domain.invitation.dto.AssistantInvitationCreateRequest;
-import com.classhub.domain.invitation.dto.InvitationResponse;
-import com.classhub.domain.invitation.dto.StudentInvitationCreateRequest;
+import com.classhub.domain.invitation.dto.request.AssistantInvitationCreateRequest;
+import com.classhub.domain.invitation.dto.request.StudentInvitationCreateRequest;
+import com.classhub.domain.invitation.dto.response.InvitationResponse;
 import com.classhub.domain.invitation.model.InvitationRole;
 import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.invitation.repository.InvitationRepository;

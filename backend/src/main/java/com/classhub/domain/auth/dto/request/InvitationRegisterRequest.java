@@ -1,11 +1,14 @@
-package com.classhub.domain.auth.dto;
+package com.classhub.domain.auth.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record TeacherRegisterRequest(
+public record InvitationRegisterRequest(
+        @NotBlank
+        String code,
+
         @NotBlank
         @Email
         @Size(max = 120)
@@ -25,9 +28,5 @@ public record TeacherRegisterRequest(
 ) {
     public String normalizedEmail() {
         return email.trim().toLowerCase();
-    }
-
-    public String sanitizedName() {
-        return name.trim();
     }
 }

@@ -1859,3 +1859,44 @@ STRUCTURAL
   - backend/src/main/java/com/classhub/global/config/SwaggerConfig.java
 - 다음 단계
   - 필요 시 UI 기본 그룹을 `All`로 설정하거나 문서 가이드를 추가한다.
+
+## [2025-12-03 18:28] DTO 패키지 분리 및 Sample 패키지 제거
+
+### Type
+STRUCTURAL
+
+### Summary
+- 모든 도메인의 DTO를 request/response 패키지로 이동하고, 사용하지 않는 `domain.sample` 패키지와 관련 테스트를 제거했다.
+
+### Details
+- 작업 사유
+  - DTO 위치를 일관성 있게 정리하고 불필요한 샘플 코드를 정리해 유지보수를 단순화하기 위함.
+- 영향받은 테스트
+  - `GRADLE_USER_HOME=./.gradle ./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/** (DTO 패키지, 서비스, 컨트롤러)
+  - backend/src/main/java/com/classhub/domain/invitation/**
+  - backend/src/test/java/com/classhub/domain/auth/**, backend/src/test/java/com/classhub/domain/invitation/**
+  - backend/src/test/java/com/classhub/global/entity/BaseEntityAuditingTest.java
+  - backend/src/main/java/com/classhub/global/config/SwaggerConfig.java (Sample 그룹 제거)
+  - backend/src/main/java/com/classhub/domain/sample/**, backend/src/test/java/com/classhub/domain/sample/** (삭제)
+- 다음 단계
+  - 남은 TODO(데이터 시드 등) 작업으로 진행한다.
+
+## [2025-12-03 18:28] TODO 완료: DTO 패키지 분리 + sample 삭제
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 “모든 dto 패키지 request/response로 분리 + domain/sample 패키지 삭제” 항목을 완료로 표시했다.
+
+### Details
+- 작업 사유
+  - DTO 재조직 및 샘플 코드 제거가 완료되었기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - StudentProfile 시드/업데이트 작업을 준비한다.

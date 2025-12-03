@@ -1,4 +1,4 @@
-package com.classhub.domain.invitation.dto;
+package com.classhub.domain.invitation.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

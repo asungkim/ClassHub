@@ -1,4 +1,4 @@
-package com.classhub.domain.auth.dto;
+package com.classhub.domain.auth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
