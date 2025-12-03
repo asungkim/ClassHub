@@ -100,6 +100,9 @@ public class InvitationAuthService {
         if (role == MemberRole.STUDENT) {
             Member sender = memberRepository.findById(invitation.getSenderId())
                     .orElseThrow(() -> new BusinessException(RsCode.INVALID_INVITATION));
+            if (sender.getRole() == MemberRole.TEACHER) {
+                return sender.getId();
+            }
             UUID teacherId = sender.getTeacherId();
             if (teacherId == null) {
                 throw new BusinessException(RsCode.INVALID_INVITATION);

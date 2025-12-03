@@ -1385,3 +1385,172 @@ TODO_UPDATE
   - docs/todo/v1.4.md
 - 다음 단계
   - Phase 2 완료 후 다음 Phase로 넘어갈 준비를 한다.
+
+## [2025-11-29 00:10] TODO 상태: Auth Epic 정리
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 "Auth 서비스 (Spring Security + JWT + 초대 검증)" Epic과 하위 항목, 그리고 Auth & Security Epic의 “Teacher 회원가입/로그인 API”를 완료(✅)로 정리했다.
+
+### Details
+- 작업 사유
+  - 회원가입/로그인/Refresh/로그아웃/초대 기반 가입 등 Auth 관련 작업이 모두 끝났기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - Phase 3 혹은 다른 우선순위 작업을 선택한다.
+
+## [2025-11-29 00:15] Auth & Security 초대 API 상위 PLAN
+
+### Type
+DESIGN
+
+### Summary
+- Auth & Security Epic 관점에서 초대 기반 가입/검증 API 요구와 확장 포인트를 정리한 `docs/plan/auth-invitation_api_plan.md`를 작성했다.
+
+### Details
+- 작업 사유
+  - TODO 항목(Invitation 기반 가입/검증 API)을 상위 Epic에서 관리하기 위한 기준 문서를 마련.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/auth-invitation_api_plan.md (신규)
+- 다음 단계
+  - 계획에 맞춰 초대 생성/관리 API PLAN을 이어서 작성한다.
+
+## [2025-11-29 00:20] TODO 업데이트: 초대 생성/프런트 PoC 작업 추가
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2에 “Invitation 생성/관리 API” Epic을 추가하고, Auth & Security Epic 항목을 완료 처리했다. 또한 Auth 문서/UX 섹션에 초대 기반 E2E 프런트 PoC 작업을 추가했다.
+
+### Details
+- 작업 사유
+  - Requirement/Spec v1.2 기반 초대 생성/취소 API와 초대 흐름 프런트 검증 작업이 아직 남아 있기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - 새로운 Epic에 대한 PLAN을 수립하고 구현을 진행한다.
+
+## [2025-11-29 00:25] Invitation 생성/관리 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant 초대 생성/목록/취소 API 요구사항을 정의한 `docs/plan/invitation-management_plan.md`를 작성했다.
+
+### Details
+- 작업 사유
+  - TODO에 추가된 “Invitation 생성/관리 API” Epic을 시작하기 이전에 기능 범위와 TDD 전략을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/invitation-management_plan.md (신규)
+- 다음 단계
+  - PLAN에 따라 실제 초대 생성/목록/취소 API를 구현한다.
+
+## [2025-11-29 00:27] Invitation PLAN: 입력 필드 정리
+
+### Type
+DESIGN
+
+### Summary
+- 초대 생성 API에서 note/만료 기간 입력을 제거하고, 시스템 기본 만료값만 사용하도록 PLAN을 수정했다.
+
+### Details
+- 작업 사유
+  - 사용자 피드백에 따라 초대 요청 시 별도 만료 기간이나 메모를 받지 않도록 설계를 단순화.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/invitation-management_plan.md
+- 다음 단계
+  - 변경된 요구사항에 맞춰 구현을 진행한다.
+
+## [2025-11-29 00:29] Invitation PLAN: 역할별 입력 조건 보완
+
+### Type
+DESIGN
+
+### Summary
+- Teacher→Assistant 초대는 email만 입력하고, Assistant→Student 초대는 `studentProfileId` + email을 요구하도록 PLAN을 수정했다.
+
+### Details
+- 작업 사유
+  - UI/요구사항에 따라 학생 초대 시 특정 StudentProfile과 이메일을 매칭해야 함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/invitation-management_plan.md
+- 다음 단계
+  - 수정된 요구사항에 맞춰 구현을 진행한다.
+
+## [2025-11-29 01:25] Invitation PLAN: 학생 초대 권한/검증 수정
+
+### Type
+DESIGN
+
+### Summary
+- 학생 초대 API를 Teacher와 Assistant 모두 사용할 수 있도록 하고, StudentProfile 이메일 일치 검증 요구를 제거하도록 PLAN을 업데이트했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청에 따라 학생 초대 절차에서 이메일 매칭을 강제하지 않고 Teacher도 직접 학생을 초대할 수 있어야 함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/invitation-management_plan.md
+- 다음 단계
+  - 구현 로직과 테스트를 해당 요구에 맞게 조정한다.
+
+## [2025-11-29 01:21] Invitation 생성/관리 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/Assistant 초대 생성·목록·취소 API를 추가하고, InvitationService/Controller/DTO, 테스트를 구현했다.
+
+### Details
+- 작업 사유
+  - Requirement/Spec에 정의된 Invitation CRUD 흐름을 실제 API로 제공하기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/invitation/application/InvitationService.java (신규)
+  - backend/src/main/java/com/classhub/domain/invitation/web/InvitationController.java (신규)
+  - backend/src/main/java/com/classhub/domain/invitation/dto/** (신규)
+  - backend/src/main/java/com/classhub/domain/invitation/repository/InvitationRepository.java
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/test/java/com/classhub/domain/invitation/application/InvitationServiceTest.java (신규)
+  - backend/src/test/java/com/classhub/domain/invitation/web/InvitationControllerTest.java (신규)
+  - backend/src/test/java/com/classhub/domain/auth/application/InvitationAuthServiceTest.java (간접 영향 없음)
+- 다음 단계
+  - 초대 만료 정리 로직 및 프런트 PoC 작업을 준비한다.
+
+## [2025-11-29 01:22] TODO 상태: Invitation 생성/관리 API 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Invitation 생성/관리 Epic에서 초대 생성/목록/취소 작업을 완료(✅)로 표시하고 Auth & Security Epic도 전부 ✅로 정리했다.
+
+### Details
+- 작업 사유
+  - 초대 관련 API 구현이 끝났기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - 남은 "초대 만료/정리 로직" 및 Auth 문서/프런트 작업을 진행한다.
