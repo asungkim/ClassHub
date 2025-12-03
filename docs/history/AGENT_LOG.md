@@ -1554,3 +1554,197 @@ TODO_UPDATE
   - docs/todo/v1.4.md
 - 다음 단계
   - 남은 "초대 만료/정리 로직" 및 Auth 문서/프런트 작업을 진행한다.
+
+## [2025-12-03 15:20] TODO 업데이트: Invitation & Auth E2E 준비
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 초대/인증 관련 Epic을 E2E 준비 방향으로 재구성하고, StudentProfile / 프런트 PoC / Playwright 데모 작업을 추가했다.
+
+### Details
+- 작업 사유
+  - 초대→로그인→회원가입→로그아웃 흐름을 실제 프런트/테스트로 검증하기 위해 StudentProfile 선행 작업과 데모 준비가 필요하다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.4.md
+- 다음 단계
+  - StudentProfile PLAN 작성 및 구현부터 시작한다.
+
+## [2025-12-03 15:25] TODO v1.5 정리
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.5.md`를 추가해 Phase 2를 StudentProfile/E2E 검증 중심으로 재편하고, Phase3~6 로드맵(핵심 기능, 리팩토링, 배포, 프론트 디자인)을 새롭게 정의했다.
+
+### Details
+- 작업 사유
+  - Auth/Invitation 기능을 실제 프론트에서 검증하기 위한 우선순위를 반영하고, 이후 Phase 작업 순서를 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md (신규)
+- 다음 단계
+  - Phase 2의 StudentProfile PLAN을 작성하고 구현에 착수한다.
+
+## [2025-12-03 16:01] TODO 상태: StudentProfile & PersonalLesson 작업 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 "StudentProfile 엔티티 + Repository + CRUD (Teacher 전용), PersonalLesson 개발" 작업을 진행 상태(🔄)로 변경하고, 다음 단계 계획을 명확히 했다.
+
+### Details
+- 작업 사유
+  - "go" 명령에 따라 Phase 2의 첫 번째 대기 작업을 시작했음을 기록하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - StudentProfile & PersonalLesson 설계 문서를 작성하고 사용자 검토를 기다린다.
+
+## [2025-12-03 16:01] StudentProfile & PersonalLesson 설계 문서 초안
+
+### Type
+DESIGN
+
+### Summary
+- StudentProfile/PersonalLesson 요구사항과 API/도메인/TDD 전략을 정의한 `docs/plan/studentprofile-personallesson_plan.md` 초안을 작성했다.
+
+### Details
+- 작업 사유
+  - TODO에서 정의된 기능 구현 전에 PLAN 작성이 선행되어야 하므로 요구/스펙을 구조화하였다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/studentprofile-personallesson_plan.md (신규)
+- 다음 단계
+  - 설계 문서 리뷰/승인 후 TDD 및 구현을 진행한다.
+
+## [2025-12-03 16:10] StudentProfile PLAN 요구사항 반영
+
+### Type
+DESIGN
+
+### Summary
+- StudentProfile 필수/선택 필드를 사용자 요청대로 조정하고, 담당 조교/학번/초대 연동 정책을 설계 문서(`docs/plan/studentprofile-personallesson_plan.md`)에 반영했다.
+
+### Details
+- 작업 사유
+  - 부모 이름 필수 제거, 학생 번호·담당 조교 필수 추가, memberId/defaultClinicSlotId 동작 명시 등 요구사항을 수용하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/studentprofile-personallesson_plan.md
+- 다음 단계
+  - 문서 승인을 받은 뒤 StudentProfile/PersonalLesson TDD를 시작한다.
+
+## [2025-12-03 16:24] TODO 상태: StudentProfile & PersonalLesson 구현 완료
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 "StudentProfile 엔티티 + Repository + CRUD (Teacher 전용), PersonalLesson 개발" 작업을 완료(✅)로 표시하고 후속 데이터 시드/프런트 작업을 준비할 수 있게 했다.
+
+### Details
+- 작업 사유
+  - StudentProfile/PersonalLesson 백엔드 구현 및 테스트를 마쳤기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - 남은 Phase 2 작업(시드/프런트 PoC 등)을 진행한다.
+
+## [2025-12-03 16:24] StudentProfile & PersonalLesson 도메인/CRUD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Course/StudentProfile/PersonalLesson 엔티티·레포·서비스·컨트롤러를 추가하고 Teacher 중심 CRUD + 검색/PersonalLesson 기록 기능을 구현했다.
+
+### Details
+- 작업 사유
+  - 초대 이후 학생 정보를 관리하고 개별 진도 기록을 남길 수 있는 Requirement v1.2 기능을 제공하기 위함.
+- 영향받은 테스트
+  - `./gradlew test` (Gradle 배포본 다운로드 시 네트워크 제한으로 실행 불가, 수동 검증 필요)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/course/model/Course.java (신규)
+  - backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java (신규)
+  - backend/src/main/java/com/classhub/domain/studentprofile/** (신규 서비스/엔티티/DTO/컨트롤러)
+  - backend/src/main/java/com/classhub/domain/personallesson/** (신규 서비스/엔티티/DTO/컨트롤러)
+  - backend/src/main/java/com/classhub/global/response/PageResponse.java (신규)
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/** (신규)
+  - backend/src/test/java/com/classhub/domain/personallesson/** (신규)
+- 다음 단계
+  - Gradle 배포본이 준비된 환경에서 테스트를 실행하고, 프런트 데모/시드 데이터 작업으로 이어간다.
+
+## [2025-12-03 16:55] PersonalLesson↔StudentProfile 연관관계 및 DTO 패키지 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- PersonalLesson이 StudentProfile을 `@ManyToOne`으로 참조하도록 리팩터링하고, StudentProfile/PersonalLesson DTO를 request/response 패키지로 분리했다.
+
+### Details
+- 작업 사유
+  - PersonalLesson이 학생 프로필과 강하게 결합돼 있어 FK 무결성과 Lazy 로딩을 활용할 수 있도록 엔티티 연관관계를 명확히 하고, DTO 패키지 구조를 일관성 있게 정리하기 위함.
+- 영향받은 테스트
+  - `GRADLE_USER_HOME=./.gradle ./gradlew test` (Gradle 배포본 다운로드 시 네트워크 차단으로 실행 불가)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/personallesson/** (엔티티, 레포, 서비스, 컨트롤러, DTO)
+  - backend/src/main/java/com/classhub/domain/studentprofile/dto/** (패키지 구조 변경)
+  - backend/src/test/java/com/classhub/domain/personallesson/**, backend/src/test/java/com/classhub/domain/studentprofile/** (패키지/관계 변경 반영)
+- 다음 단계
+  - 네트워크가 허용되는 환경에서 테스트를 실행하고 이후 기능 개발을 이어간다.
+
+## [2025-12-03 17:08] 테스트 실행 환경 정비 및 Gradle 테스트 통과
+
+### Type
+BUGFIX
+
+### Summary
+- 보안 필터 없이 `@AuthenticationPrincipal`을 모킹할 수 있도록 MockMvc 커스텀 필터와 RequestPostProcessor를 추가하고, 수동 JSON 직렬화로 `ObjectMapper` 의존 없이 컨트롤러 테스트를 재작성하여 `./gradlew test`가 통과하도록 했다.
+
+### Details
+- 작업 사유
+  - Gradle 테스트가 `AutoConfigureMockMvc`/Jackson 미존재 및 인증 주입 실패로 컴파일/실행되지 않아 CI를 막고 있었음.
+- 영향받은 테스트
+  - `GRADLE_USER_HOME=./.gradle ./gradlew test` (성공)
+- 수정한 파일
+  - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
+  - backend/src/test/java/com/classhub/domain/personallesson/web/PersonalLessonControllerTest.java
+  - backend/src/main/java/com/classhub/domain/personallesson/web/PersonalLessonController.java (PatchMapping import)
+- 다음 단계
+  - 향후 테스트 작성 시 동일한 MockMvc 헬퍼를 재사용하고, 필요 시 실제 JWT 인증 흐름으로 전환한다.
+
+## [2025-12-03 17:16] StudentProfile 필드 정리 및 나이/연락처 스펙 반영
+
+### Type
+STRUCTURAL
+
+### Summary
+- StudentProfile에서 `parentName`, `memo`, `studentNumber`를 정리하고 `phoneNumber` 및 `age`를 도입했으며, DTO/서비스/테스트/PLAN 문서를 모두 일관되게 업데이트했다.
+
+### Details
+- 작업 사유
+  - 최신 요구에 맞춰 학생 고유 식별을 전화번호로 통일하고, 나이 정보를 추가하며 불필요한 필드를 제거하기 위함.
+- 영향받은 테스트
+  - `GRADLE_USER_HOME=./.gradle ./gradlew test` (성공)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/studentprofile/** (모델/DTO/서비스/리포지토리/컨트롤러 응답)
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/** 및 backend/src/test/java/com/classhub/domain/personallesson/** (요청/검증 업데이트)
+  - docs/plan/studentprofile-personallesson_plan.md
+- 다음 단계
+  - 새로운 필드에 맞춰 프런트/기타 도메인 연동 시나리오를 점검한다.
