@@ -2,6 +2,8 @@ package com.classhub.global.init;
 
 import java.util.Comparator;
 import java.util.List;
+
+import com.classhub.global.init.data.BaseInitData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

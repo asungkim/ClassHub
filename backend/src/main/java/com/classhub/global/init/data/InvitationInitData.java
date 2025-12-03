@@ -1,4 +1,4 @@
-package com.classhub.global.init;
+package com.classhub.global.init.data;
 
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;
@@ -9,7 +9,9 @@ import com.classhub.domain.studentprofile.model.StudentProfile;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Optional;
+
+import com.classhub.global.init.BootstrapSeedContext;
+import com.classhub.global.init.SeedKeys;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

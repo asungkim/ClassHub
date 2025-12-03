@@ -1,10 +1,13 @@
-package com.classhub.global.init;
+package com.classhub.global.init.data;
 
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.model.Member;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.classhub.global.init.BootstrapSeedContext;
+import com.classhub.global.init.SeedKeys;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

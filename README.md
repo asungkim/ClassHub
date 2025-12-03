@@ -79,6 +79,14 @@ flowchart TD
 - 각 Teacher는 3개의 Course와 30개의 StudentProfile을 보유하며, StudentProfile마다 PersonalLesson 3건이 생성된다.
 - Invitation 시드는 Teacher→Assistant, Assistant→Student 케이스를 모두 포함하며 `STD-*/AST-*` 코드로 구분된다.
 
+## 프런트엔드 빠른 시작
+- `frontend/` 디렉터리는 Next.js 16 + React 19 + Tailwind 4 기반의 데모 앱 스캐폴딩이다.
+- 실행 절차
+  1. `cd frontend && npm install`
+  2. `.env.local` 생성 → `NEXT_PUBLIC_API_BASE_URL` 설정 (`.env.local.example` 참고)
+  3. `npm run dev` 로 http://localhost:3000 개발 서버 실행
+- 공용 API 래퍼는 `src/lib/apiClient.ts` 에서 제공하며, TODO에 따라 Auth/Invitation/StudentProfile 화면을 단계적으로 추가한다.
+
 ## 향후 포함 예정
 - 설치/실행 방법, 환경 변수, 로컬/배포 구성 예시
 - API 문서(Swagger/OpenAPI) 링크

@@ -1992,3 +1992,41 @@ TODO_UPDATE
   - docs/todo/v1.5.md
 - 다음 단계
   - 후속 프런트 데모/Playwright 시나리오 작업을 이어간다.
+
+## [2025-12-03 20:04] Frontend Bootstrap PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Next.js + Tailwind 기반 프런트 스캐폴딩 요구를 정의한 `docs/plan/frontend-bootstrap_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 2 TODO “간단한 프런트(Next.js)로 현재까지 만든 기능 테스트” 진행을 위한 설계 문서가 필요했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/frontend-bootstrap_plan.md (신규)
+- 다음 단계
+  - PLAN에 따라 frontend 프로젝트 생성 및 공용 API/Tailwind 설정을 구현한다.
+
+## [2025-12-03 20:06] Frontend Next.js 스캐폴딩 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `frontend/` 디렉터리에 Next.js 16 + React 19 + Tailwind 4 기반 프로젝트 구조를 추가하고, 공용 API 클라이언트/환경 변수 예시/문서화를 완료했다.
+
+### Details
+- 작업 사유
+  - Phase 2 TODO의 첫 하위 작업(프런트 스캐폴딩)을 완료해 이후 Auth/Invitation/StudentProfile 화면을 개발할 기반을 마련.
+- 영향받은 테스트
+  - N/A (Next.js 기본 구조, 실행은 로컬에서 `npm run dev`)
+- 수정한 파일
+  - frontend/** (package.json, tsconfig, app, src/lib/apiClient.ts, README 등)
+  - README.md (프런트 실행 가이드)
+  - docs/todo/v1.5.md (하위 작업 상태)
+- 다음 단계
+  - Auth/Invitation 화면과 StudentProfile/PersonalLesson UI를 추가하고 smoke 테스트/문서화를 이어간다.

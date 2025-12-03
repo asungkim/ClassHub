@@ -1,4 +1,4 @@
-package com.classhub.global.init;
+package com.classhub.global.init.data;
 
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
@@ -6,6 +6,9 @@ import com.classhub.domain.member.repository.MemberRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.classhub.global.init.BootstrapSeedContext;
+import com.classhub.global.init.SeedKeys;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.classhub.global.init;
+package com.classhub.global.init.data;
 
 import com.classhub.domain.personallesson.model.PersonalLesson;
 import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import com.classhub.global.init.BootstrapSeedContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
