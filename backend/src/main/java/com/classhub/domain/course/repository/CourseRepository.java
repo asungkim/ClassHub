@@ -11,5 +11,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
 
     Optional<Course> findByIdAndTeacherId(UUID id, UUID teacherId);
 
+    Optional<Course> findByNameIgnoreCaseAndTeacherId(String name, UUID teacherId);
+
     boolean existsByIdAndTeacherId(UUID id, UUID teacherId);
 }

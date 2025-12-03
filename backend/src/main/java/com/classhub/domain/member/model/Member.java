@@ -48,6 +48,18 @@ public class Member extends BaseEntity {
         this.password = encodedPassword;
     }
 
+    public void changeName(String name) {
+        if (name != null) {
+            this.name = name;
+        }
+    }
+
+    public void changeRole(MemberRole role) {
+        if (role != null) {
+            this.role = role;
+        }
+    }
+
     public void assignTeacher(UUID teacherId) {
         this.teacherId = teacherId;
     }

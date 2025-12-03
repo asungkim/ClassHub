@@ -25,4 +25,6 @@ public interface PersonalLessonRepository extends JpaRepository<PersonalLesson, 
     );
 
     Optional<PersonalLesson> findByIdAndTeacherId(UUID id, UUID teacherId);
+
+    Optional<PersonalLesson> findByStudentProfile_IdAndDate(UUID studentProfileId, LocalDate date);
 }

@@ -1900,3 +1900,95 @@ TODO_UPDATE
   - docs/todo/v1.5.md
 - 다음 단계
   - StudentProfile 시드/업데이트 작업을 준비한다.
+
+## [2025-12-03 18:34] Bootstrap Data PLAN 초안
+
+### Type
+DESIGN
+
+### Summary
+- StudentProfile 기반 데이터 시드/업데이트 흐름의 범위를 정의하고, Member/Teacher/Assistant/StudentProfile/PersonalLesson을 자동 주입할 `BootstrapDataRunner` 설계를 `docs/plan/bootstrap-data_plan.md`로 정리했다.
+
+### Details
+- 작업 사유
+  - TODO Phase 2에서 요구한 seed/업데이트 작업을 시작하려면 어떤 데이터 세트를 언제/어떻게 생성할지 먼저 문서로 확정해야 한다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/bootstrap-data_plan.md (신규)
+- 다음 단계
+  - PLAN 내용을 기반으로 Runner/Fixture 구현 및 TODO 진행 상황을 업데이트한다.
+
+## [2025-12-03 18:41] Bootstrap Data PLAN 피드백 반영
+
+### Type
+DESIGN
+
+### Summary
+- global.init 패키지/`BaseInitData` 구성, Teacher별 Assistant 3명·Course 3개·StudentProfile 30명·PersonalLesson 3건씩 생성 요구, Course 단순 조회 용도 등의 피드백을 `docs/plan/bootstrap-data_plan.md`에 반영했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청에 따라 seed 데이터 규모와 패키지 구조를 구체화해야 다음 구현 단계가 명확해졌다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/bootstrap-data_plan.md
+- 다음 단계
+  - 확정된 PLAN에 맞춰 global.init Runner/Fixture를 구현한다.
+
+## [2025-12-03 18:47] Bootstrap Runner 순서 정비
+
+### Type
+DESIGN
+
+### Summary
+- Invitation이 StudentProfile 정보를 참조하도록 명확히 하기 위해 `docs/plan/bootstrap-data_plan.md`에서 Runner 실행 순서를 Member → Course → StudentProfile → Invitation → PersonalLesson으로 조정했다.
+
+### Details
+- 작업 사유
+  - 초대 데이터가 StudentProfile을 참조해야 해 이전 순서대로면 FK 매핑이 불가능했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/bootstrap-data_plan.md
+- 다음 단계
+  - 조정된 순서를 기준으로 Runner/Fixture 구현을 진행한다.
+
+## [2025-12-03 18:53] Bootstrap 데이터 러너 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `global.init` 패키지에 BaseInitData/Runner/Context와 Member·Course·StudentProfile·Invitation·PersonalLesson 시드를 추가하고, local/dev 프로필에서만 실행되는 부트스트랩 플로우를 완성했다.
+
+### Details
+- 작업 사유
+  - Phase 2의 StudentProfile 기반 데이터 시드/업데이트 흐름을 자동화해 Swagger/프런트/E2E 검증용 데이터를 즉시 확보해야 했다.
+- 영향받은 테스트
+  - `GRADLE_USER_HOME=../.gradle ./gradlew test` (Gradle 배포본 다운로드가 네트워크 차단으로 실패)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/** (Member/StudentProfile/Invitation 모델, Course/StudentProfile/PersonalLesson Repository)
+  - backend/src/main/java/com/classhub/global/init/** (BaseInitData, Runner, Seed Context 및 도메인별 InitData)
+  - backend/src/main/resources/application-local.yml, README.md
+- 다음 단계
+  - 네트워크 접근이 가능한 환경에서 테스트를 실행해 시드 로직을 검증하고, 필요 시 추가 Fixture나 force 옵션을 조정한다.
+
+## [2025-12-03 18:53] TODO 완료: 기초 데이터 저장
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Invitation & Auth E2E 준비 Epic의 “기초 데이터 저장” 작업을 완료로 표시했다.
+
+### Details
+- 작업 사유
+  - Bootstrap Runner 구현으로 요구된 시드/업데이트 흐름이 완료되었다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - 후속 프런트 데모/Playwright 시나리오 작업을 이어간다.

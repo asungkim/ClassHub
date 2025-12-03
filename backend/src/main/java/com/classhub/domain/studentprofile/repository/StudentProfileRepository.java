@@ -38,4 +38,6 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
     boolean existsByTeacherIdAndCourseIdAndPhoneNumberIgnoreCase(UUID teacherId, UUID courseId, String phoneNumber);
 
     boolean existsByMemberId(UUID memberId);
+
+    Optional<StudentProfile> findByCourseIdAndPhoneNumberIgnoreCase(UUID courseId, String phoneNumber);
 }

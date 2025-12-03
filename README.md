@@ -67,6 +67,18 @@ flowchart TD
 ## 작업 방식(요약)
 - “go” → TODO 순서대로 다음 Task 선택 → `*_plan.md` 작성(+ 한국어 요약) → 승인 → TDD(레드/그린/리팩터) → 커밋은 구조/행위 분리 → AGENT_LOG 기록
 
+## 로컬 부트스트랩 데이터
+- `local`, `dev` 프로필에서 `global.init.BootstrapDataRunner`가 자동 실행되어 기본 계정/코스/학생/진도 데이터를 주입한다.
+- 속성: `bootstrap.data.enabled=true`, `bootstrap.data.force=false` (필요 시 `application-local.yml`에서 제어).
+- 공통 비밀번호: `Classhub!234`
+- 계정
+  - SuperAdmin: `admin@classhub.dev`
+  - Teacher: `teacher_alpha@classhub.dev`, `teacher_beta@classhub.dev`
+  - Assistant: `assistant_alpha_{1..3}@classhub.dev`, `assistant_beta_{1..3}@classhub.dev`
+  - Student 계정 샘플: `student_alpha_main@classhub.dev`, `student_beta_main@classhub.dev`
+- 각 Teacher는 3개의 Course와 30개의 StudentProfile을 보유하며, StudentProfile마다 PersonalLesson 3건이 생성된다.
+- Invitation 시드는 Teacher→Assistant, Assistant→Student 케이스를 모두 포함하며 `STD-*/AST-*` 코드로 구분된다.
+
 ## 향후 포함 예정
 - 설치/실행 방법, 환경 변수, 로컬/배포 구성 예시
 - API 문서(Swagger/OpenAPI) 링크

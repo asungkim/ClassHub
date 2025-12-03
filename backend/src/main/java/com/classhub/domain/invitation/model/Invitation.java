@@ -65,4 +65,28 @@ public class Invitation extends BaseEntity {
         }
         return false;
     }
+
+    public void refresh(
+            UUID senderId,
+            UUID studentProfileId,
+            String targetEmail,
+            InvitationRole inviteeRole,
+            InvitationStatus status,
+            LocalDateTime expiredAt
+    ) {
+        this.senderId = senderId;
+        this.studentProfileId = studentProfileId;
+        if (targetEmail != null) {
+            this.targetEmail = targetEmail;
+        }
+        if (inviteeRole != null) {
+            this.inviteeRole = inviteeRole;
+        }
+        if (status != null) {
+            this.status = status;
+        }
+        if (expiredAt != null) {
+            this.expiredAt = expiredAt;
+        }
+    }
 }
