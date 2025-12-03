@@ -6,6 +6,8 @@ import com.classhub.domain.personallesson.dto.response.PersonalLessonSummary;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/student-profiles/{profileId}/personal-lessons")
 @RequiredArgsConstructor
+@Tag(name = "Student PersonalLesson API", description = "학생별 개별 진도 조회 API")
 public class StudentPersonalLessonController {
 
     private final PersonalLessonService personalLessonService;
 
     @GetMapping
+    @Operation(summary = "학생별 PersonalLesson 목록", description = "특정 학생 프로필에 대한 개별 진도를 조회한다.")
     public RsData<PageResponse<PersonalLessonSummary>> getLessonsByProfile(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable("profileId") UUID profileId,

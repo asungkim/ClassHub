@@ -5,6 +5,8 @@ import com.classhub.domain.studentprofile.application.StudentProfileService;
 import com.classhub.domain.studentprofile.dto.response.StudentProfileSummary;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/courses/{courseId}/students")
 @RequiredArgsConstructor
+@Tag(name = "Course Student API", description = "Course별 학생 목록 조회")
 public class CourseStudentProfileController {
 
     private final StudentProfileService studentProfileService;
 
     @GetMapping
+    @Operation(summary = "Course 학생 목록", description = "Course ID 기준으로 학생 프로필 요약을 조회한다.")
     public RsData<List<StudentProfileSummary>> getStudentsByCourse(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable UUID courseId

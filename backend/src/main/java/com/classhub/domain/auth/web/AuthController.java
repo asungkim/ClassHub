@@ -13,6 +13,8 @@ import com.classhub.domain.auth.dto.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.TeacherRegisterResponse;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,12 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth API", description = "회원 가입/로그인/토큰 관련 API")
 public class AuthController {
 
     private final AuthService authService;
     private final InvitationAuthService invitationAuthService;
 
     @PostMapping("/register/teacher")
+    @Operation(summary = "Teacher 회원가입", description = "Teacher 계정을 등록한다.")
     public RsData<TeacherRegisterResponse> registerTeacher(
             @Valid @RequestBody TeacherRegisterRequest request
     ) {
@@ -37,6 +41,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "로그인", description = "이메일/비밀번호로 Access/Refresh 토큰을 발급한다.")
     public RsData<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
@@ -45,6 +50,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "토큰 재발급", description = "Refresh 토큰으로 Access 토큰을 재발급한다.")
     public RsData<LoginResponse> refresh(
             @Valid @RequestBody RefreshRequest request
     ) {
@@ -53,6 +59,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "갱신 토큰을 만료 처리한다.")
     public RsData<Void> logout(
             @Valid @RequestBody LogoutRequest request
     ) {
@@ -61,6 +68,7 @@ public class AuthController {
     }
 
     @PostMapping("/invitations/verify")
+    @Operation(summary = "초대 코드 검증", description = "초대 코드 유효성을 확인한다.")
     public RsData<InvitationVerifyResponse> verifyInvitation(
             @Valid @RequestBody InvitationVerifyRequest request
     ) {
@@ -69,6 +77,7 @@ public class AuthController {
     }
 
     @PostMapping("/register/invited")
+    @Operation(summary = "초대 기반 회원가입", description = "초대 코드를 통한 회원가입을 처리한다.")
     public RsData<LoginResponse> registerInvited(
             @Valid @RequestBody InvitationRegisterRequest request
     ) {

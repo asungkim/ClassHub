@@ -1748,3 +1748,114 @@ STRUCTURAL
   - docs/plan/studentprofile-personallesson_plan.md
 - 다음 단계
   - 새로운 필드에 맞춰 프런트/기타 도메인 연동 시나리오를 점검한다.
+
+## [2025-12-03 17:47] TODO 업데이트: Swagger 구축 작업 추가
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 Invitation & Auth E2E 준비 목록에 SpringDoc 기반 Swagger UI 구축 작업을 추가했다.
+
+### Details
+- 작업 사유
+  - 각 API를 직접 호출/검증할 수 있도록 문서화 및 테스트 UI가 필요하다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - Swagger 설정 PLAN/TODO를 작성하고 구현을 진행한다.
+
+## [2025-12-03 17:49] TODO 착수 변경: Swagger 구축
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2에서 Swagger 구축 작업을 진행 상태(🔄)로, StudentProfile 데이터 시드 작업은 다시 대기로 조정했다.
+
+### Details
+- 작업 사유
+  - 사용자가 “다음 작업”으로 Swagger를 지목했기 때문에 우선순위를 재정렬했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - Swagger PLAN 문서를 작성하고 구현을 시작한다.
+
+## [2025-12-03 17:50] Swagger 구축 PLAN 초안
+
+### Type
+DESIGN
+
+### Summary
+- SpringDoc 기반 Swagger UI 구성 목표, 요구사항, 설정 전략, TDD 계획을 정리한 `docs/plan/swagger_plan.md`를 작성했다.
+
+### Details
+- 작업 사유
+  - API를 직접 호출/검증할 수 있는 자동 문서/테스트 UI가 필요해 단계별 계획이 요구되었다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/swagger_plan.md (신규)
+- 다음 단계
+  - 계획에 따라 SpringDoc 의존성과 설정을 추가하고, 테스트/보안 정책을 구현한다.
+
+## [2025-12-03 17:59] Swagger UI 및 OpenAPI 문서화 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- SpringDoc(OpenAPI 3) 의존성을 추가하고 `SwaggerConfig`, Security 허용 정책, 컨트롤러 Tag/Operation 메타를 구성해 Swagger UI에서 모든 API를 호출할 수 있도록 했다.
+
+### Details
+- 작업 사유
+  - API를 직접 호출·검증하려는 요구에 맞춰 자동 문서와 테스트 UI를 제공하기 위함.
+- 영향받은 테스트
+  - `GRADLE_USER_HOME=./.gradle ./gradlew test`
+- 수정한 파일
+  - backend/build.gradle
+  - backend/src/main/java/com/classhub/global/config/SwaggerConfig.java (신규)
+  - backend/src/main/java/com/classhub/global/config/SecurityConfig.java
+  - backend/src/main/java/com/classhub/domain/**/web/*.java (Auth, Invitation, StudentProfile, CourseStudent, PersonalLesson, StudentPersonalLesson, Sample)
+- 다음 단계
+  - 필요 시 운영 프로필 접근 제어/문서 자동 배포 정책을 정비한다.
+
+## [2025-12-03 17:59] TODO 완료: Swagger 구축
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2의 "SpringDoc 기반 Swagger UI 구축 및 API 스펙 자동화" 작업을 ✅로 표시했다.
+
+### Details
+- 작업 사유
+  - Swagger 구축 구현이 완료되었기 때문.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - 다음 우선순위인 StudentProfile 시드/업데이트 흐름 작업을 준비한다.
+
+## [2025-12-03 18:15] Swagger All 그룹 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- SwaggerConfig에 모든 엔드포인트를 한 번에 보여주는 `All` 그룹을 추가해 Swagger UI에서 전체 API를 한 화면에서 볼 수 있도록 했다.
+
+### Details
+- 작업 사유
+  - 각 그룹을 개별로 클릭하지 않고 전체 엔드포인트를 빠르게 확인하고자 하는 요구를 반영했다.
+- 영향받은 테스트
+  - N/A (구성 변경)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/global/config/SwaggerConfig.java
+- 다음 단계
+  - 필요 시 UI 기본 그룹을 `All`로 설정하거나 문서 가이드를 추가한다.
