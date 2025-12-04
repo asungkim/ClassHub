@@ -2506,3 +2506,64 @@ DESIGN
   - `CLAUDE.md`
 - 다음 단계
   - 프런트 PLAN/구현 공유 시 새로운 지침을 준수하며 단계별 설명을 제공한다.
+
+## [2025-12-04 12:37] Auth PLAN 업데이트 - GET /auth/me 추가
+
+### Type
+DESIGN
+
+### Summary
+- 프런트 세션 컨텍스트 요구에 맞춰 `auth-core_plan.md`에 `GET /api/v1/auth/me` 기능을 추가하고, API/TDD 항목에 해당 내용을 반영했다.
+
+### Details
+- 작업 사유
+  - React Query 기반 SessionProvider가 현재 사용자 정보를 표준 방식으로 조회할 엔드포인트가 필요해 기존 Auth PLAN에 self-lookup API를 명시했다.
+- 영향받은 테스트
+  - N/A (계획 수정)
+- 수정한 파일
+  - `docs/plan/backend/auth-core_plan.md`
+- 다음 단계
+  - PLAN을 기준으로 AuthController/Service에 `/auth/me` 엔드포인트를 구현하고 관련 테스트를 추가한다.
+
+## [2025-12-04 12:43] Auth self-lookup API 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `GET /api/v1/auth/me` 엔드포인트를 도입해 Access 토큰 기준으로 현재 로그인한 사용자의 식별자/역할 정보를 제공한다.
+- AuthService에 현재 사용자 조회 메서드와 `MeResponse` DTO를 추가하고, MockMvc 테스트로 성공/401 흐름을 검증했다.
+
+### Details
+- 작업 사유
+  - 프런트 SessionProvider가 백엔드에서 현재 사용자를 표준 방식으로 조회할 API가 없어 세션 동기화가 불가능했다.
+- 영향받은 테스트
+  - `AuthControllerTest` (MockMvc) — ✅ (새 케이스 작성, Gradle wrapper 부재로 로컬 실행은 생략)
+- 수정한 파일
+  - `backend/src/main/java/com/classhub/domain/auth/{application/AuthService.java,dto/response/MeResponse.java,web/AuthController.java}`
+  - `backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java`
+- 다음 단계
+  - 프런트 `SessionProvider`가 `/auth/me` 응답을 사용하도록 UI foundation 작업을 진행한다.
+
+## [2025-12-04 15:55] 프런트 UI Foundation 1차 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 루트 레이아웃에 공통 Notification/Portal 레이어와 ErrorBoundary를 추가해 모든 페이지가 동일한 구조에서 렌더링되도록 했다.
+- React Query 기반 `SessionProvider`/`useSession` 훅을 구현해 `/api/v1/auth/me` 응답을 컨텍스트에 보관하고, mock 토큰/토큰 갱신 API와 연동할 수 있게 했다.
+- ErrorState·InlineError 컴포넌트와 글로벌 QueryCache onError 핸들러를 추가해 인증 오류/예상치 못한 예외를 일관되게 처리한다.
+
+### Details
+- 작업 사유
+  - TODO Phase 2의 “공통 레이아웃·세션 상태·에러 처리 컴포넌트 정비” 항목을 완료해 이후 Auth/Invitation 화면 구현 시 재사용 가능한 기반을 마련하려 함.
+- 영향받은 테스트
+  - N/A (프런트 빌드/테스트 미실행, Next dev 환경에서 수동 확인 예정)
+- 수정한 파일
+  - `frontend/src/app/{layout.tsx,providers.tsx}`
+  - `frontend/src/components/session/session-provider.tsx`
+  - `frontend/src/components/ui/{app-error-boundary.tsx,error-state.tsx,inline-error.tsx}`
+  - `docs/todo/v1.5.md`
+- 다음 단계
+  - Auth/Invitation / StudentProfile 페이지에서 `useSession`과 에러 컴포넌트를 활용하도록 UI 작업을 진행하고, 필요 시 토큰 저장/로그인 흐름을 세분화한다.

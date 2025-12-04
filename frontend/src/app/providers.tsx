@@ -1,20 +1,42 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
+import { SessionProvider } from "@/components/session/session-provider";
+import { clearAuthToken } from "@/lib/api";
+
+function createQueryClient() {
+  let client: QueryClient | null = null;
+
+  const queryCache = new QueryCache({
+    onError: (error) => {
+      const status = (error as { status?: number }).status;
+      if (status === 401 || status === 419) {
+        clearAuthToken();
+        client?.invalidateQueries({ queryKey: ["session", "current"] }).catch(() => {});
+      }
+    }
+  });
+
+  client = new QueryClient({
+    queryCache,
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        refetchOnWindowFocus: false
+      }
+    }
+  });
+
+  return client;
+}
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000,
-            refetchOnWindowFocus: false
-          }
-        }
-      })
-  );
+  const [queryClient] = useState(createQueryClient);
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>{children}</SessionProvider>
+    </QueryClientProvider>
+  );
 }

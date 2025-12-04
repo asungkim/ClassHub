@@ -5,6 +5,7 @@ import com.classhub.domain.auth.dto.request.LogoutRequest;
 import com.classhub.domain.auth.dto.request.RefreshRequest;
 import com.classhub.domain.auth.dto.request.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.response.LoginResponse;
+import com.classhub.domain.auth.dto.response.MeResponse;
 import com.classhub.domain.auth.dto.response.TeacherRegisterResponse;
 import com.classhub.domain.auth.token.RefreshTokenStore;
 import com.classhub.domain.member.model.Member;
@@ -14,6 +15,7 @@ import com.classhub.global.exception.BusinessException;
 import com.classhub.global.jwt.JwtProvider;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,6 +88,13 @@ public class AuthService {
         } else if (!refreshTokenStore.isBlacklisted(token)) {
             refreshTokenStore.blacklist(token, jwtProvider.getExpiration(token));
         }
+    }
+
+    @Transactional(readOnly = true)
+    public MeResponse getCurrentMember(UUID memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));
+        return MeResponse.from(member);
     }
 
     private LoginResponse issueTokens(Member member) {

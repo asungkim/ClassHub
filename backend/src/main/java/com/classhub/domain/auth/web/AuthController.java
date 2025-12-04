@@ -10,13 +10,18 @@ import com.classhub.domain.auth.dto.request.RefreshRequest;
 import com.classhub.domain.auth.dto.request.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.response.InvitationVerifyResponse;
 import com.classhub.domain.auth.dto.response.LoginResponse;
+import com.classhub.domain.auth.dto.response.MeResponse;
 import com.classhub.domain.auth.dto.response.TeacherRegisterResponse;
+import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +35,16 @@ public class AuthController {
 
     private final AuthService authService;
     private final InvitationAuthService invitationAuthService;
+
+    @GetMapping("/me")
+    @Operation(summary = "현재 로그인한 사용자 정보 조회", description = "Access 토큰 기준으로 현재 사용자의 식별자/역할을 조회한다.")
+    public RsData<MeResponse> me(@AuthenticationPrincipal MemberPrincipal principal) {
+        if (principal == null) {
+            throw new BusinessException(RsCode.UNAUTHENTICATED);
+        }
+        MeResponse response = authService.getCurrentMember(principal.id());
+        return RsData.from(RsCode.SUCCESS, response);
+    }
 
     @PostMapping("/register/teacher")
     @Operation(summary = "Teacher 회원가입", description = "Teacher 계정을 등록한다.")

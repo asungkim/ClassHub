@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { Providers } from "./providers";
 import { NavigationBar } from "@/components/ui/navigation-bar";
 import { Footer } from "@/components/ui/footer";
+import { AppErrorBoundary } from "@/components/ui/app-error-boundary";
 
 const navItems = [
   { label: "홈", href: "/" },
@@ -48,10 +49,22 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ko">
       <body className="bg-slate-950 text-slate-50 antialiased">
         <Providers>
-          <div className="min-h-screen bg-gradient-to-br from-[#e8eaff] via-[#f5e6ff] to-[#ffe6f5]">
+          <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#e8eaff] via-[#f5e6ff] to-[#ffe6f5]">
             <NavigationBar navItems={navItems} ctaLabel="대시보드 열기" ctaHref="#" />
-            <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+            <AppErrorBoundary>
+              <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">{children}</main>
+            </AppErrorBoundary>
             <Footer sections={footerSections} />
+
+            <div
+              id="notification-layer"
+              className="pointer-events-none fixed inset-x-0 top-16 z-40 flex justify-center px-4"
+              aria-live="assertive"
+            >
+              <div className="w-full max-w-lg space-y-3" />
+            </div>
+            <div id="portal-toast-root" className="fixed inset-0 z-50 pointer-events-none" />
+            <div id="portal-modal-root" className="fixed inset-0 z-50 pointer-events-none" />
           </div>
         </Providers>
       </body>

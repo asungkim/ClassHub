@@ -1,6 +1,7 @@
 package com.classhub.domain.auth.web;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -158,6 +159,37 @@ class AuthControllerTest {
                         .content(payload))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    @DisplayName("유효한 Access 토큰으로 /auth/me를 호출하면 현재 사용자 정보를 반환한다")
+    void me_success() throws Exception {
+        createTeacher("teacher@classhub.com", "Classhub!1");
+        String loginPayload = objectMapper.writeValueAsString(new LoginPayload("teacher@classhub.com", "Classhub!1"));
+        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginPayload))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String accessToken = objectMapper.readTree(loginResponse).get("data").get("accessToken").asText();
+
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.memberId").isNotEmpty())
+                .andExpect(jsonPath("$.data.email").value("teacher@classhub.com"))
+                .andExpect(jsonPath("$.data.name").value("선생님"))
+                .andExpect(jsonPath("$.data.role").value("TEACHER"));
+    }
+
+    @Test
+    @DisplayName("인증 정보 없이 /auth/me를 호출하면 401을 반환한다")
+    void me_unauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
