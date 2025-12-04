@@ -2661,3 +2661,27 @@ DESIGN
   - `docs/plan/frontend/home-page_plan.md`
 - 다음 단계
   - 홈 화면 구현 시 초대 안내는 별도 초대 링크 페이지에서 처리한다.
+
+## [2025-12-04 16:33] 홈 진입 페이지 구현 및 레이아웃 분기
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 루트 레이아웃에 `AppChrome`을 도입해 `/`에서는 Nav/Footer를 숨기고, 다른 페이지는 기존 NavigationBar/Footer/Portal 구조를 유지하도록 분기했다.
+- 홈 페이지를 Glassmorphism Hero + 로그인 카드 UI로 재구성하고, `useSession`/`api.POST("/auth/login")`를 연결해 로그인 후 토큰을 SessionProvider에 주입하도록 했다.
+- TODO에 “홈 진입 페이지” 세부 항목을 추가해 완료 상태를 표시했다.
+
+### Details
+- 작업 사유
+  - 사용자가 제안한 메인 디자인 가이드를 적용해 실제 서비스 느낌의 첫 화면을 제공하고, 앞으로 역할별 대시보드 진입 전에 로그인 흐름을 확정하려 함.
+- 영향받은 테스트
+  - `npm run lint` (frontend) → 스크립트가 정의돼 있지 않아 실행 불가 (package.json 상 lint 명령 없음)
+  - 수동 확인: mock 토큰 없이 브라우저 렌더링 시 로그인 폼/세션 배너 노출, 이메일/비밀번호 입력 및 패스워드 토글, Teacher 가입 버튼 라우팅을 확인
+- 수정한 파일
+  - `frontend/src/components/ui/app-chrome.tsx`
+  - `frontend/src/app/layout.tsx`
+  - `frontend/src/app/page.tsx`
+  - `docs/todo/v1.5.md`
+- 다음 단계
+  - Auth/Invitation 페이지를 동일한 SessionProvider 흐름으로 구현하고, 로그인/초대 페이지별 Test Plan을 정리한다.
