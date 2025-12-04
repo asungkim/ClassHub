@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { useSession } from "@/components/session/session-provider";
 import { InlineError } from "@/components/ui/inline-error";
 import { api } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
 import type { components } from "@/types/openapi";
 
 type RegisterRequestBody = components["schemas"]["TeacherRegisterRequest"];
@@ -48,10 +49,10 @@ export default function TeacherRegisterPage() {
         password: form.password,
         name: form.name
       };
-      const response = await api.POST("/auth/register/teacher", { body: payload });
+      const response = await api.POST("/api/v1/auth/register/teacher", { body: payload });
 
       if (response.error || !response.data?.data) {
-        throw new Error(response.error?.message ?? "회원가입 중 문제가 발생했습니다.");
+        throw new Error(getApiErrorMessage(response.error, "회원가입 중 문제가 발생했습니다."));
       }
 
       const responseData: RegisterResponse = response.data.data;
@@ -66,7 +67,7 @@ export default function TeacherRegisterPage() {
   useEffect(() => {
     if (successEmail) {
       const timeout = setTimeout(() => {
-        router.push("/auth/login");
+        router.push("/");
       }, 1500);
       return () => clearTimeout(timeout);
     }

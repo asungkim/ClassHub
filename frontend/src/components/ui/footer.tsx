@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 
 type FooterLink = {
   label: string;
@@ -15,6 +16,10 @@ type FooterSection = {
 type FooterProps = {
   sections: FooterSection[];
 };
+
+function isInternalRoute(href: string): href is Route {
+  return href.startsWith("/");
+}
 
 export function Footer({ sections }: FooterProps) {
   return (
@@ -40,9 +45,15 @@ export function Footer({ sections }: FooterProps) {
             <ul className="space-y-2 text-sm text-slate-500">
               {section.links.map((link, linkIndex) => (
                 <li key={`${section.title}-${link.label}-${linkIndex}`}>
-                  <Link href={link.href} className="hover:text-primary">
-                    {link.label}
-                  </Link>
+                  {isInternalRoute(link.href) ? (
+                    <Link href={link.href} className="hover:text-primary">
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a href={link.href} className="hover:text-primary" target="_blank" rel="noreferrer">
+                      {link.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

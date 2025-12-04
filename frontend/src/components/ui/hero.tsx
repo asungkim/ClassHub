@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import Link from "next/link";
+import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 
 type HeroProps = {
@@ -13,6 +14,10 @@ type HeroProps = {
   illustration?: ReactNode;
 };
 
+function isInternalRoute(href: string): href is Route {
+  return href.startsWith("/");
+}
+
 export function Hero({ eyebrow, title, description, primaryCta, secondaryCta, illustration }: HeroProps) {
   return (
     <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/80 p-6 shadow-lg backdrop-blur lg:flex lg:items-center">
@@ -23,12 +28,20 @@ export function Hero({ eyebrow, title, description, primaryCta, secondaryCta, il
         <div className="flex flex-wrap gap-3">
           {primaryCta && (
             <Button asChild>
-              <Link href={primaryCta.href}>{primaryCta.label}</Link>
+              {isInternalRoute(primaryCta.href) ? (
+                <Link href={primaryCta.href}>{primaryCta.label}</Link>
+              ) : (
+                <a href={primaryCta.href}>{primaryCta.label}</a>
+              )}
             </Button>
           )}
           {secondaryCta && (
             <Button variant="secondary" asChild>
-              <Link href={secondaryCta.href}>{secondaryCta.label}</Link>
+              {isInternalRoute(secondaryCta.href) ? (
+                <Link href={secondaryCta.href}>{secondaryCta.label}</Link>
+              ) : (
+                <a href={secondaryCta.href}>{secondaryCta.label}</a>
+              )}
             </Button>
           )}
         </div>

@@ -2,13 +2,15 @@ import createClient from "openapi-fetch";
 import { env } from "@/lib/env";
 import type { paths } from "@/types/openapi";
 
+const fetchWithCredentials: typeof fetch = (input, init) =>
+  fetch(input, {
+    ...init,
+    credentials: "include"
+  });
+
 const apiClient = createClient<paths>({
   baseUrl: env.apiBaseUrl,
-  fetch: async (url, init) =>
-    fetch(url, {
-      ...init,
-      credentials: "include"
-    })
+  fetch: fetchWithCredentials
 });
 
 export const api = apiClient;

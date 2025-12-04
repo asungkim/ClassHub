@@ -2964,3 +2964,126 @@ STRUCTURAL
   - `infra/docker/docker-compose.yml`
 - 다음 단계
   - Compose를 다시 빌드/실행하여 통합된 환경 변수로 백엔드가 정상 기동하는지 확인한다.
+
+## [2025-12-04 23:34] 프런트 API 경로를 배포 기준으로 통일
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 프런트 환경 변수 예시를 호스트 기준 URL로 변경해 배포/로컬에서 동일한 값을 재사용하도록 했다.
+- 로그인/선생님 회원가입 API 호출 경로를 `/api/v1/...`으로 고정해 OpenAPI 타입과 일치시키고, Vercel 빌드 오류를 방지했다.
+
+### Details
+- 작업 사유
+  - Vercel 빌드시 경로 타입이 `/api/v1` 프리픽스와 맞지 않아 실패했고, 환경 변수를 배포용으로 쉽게 전파할 필요가 있었다.
+- 영향받은 테스트
+  - 테스트 미실행 (간단한 문자열 변경)
+- 수정한 파일
+  - `frontend/.env.local.example`
+  - `frontend/src/app/page.tsx`
+  - `frontend/src/app/auth/register/teacher/page.tsx`
+- 다음 단계
+  - 배포 환경(Vercel)의 `NEXT_PUBLIC_API_BASE_URL`을 호스트 값으로 맞추고, 다른 API 호출부에서도 동일한 규칙을 적용한다.
+
+## [2025-12-04 23:38] 선생님 회원가입 API 에러 타입 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- OpenAPI 스펙에 명시되지 않은 오류 응답으로 인해 Vercel 타입 검사에서 `never`가 발생하던 구간을 별도 타입으로 캐스팅해 해결했다.
+- UI에서는 항상 의미 있는 오류 메시지를 던지도록 기본 문구를 추가했다.
+
+### Details
+- 작업 사유
+  - 배포 빌드가 `/auth/register/teacher` 응답 타입 문제로 실패하여, 안전하게 오류 메시지를 처리할 필요가 있었다.
+- 영향받은 테스트
+  - 테스트 미실행 (컴파일 오류 해결 목적)
+- 수정한 파일
+  - `frontend/src/app/auth/register/teacher/page.tsx`
+- 다음 단계
+  - 다른 API 호출부에서도 오류 스키마를 OpenAPI에 명확히 정의하거나 동일한 유형 보호 로직을 도입한다.
+
+## [2025-12-04 23:46] 공통 API 오류 메시지 헬퍼 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `getApiErrorMessage` 헬퍼를 만들어 OpenAPI에 정의되지 않은 오류 응답이라도 안전하게 메시지를 추출하도록 했다.
+- 로그인/선생님 회원가입 화면에서 헬퍼를 사용해 타입 오류 없이 일관된 에러 문구를 표시한다.
+
+### Details
+- 작업 사유
+  - 여러 화면에서 `response.error?.message` 접근 시 타입이 `never`로 추론되어 배포 빌드가 실패했다.
+- 영향받은 테스트
+  - 테스트 미실행 (헬퍼 도입 및 문자열 처리)
+- 수정한 파일
+  - `frontend/src/lib/api-error.ts`
+  - `frontend/src/app/page.tsx`
+  - `frontend/src/app/auth/register/teacher/page.tsx`
+- 다음 단계
+  - 추후 다른 API 호출부에서도 동일한 헬퍼를 활용해 예외 메시지 처리를 표준화한다.
+
+## [2025-12-04 23:50] 역할별 대시보드 라우트 타입 정교화
+
+### Type
+STRUCTURAL
+
+### Summary
+- `getDashboardRoute`가 Next.js의 타입드 라우트 시스템을 따르도록 `Route` 타입으로 값을 제한하고, 유효하지 않은 역할을 안전하게 거르는 타입 가드를 추가했다.
+- 홈/가드 훅에서 `router.replace` 호출 시 더 이상 문자열 타입 오류가 발생하지 않는다.
+
+### Details
+- 작업 사유
+  - Vercel 빌드 중 `router.replace`가 단순 문자열을 받으면서 타입 충돌이 발생했다.
+- 영향받은 테스트
+  - 테스트 미실행 (타입 선언만 변경)
+- 수정한 파일
+  - `frontend/src/lib/role-route.ts`
+- 다음 단계
+  - 추후 역할 상수가 늘어나면 동일한 테이블에만 값을 추가하면 되도록 유지한다.
+
+## [2025-12-04 23:58] 프런트엔드 타입 안전성 강화 및 빌드 확인
+
+### Type
+STRUCTURAL
+
+### Summary
+- 세션/라우팅/UI 공통 컴포넌트에 Route/Fetch 타입 가드를 도입하고, 공통 오류 헬퍼(`getFetchError`)를 추가해 Next.js 16의 엄격한 타입 검사에서 더 이상 경고가 발생하지 않도록 했다.
+- Link/Button/Footer/Hero/NavBar 등 내부 링크가 아닌 경우 자동으로 `<a>`를 사용해 Route 타입 위반을 방지했고, API 클라이언트 커스텀 fetch의 시그니처를 `typeof fetch`로 통일했다.
+- `npm run build -- --webpack`을 실행해 전체 Next.js 빌드를 성공적으로 완료했다.
+
+### Details
+- 작업 사유
+  - Vercel/Next 빌드 단계에서 Route 타입/response.error 접근 문제로 반복적으로 실패했기 때문에 타입 안전성을 강화해 재발을 막고자 함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - `frontend/src/lib/api-error.ts`
+  - `frontend/src/components/session/session-provider.tsx`
+  - `frontend/src/components/ui/{button.tsx,footer.tsx,hero.tsx,navigation-bar.tsx}`
+  - `frontend/src/lib/api.ts`
+- 다음 단계
+  - 추후 다른 컴포넌트도 Link 사용 시 동일한 타입 가이드를 적용하고, 필요 시 Route 헬퍼를 공통 모듈로 분리한다.
+
+## [2025-12-05 00:00] 프런트 작업 가이드 명문화
+
+### Type
+DESIGN
+
+### Summary
+- `frontend/AGENTS.md`와 `CLAUDE.md`에 프런트 개발 시 따라야 할 상세 워크플로(작은 단위 작업, OpenAPI 기반 타입 사용, Route/Link 처리, `npm run build -- --webpack` 필수 실행, 에러 헬퍼 사용)를 추가했다.
+- 사용자가 프런트 컨텍스트에 익숙하지 않다는 점을 반영해, 항상 단계별 설명과 검사 결과를 보고하도록 명시했다.
+
+### Details
+- 작업 사유
+  - 최근 타입/빌드 오류가 반복되면서 프런트 작업 원칙과 검증 절차를 문서화해 재발을 방지할 필요가 있었다.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - `frontend/AGENTS.md`
+  - `CLAUDE.md`
+- 다음 단계
+  - 새로운 프런트 작업을 시작할 때마다 해당 가이드를 다시 확인하고, 보고 포맷/검증 절차를 지킨다.

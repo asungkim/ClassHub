@@ -49,8 +49,9 @@ export function Button({
     if (!isValidElement(props.children)) {
       throw new Error("Button with asChild expects a single React element child.");
     }
-    const child = props.children as ReactElement;
-    return cloneElement(child, {
+    type SlotChildProps = { className?: string; style?: CSSProperties; children?: ReactNode };
+    const child = props.children as ReactElement<SlotChildProps>;
+    return cloneElement<SlotChildProps>(child, {
       className: clsx(
         baseClasses,
         variantClassMap[variant],

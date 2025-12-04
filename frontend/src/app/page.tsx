@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { api } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/components/session/session-provider";
 import { InlineError } from "@/components/ui/inline-error";
 import type { components } from "@/types/openapi";
@@ -34,12 +35,12 @@ export default function HomePage() {
     try {
       setIsLoading(true);
       const loginPayload: LoginRequestBody = { email, password };
-      const response = await api.POST("/auth/login", {
+      const response = await api.POST("/api/v1/auth/login", {
         body: loginPayload
       });
 
       if (!response.data?.data?.accessToken || response.error) {
-        throw new Error(response.error?.message ?? "로그인에 실패했어요. 입력값을 다시 확인해주세요.");
+        throw new Error(getApiErrorMessage(response.error, "로그인에 실패했어요. 입력값을 다시 확인해주세요."));
       }
 
       const loginData: LoginResponseData = response.data.data ?? {};

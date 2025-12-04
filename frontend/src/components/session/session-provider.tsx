@@ -3,6 +3,7 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, clearAuthToken, setAuthToken } from "@/lib/api";
+import { getFetchError } from "@/lib/api-error";
 import { env } from "@/lib/env";
 
 type SessionStatus = "loading" | "authenticated" | "unauthenticated";
@@ -23,21 +24,17 @@ type SessionContextValue = {
   logout: () => Promise<void>;
 };
 
-type FetchErrorLike = {
-  status?: number;
-};
-
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 const SESSION_QUERY_KEY = ["session", "current"] as const;
 
 async function fetchSession(): Promise<MemberSummary | null> {
-  const response = await api.GET("/auth/me" as any);
-  if (response.error) {
-    const status = (response.error as FetchErrorLike).status;
-    if (status === 401 || status === 419) {
+  const response = await api.GET("/api/v1/auth/me");
+  const fetchError = getFetchError(response);
+  if (fetchError) {
+    if (fetchError.status === 401 || fetchError.status === 419) {
       return null;
     }
-    throw response.error;
+    throw fetchError;
   }
 
   const payload = response.data?.data;
@@ -46,10 +43,10 @@ async function fetchSession(): Promise<MemberSummary | null> {
   }
 
   return {
-    memberId: payload.memberId,
-    email: payload.email,
-    name: payload.name,
-    role: payload.role
+    memberId: payload.memberId ?? "",
+    email: payload.email ?? "",
+    name: payload.name ?? "",
+    role: payload.role ?? ""
   };
 }
 
@@ -66,7 +63,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const performRefresh = useCallback(async () => {
     try {
-      const response = await api.POST("/auth/refresh" as any, {});
+      const response = await api.POST("/api/v1/auth/refresh", {});
       const token = response.data?.data?.accessToken;
       if (token) {
         setAuthToken(token);
@@ -125,7 +122,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await api.POST("/auth/logout" as any, {});
+      await api.POST("/api/v1/auth/logout", {});
     } catch {
       // ignore
     } finally {

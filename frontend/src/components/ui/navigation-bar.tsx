@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
+
 export type NavItem = {
   label: string;
   href: string;
@@ -11,6 +13,10 @@ type NavigationBarProps = {
   ctaLabel?: string;
   ctaHref?: string;
 };
+
+function isInternalRoute(href: string): href is Route {
+  return href.startsWith("/");
+}
 
 export function NavigationBar({ navItems, ctaLabel, ctaHref }: NavigationBarProps) {
   return (
@@ -27,18 +33,39 @@ export function NavigationBar({ navItems, ctaLabel, ctaHref }: NavigationBarProp
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-slate-500 md:flex">
           {navItems.map((item, index) => (
-            <Link key={`${item.label}-${item.href}-${index}`} href={item.href} className="hover:text-primary">
-              {item.label}
-            </Link>
+            <div key={`${item.label}-${item.href}-${index}`}>
+              {isInternalRoute(item.href) ? (
+                <Link href={item.href} className="hover:text-primary">
+                  {item.label}
+                </Link>
+              ) : (
+                <a href={item.href} className="hover:text-primary" target="_blank" rel="noreferrer">
+                  {item.label}
+                </a>
+              )}
+            </div>
           ))}
         </nav>
         {ctaLabel && ctaHref && (
-          <Link
-            href={ctaHref}
-            className="hidden rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow md:inline-flex"
-          >
-            {ctaLabel}
-          </Link>
+          <>
+            {isInternalRoute(ctaHref) ? (
+              <Link
+                href={ctaHref}
+                className="hidden rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow md:inline-flex"
+              >
+                {ctaLabel}
+              </Link>
+            ) : (
+              <a
+                href={ctaHref}
+                className="hidden rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow md:inline-flex"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {ctaLabel}
+              </a>
+            )}
+          </>
         )}
       </div>
     </header>
