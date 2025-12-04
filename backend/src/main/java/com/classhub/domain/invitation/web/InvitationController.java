@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,7 @@ public class InvitationController {
     private final InvitationService invitationService;
 
     @PostMapping("/assistant")
+    @PreAuthorize("hasAnyAuthority('TEACHER')")
     @Operation(summary = "조교 초대 생성", description = "Teacher가 Assistant 초대를 생성한다.")
     public RsData<InvitationResponse> createAssistantInvitation(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -44,6 +46,7 @@ public class InvitationController {
     }
 
     @PostMapping("/student")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
     @Operation(summary = "학생 초대 생성", description = "Teacher/Assistant가 Student 초대를 생성한다.")
     public RsData<InvitationResponse> createStudentInvitation(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -54,6 +57,7 @@ public class InvitationController {
     }
 
     @GetMapping("/assistant")
+    @PreAuthorize("hasAnyAuthority('TEACHER')")
     @Operation(summary = "조교 초대 목록", description = "Teacher가 생성한 Assistant 초대 목록을 조회한다.")
     public RsData<List<InvitationResponse>> listAssistantInvitations(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -65,6 +69,7 @@ public class InvitationController {
     }
 
     @GetMapping("/student")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
     @Operation(summary = "학생 초대 목록", description = "Teacher/Assistant가 생성한 Student 초대 목록을 조회한다.")
     public RsData<List<InvitationResponse>> listStudentInvitations(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -76,6 +81,7 @@ public class InvitationController {
     }
 
     @DeleteMapping("/{code}")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
     @Operation(summary = "초대 취소", description = "초대 코드 기준으로 초대를 취소한다.")
     public RsData<Void> revokeInvitation(
             @AuthenticationPrincipal MemberPrincipal principal,

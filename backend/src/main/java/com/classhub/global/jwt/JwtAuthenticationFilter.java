@@ -15,6 +15,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import java.util.List;
+
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 
 import static com.classhub.global.response.RsCode.UNAUTHENTICATED;
@@ -27,6 +30,15 @@ import static com.classhub.global.response.RsCode.UNAUTHENTICATED;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final static String HEADER_AUTHORIZATION = "Authorization";
+    private final static List<String> AUTH_WHITELIST = List.of(
+            "/api/v1/auth/register/teacher",
+            "/api/v1/auth/register/invited",
+            "/api/v1/auth/invitations/verify",
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh"
+    );
+
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final JwtProvider jwtProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
@@ -52,5 +64,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        return AUTH_WHITELIST.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 }

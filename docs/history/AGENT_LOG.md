@@ -2030,3 +2030,442 @@ BEHAVIORAL
   - docs/todo/v1.5.md (하위 작업 상태)
 - 다음 단계
   - Auth/Invitation 화면과 StudentProfile/PersonalLesson UI를 추가하고 smoke 테스트/문서화를 이어간다.
+
+## [2025-12-03 22:30] PLAN 디렉터리 Backend/Frontend 분리
+
+### Type
+STRUCTURAL
+
+### Summary
+- `docs/plan`을 backend/frontend 작업 큐로 분리하고 공통 문서는 루트에 유지하도록 README를 추가했다.
+
+### Details
+- 작업 사유
+  - TODO Phase 2의 프런트 진행 전, PLAN 문서를 영역별로 정리하여 추적성을 높이기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/backend/** (기존 backend 관련 PLAN 이동)
+  - docs/plan/frontend/** (frontend PLAN 이동)
+  - docs/plan/README.md (신규)
+- 다음 단계
+  - 분리된 PLAN 구조를 기반으로 Auth/Invitation UI PLAN을 작성하고 구현을 이어간다.
+## [2025-12-03 22:33] Auth & Invitation UI PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- 로그인/회원가입/초대 코드 검증 화면 요구사항을 정의한 `docs/plan/frontend/auth-invitation-ui_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 2 TODO의 Auth·Invitation UI를 구현하기 전에 입력 흐름, 상태 모델, 테스트 전략을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (설계 문서 작성)
+- 수정한 파일
+  - docs/plan/frontend/auth-invitation-ui_plan.md (신규)
+- 다음 단계
+  - PLAN 내용에 따라 컴포넌트/페이지를 구현하고, 테스트/문서화를 진행한다.
+
+## [2025-12-03 22:33] TODO 상태 업데이트 - Auth & Invitation UI 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.5.md`에서 Auth·Invitation UI 작업을 ⚪ → 🔄로 전환해 진행 중 상태를 반영했다.
+
+### Details
+- 작업 사유
+  - PLAN 작성과 동시에 실제 구현 준비가 시작되어 TODO 상태 동기화가 필요했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.5.md
+- 다음 단계
+  - Auth·Invitation UI 구현 진행 상황에 따라 TODO 상태를 다시 갱신하고, 완료 시 ✅로 변경한다.
+## [2025-12-03 22:40] Auth & Invitation UI PLAN 경로 보정
+
+### Type
+DESIGN
+
+### Summary
+- OpenAPI 스펙(`/api/v1/...`)과 일치하도록 Auth & Invitation UI PLAN의 로그인/Teacher 회원가입 API 경로를 명시적으로 수정했다.
+
+### Details
+- 작업 사유
+  - `frontend/src/types/openapi.d.ts` 기준 모든 Auth 엔드포인트가 `/api/v1` prefix를 포함하므로 PLAN 요구사항도 동일한 경로를 가리키도록 보정이 필요했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/frontend/auth-invitation-ui_plan.md
+- 다음 단계
+  - 수정된 PLAN에 맞춰 UI 구현 시 올바른 경로를 사용한다.
+## [2025-12-03 22:43] Auth & Invitation UI PLAN 접근 제약 명시
+
+### Type
+DESIGN
+
+### Summary
+- Teacher 전용 일반 회원가입과 초대 기반 가입 경로를 구분해 PLAN에 공개 범위/접근 제약을 명시했다.
+
+### Details
+- 작업 사유
+  - 서비스 정책상 공개 회원가입은 Teacher만 가능하며, 초대 가입 URL은 검증을 거친 사용자만 접근해야 하므로 PLAN 요구사항에 이를 반영했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/frontend/auth-invitation-ui_plan.md
+- 다음 단계
+  - 구현 시 초대 검증 상태 없이는 초대 가입 페이지에 접근할 수 없도록 라우팅 가드를 적용한다.
+## [2025-12-03 22:44] Auth & Invitation UI PLAN - 가입 정책 정교화
+
+### Type
+DESIGN
+
+### Summary
+- Teacher 공개 가입은 '선생님 회원가입' 카피로 명시하고, 초대 링크 진입 시 자동 검증/가입 흐름을 상세화했다.
+
+### Details
+- 작업 사유
+  - 서비스 정책에 따라 일반 가입자는 Teacher로 등록되며, Assistant/Student는 초대 링크를 통해서만 가입해야 하므로 UI PLAN에 정책을 반영했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/frontend/auth-invitation-ui_plan.md
+- 다음 단계
+  - 구현 시 Teacher 공개 가입 CTA와 초대 링크 기반 라우팅 가드를 정확히 반영한다.
+## [2025-12-03 22:46] Auth & Invitation UI PLAN - 초대 링크 역할 분기 강화
+
+### Type
+DESIGN
+
+### Summary
+- 초대 링크로 진입한 사용자만 해당 역할(조교/학생) 가입 화면으로 이동하고, 역할별 카피/가드가 잠기도록 PLAN 요구사항을 보강했다.
+
+### Details
+- 작업 사유
+  - Teacher가 발급한 초대 링크를 통해서만 Assistant/Student가 회원가입하도록 보장해야 하므로 검증/가입 단계에 역할 잠금과 UI 구분을 명시했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/frontend/auth-invitation-ui_plan.md
+- 다음 단계
+  - 구현 시 verify 단계에서 role을 컨텍스트에 저장하고, invited 등록 페이지가 해당 role에 맞춰 렌더링되도록 구성한다.
+## [2025-12-03 22:49] Auth & Invitation UI PLAN - UI 지침 추가
+
+### Type
+DESIGN
+
+### Summary
+- Auth/Invitation 화면이 최신 SaaS 스타일 카드형 레이아웃과 반응형 디자인을 따르도록 Non-functional 요구 사항을 보강했다.
+
+### Details
+- 작업 사유
+  - 사용자 경험을 현대적으로 유지하고 직관적인 UI를 제공하기 위해 Tailwind 기반 레이아웃/타이포/컬러 지침을 명시적으로 정의했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/frontend/auth-invitation-ui_plan.md
+- 다음 단계
+  - 구현 시 해당 UI 지침을 반영해 카드형 레이아웃과 명확한 대비를 적용한다.
+## [2025-12-03 22:50] Auth & Invitation UI PLAN - 테마 전환 요구 추가
+
+### Type
+DESIGN
+
+### Summary
+- 라이트/다크 모드를 지원하는 ThemeProvider와 토글 요구 사항을 Non-functional 항목에 추가했다.
+
+### Details
+- 작업 사유
+  - 최신 UI 기대치에 맞춰 시스템 테마 감지 + 수동 전환을 제공해야 하므로 Auth/Invitation PLAN에 명시적으로 포함했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/plan/frontend/auth-invitation-ui_plan.md
+- 다음 단계
+  - 구현 시 ThemeProvider와 토글 컴포넌트를 추가하고 각 화면이 두 모드에서 동일한 사용자 경험을 제공하도록 한다.
+## [2025-12-03 23:03] Auth · Invitation UI 1차 구현 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Next.js 앱에 글로벌 테마/세션/쿼리 프로바이더를 구성하고 로그인·선생님 가입·초대 검증·초대 가입 UI 흐름을 구현했다.
+
+### Details
+- 작업 사유
+  - Phase 2 TODO의 첫 하위 작업을 마무리해 백엔드 Auth/Invitation API를 프런트에서 즉시 검증할 수 있도록 함.
+- 영향받은 테스트
+  - `npm run lint` 시도 시 Next CLI가 `lint` 디렉터리를 찾으려 해 실패(추후 Next lint 설정 확인 필요).
+- 수정한 파일
+  - frontend/app/** (layout, providers, globals.css, 메인/인증 페이지 일괄 추가)
+  - frontend/src/components/** (AuthLayout, Theme/Session/Invitation 컨텍스트, UI 컴포넌트 등)
+  - frontend/src/hooks/useAuthForm.ts, src/lib/api.ts, src/lib/cn.ts
+  - docs/todo/v1.5.md
+- 다음 단계
+  - StudentProfile/PersonalLesson UI, 공통 에러 처리, smoke 테스트/실행 가이드를 이어서 구현한다.
+
+## [2025-12-03 23:12] Tailwind/PostCSS 및 Auth 세션 핸들러 수정
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Tailwind 4가 요구하는 `@tailwindcss/postcss` 플러그인을 추가하고 PostCSS 구성을 업데이트했으며, AuthSessionProvider가 올바른 토큰 헬퍼를 import하도록 수정했다.
+
+### Details
+- 작업 사유
+  - Next dev 실행 시 Tailwind PostCSS 플러그인 에러와 존재하지 않는 함수 import 에러가 발생했다.
+- 영향받은 테스트
+  - `npm run lint` 여전히 Next.js CLI가 `/frontend/lint` 디렉터리를 찾으려다 실패(기존 이슈 지속).
+- 수정한 파일
+  - frontend/postcss.config.cjs
+  - frontend/src/components/auth/auth-session-provider.tsx
+- 다음 단계
+  - Next lint 명령이 잘못된 디렉터리를 가리키는 원인을 추적하고, Auth/Invitation UI의 추가 기능 개발을 이어간다.
+## [2025-12-03 23:25] ESLint 스크립트 및 상태 관리 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Next 16 CLI에는 `next lint` 명령이 없어 ESLint 실행 실패가 발생해 `eslint.config.mjs` + `eslint .` 스크립트로 대체하고, Auth/Theme Provider 상태 초기화를 렌더 단계에서 처리해 lint 오류를 해결했다.
+
+### Details
+- 작업 사유
+  - `npm run lint`가 `next lint` 명령 부재로 실패했고, ESLint 적용 후 React 훅 규칙 위반이 발생했다.
+- 영향받은 테스트
+  - `npm run lint` (성공)
+- 수정한 파일
+  - frontend/package.json
+  - frontend/eslint.config.mjs (신규)
+  - frontend/src/components/auth/auth-session-provider.tsx
+  - frontend/src/components/theme/theme-provider.tsx
+- 다음 단계
+  - Theme/Auth 컨텍스트를 사용하는 UI를 최신 API에 맞게 연동하고, lint 경고를 지속적으로 모니터링한다.
+
+## [2025-12-03 23:27] JWT 필터 화이트리스트 적용
+
+### Type
+BUGFIX
+
+### Summary
+- JWT 인증 필터가 permitAll 경로에서도 실행돼 회원가입/로그인 요청이 막히는 문제를 해결하기 위해 인증이 필요 없는 Auth 엔드포인트를 `shouldNotFilter` 화이트리스트로 분리했다.
+
+### Details
+- 작업 사유
+  - `/api/v1/auth/register/teacher` 등 무토큰 API가 `JwtAuthenticationFilter`에서 401로 차단됐다.
+- 영향받은 테스트
+  - 별도 테스트 미실행(구성 변경)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/global/jwt/JwtAuthenticationFilter.java
+- 다음 단계
+  - 필요한 다른 오픈 엔드포인트가 생기면 화이트리스트를 업데이트하고, 보호가 필요한 Auth 경로는 별도 세분화한다.
+
+## [2025-12-03 23:39] Auth 공개 API 호출 시 토큰 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 토큰이 자동 첨부되어 공개 Auth 엔드포인트가 차단되는 문제를 막기 위해 토큰 미첨부 클라이언트(`publicApi`)를 도입하고 로그인/회원가입/초대 검증 흐름에서 이를 사용하도록 수정했다.
+
+### Details
+- 작업 사유
+  - AuthSessionProvider가 설정한 Authorization 헤더가 회원가입/로그인 요청에도 붙어 JWT 필터에서 401이 발생했다.
+- 영향받은 테스트
+  - `npm run lint`
+- 수정한 파일
+  - frontend/src/lib/api.ts
+  - frontend/app/auth/login/page.tsx
+  - frontend/app/auth/register/teacher/page.tsx
+  - frontend/app/auth/register/invited/page.tsx
+  - frontend/src/components/auth/invitation-flow-provider.tsx
+- 다음 단계
+  - README 등 개발 문서에서도 publicApi 사용처 안내를 검토하고, 보호된 API 호출부는 기존 `api`를 계속 활용한다.
+
+## [2025-12-04 09:37] API 경로 정리 및 publicApi 제거
+
+### Type
+STRUCTURAL
+
+### Summary
+- BASE_URL에 `/api/v1`를 포함하도록 바꾸고 모든 요청 경로에서 중복된 `/api/v1` 접두어를 제거했으며, publicApi를 없애고 단일 클라이언트를 사용하도록 정리했다.
+
+### Details
+- 작업 사유
+  - 백엔드 로그에서 `/api/v1/api/v1/...`가 찍히고 클라이언트가 두 개라 혼란이 있어 요청 경로 체계를 단순화했다.
+- 영향받은 테스트
+  - `npm run lint`
+- 수정한 파일
+  - frontend/src/lib/api.ts
+  - frontend/app/auth/login/page.tsx
+  - frontend/app/auth/register/teacher/page.tsx
+  - frontend/app/auth/register/invited/page.tsx
+  - frontend/src/components/auth/invitation-flow-provider.tsx
+  - frontend/README.md
+- 다음 단계
+  - 환경 변수(`NEXT_PUBLIC_API_BASE_URL`)를 호스트+`/api/v1` 형태로 유지하고, 향후 다른 경로 추가 시 동일한 규칙을 따른다.
+
+## [2025-12-04 09:38] ThemeToggle Hydration 대응
+
+### Type
+BUGFIX
+
+### Summary
+- SSR과 CSR 간 테마 아이콘이 달라 발생하던 Hydration mismatch를 방지하기 위해 ThemeToggle 아이콘을 클라이언트 마운트 이후에만 실제 테마 상태로 렌더링하도록 수정했다.
+
+### Details
+- 작업 사유
+  - 서버 렌더 시 항상 Sun, 클라이언트에서는 시스템 테마에 따라 Moon/Sun이 달라져 Hydration 오류가 발생했다.
+- 영향받은 테스트
+  - N/A (UI 컴포넌트)
+- 수정한 파일
+  - frontend/src/components/theme/theme-toggle.tsx
+- 다음 단계
+  - 다른 컴포넌트에서도 SSR/CSR 불일치가 없는지 점검한다.
+
+## [2025-12-04 10:15] Next.js 부트스트랩 및 API 클라이언트 재구성
+
+### Type
+STRUCTURAL
+
+### Summary
+- 삭제된 프런트엔드 스캐폴딩을 Next.js 16 + Tailwind 4 조합으로 다시 생성하고 공용 API/환경 변수 유틸을 정비했다.
+- 팀에서 사용하지 않기로 한 ESLint/`npm run lint` 구성을 제거해 의존성과 스크립트를 단순화했다.
+
+### Details
+- 작업 사유
+  - TODO의 “Next.js + Tailwind 기본 프로젝트 세팅 및 공용 API 클라이언트/환경 변수 구성” 항목이 다시 필요해 최소 실행 가능한 프런트 구조와 문서를 복원했다.
+- 영향받은 테스트
+  - `npm run build` (Turbopack가 CSS 빌드 시 sandbox 포트 바인딩 제한으로 실패)
+- 수정한 파일
+  - frontend/package.json, frontend/package-lock.json, frontend/.gitignore, frontend/.env.local.example
+  - frontend/src/app/{layout.tsx,providers.tsx,page.tsx,globals.css}, frontend/src/lib/{env.ts,api.ts}
+  - frontend/README.md, docs/todo/v1.5.md
+- 다음 단계
+  - Auth/Invitation/StudentProfile UI를 추가하고 `npm run openapi`로 실제 타입을 생성해 API 호출을 구현한다.
+
+## [2025-12-04 10:45] Components 데모 페이지 및 테마 토큰 적용
+
+### Type
+STRUCTURAL
+
+### Summary
+- 제공된 ClassHub 테마 JSON을 기반으로 Tailwind 4 전역 토큰을 재정의하고, 공통 UI 컴포넌트(Button, Card, TextField, Checkbox 등)를 모듈화했다.
+- `/components` 페이지를 추가해 색상/타이포/폼/통계 카드 등을 한 번에 검증할 수 있는 쇼케이스를 구성했다.
+
+### Details
+- 작업 사유
+  - 반복적으로 사용할 UI 요소를 중앙화해 이후 Auth/Invitation 화면 개발 시 재사용성을 확보하고, 사용자에게 시각적 확인용 페이지를 제공하기 위함.
+- 영향받은 테스트
+  - `npm run build` (sandbox 환경에서 CSS 처리 시 Turbopack가 별도 프로세스 포트 바인딩을 시도해 실패)
+- 수정한 파일
+  - frontend/src/app/{globals.css,layout.tsx,page.tsx,components/page.tsx}, frontend/src/app/providers.tsx
+  - frontend/src/components/{ui/button.tsx,ui/card.tsx,ui/checkbox.tsx,ui/logo.tsx,ui/section-heading.tsx,ui/text-field.tsx,showcase/components-showcase.tsx}
+  - frontend/src/theme/classhub-theme.ts, frontend/package.json, frontend/package-lock.json
+  - docs/todo/v1.5.md
+- 다음 단계
+  - Components 페이지를 참고해 Auth/Invitation 페이지를 구체화하고, 상태 관리/에러 핸들링 컴포넌트로 확장한다.
+
+## [2025-12-04 10:58] Carousel 공통 컴포넌트 및 이미지 카드 확장
+
+### Type
+STRUCTURAL
+
+### Summary
+- 재사용 가능한 Carousel UI를 추가해 추천 프로그램/공지 등을 슬라이드 형태로 표시할 수 있도록 했고, Card 컴포넌트가 media 슬롯을 받아 썸네일/배너를 포함할 수 있도록 확장했다.
+- `/components` 쇼케이스에 Carousel 섹션과 이미지 카드 예제를 추가해 공통 디자인 자산을 한눈에 검증할 수 있게 했다.
+
+### Details
+- 작업 사유
+  - 프로젝트 전반에서 반복적으로 쓰일 Carousel/이미지 카드 패턴을 미리 정의해 추후 화면 개발 속도를 높이고 일관된 시각 언어를 유지하려 함.
+- 영향받은 테스트
+  - `npm run build` (sandbox 환경 포트 제한으로 Turbopack CSS 처리 실패, 이전과 동일)
+- 수정한 파일
+  - frontend/src/components/ui/{card.tsx,carousel.tsx}
+  - frontend/src/components/showcase/components-showcase.tsx
+  - docs/history/AGENT_LOG.md
+- 다음 단계
+  - Carousel/이미지 카드 기반으로 실제 도메인 화면(Auth/Invitation/StudentProfile) 디자인을 구체화한다.
+
+## [2025-12-04 11:10] Navbar · Footer · Hero 공통 컴포넌트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- NavigationBar, Footer, Hero 컴포넌트를 제작해 레이아웃 전반에서 반복 사용하는 요소를 중앙 집중화했다.
+- `/components` 페이지에 Hero, 네비게이션, 푸터 데모 섹션을 추가하고 실제 레이아웃에서도 새 Navbar/Footers를 적용했다.
+
+### Details
+- 작업 사유
+  - 공통 레이아웃 요소를 모듈화해 향후 페이지 개발 시 재활용하고 디자인 일관성을 유지하려 함.
+- 영향받은 테스트
+  - `npm run build` (Turbopack CSS 처리 시 sandbox 포트 제한으로 실패, 기존과 동일)
+- 수정한 파일
+  - frontend/src/components/ui/{button.tsx,hero.tsx,navigation-bar.tsx,footer.tsx}
+  - frontend/src/components/showcase/components-showcase.tsx
+  - frontend/src/app/layout.tsx
+  - frontend/package.json, frontend/package-lock.json
+- 다음 단계
+  - 새 Navbar/Footer/Hero를 기준으로 실제 Auth/Invitation 페이지 레이아웃을 구성한다.
+## [2025-12-04 11:25] OpenAPI 타입 기반 API 클라이언트 적용
+
+### Type
+STRUCTURAL
+
+### Summary
+- `npm run openapi`로 생성된 `paths` 타입을 `frontend/src/lib/api.ts`에서 사용하도록 업데이트해 API 호출의 타입 안전성을 확보했다.
+
+### Details
+- 작업 사유
+  - placeholder 타입을 유지하면 엔드포인트/파라미터 자동 완성이 동작하지 않아 구현 시 실수가 잦을 수 있었다.
+- 영향받은 테스트
+  - N/A (타입 정의 교체)
+- 수정한 파일
+  - frontend/src/lib/api.ts
+- 다음 단계
+  - 생성된 타입을 활용해 Auth/Invitation UI 구현 시 API 스펙을 그대로 참조한다.
+
+## [2025-12-04 12:17] PLAN 디렉터리 백엔드/프런트 분리 및 구조 가이드 정비
+
+### Type
+DESIGN
+
+### Summary
+- 기존 `docs/plan` 루트에 혼재돼 있던 PLAN 문서를 backend/frontend/rule로 재구성해 담당 영역별 문서를 명확히 분리했다.
+- 새 구조와 사용 규칙을 정리한 `docs/plan/README.md`를 추가해 향후 문서 작성 시 따라야 할 절차를 명시했다.
+
+### Details
+- 작업 사유
+  - PLAN 문서가 단일 디렉터리에 섞여 있어 필요한 설계 자료를 찾기 어렵고 영역 간 책임 구분이 불명확했다.
+- 영향받은 테스트
+  - N/A (문서 개편)
+- 수정한 파일
+  - `docs/plan/README.md`
+  - `docs/plan/backend/*`, `docs/plan/frontend/*`, `docs/plan/rule/*`
+- 다음 단계
+  - 각 기능 작업 시 해당 영역(backend/frontend)에 PLAN 문서를 추가하고 README 프로세스를 준수한다.
+
+## [2025-12-04 12:17] TODO 상태 업데이트 - 공통 레이아웃/세션 컴포넌트
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2 하위 “공통 레이아웃·세션 상태·에러 처리 컴포넌트 정비” 작업을 🔄 상태로 전환해 현재 집중 작업임을 명시했다.
+- 종료된 “간단한 프런트 테스트” 플레이스홀더 항목을 정리해 TODO를 최신 스코프로 유지했다.
+
+### Details
+- 작업 사유
+  - Next.js 기반 공통 레이아웃/상태 컴포넌트를 작업에 착수했으므로 진행 중 상태를 반영하고, 중복 항목을 제거해 추적성을 높이고자 함.
+- 영향받은 테스트
+  - N/A (TODO 문서만 수정)
+- 수정한 파일
+  - `docs/todo/v1.5.md`
+- 다음 단계
+  - 공통 컴포넌트 정비 완료 후 Auth/Invitation 화면 구현 항목을 이어서 진행한다.

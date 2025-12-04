@@ -59,6 +59,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
   - `repository/`: Spring Data JPA 리포지토리
 
 예시: `domain.auth`는 다음을 포함:
+
 - `web/AuthController.java`
 - `application/AuthService.java`
 - `dto/LoginRequest.java`, `LoginResponse.java`
@@ -67,6 +68,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 ### BaseEntity 패턴
 
 모든 JPA 엔티티는 `BaseEntity`를 상속 (`BaseTimeEntity`를 확장):
+
 - **ID**: UUID, DB에는 `BINARY(16)`으로 저장, API에서는 문자열로 노출
 - **타임스탬프**: `createdAt`과 `updatedAt`은 JPA Auditing으로 관리
 - `@UuidGenerator`와 `@EntityListeners(AuditingEntityListener.class)` 사용
@@ -74,6 +76,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 ### 응답 포맷
 
 모든 API 응답은 `RsData<T>` 구조 사용:
+
 ```json
 {
   "code": 1000,
@@ -102,7 +105,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 
 ## 작업 워크플로
 
-이 프로젝트는 `docs/todo/v1.4.md`에 정의된 구조화된 계획 워크플로를 따름:
+이 프로젝트는 `docs/todo/v1.5.md`에 정의된 구조화된 계획 워크플로를 따름:
 
 1. 작업은 Phase/Epic/Task 계층으로 구성
 2. 각 작업마다 `docs/plan/<feature>_plan.md`에 계획 문서 작성
@@ -111,7 +114,8 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 5. 의미 있는 이벤트는 `docs/history/AGENT_LOG.md`에 기록
 
 ### 사용자가 "go"라고 하면
-1. `docs/todo/v1.4.md`에서 다음 작업 확인 (🔄 진행 중 우선, 없으면 첫 번째 ⚪ 대기)
+
+1. `docs/todo/v1.5.md`에서 다음 작업 확인 (🔄 진행 중 우선, 없으면 첫 번째 ⚪ 대기)
 2. 계획이 없으면 `docs/plan/<feature>_plan.md` 작성 후 한국어 요약 제공 및 승인 요청
 3. 승인 후 테스트와 함께 구현
 4. TODO 상태와 AGENT_LOG 업데이트
@@ -126,6 +130,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 - **브랜치**: `feature/<scope>-<desc>`, `fix/<scope>-<desc>`, `refactor/<scope>-<desc>`
 
 예시:
+
 - `feat(backend:domain-auth): add teacher registration API`
 - `refactor(backend:domain-member): extract repository interfaces`
 - `test(backend:domain-invitation): add service unit tests`
@@ -145,6 +150,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 ## 도메인 모델 (현재 상태)
 
 구현된 주요 엔티티:
+
 - **Member**: 역할을 가진 사용자 (Teacher/Assistant/Student/SuperAdmin)
   - Teacher는 Course를 생성하고 Assistant를 초대
   - Assistant는 Student를 초대
@@ -153,8 +159,18 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
   - 유형: Assistant 초대 (Teacher가 생성), Student 초대 (Assistant가 생성)
 
 계획된 엔티티 (`docs/spec/v1.2.md` 참고):
+
 - Course, ClinicSlot, ClinicSession, SharedLesson, PersonalLesson
 - StudentProfile, Notice, WorkLog, ClinicRecord
+
+## 프런트엔드 컴포넌트 사용 지침
+
+- `/components` 페이지에 데모된 공통 컴포넌트(Button, Card, Carousel, Hero, NavigationBar, Footer, TextField 등)는 앞으로 구현될 모든 프런트 기능에서 기본적으로 사용한다.
+- 기존 컴포넌트로 요구사항을 충족하기 어렵다면, **새 컴포넌트를 추가하기 전에** 사용자에게 아래 내용을 반드시 질문한다:
+  1. 어떤 추가 컴포넌트를 만들 계획인지 (이름/역할)
+  2. 왜 기존 공통 컴포넌트로는 해결이 어려운지
+  3. 새 컴포넌트를 어느 화면/기능에 사용할 예정인지
+- 사용자의 확인/승인 없이 새 UI 컴포넌트를 도입하지 말고, 가능한 한 기존 라이브러리(components page 기준)를 재활용한다.
 
 ## 코드 스타일 참고사항
 

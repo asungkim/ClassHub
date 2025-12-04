@@ -6,27 +6,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "format": "prettier --write .",
     "openapi:download": "curl -o src/types/openapi.json http://localhost:8080/v3/api-docs",
     "openapi:generate": "openapi-typescript src/types/openapi.json -o src/types/openapi.d.ts",
     "openapi": "npm run openapi:download && npm run openapi:generate"
   },
   "dependencies": {
     "@tanstack/react-query": "5.62.7",
+    "clsx": "^2.1.1",
     "next": "16.0.3",
+    "openapi-fetch": "^0.15.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "4.1.17",
     "@types/node": "22.10.1",
     "@types/react": "19.0.1",
     "@types/react-dom": "19.0.1",
-    "autoprefixer": "10.4.20",
-    "eslint": "9.14.0",
-    "eslint-config-next": "16.0.3",
-    "openapi-fetch": "^0.15.0",
     "openapi-typescript": "^7.10.1",
-    "postcss": "8.4.47",
+    "prettier": "^3.3.3",
     "tailwindcss": "4.1.17",
     "typescript": "5.8.3"
   }
