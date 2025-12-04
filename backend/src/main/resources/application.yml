@@ -36,4 +36,4 @@ security:
       secure: ${REFRESH_COOKIE_SECURE:false}
       path: ${REFRESH_COOKIE_PATH:/}
       domain: ${REFRESH_COOKIE_DOMAIN:}
-      same-site: ${REFRESH_COOKIE_SAMESITE:Lax}
+      same-site: ${REFRESH_COOKIE_SAMESITE:None}

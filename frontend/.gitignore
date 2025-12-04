@@ -45,6 +45,3 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# OpenAPI generated files
-src/types/openapi.json
-src/types/openapi.d.ts

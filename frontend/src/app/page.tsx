@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import { useSession } from "@/components/session/session-provider";
@@ -14,6 +15,7 @@ type LoginResponseData = components["schemas"]["LoginResponse"];
 
 export default function HomePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { status, member, error: sessionError, setToken } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,6 +44,7 @@ export default function HomePage() {
 
       const loginData: LoginResponseData = response.data.data ?? {};
       setToken(loginData.accessToken ?? null);
+      await queryClient.invalidateQueries({ queryKey: ["session", "current"] });
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다.");
     } finally {

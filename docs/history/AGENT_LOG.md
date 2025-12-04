@@ -2898,3 +2898,69 @@ BEHAVIORAL
   - `docs/todo/v1.5.md`
 - 다음 단계
   - 역할별 대시보드 UI를 실제 위젯/데이터와 연결하고, 필요 시 자동 테스트(useRoleGuard 단위 테스트)도 추가한다.
+
+## [2025-12-04 18:07] 프런트 세션 Refresh 쿠키 연동
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `SessionProvider`가 앱 초기화 시 `/auth/refresh`를 호출해 HttpOnly 쿠키 기반으로 AccessToken을 재발급하고, 새로고침 후에도 세션이 유지되도록 변경했다.
+- 모든 fetch가 `credentials: "include"`로 동작하게 조정하고, `useSession` 컨텍스트에 `logout`/`refreshSession` 기능을 추가했다.
+- 로그인 페이지는 토큰 주입 이후 React Query 세션 캐시를 무효화해 즉시 사용자 정보가 로딩된다.
+
+### Details
+- 작업 사유
+  - 백엔드가 RefreshToken을 쿠키로 옮긴 뒤에도 프런트가 AccessToken을 복구하지 않아 새로고침 시 로그아웃되던 문제를 해결.
+- 영향받은 테스트
+  - `npm run lint` (프로젝트에 lint 스크립트 미정의로 실행 불가)
+  - 수동 검증: 로그인 후 새로고침해도 대시보드 유지, 로그아웃 시 쿠키 삭제 및 세션 초기화 확인.
+- 수정한 파일
+  - `frontend/src/lib/api.ts`
+  - `frontend/src/components/session/session-provider.tsx`
+  - `frontend/src/app/page.tsx`
+- 다음 단계
+  - `/auth/logout` 버튼 등을 연결해 실제 UI에서 logout 함수를 사용하도록 하고, 필요 시 React Testing Library 기반 훅 테스트를 추가한다.
+
+## [2025-12-04 20:48] Docker Compose 기반 HTTPS 인프라 초안
+
+### Type
+STRUCTURAL
+
+### Summary
+- backend 모듈에 멀티 스테이지 `Dockerfile`과 `.dockerignore`를 추가해 컨테이너 이미지를 쉽게 빌드할 수 있도록 했다.
+- `infra/docker/docker-compose.yml`을 작성해 MySQL 8.4, Spring Boot 백엔드, Nginx Proxy Manager를 하나의 네트워크로 띄우고, `.env.example`/README로 실행 방법과 HTTPS 프록시 구성을 문서화했다.
+- `docs/plan/infra/docker-compose_https_plan.md`에 요구사항/배포/테스트 계획을 정리했다.
+
+### Details
+- 작업 사유
+  - RefreshToken 쿠키 검증과 향후 배포를 위해 로컬에서도 HTTPS Reverse Proxy가 필요한 상황이었음.
+- 영향받은 테스트
+  - N/A (인프라 스크립트 추가)
+- 수정한 파일
+  - `backend/Dockerfile`, `backend/.dockerignore`
+  - `infra/docker/{docker-compose.yml,.env.example,README.md}`
+  - `docs/plan/infra/docker-compose_https_plan.md`
+- 다음 단계
+  - 실제 HTTPS 도메인/인증서를 Proxy Manager에서 설정하고, Compose 환경에서 백엔드 API를 호출해 Refresh 쿠키가 저장되는지 검증한다.
+
+## [2025-12-04 21:57] Docker Compose 환경 변수 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- 도메인/DB 설정을 `backend/.env` 하나로 통합하고, MySQL/백엔드 컨테이너가 동일한 파일을 참조하도록 `infra/docker/docker-compose.yml`을 수정했다.
+- `backend/.env`에 MySQL 루트 비밀번호/DB명/포트/로컬 도메인 등을 추가하고, Refresh 쿠키 기본값을 HTTPS 환경에 맞춰 조정했다.
+- Compose에서 더 이상 별도의 `.env`를 사용하지 않고도 MySQL과 Spring Boot가 같은 설정을 공유한다.
+
+### Details
+- 작업 사유
+  - `.env` 파일이 두 곳으로 분리돼 값이 중복/헷갈린다는 피드백을 반영했음.
+- 영향받은 테스트
+  - N/A (Compose 설정만 수정)
+- 수정한 파일
+  - `backend/.env`
+  - `infra/docker/docker-compose.yml`
+- 다음 단계
+  - Compose를 다시 빌드/실행하여 통합된 환경 변수로 백엔드가 정상 기동하는지 확인한다.

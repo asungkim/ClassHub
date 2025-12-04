@@ -3,11 +3,13 @@ package com.classhub.domain.auth.support;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
@@ -33,6 +35,7 @@ public class RefreshTokenCookieProvider {
 
     public void setRefreshToken(HttpServletResponse response, String refreshToken, LocalDateTime expiresAt) {
         Duration duration = Duration.between(LocalDateTime.now(ZoneOffset.UTC), expiresAt);
+        System.out.println("duration = " + duration.toSeconds());
         long maxAge = Math.max(duration.toSeconds(), 0);
         ResponseCookie cookie = baseCookieBuilder(refreshToken)
                 .maxAge(maxAge)

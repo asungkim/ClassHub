@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo } from "react";
+import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, clearAuthToken, setAuthToken } from "@/lib/api";
 import { env } from "@/lib/env";
@@ -18,8 +18,9 @@ type SessionContextValue = {
   status: SessionStatus;
   member: MemberSummary | null;
   error: unknown;
-  refresh: () => Promise<void>;
+  refreshSession: () => Promise<boolean>;
   setToken: (token: string | null) => void;
+  logout: () => Promise<void>;
 };
 
 type FetchErrorLike = {
@@ -54,23 +55,61 @@ async function fetchSession(): Promise<MemberSummary | null> {
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const [hasAttemptedRefresh, setHasAttemptedRefresh] = useState(Boolean(env.mockToken));
 
   useEffect(() => {
     if (env.mockToken) {
       setAuthToken(env.mockToken);
+      setHasAttemptedRefresh(true);
     }
   }, []);
+
+  const performRefresh = useCallback(async () => {
+    try {
+      const response = await api.POST("/auth/refresh" as any, {});
+      const token = response.data?.data?.accessToken;
+      if (token) {
+        setAuthToken(token);
+        return true;
+      }
+      clearAuthToken();
+      return false;
+    } catch {
+      clearAuthToken();
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (env.mockToken) {
+      return;
+    }
+    let isMounted = true;
+    const run = async () => {
+      await performRefresh();
+      if (isMounted) {
+        setHasAttemptedRefresh(true);
+      }
+    };
+    void run();
+    return () => {
+      isMounted = false;
+    };
+  }, [performRefresh]);
 
   const sessionQuery = useQuery({
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
     retry: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    enabled: hasAttemptedRefresh
   });
 
-  const refresh = useCallback(async () => {
+  const refreshSession = useCallback(async () => {
+    const success = await performRefresh();
     await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
-  }, [queryClient]);
+    return success;
+  }, [performRefresh, queryClient]);
 
   const setToken = useCallback(
     (token: string | null) => {
@@ -84,9 +123,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [queryClient]
   );
 
+  const logout = useCallback(async () => {
+    try {
+      await api.POST("/auth/logout" as any, {});
+    } catch {
+      // ignore
+    } finally {
+      clearAuthToken();
+      await queryClient.resetQueries({ queryKey: SESSION_QUERY_KEY });
+    }
+  }, [queryClient]);
+
   const value = useMemo<SessionContextValue>(() => {
     const status: SessionStatus =
-      sessionQuery.status === "pending"
+      !hasAttemptedRefresh || sessionQuery.status === "pending"
         ? "loading"
         : sessionQuery.data
           ? "authenticated"
@@ -96,10 +146,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       status,
       member: sessionQuery.data ?? null,
       error: sessionQuery.error,
-      refresh,
-      setToken
+      refreshSession,
+      setToken,
+      logout
     };
-  }, [sessionQuery.status, sessionQuery.data, sessionQuery.error, refresh, setToken]);
+  }, [hasAttemptedRefresh, sessionQuery.status, sessionQuery.data, sessionQuery.error, refreshSession, setToken, logout]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

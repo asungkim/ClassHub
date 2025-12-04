@@ -3,7 +3,12 @@ import { env } from "@/lib/env";
 import type { paths } from "@/types/openapi";
 
 const apiClient = createClient<paths>({
-  baseUrl: env.apiBaseUrl
+  baseUrl: env.apiBaseUrl,
+  fetch: async (url, init) =>
+    fetch(url, {
+      ...init,
+      credentials: "include"
+    })
 });
 
 export const api = apiClient;
