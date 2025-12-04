@@ -2777,6 +2777,24 @@ BEHAVIORAL
 - 다음 단계
   - 토큰 persist 전략이 확정되면 remember me 기능을 재도입한다.
 
+## [2025-12-04 16:59] TODO 상태 업데이트 - 선생님 회원가입 페이지 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 2 세부 항목 중 “선생님 회원가입 페이지 구현”을 🔄 상태로 전환해 현재 진행 작업으로 표시했다.
+
+### Details
+- 작업 사유
+  - `/auth/register/teacher` PLAN 작성 후 실제 구현을 시작하므로 TODO 상태를 업데이트했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - `docs/todo/v1.5.md`
+- 다음 단계
+  - Teacher 회원가입 페이지 구현 및 테스트 후 TODO를 ✅로 전환한다.
+
 ## [2025-12-04 16:54] Teacher 회원가입 페이지 PLAN 작성
 
 ### Type
@@ -2794,3 +2812,46 @@ DESIGN
   - `docs/plan/frontend/teacher-register_page_plan.md`
 - 다음 단계
   - PLAN을 기준으로 Teacher 회원가입 페이지를 구현하고 테스트한다.
+
+## [2025-12-04 17:07] 역할별 대시보드 페이지 틀 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `/dashboard/{superadmin,teacher,assistant,student}` 경로에 기본 페이지 컴포넌트를 추가해 향후 역할별 UI를 연결할 수 있는 골격을 만들었다.
+
+### Details
+- 작업 사유
+  - TODO 항목의 “역할별 대시보드 페이지 생성”을 진행하기 위한 최소한의 라우트를 마련함.
+- 영향받은 테스트
+  - N/A (새 페이지 틀)
+- 수정한 파일
+  - `frontend/src/app/dashboard/superadmin/page.tsx`
+  - `frontend/src/app/dashboard/teacher/page.tsx`
+  - `frontend/src/app/dashboard/assistant/page.tsx`
+  - `frontend/src/app/dashboard/student/page.tsx`
+- 다음 단계
+  - 각 역할별 페이지에 실제 위젯/라우팅 로직을 채우고, 로그인 후 해당 페이지로 이동하도록 연결한다.
+
+## [2025-12-04 17:11] Teacher 회원가입 페이지 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/auth/register/teacher` 페이지를 제작해 이메일/비밀번호/이름 입력, 약관 동의, 비밀번호 힌트, 성공 패널을 포함한 폼을 완성했다.
+- 폼은 OpenAPI 타입(`TeacherRegisterRequest/Response`)을 기반으로 API를 호출하며, 성공 시 완료 메시지와 로그인 이동 CTA를 보여준다.
+- TODO 항목 “선생님 회원가입 페이지 구현”을 완료(✅) 처리했다.
+
+### Details
+- 작업 사유
+  - 홈 화면의 “선생님 회원가입” 버튼과 실제 가입 플로우를 연결해 Teacher가 초대 없이도 계정을 만들 수 있도록 하기 위함.
+- 영향받은 테스트
+  - `npm run lint` (실행 불가: package.json에 lint 스크립트 없음)
+  - 수동: dev 환경에서 필수 검증/비밀번호 정책/약관 동의를 확인하고 중복/빈 입력 시 UI 반응을 확인함.
+- 수정한 파일
+  - `frontend/src/app/auth/register/teacher/page.tsx`
+  - `docs/todo/v1.5.md`
+- 다음 단계
+  - 로그인 성공 시 역할 기반 대시보드로 이동하도록 라우팅을 확장한다.
