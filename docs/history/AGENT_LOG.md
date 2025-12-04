@@ -2685,3 +2685,76 @@ BEHAVIORAL
   - `docs/todo/v1.5.md`
 - 다음 단계
   - Auth/Invitation 페이지를 동일한 SessionProvider 흐름으로 구현하고, 로그인/초대 페이지별 Test Plan을 정리한다.
+
+## [2025-12-04 16:35] 홈 페이지 Hero 카피 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/` 페이지 상단의 Hero 설명/목록 섹션을 제거해 로그인 카드에 집중하도록 단순화했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청으로 홈 화면을 로그인 카드 중심으로 유지하고, 상단 카피/리스트는 추후 대시보드에서 다루기로 했다.
+- 영향받은 테스트
+  - N/A (UI 텍스트 제거)
+- 수정한 파일
+  - `frontend/src/app/page.tsx`
+- 다음 단계
+  - 나머지 Auth/Invitation 페이지를 동일한 세션 흐름으로 구현한다.
+
+## [2025-12-04 16:38] 홈 페이지 세션 배너 UX 조정
+
+### Type
+BUGFIX
+
+### Summary
+- 초 방문 시 `/auth/me`가 실패하더라도 붉은 경고가 뜨지 않도록 SessionBanner의 에러 표시를 완화하고, 기본 안내 메시지로 대체했다.
+
+### Details
+- 작업 사유
+  - 백엔드가 꺼져 있거나 로그인 전 상태에서 에러 메시지가 보여 사용자 경험이 어색했다.
+- 영향받은 테스트
+  - N/A (UI 조건 변경)
+- 수정한 파일
+  - `frontend/src/app/page.tsx`
+- 다음 단계
+  - 실제 로그인 플로우 구현 시 성공/실패 상태를 별도 토스트나 폼 에러로 안내한다.
+
+## [2025-12-04 16:41] 홈 로그인 API 타입 참조 적용
+
+### Type
+STRUCTURAL
+
+### Summary
+- 홈 페이지 로그인 호출 시 `components["schemas"]["LoginRequest"]`/`LoginResponse` 타입을 활용해 OpenAPI 기반 Request/Response 검증을 적용했다.
+
+### Details
+- 작업 사유
+  - API 스펙 변경과 무관하게 타입 안전성을 확보하고, 임의 string 기반 구현을 방지하기 위함.
+- 영향받은 테스트
+  - N/A (타입/구현 정비)
+- 수정한 파일
+  - `frontend/src/app/page.tsx`
+- 다음 단계
+  - 다른 프런트 API 호출부도 동일한 방식으로 OpenAPI 타입을 명시한다.
+
+## [2025-12-04 16:41] 프런트 OpenAPI 사용 지침 추가
+
+### Type
+DESIGN
+
+### Summary
+- `frontend/AGENTS.md`, `CLAUDE.md`에 “프런트 API 구현 시 반드시 `src/types/openapi` 타입을 참고하고 Request/Response를 명시하라”는 규칙을 추가했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청에 따라 앞으로의 프런트 작업에서도 OpenAPI 스키마를 단일 출처로 삼도록 명문화.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - `frontend/AGENTS.md`
+  - `CLAUDE.md`
+- 다음 단계
+  - 향후 PLAN/구현 공유 시 해당 지침을 준수하고 테스트 보고를 병행한다.

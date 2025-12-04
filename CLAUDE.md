@@ -178,6 +178,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 - 구현 계획과 실행은 가능한 한 **작은 단계**(예: SessionProvider 세팅, ErrorState 컴포넌트, 훅 작성 등)로 나누고, 각 단계가 끝나면 어떤 테스트/검증을 했는지까지 보고한다.
 - 새 작업을 시작할 때는 “목표 → 세부 단계 → 예상 결과” 구조를 명시해 사용자가 진행 상황을 쉽게 따라올 수 있게 한다.
 - 각 단계 보고 시 반드시 **어떤 자동 테스트(React Testing Library, Storybook 시각 확인, Playwright 등)를 돌렸는지와 수동 확인(페이지 경로, mock 토큰 등)을 어떻게 했는지**를 적어야 한다.
+- 프런트에서 API를 호출하거나 타입을 선언할 때는 `frontend/src/types/openapi.d.ts` 기반 타입(`paths`, `operations`, `components`)을 참고해 Request/Response 스키마를 그대로 사용해야 한다. 문자열 상수나 임의 타입 대신 오픈API에서 파생된 타입을 명시하고, 필요 시 코드에 `type LoginRequestBody = components["schemas"]["LoginRequest"]` 같은 alias를 둔다.
 
 ## 코드 스타일 참고사항
 

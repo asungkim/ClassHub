@@ -6,6 +6,10 @@ import clsx from "clsx";
 import { api } from "@/lib/api";
 import { useSession } from "@/components/session/session-provider";
 import { InlineError } from "@/components/ui/inline-error";
+import type { components } from "@/types/openapi";
+
+type LoginRequestBody = components["schemas"]["LoginRequest"];
+type LoginResponseData = components["schemas"]["LoginResponse"];
 
 export default function HomePage() {
   const router = useRouter();
@@ -27,15 +31,17 @@ export default function HomePage() {
 
     try {
       setIsLoading(true);
+      const loginPayload: LoginRequestBody = { email, password };
       const response = await api.POST("/auth/login", {
-        body: { email, password }
+        body: loginPayload
       });
 
       if (!response.data?.data?.accessToken || response.error) {
         throw new Error(response.error?.message ?? "로그인에 실패했어요. 입력값을 다시 확인해주세요.");
       }
 
-      setToken(response.data.data.accessToken);
+      const loginData: LoginResponseData = response.data.data ?? {};
+      setToken(loginData.accessToken ?? null);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다.");
     } finally {
@@ -58,33 +64,7 @@ export default function HomePage() {
         <div className="animate-blob animation-delay-4000 absolute -bottom-10 left-1/2 h-80 w-80 rounded-full bg-pink-200 opacity-30 blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-start">
-        <section className="max-w-xl text-center lg:text-left">
-          <div className="inline-flex items-center rounded-full border border-white/70 bg-white/50 px-4 py-1 text-sm font-medium text-indigo-700 shadow-sm">
-            ClassHub
-          </div>
-          <h1 className="mt-6 text-4xl font-bold leading-tight text-gray-900 sm:text-5xl">
-            학원의 초대, 레슨, 학생 관리를 <span className="text-indigo-600">한곳에서</span>.
-          </h1>
-          <p className="mt-4 text-lg text-gray-600">
-            Teacher는 초대와 레슨을 준비하고, Assistant/Student는 초대 링크를 통해 자연스럽게 합류하세요. ClassHub는 역할별
-            대시보드로 업무를 단순화합니다.
-          </p>
-
-          <div className="mt-8 flex flex-col gap-4 text-left text-gray-700">
-            {[
-              "Teacher 대시보드: 초대/레슨/학생 리포트 관리",
-              "Assistant 대시보드: 초대 승인 및 일정 조율",
-              "Student 포털: 개인 레슨 일정과 피드백 확인"
-            ].map((item) => (
-              <div key={item} className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" />
-                <p>{item}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center">
         <div className="relative w-full max-w-md rounded-3xl bg-white/80 p-8 shadow-2xl ring-1 ring-white/60 backdrop-blur">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg">
@@ -327,8 +307,8 @@ function SessionBanner({ status, message, error, memberName }: SessionBannerProp
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-        세션을 확인하는 중 문제가 발생했습니다. 다시 로그인해주세요.
+      <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+        {message}
       </div>
     );
   }

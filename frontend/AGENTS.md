@@ -14,3 +14,4 @@
 - 공통 레이아웃(NavigationBar, Footer, Hero 등)은 `frontend/src/components/ui/` 하위에 이미 준비되어 있으므로 신규 페이지에서도 동일한 구조를 사용한다.
 - 컴포넌트 예시는 `/components` 쇼케이스 페이지에서 시각적으로 확인할 수 있으며, 디자인 토큰은 `classhub-theme.ts` 와 `globals.css` 를 통해 공유된다.
 - 기능을 작은 단위(컴포넌트/훅/상태)로 나눠 작업하고 **각 단위가 끝날 때마다 어떤 자동/수동 테스트를 실행했는지, 어떤 화면에서 확인했는지를 반드시 기록**한다.
+- API를 호출하거나 타입을 정의할 때는 반드시 `frontend/src/types/openapi.d.ts`에서 제공하는 `paths`, `operations`, `components` 타입을 참고해 Request/Response를 선언한다. 임의의 string/path를 쓰지 말고, 오픈API 스키마를 근거로 한 타입 안전한 구현을 유지한다.
