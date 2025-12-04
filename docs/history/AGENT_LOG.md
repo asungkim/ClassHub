@@ -2607,3 +2607,57 @@ DESIGN
   - `CLAUDE.md`
 - 다음 단계
   - 프런트 작업 보고 시 각 단계별 테스트/확인 내용을 빠짐없이 기록한다.
+
+## [2025-12-04 16:17] Frontend Home Page PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 2의 “Auth·Invitation 화면 구현”을 세분화해, 홈 페이지에서 세션 상태/주요 액션을 안내하는 `home-page_plan.md`를 작성했다.
+
+### Details
+- 작업 사유
+  - `/` 화면을 실제 업무 플로우 진입점으로 만들기 위해 Hero, 세션 카드, Quick Action 카드, Env 정보 등을 정의할 필요가 있었다.
+- 영향받은 테스트
+  - N/A (설계)
+- 수정한 파일
+  - `docs/plan/frontend/home-page_plan.md`
+- 다음 단계
+  - PLAN을 기준으로 홈 페이지 구현과 테스트(React Testing Library, 수동 확인)를 진행한다.
+
+## [2025-12-04 16:26] Frontend Home Page PLAN 보완
+
+### Type
+DESIGN
+
+### Summary
+- 홈 화면을 Glassmorphism 기반 로그인 카드 + Hero 레이아웃으로 재정의하고, Teacher 가입/초대 안내 등 구체적 UI 요구를 PLAN에 반영했다.
+
+### Details
+- 작업 사유
+  - 사용자 피드백에 따라 `/` 페이지를 실제 서비스 메인처럼 보이게 구성하고, Nav/Footer는 별도 대시보드에서 적용할 예정이라 독립 레이아웃으로 수정했다.
+- 영향받은 테스트
+  - N/A (설계 업데이트)
+- 수정한 파일
+  - `docs/plan/frontend/home-page_plan.md`
+- 다음 단계
+  - PLAN 기준으로 홈 페이지 구현 시 로그인 폼/CTA/애니메이션/테스트를 차례로 진행한다.
+
+## [2025-12-04 16:28] Home Page PLAN - 초대 안내 제외
+
+### Type
+DESIGN
+
+### Summary
+- 홈 페이지 PLAN에서 조교/학생 초대 안내 섹션을 제거하고, 기본 Hero + Login + Teacher 가입 CTA 중심으로 단순화했다.
+
+### Details
+- 작업 사유
+  - 초대 기반 가입은 별도 링크 진입 시 처리하기로 하여, 기본 홈 화면에는 노출하지 않도록 요구가 변경되었다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - `docs/plan/frontend/home-page_plan.md`
+- 다음 단계
+  - 홈 화면 구현 시 초대 안내는 별도 초대 링크 페이지에서 처리한다.
