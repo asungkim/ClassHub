@@ -2776,3 +2776,21 @@ BEHAVIORAL
   - `frontend/src/app/page.tsx`
 - 다음 단계
   - 토큰 persist 전략이 확정되면 remember me 기능을 재도입한다.
+
+## [2025-12-04 16:54] Teacher 회원가입 페이지 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- `/auth/register/teacher` 화면에 필요한 Hero/폼/오류 처리/약관 동의 요구사항과 Test Plan을 정의한 `teacher-register_page_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - TODO Phase 2에서 “로그인/회원가입/초대 화면”을 세분화해 홈 CTA와 실제 화면을 연결하기 위함.
+- 영향받은 테스트
+  - N/A (계획)
+- 수정한 파일
+  - `docs/plan/frontend/teacher-register_page_plan.md`
+- 다음 단계
+  - PLAN을 기준으로 Teacher 회원가입 페이지를 구현하고 테스트한다.
