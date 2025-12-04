@@ -30,3 +30,10 @@ custom:
     secret-key: ${JWT_SECRET_KEY:change-me}
     access-token-expiration-millis: ${JWT_ACCESS_TOKEN_EXP:3600000} # 1 hour
     refresh-token-expiration-millis: ${JWT_REFRESH_TOKEN_EXP:1209600000} # 14 days
+security:
+  cookie:
+    refresh:
+      secure: ${REFRESH_COOKIE_SECURE:false}
+      path: ${REFRESH_COOKIE_PATH:/}
+      domain: ${REFRESH_COOKIE_DOMAIN:}
+      same-site: ${REFRESH_COOKIE_SAMESITE:Lax}

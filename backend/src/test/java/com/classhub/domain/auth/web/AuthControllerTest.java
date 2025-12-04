@@ -1,8 +1,10 @@
 package com.classhub.domain.auth.web;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
+import jakarta.servlet.http.Cookie;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -131,9 +134,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.memberId").isNotEmpty())
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
                 .andExpect(jsonPath("$.data.accessTokenExpiresAt").isNotEmpty())
-                .andExpect(jsonPath("$.data.refreshTokenExpiresAt").isNotEmpty());
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refreshToken=")));
     }
 
     @Test
@@ -197,33 +199,25 @@ class AuthControllerTest {
     void refresh_success() throws Exception {
         createTeacher("teacher@classhub.com", "Classhub!1");
         String loginPayload = objectMapper.writeValueAsString(new LoginPayload("teacher@classhub.com", "Classhub!1"));
-        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+        var loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginPayload))
                 .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        String refreshToken = objectMapper.readTree(loginResponse).get("data").get("refreshToken").asText();
+                .andReturn();
 
-        String refreshPayload = objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken));
+        Cookie refreshCookie = loginResult.getResponse().getCookie("refreshToken");
+        assertThat(refreshCookie).isNotNull();
 
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(refreshPayload))
+        mockMvc.perform(post("/api/v1/auth/refresh").cookie(refreshCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refreshToken=")));
     }
 
     @Test
-    @DisplayName("잘못된 Refresh 토큰이면 401을 반환한다")
+    @DisplayName("Refresh 쿠키가 없으면 401을 반환한다")
     void refresh_invalidToken() throws Exception {
-        String payload = objectMapper.writeValueAsString(Map.of("refreshToken", "invalid-token"));
-
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
+        mockMvc.perform(post("/api/v1/auth/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -272,7 +266,7 @@ class AuthControllerTest {
                         .content(payload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refreshToken=")));
     }
 
     @Test
@@ -297,39 +291,30 @@ class AuthControllerTest {
     void logout_success() throws Exception {
         createTeacher("teacher@classhub.com", "Classhub!1");
         String loginPayload = objectMapper.writeValueAsString(new LoginPayload("teacher@classhub.com", "Classhub!1"));
-        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+        var loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginPayload))
                 .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        String refreshToken = objectMapper.readTree(loginResponse).get("data").get("refreshToken").asText();
+                .andReturn();
+        Cookie refreshCookie = loginResult.getResponse().getCookie("refreshToken");
 
-        String logoutPayload = objectMapper.writeValueAsString(new LogoutPayload(refreshToken, false));
+        mockMvc.perform(post("/api/v1/auth/logout").cookie(refreshCookie))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
 
-        mockMvc.perform(post("/api/v1/auth/logout")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(logoutPayload))
-                .andExpect(status().isOk());
-
-        String refreshPayload = objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken));
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(refreshPayload))
+        mockMvc.perform(post("/api/v1/auth/refresh").cookie(refreshCookie))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("로그아웃 요청 Validation 실패 시 400을 반환한다")
-    void logout_validationFailure() throws Exception {
+    @DisplayName("쿠키 없이 로그아웃 요청을 보내도 200을 반환한다")
+    void logout_withoutCookie() throws Exception {
         String payload = objectMapper.writeValueAsString(new LogoutPayload("", false));
 
         mockMvc.perform(post("/api/v1/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400));
+                .andExpect(status().isOk());
     }
 
     private Member createTeacher(String email, String rawPassword) {
@@ -359,4 +344,5 @@ class AuthControllerTest {
 
     private record LogoutPayload(String refreshToken, boolean logoutAll) {
     }
+
 }

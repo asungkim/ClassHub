@@ -2,9 +2,8 @@ package com.classhub.domain.auth.application;
 
 import com.classhub.domain.auth.dto.request.LoginRequest;
 import com.classhub.domain.auth.dto.request.LogoutRequest;
-import com.classhub.domain.auth.dto.request.RefreshRequest;
 import com.classhub.domain.auth.dto.request.TeacherRegisterRequest;
-import com.classhub.domain.auth.dto.response.LoginResponse;
+import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.MeResponse;
 import com.classhub.domain.auth.dto.response.TeacherRegisterResponse;
 import com.classhub.domain.auth.token.RefreshTokenStore;
@@ -49,7 +48,7 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public LoginResponse login(LoginRequest request) {
+    public AuthTokens login(LoginRequest request) {
         Member member = memberRepository.findByEmail(request.normalizedEmail())
                 .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));
 
@@ -61,8 +60,11 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public LoginResponse refresh(RefreshRequest request) {
-        String token = request.refreshToken();
+    public AuthTokens refresh(String refreshToken) {
+        if (refreshToken == null) {
+            throw new BusinessException(RsCode.UNAUTHENTICATED);
+        }
+        String token = refreshToken;
         if (refreshTokenStore.isBlacklisted(token)) {
             throw new BusinessException(RsCode.UNAUTHENTICATED);
         }
@@ -79,7 +81,7 @@ public class AuthService {
     @Transactional
     public void logout(LogoutRequest request) {
         String token = request.refreshToken();
-        if (!jwtProvider.isValidToken(token)) {
+        if (token == null || !jwtProvider.isValidToken(token)) {
             return;
         }
 
@@ -97,17 +99,17 @@ public class AuthService {
         return MeResponse.from(member);
     }
 
-    private LoginResponse issueTokens(Member member) {
+    private AuthTokens issueTokens(Member member) {
         String accessToken = jwtProvider.generateAccessToken(member.getId(), member.getRole().name());
         String refreshToken = jwtProvider.generateRefreshToken(member.getId());
         LocalDateTime accessExpiresAt = jwtProvider.getExpiration(accessToken);
         LocalDateTime refreshExpiresAt = jwtProvider.getExpiration(refreshToken);
 
-        return new LoginResponse(
+        return new AuthTokens(
                 member.getId(),
                 accessToken,
-                refreshToken,
                 accessExpiresAt,
+                refreshToken,
                 refreshExpiresAt
         );
     }

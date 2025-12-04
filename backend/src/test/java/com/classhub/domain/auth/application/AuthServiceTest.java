@@ -5,9 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classhub.domain.auth.dto.request.LoginRequest;
 import com.classhub.domain.auth.dto.request.LogoutRequest;
-import com.classhub.domain.auth.dto.request.RefreshRequest;
 import com.classhub.domain.auth.dto.request.TeacherRegisterRequest;
-import com.classhub.domain.auth.dto.response.LoginResponse;
+import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.TeacherRegisterResponse;
 import com.classhub.domain.auth.token.InMemoryRefreshTokenStore;
 import com.classhub.domain.member.model.Member;
@@ -90,12 +89,12 @@ class AuthServiceTest {
         Member member = createTeacher("teacher@classhub.com", "Classhub!1");
         LoginRequest request = new LoginRequest("teacher@classhub.com", "Classhub!1");
 
-        LoginResponse response = authService.login(request);
+        AuthTokens response = authService.login(request);
 
         assertThat(response.memberId()).isEqualTo(member.getId());
         assertThat(response.accessToken()).isNotBlank();
-        assertThat(response.refreshToken()).isNotBlank();
         assertThat(response.accessTokenExpiresAt()).isNotNull();
+        assertThat(response.refreshToken()).isNotBlank();
         assertThat(response.refreshTokenExpiresAt()).isNotNull();
     }
 
@@ -124,9 +123,9 @@ class AuthServiceTest {
     @DisplayName("유효한 Refresh 토큰으로 Access/Refresh를 재발급한다")
     void refresh_success() {
         createTeacher("teacher@classhub.com", "Classhub!1");
-        LoginResponse login = authService.login(new LoginRequest("teacher@classhub.com", "Classhub!1"));
+        AuthTokens login = authService.login(new LoginRequest("teacher@classhub.com", "Classhub!1"));
 
-        LoginResponse refreshed = authService.refresh(new RefreshRequest(login.refreshToken()));
+        AuthTokens refreshed = authService.refresh(login.refreshToken());
 
         assertThat(refreshed.accessToken()).isNotBlank();
         assertThat(refreshed.refreshToken()).isNotBlank();
@@ -136,9 +135,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("잘못된 Refresh 토큰이면 재발급을 거부한다")
     void refresh_invalidToken() {
-        RefreshRequest request = new RefreshRequest("invalid.token.value");
-
-        assertThatThrownBy(() -> authService.refresh(request))
+        assertThatThrownBy(() -> authService.refresh("invalid.token.value"))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(RsCode.UNAUTHENTICATED.getMessage());
     }
@@ -147,11 +144,11 @@ class AuthServiceTest {
     @DisplayName("로그아웃하면 해당 Refresh 토큰으로 재발급을 차단한다")
     void logout_blacklistsToken() {
         createTeacher("teacher@classhub.com", "Classhub!1");
-        LoginResponse login = authService.login(new LoginRequest("teacher@classhub.com", "Classhub!1"));
+        AuthTokens login = authService.login(new LoginRequest("teacher@classhub.com", "Classhub!1"));
 
         authService.logout(new LogoutRequest(login.refreshToken(), false));
 
-        assertThatThrownBy(() -> authService.refresh(new RefreshRequest(login.refreshToken())))
+        assertThatThrownBy(() -> authService.refresh(login.refreshToken()))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(RsCode.UNAUTHENTICATED.getMessage());
     }

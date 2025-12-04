@@ -3,8 +3,8 @@ package com.classhub.domain.auth.application;
 import com.classhub.domain.auth.dto.request.InvitationRegisterRequest;
 import com.classhub.domain.auth.dto.request.InvitationVerifyRequest;
 import com.classhub.domain.auth.dto.request.LoginRequest;
+import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.InvitationVerifyResponse;
-import com.classhub.domain.auth.dto.response.LoginResponse;
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;
 import com.classhub.domain.invitation.model.InvitationStatus;
@@ -46,7 +46,7 @@ public class InvitationAuthService {
     }
 
     @Transactional
-    public LoginResponse registerInvited(InvitationRegisterRequest request) {
+    public AuthTokens registerInvited(InvitationRegisterRequest request) {
         Invitation invitation = loadActiveInvitation(request.code());
         String normalizedEmail = request.normalizedEmail();
 
