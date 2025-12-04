@@ -17,7 +17,6 @@ export default function HomePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -71,7 +70,7 @@ export default function HomePage() {
               <ClassHubIcon />
             </div>
             <h2 className="text-3xl font-bold text-gray-900">ClassHub</h2>
-            <p className="text-sm text-gray-500">교습소 운영을 위한 통합 대시보드</p>
+            <p className="text-sm text-gray-500">ClassHub에 오신 것을 환영합니다</p>
           </div>
 
           <SessionBanner status={status} message={sessionMessage} error={sessionError} memberName={member?.name ?? ""} />
@@ -121,17 +120,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <label className="flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(event) => setRememberMe(event.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="ml-2">로그인 상태 유지</span>
-              </label>
-              <button type="button" className="font-medium text-blue-600 hover:text-blue-700">
+            <div className="flex justify-end text-sm text-blue-600">
+              <button type="button" className="font-medium hover:text-blue-700">
                 비밀번호 찾기
               </button>
             </div>
