@@ -2567,3 +2567,43 @@ BEHAVIORAL
   - `docs/todo/v1.5.md`
 - 다음 단계
   - Auth/Invitation / StudentProfile 페이지에서 `useSession`과 에러 컴포넌트를 활용하도록 UI 작업을 진행하고, 필요 시 토큰 저장/로그인 흐름을 세분화한다.
+
+## [2025-12-04 16:12] 프런트 PLAN Test Plan 명시
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/README.md`에 프런트 PLAN은 5번 섹션을 Test Plan으로 작성해 구체적인 테스트 전략을 담아야 한다는 규칙을 추가했다.
+- `ui-foundation_plan.md`의 `TDD Plan` 섹션명을 `Test Plan`으로 변경해 실제 테스트 항목을 명확히 했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청에 따라 프런트 개발도 TDD에 준하는 테스트 계획을 문서 단계에서 명시하도록 지침을 업데이트했다.
+- 영향받은 테스트
+  - N/A (문서)
+- 수정한 파일
+  - `docs/plan/README.md`
+  - `docs/plan/frontend/ui-foundation_plan.md`
+- 다음 단계
+  - 이후 모든 프런트 PLAN 문서에서 Test Plan 섹션에 단위/통합/E2E 테스트 전략을 구체적으로 작성한다.
+
+## [2025-12-04 16:15] 프런트 테스트 보고 지침 강화
+
+### Type
+DESIGN
+
+### Summary
+- `frontend/AGENTS.md`에 프런트 작업을 단위별로 나누고 자동/수동 테스트 결과를 반드시 기록하도록 명시했다.
+- `CLAUDE.md`에도 동일한 요구사항을 추가해 프런트 작업 보고 시 실행한 테스트 종류와 확인 절차를 항상 포함하도록 했다.
+
+### Details
+- 작업 사유
+  - 프런트 개발 시 검증 과정을 일관되게 공유해달라는 요청을 문서화해 에이전트 모두가 동일한 기준을 따르도록 하기 위함.
+- 영향받은 테스트
+  - N/A (문서)
+- 수정한 파일
+  - `frontend/AGENTS.md`
+  - `CLAUDE.md`
+- 다음 단계
+  - 프런트 작업 보고 시 각 단계별 테스트/확인 내용을 빠짐없이 기록한다.

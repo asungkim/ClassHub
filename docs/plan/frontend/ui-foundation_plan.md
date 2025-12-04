@@ -55,7 +55,7 @@
 - **LayoutState**
   - 전역 토스트/알림 큐 (React Context 혹은 simple store)
 
-## 5. TDD Plan
+## 5. Test Plan
 1. **SessionProvider Hook Test**
    - React Testing Library로 `SessionProvider` + mocked API 클라이언트를 이용해 `status` 변화를 검증한다.
    - 401 응답 시 `status`가 `unauthenticated`로 바뀌고 `member`가 `null`이 되는지 확인한다.
