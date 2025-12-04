@@ -2469,3 +2469,40 @@ TODO_UPDATE
   - `docs/todo/v1.5.md`
 - 다음 단계
   - 공통 컴포넌트 정비 완료 후 Auth/Invitation 화면 구현 항목을 이어서 진행한다.
+
+## [2025-12-04 12:25] Frontend UI Foundation PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 2의 “공통 레이아웃·세션 상태·에러 처리 컴포넌트 정비” 작업을 위한 `ui-foundation_plan.md`를 작성해 레이아웃 확장, SessionProvider, 에러 컴포넌트 요구사항을 정리했다.
+
+### Details
+- 작업 사유
+  - 세션/에러 처리 구현 범위가 명확하지 않아 기능 개발 전에 목표와 API 의존성을 정의할 필요가 있었다.
+- 영향받은 테스트
+  - N/A (설계 문서)
+- 수정한 파일
+  - `docs/plan/frontend/ui-foundation_plan.md`
+- 다음 단계
+  - PLAN 승인 후 SessionProvider/에러 컴포넌트 구현을 진행하고 TODO 상태를 업데이트한다.
+
+## [2025-12-04 12:26] 프런트 커뮤니케이션 지침 강화
+
+### Type
+DESIGN
+
+### Summary
+- 사용자의 프런트 이해도를 감안해, AGENTS.md와 CLAUDE.md에 “프런트 작업은 항상 세분화하고 단계별로 아주 상세히 설명”해야 한다는 지침을 추가했다.
+
+### Details
+- 작업 사유
+  - 프런트 관련 대화가 추상적으로 흐르면서 확인이 어렵다는 요청이 있어, 문서상으로 상세 설명/분할 규칙을 명시했다.
+- 영향받은 테스트
+  - N/A (문서)
+- 수정한 파일
+  - `AGENTS.md`
+  - `CLAUDE.md`
+- 다음 단계
+  - 프런트 PLAN/구현 공유 시 새로운 지침을 준수하며 단계별 설명을 제공한다.
