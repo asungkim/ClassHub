@@ -2855,3 +2855,46 @@ BEHAVIORAL
   - `docs/todo/v1.5.md`
 - 다음 단계
   - 로그인 성공 시 역할 기반 대시보드로 이동하도록 라우팅을 확장한다.
+
+## [2025-12-04 17:13] Role Dashboard Routing PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- `/dashboard/{role}` 페이지에 대한 접근 가드/자동 라우팅 전략을 정의한 `role-dashboard-routing_plan.md`를 추가했다.
+
+### Details
+- 작업 사유
+  - “역할별 대시보드 페이지 생성 → 각 role에 맞게 이동” TODO를 수행하기 위해 필요한 라우팅/가드 요구사항을 정리했다.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - `docs/plan/frontend/role-dashboard-routing_plan.md`
+- 다음 단계
+  - PLAN을 기준으로 RoleRoute 매핑/페이지 가드/로그인 후 리다이렉트를 구현한다.
+
+## [2025-12-04 17:25] 역할별 대시보드 라우팅/가드 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Role→Route 매핑(`frontend/src/lib/role-route.ts`)과 `useRoleGuard` 훅을 추가해 각 `/dashboard/*` 페이지에서 세션/역할을 검사하도록 했다.
+- 홈 로그인 후 인증되면 `member.role`에 맞춰 자동으로 해당 대시보드로 리다이렉트되도록 수정했고, Teacher 회원가입 완료 시 로그인 페이지로 자동 이동하도록 처리했다.
+- TODO의 “슈퍼어드민, 선생님, 조교, 학생별 대시보드 페이지 생성 → 각 role에 정해진 페이지로 넘어가게” 항목을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - TODO/PLAN에 따라 역할별 대시보드 접근을 제한하고 자연스럽게 이동시키기 위해.
+- 영향받은 테스트
+  - `npm run lint` (실패: 스크립트 미정의)
+  - 수동: 로그인/회원가입 성공 후 자동 리다이렉트 및 URL 직접 접근 시 가드 동작을 확인.
+- 수정한 파일
+  - `frontend/src/lib/role-route.ts`
+  - `frontend/src/hooks/use-role-guard.tsx`
+  - `frontend/src/app/{page.tsx,auth/register/teacher/page.tsx}`
+  - `frontend/src/app/dashboard/{superadmin,teacher,assistant,student}/page.tsx`
+  - `docs/todo/v1.5.md`
+- 다음 단계
+  - 역할별 대시보드 UI를 실제 위젯/데이터와 연결하고, 필요 시 자동 테스트(useRoleGuard 단위 테스트)도 추가한다.

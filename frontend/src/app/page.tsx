@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import { useSession } from "@/components/session/session-provider";
 import { InlineError } from "@/components/ui/inline-error";
 import type { components } from "@/types/openapi";
+import { getDashboardRoute } from "@/lib/role-route";
 
 type LoginRequestBody = components["schemas"]["LoginRequest"];
 type LoginResponseData = components["schemas"]["LoginResponse"];
@@ -54,6 +55,15 @@ export default function HomePage() {
       : status === "loading"
         ? "세션 상태를 확인하는 중입니다..."
         : "ClassHub에 로그인하고 대시보드를 살펴보세요.";
+
+  useEffect(() => {
+    if (status === "authenticated" && member?.role) {
+      const target = getDashboardRoute(member.role);
+      if (target) {
+        router.replace(target);
+      }
+    }
+  }, [status, member?.role, router]);
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4 py-16 text-gray-900">

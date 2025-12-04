@@ -1,4 +1,11 @@
+"use client";
+
+import { useRoleGuard } from "@/hooks/use-role-guard";
+
 export default function SuperAdminDashboardPage() {
+  const { canRender, fallback } = useRoleGuard("SUPERADMIN");
+  if (!canRender) return fallback;
+
   return (
     <div className="space-y-4">
       <h1 className="text-3xl font-bold text-slate-900">SuperAdmin Dashboard</h1>
@@ -6,4 +13,3 @@ export default function SuperAdminDashboardPage() {
     </div>
   );
 }
-

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useSession } from "@/components/session/session-provider";
 import { InlineError } from "@/components/ui/inline-error";
@@ -63,6 +63,15 @@ export default function TeacherRegisterPage() {
     }
   }
 
+  useEffect(() => {
+    if (successEmail) {
+      const timeout = setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [successEmail, router]);
+
   if (isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4">
@@ -109,7 +118,7 @@ export default function TeacherRegisterPage() {
 
         <div className="w-full max-w-lg rounded-3xl bg-white/90 p-8 shadow-2xl ring-1 ring-white/60 backdrop-blur">
           {successEmail ? (
-            <SuccessPanel email={successEmail} onNavigateHome={() => router.push("/auth/login")} />
+            <RedirectPanel email={successEmail} />
           ) : (
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="text-center">
@@ -226,22 +235,13 @@ function PasswordHint({ password }: { password: string }) {
   );
 }
 
-function SuccessPanel({ email, onNavigateHome }: { email: string; onNavigateHome: () => void }) {
+function RedirectPanel({ email }: { email: string }) {
   return (
     <div className="space-y-4 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-        ✓
-      </div>
-      <h3 className="text-2xl font-semibold text-gray-900">가입이 완료되었습니다!</h3>
+      <h3 className="text-2xl font-semibold text-gray-900">로그인 페이지로 이동합니다</h3>
       <p className="text-sm text-gray-500">
-        {email} 계정으로 가입되었습니다. 로그인 페이지에서 이메일과 비밀번호를 입력하여 대시보드를 이용하세요.
+        {email} 계정으로 가입이 완료되었습니다. 잠시 후 로그인 페이지로 이동해 새 계정으로 로그인해주세요.
       </p>
-      <button
-        className="w-full rounded-lg bg-indigo-600 py-3 text-white shadow-lg transition hover:bg-indigo-700"
-        onClick={onNavigateHome}
-      >
-        로그인하러 가기
-      </button>
     </div>
   );
 }
