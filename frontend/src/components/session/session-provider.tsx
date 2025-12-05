@@ -52,12 +52,10 @@ async function fetchSession(): Promise<MemberSummary | null> {
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [hasAttemptedRefresh, setHasAttemptedRefresh] = useState(Boolean(env.mockToken));
 
   useEffect(() => {
     if (env.mockToken) {
       setAuthToken(env.mockToken);
-      setHasAttemptedRefresh(true);
     }
   }, []);
 
@@ -81,25 +79,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (env.mockToken) {
       return;
     }
-    let isMounted = true;
-    const run = async () => {
-      await performRefresh();
-      if (isMounted) {
-        setHasAttemptedRefresh(true);
-      }
-    };
-    void run();
-    return () => {
-      isMounted = false;
-    };
+    void performRefresh();
   }, [performRefresh]);
 
   const sessionQuery = useQuery({
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
     retry: false,
-    refetchOnWindowFocus: false,
-    enabled: hasAttemptedRefresh
+    refetchOnWindowFocus: false
   });
 
   const refreshSession = useCallback(async () => {
@@ -133,7 +120,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SessionContextValue>(() => {
     const status: SessionStatus =
-      !hasAttemptedRefresh || sessionQuery.status === "pending"
+      sessionQuery.status === "pending"
         ? "loading"
         : sessionQuery.data
           ? "authenticated"
@@ -147,7 +134,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setToken,
       logout
     };
-  }, [hasAttemptedRefresh, sessionQuery.status, sessionQuery.data, sessionQuery.error, refreshSession, setToken, logout]);
+  }, [sessionQuery.status, sessionQuery.data, sessionQuery.error, refreshSession, setToken, logout]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
