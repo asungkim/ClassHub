@@ -3262,3 +3262,39 @@ STRUCTURAL
   - `.github/workflows/backend-cd.yml`
 - 다음 단계
   - Terraform 설계에 prod SSH 정보 전달 방안을 반영하면서 이후 작업을 진행한다.
+## [2025-12-05 14:58] CI/CD 테스트 환경 변수 보완
+
+### Type
+STRUCTURAL
+
+### Summary
+- 백엔드 테스트가 WeakKeyException으로 실패해, CI/CD 워크플로의 테스트 단계에 고정된 JWT 시크릿 값을 주입해 안정적으로 통과하도록 수정했다.
+
+### Details
+- 작업 사유
+  - GitHub Actions 환경에는 `.env`가 없어서 기본 `change-me` 시크릿으로 테스트가 실행되며 JWT 키 길이 제약에 걸려 실패했다.
+- 영향받은 테스트
+  - `./gradlew test` (CI/CD 워크플로 내)
+- 수정한 파일
+  - `.github/workflows/backend-ci.yml`
+  - `.github/workflows/backend-cd.yml`
+- 다음 단계
+  - 필요 시 Secrets로 치환하거나 Terraform/배포 환경에서도 동일한 키를 문서화한다.
+## [2025-12-05 15:02] CI/CD JWT 시크릿을 GitHub Secrets로 이전
+
+### Type
+STRUCTURAL
+
+### Summary
+- GitHub Actions 워크플로에서 테스트용 JWT 시크릿을 하드코딩하지 않고 `secrets.CI_JWT_SECRET`를 참조하도록 변경했다.
+
+### Details
+- 작업 사유
+  - 저장소에 민감한 키를 남기지 않고, GitHub Secrets로 안전하게 주입해야 한다.
+- 영향받은 테스트
+  - `./gradlew test` (CI/CD 워크플로 내)
+- 수정한 파일
+  - `.github/workflows/backend-ci.yml`
+  - `.github/workflows/backend-cd.yml`
+- 다음 단계
+  - 레포지토리 Settings > Secrets and variables > Actions에서 `CI_JWT_SECRET`을 충분히 긴 키로 등록한다.

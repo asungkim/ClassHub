@@ -38,7 +38,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
           cache: gradle
 
       - name: Make Gradle executable
@@ -51,6 +51,7 @@ jobs:
         working-directory: backend
         env:
           SPRING_PROFILES_ACTIVE: test
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET }}
         run: ./gradlew test
 
       - name: Publish unit test results
