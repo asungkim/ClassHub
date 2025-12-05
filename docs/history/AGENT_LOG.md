@@ -3087,3 +3087,178 @@ DESIGN
   - `CLAUDE.md`
 - 다음 단계
   - 새로운 프런트 작업을 시작할 때마다 해당 가이드를 다시 확인하고, 보고 포맷/검증 절차를 지킨다.
+
+## [2025-12-05 10:27] TODO v1.6 배포 우선순위 정리
+
+### Type
+TODO_UPDATE
+
+### Summary
+- 신규 `docs/todo/v1.6.md`에서 Phase 3를 “HTTPS 배포 및 운영”으로 재편성하고, Docker Compose prod 설정/ Terraform/CI/CD/쿠키 검증 등 배포 관련 태스크를 🔄/⚪ 상태로 명확히 구분했다.
+- 이후 Phase 번호(4~6)를 조정해 핵심 도메인 개발과 리팩토링, UX 개선 단계가 이어지도록 정리했다.
+
+### Details
+- 작업 사유
+  - 배포 환경을 최우선으로 진행해야 해 TODO 구조가 혼재돼 있어, 우선순위를 명확히 하기 위해 버전 v1.6을 다듬었다.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - `docs/todo/v1.6.md`
+- 다음 단계
+  - Phase 3의 각 작업마다 PLAN 문서를 작성/업데이트하고, 진행 상황을 🔄/✅로 갱신한다.
+## [2025-12-05 10:35] Docker Compose prod 계획 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 3의 Docker Compose prod 설정 태스크를 위해 override 구조, 이미지 전략, 환경 변수 템플릿 요구사항을 담은 설계 문서를 추가했다.
+- 운영 명령어와 검증 절차(TDD Plan)를 정의해 CI/서버에서 동일한 Compose 설정을 재현할 수 있도록 기준을 세웠다.
+
+### Details
+- 작업 사유
+  - prod 환경에 맞는 Compose override와 `.env.prod` 템플릿이 없어 배포 단계마다 수동 대응이 발생했으므로, 요구/검증 범위를 선명히 하기 위한 설계가 필요했다.
+- 영향받은 테스트
+  - N/A (문서 작성)
+- 수정한 파일
+  - `docs/plan/infra/docker-compose-prod_plan.md`
+- 다음 단계
+  - 사용자 리뷰/승인을 받은 뒤 prod override 파일과 `.env.prod.example`를 실제로 작성하고 TODO 상태를 갱신한다.
+## [2025-12-05 10:37] Docker Compose prod 계획 보안 요구 반영
+
+### Type
+DESIGN
+
+### Summary
+- prod Compose 설계에 비표준 포트 사용 요구를 반영해 `PUBLIC_HTTP_PORT`/`PUBLIC_HTTPS_PORT`/`NPM_DASHBOARD_PORT` 환경 변수로 호스트 노출 포트를 조정하고, ALB/보안 그룹과 연동하는 방식을 명시했다.
+- 문서에서 대시보드 포트를 SSH 터널 또는 화이트리스트로 제한하고, 포트 변경만으로는 충분한 보안이 아니라는 점을 전달하도록 했다.
+
+### Details
+- 작업 사유
+  - 사용자 피드백에 따라 기본 포트(80/443/81)를 그대로 드러내지 않고도 Compose 구성을 재현할 수 있도록 계획을 명확히 해야 했다.
+- 영향받은 테스트
+  - N/A (문서 업데이트)
+- 수정한 파일
+  - `docs/plan/infra/docker-compose-prod_plan.md`
+- 다음 단계
+  - 설계 승인 후 prod override 구현 시 비표준 포트 환경 변수와 보안 그룹 구성을 함께 반영한다.
+## [2025-12-05 14:03] Docker Compose prod 환경 구현 및 TODO 상태 갱신
+
+### Type
+STRUCTURAL
+
+### Summary
+- prod/local Docker Compose 파일을 분리하고 `.env.prod` 템플릿, backend prod 설정 등을 맞춰 HTTPS 배포 환경을 컨테이너 기반으로 재현 가능하게 만들었다.
+- TODO v1.6에서 Docker Compose prod 작업을 완료(✅)로 전환했다.
+
+### Details
+- 작업 사유
+  - 설계 문서에 정의한 prod override/환경변수 구조를 실제 Compose와 backend 설정에 반영해 운영 배포 기준을 확정하기 위함.
+- 영향받은 테스트
+  - 수동 Docker Compose 기동(`docker compose --env-file .env.prod up -d`)으로 backend/DB 헬스 확인.
+- 수정한 파일
+  - `infra/docker/docker-compose-prod.yml`
+  - `infra/docker/docker-compose-local.yml`
+  - `infra/docker/.env.example`
+  - `backend/.env.example`
+  - `backend/src/main/resources/application.yml`
+  - `backend/src/main/resources/application-prod.yml`
+  - `docs/todo/v1.6.md`
+- 다음 단계
+  - Terraform 기반 AWS 네트워크/EC2 작업을 위한 설계 문서 작성 후 진행.
+## [2025-12-05 14:10] CI/CD 파이프라인 설계 작성
+
+### Type
+DESIGN
+
+### Summary
+- GitHub Actions 기반으로 프론트/백엔드 테스트, 백엔드 이미지 빌드·푸시, EC2 배포 트리거를 자동화하는 계획을 정리했다.
+- main PR/머지 트리거, GHCR 태그 전략, 배포 명령 구조, TDD 플랜 등을 정의해 이후 구현 범위를 명확히 했다.
+
+### Details
+- 작업 사유
+  - prod Compose가 레지스트리 이미지를 요구하므로, 일관된 CI/CD 파이프라인 설계가 필요했다.
+- 영향받은 테스트
+  - N/A (문서 작성)
+- 수정한 파일
+  - `docs/plan/infra/ci-cd_pipeline_plan.md`
+- 다음 단계
+  - 사용자가 설계를 검토·승인하면 GitHub Actions workflow와 관련 스크립트를 구현한다.
+## [2025-12-05 14:15] CI/CD 설계에서 프런트 배포 범위 조정
+
+### Type
+DESIGN
+
+### Summary
+- 프런트엔드는 Vercel에서 별도 파이프라인으로 운영되므로, GitHub Actions CI/CD 설계에서 프런트 빌드/배포 단계를 제외하고 백엔드/이미지/배포 흐름만 남겼다.
+
+### Details
+- 작업 사유
+  - 사용자가 프런트 배포를 Vercel에서 처리한다고 하여, 저장소 CI/CD 설계가 중복되지 않도록 조정했다.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - `docs/plan/infra/ci-cd_pipeline_plan.md`
+- 다음 단계
+  - 백엔드 중심의 CI/CD 구현을 진행하면서, Vercel 배포는 별도 프로세스로 관리한다.
+## [2025-12-05 14:28] 백엔드 CI/CD 파이프라인 및 prod Compose 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- PR 대상 백엔드 테스트(`backend-ci`)와 main 병합 시 이미지 빌드·배포(`backend-cd`) 워크플로를 추가했다.
+- prod Compose가 GHCR 이미지를 가져오도록 구성하고, `.env.prod.example`/README에 운영 실행 절차를 정리했다.
+
+### Details
+- 작업 사유
+  - 설계한 CI/CD 절차를 코드화하고, 운영 Compose가 레지스트리 이미지를 사용하도록 만들기 위해 진행.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - `.github/workflows/backend-ci.yml`
+  - `.github/workflows/backend-cd.yml`
+  - `infra/docker/docker-compose-prod.yml`
+  - `infra/docker/.env.example`
+  - `infra/docker/.env.prod.example`
+  - `infra/docker/README.md`
+  - `docs/history/AGENT_LOG.md`
+- 다음 단계
+  - GitHub Secrets/Environments에 GHCR·SSH 정보를 등록하고, Terraform 작업(Phase 3 다음 항목)을 위한 설계를 준비한다.
+## [2025-12-05 14:40] CI/CD 워크플로 개선 (필터/이미지 정리)
+
+### Type
+STRUCTURAL
+
+### Summary
+- Backend CI에 concurrency, backend 경로 필터, 테스트 결과 리포트를 추가해 효율적으로 동작하도록 개선했다.
+- Backend CD에 paths 필터와 배포시 컨테이너 down/image prune 단계를 넣어 불필요한 실행과 디스크 사용을 줄였다.
+
+### Details
+- 작업 사유
+  - CI/CD 파이프라인을 이전 프로젝트에서 활용하던 최적화 패턴과 로깅, 자원 정리 방식으로 보완하기 위함.
+- 영향받은 테스트
+  - `./gradlew test`
+- 수정한 파일
+  - `.github/workflows/backend-ci.yml`
+  - `.github/workflows/backend-cd.yml`
+  - `docs/history/AGENT_LOG.md`
+- 다음 단계
+  - Terraform 설계 시 prod SSH 자격/호스트 정보를 Secrets로 넘길 수 있도록 인프라 출력/문서화를 포함한다.
+## [2025-12-05 14:43] CD 워크플로 compose 파일 경로 보완
+
+### Type
+STRUCTURAL
+
+### Summary
+- 배포 스크립트에서 prod 전용 compose 파일(`docker-compose-prod.yml`)을 명시하도록 수정해, 기본 compose 파일이 없는 서버에서도 안정적으로 pull/up이 동작하게 했다.
+
+### Details
+- 작업 사유
+  - prod 환경은 `docker-compose-prod.yml`만 존재하므로, `docker compose` 호출 시 `-f` 옵션을 빠뜨리면 실패한다는 이슈를 방지.
+- 영향받은 테스트
+  - N/A (워크플로 스크립트 수정)
+- 수정한 파일
+  - `.github/workflows/backend-cd.yml`
+- 다음 단계
+  - Terraform 설계에 prod SSH 정보 전달 방안을 반영하면서 이후 작업을 진행한다.

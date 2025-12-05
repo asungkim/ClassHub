@@ -1,3 +1,4 @@
 .codex
 .env
 .idea/
+.env.prod
