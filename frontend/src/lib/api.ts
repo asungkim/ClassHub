@@ -15,23 +15,35 @@ const apiClient = createClient<paths>({
 
 export const api = apiClient;
 
+let currentToken: string | null = null;
+
 /**
  * 요청 헤더에 Authorization 토큰을 자동으로 주입한다.
  */
 export function setAuthToken(token: string | null) {
-  if (!token) return;
-
-  api.use({
-    onRequest({ request }) {
-      request.headers.set("Authorization", `Bearer ${token}`);
-      return request;
-    }
-  });
+  currentToken = token;
 }
 
 /**
- * 중간에 주입된 토큰 interceptors를 제거한다.
+ * 현재 저장된 토큰을 반환한다.
+ */
+export function getAuthToken(): string | null {
+  return currentToken;
+}
+
+/**
+ * 중간에 주입된 토큰을 제거한다.
  */
 export function clearAuthToken() {
-  Object.assign(api, createClient<paths>({ baseUrl: env.apiBaseUrl }));
+  currentToken = null;
 }
+
+// 모든 요청에 토큰을 자동으로 주입하는 interceptor
+api.use({
+  onRequest({ request }) {
+    if (currentToken) {
+      request.headers.set("Authorization", `Bearer ${currentToken}`);
+    }
+    return request;
+  }
+});

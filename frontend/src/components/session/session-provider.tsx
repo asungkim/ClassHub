@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { api, clearAuthToken, setAuthToken } from "@/lib/api";
 import { getFetchError } from "@/lib/api-error";
 import { env } from "@/lib/env";
@@ -18,7 +18,7 @@ type MemberSummary = {
 type SessionContextValue = {
   status: SessionStatus;
   member: MemberSummary | null;
-  error: unknown;
+  error: string | null;
   refreshSession: () => Promise<boolean>;
   setToken: (token: string | null) => void;
   logout: () => Promise<void>;
@@ -50,59 +50,130 @@ async function fetchSession(): Promise<MemberSummary | null> {
   };
 }
 
+async function tryRefreshToken(): Promise<string | null> {
+  try {
+    const response = await api.POST("/api/v1/auth/refresh", {});
+    const token = response.data?.data?.accessToken;
+    return token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const [status, setStatus] = useState<SessionStatus>("loading");
+  const [member, setMember] = useState<MemberSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // 초기화: refresh 토큰으로 access 토큰 발급 → 사용자 정보 조회
   useEffect(() => {
-    if (env.mockToken) {
-      setAuthToken(env.mockToken);
+    let isMounted = true;
+
+    async function initializeSession() {
+      try {
+        setStatus("loading");
+        setError(null);
+
+        // Mock 토큰이 있으면 사용
+        if (env.mockToken) {
+          setAuthToken(env.mockToken);
+        } else {
+          // Refresh 토큰으로 access 토큰 발급
+          const accessToken = await tryRefreshToken();
+          if (!accessToken) {
+            if (isMounted) {
+              setStatus("unauthenticated");
+            }
+            return;
+          }
+          setAuthToken(accessToken);
+        }
+
+        // 사용자 정보 조회
+        const memberData = await fetchSession();
+        if (isMounted) {
+          if (memberData) {
+            setMember(memberData);
+            setStatus("authenticated");
+          } else {
+            clearAuthToken();
+            setStatus("unauthenticated");
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          clearAuthToken();
+          setError(err instanceof Error ? err.message : "세션 초기화 중 오류가 발생했습니다.");
+          setStatus("unauthenticated");
+        }
+      }
     }
+
+    void initializeSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const performRefresh = useCallback(async () => {
+  const refreshSession = useCallback(async () => {
     try {
-      const response = await api.POST("/api/v1/auth/refresh", {});
-      const token = response.data?.data?.accessToken;
-      if (token) {
-        setAuthToken(token);
+      const accessToken = await tryRefreshToken();
+      if (!accessToken) {
+        clearAuthToken();
+        setMember(null);
+        setStatus("unauthenticated");
+        await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+        return false;
+      }
+
+      setAuthToken(accessToken);
+      const memberData = await fetchSession();
+      if (memberData) {
+        setMember(memberData);
+        setStatus("authenticated");
+        await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
         return true;
       }
+
       clearAuthToken();
+      setMember(null);
+      setStatus("unauthenticated");
       return false;
     } catch {
       clearAuthToken();
+      setMember(null);
+      setStatus("unauthenticated");
       return false;
     }
-  }, []);
-
-  useEffect(() => {
-    if (env.mockToken) {
-      return;
-    }
-    void performRefresh();
-  }, [performRefresh]);
-
-  const sessionQuery = useQuery({
-    queryKey: SESSION_QUERY_KEY,
-    queryFn: fetchSession,
-    retry: false,
-    refetchOnWindowFocus: false
-  });
-
-  const refreshSession = useCallback(async () => {
-    const success = await performRefresh();
-    await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
-    return success;
-  }, [performRefresh, queryClient]);
+  }, [queryClient]);
 
   const setToken = useCallback(
-    (token: string | null) => {
-      if (token) {
-        setAuthToken(token);
-      } else {
+    async (token: string | null) => {
+      try {
+        if (token) {
+          setAuthToken(token);
+          const memberData = await fetchSession();
+          if (memberData) {
+            setMember(memberData);
+            setStatus("authenticated");
+          } else {
+            clearAuthToken();
+            setMember(null);
+            setStatus("unauthenticated");
+          }
+        } else {
+          clearAuthToken();
+          setMember(null);
+          setStatus("unauthenticated");
+        }
+        await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+      } catch {
         clearAuthToken();
+        setMember(null);
+        setStatus("unauthenticated");
       }
-      void queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
     },
     [queryClient]
   );
@@ -114,27 +185,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // ignore
     } finally {
       clearAuthToken();
+      setMember(null);
+      setStatus("unauthenticated");
       await queryClient.resetQueries({ queryKey: SESSION_QUERY_KEY });
     }
   }, [queryClient]);
 
   const value = useMemo<SessionContextValue>(() => {
-    const status: SessionStatus =
-      sessionQuery.status === "pending"
-        ? "loading"
-        : sessionQuery.data
-          ? "authenticated"
-          : "unauthenticated";
-
     return {
       status,
-      member: sessionQuery.data ?? null,
-      error: sessionQuery.error,
+      member,
+      error,
       refreshSession,
       setToken,
       logout
     };
-  }, [sessionQuery.status, sessionQuery.data, sessionQuery.error, refreshSession, setToken, logout]);
+  }, [status, member, error, refreshSession, setToken, logout]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
