@@ -38,3 +38,4 @@ out/
 
 ### Custom ###
 .env
+.env.prod

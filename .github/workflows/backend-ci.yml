@@ -1,0 +1,65 @@
+name: Backend CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect backend changes
+        id: backend_changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+
+      - name: Skip because backend untouched
+        if: steps.backend_changes.outputs.backend != 'true'
+        run: echo "No backend changes detected. Skipping tests."
+        continue-on-error: false
+
+      - name: Set up JDK
+        if: steps.backend_changes.outputs.backend == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Make Gradle executable
+        if: steps.backend_changes.outputs.backend == 'true'
+        working-directory: backend
+        run: chmod +x gradlew
+
+      - name: Run backend tests
+        if: steps.backend_changes.outputs.backend == 'true'
+        working-directory: backend
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET }}
+        run: ./gradlew test
+
+      - name: Publish unit test results
+        if: always() && steps.backend_changes.outputs.backend == 'true'
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: backend/**/build/test-results/test/TEST-*.xml
+          check_name: Backend Tests
+          job_summary: true
+          comment_mode: off
