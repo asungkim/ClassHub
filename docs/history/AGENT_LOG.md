@@ -3298,3 +3298,37 @@ STRUCTURAL
   - `.github/workflows/backend-cd.yml`
 - 다음 단계
   - 레포지토리 Settings > Secrets and variables > Actions에서 `CI_JWT_SECRET`을 충분히 긴 키로 등록한다.
+## [2025-12-05 15:05] CI workflow 권한 보완
+
+### Type
+STRUCTURAL
+
+### Summary
+- 테스트 결과 퍼블리시 액션이 체크 런 생성 권한이 없어 403이 발생해, CI 워크플로에 `checks: write` 권한을 추가했다.
+
+### Details
+- 작업 사유
+  - `EnricoMi/publish-unit-test-result-action`이 check run API를 호출하므로 `checks: write` 권한이 필요했다.
+- 영향받은 테스트
+  - `./gradlew test` (CI 워크플로 내)
+- 수정한 파일
+  - `.github/workflows/backend-ci.yml`
+- 다음 단계
+  - PR에서 CI 다시 실행 시 체크 실행 생성이 정상 동작하는지 확인한다.
+## [2025-12-05 15:08] 테스트 결과 퍼블리셔 코멘트 비활성화
+
+### Type
+STRUCTURAL
+
+### Summary
+- GitHub Actions가 PR 댓글 권한이 없어 403이 발생해, 테스트 결과 퍼블리셔를 check/job 요약만 남기고 댓글은 작성하지 않도록 설정했다.
+
+### Details
+- 작업 사유
+  - 기본 설정이 PR에 댓글을 달려고 하면서 권한 문제로 실패했으므로, `comment_mode: off`로 전환.
+- 영향받은 테스트
+  - `./gradlew test` (CI 워크플로 내)
+- 수정한 파일
+  - `.github/workflows/backend-ci.yml`
+- 다음 단계
+  - CI 재시행 시 체크/요약만 생성되는지 확인한다.
