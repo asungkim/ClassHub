@@ -37,7 +37,7 @@ variable "instance_type" {
 variable "key_pair_name" {
   description = "Name of an existing AWS key pair for SSH access"
   type        = string
-  default     = ""
+  default     = "classhub-prod-key"
 }
 
 variable "remote_app_path" {
