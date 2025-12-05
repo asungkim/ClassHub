@@ -3332,3 +3332,99 @@ STRUCTURAL
   - `.github/workflows/backend-ci.yml`
 - 다음 단계
   - CI 재시행 시 체크/요약만 생성되는지 확인한다.
+## [2025-12-05 15:11] Terraform 기반 인프라 설계 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 3의 "Terraform으로 AWS 네트워크/EC2 기본 리소스" 작업을 위해 VPC/서브넷/보안그룹/EC2/IAM/Output 구성을 정의한 설계 문서를 추가했다.
+- User Data, 변수, Outputs, TDD 계획을 포함해 CD에서 필요한 SSH/배포 경로 정보를 Terraform outputs로 연결하도록 명시했다.
+
+### Details
+- 작업 사유
+  - CD를 실제 서버에 적용하려면 일관된 인프라 코드가 필요하므로 요구 범위를 정리했다.
+- 영향받은 테스트
+  - N/A (문서 작성)
+- 수정한 파일
+  - `docs/plan/infra/terraform-basic_infra_plan.md`
+- 다음 단계
+  - 사용자 확인 후 Terraform 코드를 작성하고 `terraform fmt/validate`를 통과시킨다.
+## [2025-12-05 15:16] Terraform 계획에 인스턴스 타입 전략 반영
+
+### Type
+DESIGN
+
+### Summary
+- Terraform 설계에서 개발 환경은 t2.micro(Free Tier), 운영은 t3.small 이상을 사용할 수 있도록 인스턴스 타입을 변수화하도록 명시했다.
+
+### Details
+- 작업 사유
+  - 비용 절감을 위해 개발/운영 인스턴스 사양을 분리하고, Terraform 변수로 쉽게 전환할 수 있게 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - `docs/plan/infra/terraform-basic_infra_plan.md`
+- 다음 단계
+  - Terraform 구현 시 `instance_type` 변수를 도입하고 tfvars에서 개발/운영 값을 분리한다.
+## [2025-12-05 15:18] Terraform 설계에 Elastic IP 요구 추가
+
+### Type
+DESIGN
+
+### Summary
+- EC2에 고정 공인 IP를 제공하기 위해 Elastic IP 할당을 필수로 포함하도록 Terraform 계획을 보완했다.
+
+### Details
+- 작업 사유
+  - 배포/CD 환경에서 IP가 변하면 SSH/도메인 연동이 번거로우므로 Elastic IP를 사용하기로 함.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - `docs/plan/infra/terraform-basic_infra_plan.md`
+- 다음 단계
+  - Terraform에서 EIP 리소스를 생성하고 Output으로 IP 값을 노출한다.
+## [2025-12-05 15:25] Terraform 기본 인프라 구성 반영 및 TODO 상태 갱신
+
+### Type
+STRUCTURAL
+
+### Summary
+- VPC/서브넷/IGW/보안그룹/EC2(EIP 포함) 등 Phase 3 인프라 요구 사항을 Terraform 코드로 정비했다.
+- dev/prod tfvars 예시와 Terraform 관련 .gitignore 규칙을 추가하고, 이전 프로젝트 잔재(secrets.tf 등)를 제거했다.
+- TODO v1.6에서 Terraform 작업을 🔄 상태로 전환했다.
+
+### Details
+- 작업 사유
+  - CI/CD가 사용할 고정 인프라 템플릿을 마련하고, 민감한 값은 tfvars로 분리하기 위함.
+- 영향받은 테스트
+  - `terraform fmt`
+  - `terraform validate` (provider 설치가 막혀 init 실패로 검증 불가, 네트워크 접근 가능한 환경에서 `terraform init && terraform validate` 필요)
+- 수정한 파일
+  - `infra/terraform/main.tf`
+  - `infra/terraform/variables.tf`
+  - `infra/terraform/env/dev.tfvars.example`
+  - `infra/terraform/env/prod.tfvars.example`
+  - `infra/terraform/secrets.tf` (삭제)
+  - `.gitignore`
+  - `docs/todo/v1.6.md`
+- 다음 단계
+  - AWS 자격 증명이 있는 환경에서 `terraform init && terraform apply -var-file=env/dev.tfvars` 실행, Outputs를 GitHub Secrets/CD에 반영한다.
+## [2025-12-05 19:08] 프런트 세션 로직 초기 로딩 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- 메인 페이지에서 refresh/me 호출이 지연될 때 로그인 버튼이 비활성화된 채로 남는 문제를 해결하기 위해 `SessionProvider`의 초기 refresh 플로우를 단순화했다.
+- 세션 쿼리를 항상 즉시 실행하고 refresh는 백그라운드로만 수행해, API 지연과 무관하게 `status`가 신속히 `unauthenticated`로 떨어지도록 수정했다.
+
+### Details
+- 작업 사유
+  - 비로그인 사용자가 접속했을 때 `/auth/refresh` 호출이 지연되면 `status === "loading"` 상태가 길어져 로그인/회원가입 버튼을 눌 수 없는 문제가 있었다.
+- 영향받은 테스트
+  - 미실행 (프런트 런타임 변경)
+- 수정한 파일
+  - `frontend/src/components/session/session-provider.tsx`
+- 다음 단계
+  - 배포 프런트에서 새 코드가 반영되는지 확인하고, refresh/me API가 정상 응답하면 즉시 로그인 가능 여부를 재확인한다.
