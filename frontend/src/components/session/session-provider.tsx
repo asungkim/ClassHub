@@ -2,7 +2,7 @@
 
 import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { api, clearAuthToken, setAuthToken } from "@/lib/api";
+import { api, clearAuthToken, setAuthToken, tryRefreshToken } from "@/lib/api";
 import { getFetchError } from "@/lib/api-error";
 import { env } from "@/lib/env";
 
@@ -48,16 +48,6 @@ async function fetchSession(): Promise<MemberSummary | null> {
     name: payload.name ?? "",
     role: payload.role ?? ""
   };
-}
-
-async function tryRefreshToken(): Promise<string | null> {
-  try {
-    const response = await api.POST("/api/v1/auth/refresh", {});
-    const token = response.data?.data?.accessToken;
-    return token ?? null;
-  } catch {
-    return null;
-  }
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
