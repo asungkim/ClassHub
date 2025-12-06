@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/swagger-ui/**"
+                                "/swagger-ui/**",
+                                "/.well-known/**"
                         ).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasAuthority("SUPERADMIN")
                         .anyRequest().authenticated())

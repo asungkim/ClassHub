@@ -86,7 +86,7 @@ jobs:
           port: ${{ secrets.PROD_SSH_PORT }}
           script: |
             cd ${{ secrets.PROD_APP_PATH }}
-            docker compose -f docker-compose-prod.yml --env-file .env.prod down || true
+            docker-compose down || true
             docker image prune -af || true
-            docker compose -f docker-compose-prod.yml --env-file .env.prod pull backend
-            docker compose -f docker-compose-prod.yml --env-file .env.prod up -d --remove-orphans
+            docker-compose pull backend
+            docker-compose up -d --remove-orphans
