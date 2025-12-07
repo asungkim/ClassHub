@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { api, clearAuthToken, setAuthToken, tryRefreshToken } from "@/lib/api";
 import { getFetchError } from "@/lib/api-error";
 import { env } from "@/lib/env";
+import type { components } from "@/types/openapi";
 
 type SessionStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -23,6 +24,8 @@ type SessionContextValue = {
   setToken: (token: string | null) => void;
   logout: () => Promise<void>;
 };
+
+type LogoutRequest = components["schemas"]["LogoutRequest"];
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 const SESSION_QUERY_KEY = ["session", "current"] as const;
@@ -170,7 +173,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await api.POST("/api/v1/auth/logout", {});
+      const body: LogoutRequest = { logoutAll: false };
+      await api.POST("/api/v1/auth/logout", { body });
     } catch {
       // ignore
     } finally {

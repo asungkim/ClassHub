@@ -3428,3 +3428,98 @@ STRUCTURAL
   - `frontend/src/components/session/session-provider.tsx`
 - 다음 단계
   - 배포 프런트에서 새 코드가 반영되는지 확인하고, refresh/me API가 정상 응답하면 즉시 로그인 가능 여부를 재확인한다.
+
+## [2025-12-06 16:14] TODO v1.7: 로그아웃/대시보드 UI 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- 로그아웃 기능을 진행 중(🔄)으로 전환하고, 역할 공통 대시보드 UI 개선 작업을 Phase 6에 추가한 TODO v1.7을 작성했다.
+
+### Details
+- 작업 사유
+  - 로그아웃 UI/동작과 대시보드 좌측 네비·로그아웃 버튼 요구를 반영하기 위함.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - docs/todo/v1.7.md (신규)
+- 다음 단계
+  - 대시보드 UI/로그아웃 설계 문서를 작성하고 사용자 승인 후 구현에 착수한다.
+
+## [2025-12-06 16:16] 대시보드 UI/로그아웃 프런트 설계 작성
+
+### Type
+DESIGN
+
+### Summary
+- 좌측 사이드바/로그아웃 버튼/요약 카드/푸터 축소 요구를 반영한 프런트 대시보드 계획을 추가했다.
+
+### Details
+- 작업 사유
+  - 역할 공통 대시보드 레이아웃과 로그아웃 플로우를 구현하기 전에 요구사항과 검증 범위를 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/dashboard-ui_logout_plan.md (신규)
+- 다음 단계
+  - 설계 승인 후 대시보드 레이아웃/사이드바/로그아웃 버튼/푸터 조정 구현 및 `npm run build -- --webpack` 검증을 진행한다.
+
+## [2025-12-06 16:19] TODO v1.7 수정: 로그아웃+대시보드 UI 묶음
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 3의 작업명을 “로그아웃 기능 개발 및 대시보드 UI 개선”으로 수정해 대시보드 개선을 동일 태스크로 관리하도록 조정했다.
+
+### Details
+- 작업 사유
+  - 사용자 요청에 따라 로그아웃 구현과 대시보드 UI 개선을 하나의 진행 중 작업으로 명시하기 위함.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - docs/todo/v1.7.md
+- 다음 단계
+  - 설계 기준으로 대시보드 레이아웃/사이드바/로그아웃 버튼을 구현하고 빌드 검증을 진행한다.
+
+## [2025-12-06 16:31] 프런트 대시보드 좌측 내비·로그아웃 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 대시보드 페이지에 좌측 사이드바(역할별 프로필/메뉴)와 하단 로그아웃 버튼을 추가하고, 홈/Hero/Footer 요소를 제거한 전용 레이아웃으로 교체했다.
+- 대시보드 본문을 요약 카드·일정·클리닉 진행률·조교 근무 현황 카드로 구성해 모든 역할 페이지에서 동일한 UI를 제공한다.
+
+### Details
+- 작업 사유
+  - 요구사항에 맞춰 대시보드를 좌측 내비게이션 기반 UI로 재편하고, 명시적 로그아웃 버튼을 제공하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/components/ui/app-chrome.tsx
+  - frontend/src/components/dashboard/dashboard-shell.tsx (신규)
+  - frontend/src/components/dashboard/dashboard-sections.tsx (신규)
+  - frontend/src/components/session/session-provider.tsx
+  - frontend/src/app/dashboard/{teacher,assistant,student,superadmin}/page.tsx
+- 다음 단계
+  - 필요 시 실제 데이터 연동/역할별 메뉴 활성화와 추가 테스트(E2E)를 진행한다.
+
+## [2025-12-07 14:11] TODO v1.7 상태 업데이트: 로그아웃 완료, 초대 연동 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 3의 “로그아웃 기능 개발 및 대시보드 UI 개선”을 완료로 표시하고, “조교 및 학생 초대 기능 연동 및 개발”을 진행 중으로 전환했다.
+
+### Details
+- 작업 사유
+  - 현재 완료된 작업과 착수할 초대 연동 작업을 TODO에 반영하기 위함.
+- 영향받은 테스트
+  - N/A (문서 변경)
+- 수정한 파일
+  - docs/todo/v1.7.md
+- 다음 단계
+  - 조교/학생 초대 연동을 위한 PLAN 문서를 작성·승인받은 뒤 구현을 진행한다.

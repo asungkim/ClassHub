@@ -1,15 +1,16 @@
 "use client";
 
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { DashboardSections } from "@/components/dashboard/dashboard-sections";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 export default function AssistantDashboardPage() {
   const { canRender, fallback } = useRoleGuard("ASSISTANT");
   if (!canRender) return fallback;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-bold text-slate-900">Assistant Dashboard</h1>
-      <p className="text-slate-600">초대 승인·일정 조율을 위한 카드가 여기에 배치될 예정입니다.</p>
-    </div>
+    <DashboardShell title="조교 대시보드" subtitle="초대·일정·클리닉을 좌측 메뉴에서 관리하세요.">
+      <DashboardSections role="ASSISTANT" />
+    </DashboardShell>
   );
 }

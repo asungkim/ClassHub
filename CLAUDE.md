@@ -105,7 +105,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 
 ## 작업 워크플로
 
-이 프로젝트는 `docs/todo/v1.5.md`에 정의된 구조화된 계획 워크플로를 따름:
+이 프로젝트는 `docs/todo/v1.7.md`에 정의된 구조화된 계획 워크플로를 따름:
 
 1. 작업은 Phase/Epic/Task 계층으로 구성
 2. 각 작업마다 `docs/plan/<feature>_plan.md`에 계획 문서 작성
@@ -115,7 +115,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 
 ### 사용자가 "go"라고 하면
 
-1. `docs/todo/v1.5.md`에서 다음 작업 확인 (🔄 진행 중 우선, 없으면 첫 번째 ⚪ 대기)
+1. `docs/todo/v1.7.md`에서 다음 작업 확인 (🔄 진행 중 우선, 없으면 첫 번째 ⚪ 대기)
 2. 계획이 없으면 `docs/plan/<feature>_plan.md` 작성 후 한국어 요약 제공 및 승인 요청
 3. 승인 후 테스트와 함께 구현
 4. TODO 상태와 AGENT_LOG 업데이트
@@ -140,7 +140,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 ## 주요 문서
 
 - **스펙**: `docs/spec/v1.2.md` - 기술 스펙, 도메인 엔티티, 관계
-- **TODO**: `docs/todo/v1.4.md` - 현재 작업 항목 (Phase별 구성)
+- **TODO**: `docs/todo/v1.7.md` - 현재 작업 항목 (Phase별 구성)
 - **표준**:
   - `docs/standards/java-style.md` - Java 코딩 규칙
   - `docs/standards/commit-branch.md` - Git 워크플로

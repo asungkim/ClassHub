@@ -1,15 +1,16 @@
 "use client";
 
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { DashboardSections } from "@/components/dashboard/dashboard-sections";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 export default function TeacherDashboardPage() {
   const { canRender, fallback } = useRoleGuard("TEACHER");
   if (!canRender) return fallback;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-bold text-slate-900">Teacher Dashboard</h1>
-      <p className="text-slate-600">초대 관리, 레슨 일정, 학생 리포트 위젯이 여기에 배치됩니다.</p>
-    </div>
+    <DashboardShell title="선생님 대시보드" subtitle="수업과 클리닉 현황을 한눈에 확인하세요.">
+      <DashboardSections role="TEACHER" />
+    </DashboardShell>
   );
 }
