@@ -3885,3 +3885,45 @@ BEHAVIORAL
   - frontend/src/app/dashboard/students/page.tsx
 - 다음 단계
   - 학생 생성/수정/퇴원 흐름(단계 4~6)을 구현하고, Teacher/Assistant 권한 분기와 토스트/리다이렉트 처리를 추가한다.
+
+## [2025-12-07 22:50] 학생 생성 폼 구현 및 Teacher 전용 경로 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher 전용 학생 등록 페이지(`/dashboard/students/new`)를 추가해 StudentProfileCreateRequest 기반 필드를 입력/검증하고 등록 후 목록으로 이동하도록 했다.
+- 학생 목록 페이지에서 Teacher에게만 “학생 등록” 링크를 활성화하고, 생성 성공 시 목록 캐시를 무효화하는 React Query 훅(`useCreateStudentProfile`)을 추가했다.
+
+### Details
+- 작업 사유
+  - 계획 6단계 중 4번(학생 생성)을 완료해 실제 학생 등록 흐름을 제공하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+  - frontend/src/app/dashboard/students/new/page.tsx
+- 다음 단계
+  - 학생 수정/퇴원(단계 5~6) 페이지와 훅을 구현하고, 성공 토스트/리다이렉트 및 캐시 무효화를 연결한다.
+
+## [2025-12-07 23:05] 학생 수정 UI 및 상세 연동
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 수정 페이지(`/dashboard/students/[id]/edit`)를 Teacher 전용으로 추가해 기존 학생 정보를 조회(pre-fill) 후 수정/저장할 수 있게 했다.
+- 수정 성공 시 토스트, 목록 리다이렉트, 캐시 무효화 처리; 목록/모바일 카드에 Teacher 전용 “수정” 버튼을 추가했다.
+
+### Details
+- 작업 사유
+  - 계획 6단계 5번(학생 수정)을 구현해 학생 데이터 변경 흐름을 완성하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+  - frontend/src/app/dashboard/students/[id]/edit/page.tsx
+- 다음 단계
+  - 학생 퇴원(삭제) 흐름을 구현하고, 목록/권한 분기 및 토스트/캐시 무효화를 포함한다.
