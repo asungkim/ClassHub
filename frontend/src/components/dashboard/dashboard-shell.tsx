@@ -26,21 +26,35 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const role = member?.role ?? "";
+  const isTeacher = role === "TEACHER";
+  const isAssistant = role === "ASSISTANT";
 
   const dashboardHref: Route =
     (getDashboardRoute(member?.role ?? "TEACHER") as Route | undefined) ?? "/dashboard/teacher";
 
   const sidebarItems: SidebarItem[] = useMemo(
-    () => [
-      { label: "대시보드", href: dashboardHref },
-      { label: "수업 관리" },
-      { label: "학생 관리" },
-      { label: "클리닉 현황" },
-      { label: "조교 관리" },
-      { label: "공지사항" },
-      { label: "메시지", badge: "5" }
-    ],
-    [dashboardHref]
+    () => {
+      const items: SidebarItem[] = [{ label: "대시보드", href: dashboardHref }];
+
+      if (isTeacher) {
+        items.push({ label: "조교 관리", href: "/dashboard/assistants" as Route });
+      }
+
+      if (isTeacher || isAssistant) {
+        items.push({ label: "학생 관리", href: "/dashboard/students" as Route });
+      }
+
+      items.push(
+        { label: "수업 관리" },
+        { label: "클리닉 현황" },
+        { label: "공지사항" },
+        { label: "메시지", badge: "5" }
+      );
+
+      return items;
+    },
+    [dashboardHref, isAssistant, isTeacher]
   );
 
   const handleLogout = async () => {
@@ -85,7 +99,9 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
 
           <nav className="mt-4 flex-1 space-y-1 px-3">
             {sidebarItems.map((item) => {
-              const isActive = item.href ? pathname === item.href : false;
+              const isActive = item.href
+                ? pathname === item.href || pathname?.startsWith(`${item.href}/`)
+                : false;
               return item.href ? (
                 <Link
                   key={item.label}

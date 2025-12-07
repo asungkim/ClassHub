@@ -97,6 +97,20 @@ public class MemberService {
         refreshTokenStore.blacklistAllForMember(assistant.getId());
     }
 
+    @Transactional
+    public void activateAssistant(UUID teacherId, UUID assistantId) {
+        Member teacher = getTeacher(teacherId);
+        Member assistant = memberRepository.findById(assistantId)
+                .orElseThrow(() -> new BusinessException(RsCode.ASSISTANT_NOT_FOUND));
+
+        if (assistant.getRole() != MemberRole.ASSISTANT || !teacher.getId().equals(assistant.getTeacherId())) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+
+        assistant.activate();
+        memberRepository.save(assistant);
+    }
+
     private Member getTeacher(UUID memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));

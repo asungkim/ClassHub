@@ -12,6 +12,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,6 +31,7 @@ public class MemberController {
 
     @GetMapping
     @Operation(summary = "멤버 목록 조회 (조교 전용)", description = "Teacher가 소속 조교 목록을 조회한다.")    
+    @PreAuthorize("hasAuthority('TEACHER')")
     public RsData<PageResponse<MemberSummary>> getAssistants(
             @AuthenticationPrincipal MemberPrincipal principal,
             @RequestParam("role") String role,
@@ -48,11 +50,23 @@ public class MemberController {
 
     @PatchMapping("/{memberId}/deactivate")
     @Operation(summary = "조교 비활성화", description = "Teacher가 소속 조교를 비활성화한다.")
+    @PreAuthorize("hasAuthority('TEACHER')")
     public RsData<Void> deactivateAssistant(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable UUID memberId
     ) {
         memberService.deactivateAssistant(principal.id(), memberId);
+        return RsData.from(RsCode.SUCCESS, null);
+    }
+
+    @PatchMapping("/{memberId}/activate")
+    @Operation(summary = "조교 활성화", description = "Teacher가 소속 조교를 활성 상태로 변경한다.")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public RsData<Void> activateAssistant(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID memberId
+    ) {
+        memberService.activateAssistant(principal.id(), memberId);
         return RsData.from(RsCode.SUCCESS, null);
     }
 }

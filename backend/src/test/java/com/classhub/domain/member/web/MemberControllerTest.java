@@ -127,6 +127,18 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("Teacher는 비활성 조교를 다시 활성화할 수 있다")
+    void activateAssistant_success() throws Exception {
+        mockMvc.perform(patch("/api/v1/members/{id}/activate", assistantInactive.getId())
+                        .with(teacherPrincipal())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        Member updated = memberRepository.findById(assistantInactive.getId()).orElseThrow();
+        assertThat(updated.isActive()).isTrue();
+    }
+
+    @Test
     @DisplayName("다른 Teacher 소속 조교는 비활성화할 수 없다")
     void deactivateAssistant_forbiddenForOtherTeacher() throws Exception {
         Member otherTeacher = memberRepository.save(
