@@ -1,15 +1,16 @@
 "use client";
 
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { DashboardSections } from "@/components/dashboard/dashboard-sections";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 export default function StudentDashboardPage() {
   const { canRender, fallback } = useRoleGuard("STUDENT");
   if (!canRender) return fallback;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-bold text-slate-900">Student Portal</h1>
-      <p className="text-slate-600">개별 레슨 일정과 피드백을 확인할 화면이 여기에 추가됩니다.</p>
-    </div>
+    <DashboardShell title="학생 대시보드" subtitle="수업 일정과 피드백을 한 번에 확인하세요.">
+      <DashboardSections role="STUDENT" />
+    </DashboardShell>
   );
 }

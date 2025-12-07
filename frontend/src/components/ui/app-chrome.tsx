@@ -41,9 +41,27 @@ const footerSections = [
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isDashboard = pathname?.startsWith("/dashboard");
 
   if (isHome) {
     return <>{children}</>;
+  }
+
+  if (isDashboard) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900">
+        <main className="min-h-screen">{children}</main>
+        <div
+          id="notification-layer"
+          className="pointer-events-none fixed inset-x-0 top-16 z-40 flex justify-center px-4"
+          aria-live="assertive"
+        >
+          <div className="w-full max-w-lg space-y-3" />
+        </div>
+        <div id="portal-toast-root" className="pointer-events-none fixed inset-0 z-50" />
+        <div id="portal-modal-root" className="pointer-events-none fixed inset-0 z-50" />
+      </div>
+    );
   }
 
   return (
