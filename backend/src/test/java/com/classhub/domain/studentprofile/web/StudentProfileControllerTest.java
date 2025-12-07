@@ -15,7 +15,9 @@ import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileCreateRequest;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileUpdateRequest;
+import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -57,6 +60,7 @@ class StudentProfileControllerTest {
     private Member teacher;
     private Member assistant;
     private Course course;
+
     @BeforeEach
     void setUp() {
         studentProfileRepository.deleteAll();
@@ -148,14 +152,39 @@ class StudentProfileControllerTest {
         );
 
         mockMvc.perform(get("/api/v1/student-profiles")
-                        .with(teacherPrincipal()))
+                .with(teacherPrincipal()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].name").value("Jane"));
     }
 
     @Test
-    @DisplayName("학생 프로필을 수정 및 삭제할 수 있다")
-    void updateAndDeleteProfile() throws Exception {
+    @DisplayName("Assistant는 소속 Teacher의 학생 목록을 조회할 수 있다")
+    void listStudentProfiles_asAssistant() throws Exception {
+        studentProfileRepository.saveAll(
+                List.of(
+                        StudentProfile.builder()
+                                .courseId(course.getId())
+                                .teacherId(teacher.getId())
+                                .assistantId(assistant.getId())
+                                .name("Jane")
+                                .phoneNumber("010-9999-0001")
+                                .parentPhone("01012345678")
+                                .schoolName("Seoul High")
+                                .grade("1")
+                                .age(15)
+                                .build()
+                )
+        );
+
+        mockMvc.perform(get("/api/v1/student-profiles")
+                        .with(assistantPrincipal()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("Jane"));
+    }
+
+    @Test
+    @DisplayName("학생 프로필을 수정, 비활성화, 다시 활성화할 수 있다")
+    void updateAndToggleProfile() throws Exception {
         com.classhub.domain.studentprofile.model.StudentProfile profile = studentProfileRepository.save(
                 com.classhub.domain.studentprofile.model.StudentProfile.builder()
                         .courseId(course.getId())
@@ -192,6 +221,57 @@ class StudentProfileControllerTest {
         mockMvc.perform(delete("/api/v1/student-profiles/{id}", profile.getId())
                         .with(teacherPrincipal()))
                 .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/v1/student-profiles/{id}/activate", profile.getId())
+                        .with(teacherPrincipal()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Assistant는 학생 프로필을 수정하거나 삭제할 수 없다")
+    void assistantCannotModifyProfile() throws Exception {
+        com.classhub.domain.studentprofile.model.StudentProfile profile = studentProfileRepository.save(
+                com.classhub.domain.studentprofile.model.StudentProfile.builder()
+                        .courseId(course.getId())
+                        .teacherId(teacher.getId())
+                        .assistantId(assistant.getId())
+                        .name("Jane")
+                        .phoneNumber("010-9999-0001")
+                        .parentPhone("01012345678")
+                        .schoolName("Seoul High")
+                        .grade("1")
+                        .age(15)
+                        .build()
+        );
+
+        StudentProfileUpdateRequest updateRequest = new StudentProfileUpdateRequest(
+                "Jane Updated",
+                "01098765432",
+                "Seoul High",
+                "2",
+                assistant.getId(),
+                "010-3333-2222",
+                null,
+                null,
+                17
+        );
+
+        mockMvc.perform(patch("/api/v1/student-profiles/{id}", profile.getId())
+                        .with(assistantPrincipal())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(updateRequest)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        mockMvc.perform(delete("/api/v1/student-profiles/{id}", profile.getId())
+                        .with(assistantPrincipal()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        mockMvc.perform(patch("/api/v1/student-profiles/{id}/activate", profile.getId())
+                        .with(assistantPrincipal()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
     }
 
     private String toJson(StudentProfileCreateRequest request) {
@@ -238,7 +318,24 @@ class StudentProfileControllerTest {
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(new org.springframework.security.authentication.TestingAuthenticationToken(
                     new MemberPrincipal(teacher.getId()),
-                    null
+                    null,
+                    java.util.List.of(new SimpleGrantedAuthority("TEACHER"))
+            ));
+            request.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    context
+            );
+            return request;
+        };
+    }
+
+    private RequestPostProcessor assistantPrincipal() {
+        return request -> {
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(new org.springframework.security.authentication.TestingAuthenticationToken(
+                    new MemberPrincipal(assistant.getId()),
+                    null,
+                    java.util.List.of(new SimpleGrantedAuthority("ASSISTANT"))
             ));
             request.setAttribute(
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,

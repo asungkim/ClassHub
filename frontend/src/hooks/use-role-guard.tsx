@@ -5,14 +5,28 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/components/session/session-provider";
 import { getDashboardRoute } from "@/lib/role-route";
 
+type AllowedRoles = string | string[];
+
 type RoleGuardResult = {
   canRender: boolean;
   fallback: JSX.Element | null;
 };
 
-export function useRoleGuard(requiredRole: string): RoleGuardResult {
+function normalizeRoles(requiredRoles: AllowedRoles): string[] {
+  if (Array.isArray(requiredRoles)) {
+    return requiredRoles.map((role) => role.toUpperCase());
+  }
+  return [requiredRoles.toUpperCase()];
+}
+
+export function useRoleGuard(requiredRoles: AllowedRoles): RoleGuardResult {
   const router = useRouter();
   const { status, member, error } = useSession();
+  const allowedRoles = useMemo(
+    () => normalizeRoles(requiredRoles),
+    [JSON.stringify(requiredRoles)]
+  );
+  const allowedKey = allowedRoles.join(",");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -20,11 +34,17 @@ export function useRoleGuard(requiredRole: string): RoleGuardResult {
       return;
     }
 
-    if (status === "authenticated" && member?.role && member.role !== requiredRole) {
+    if (status === "authenticated" && member?.role) {
+      const normalizedRole = member.role.toUpperCase();
+      const isAllowed = allowedRoles.includes(normalizedRole);
+      if (isAllowed) {
+        return;
+      }
+
       const target = getDashboardRoute(member.role) ?? "/";
       router.replace(target);
     }
-  }, [status, member?.role, requiredRole, router]);
+  }, [status, member?.role, allowedKey, allowedRoles, router]);
 
   const fallback = useMemo(() => {
     if (status === "loading") {
@@ -50,7 +70,7 @@ export function useRoleGuard(requiredRole: string): RoleGuardResult {
     );
   }, [status, error]);
 
-  if (status === "authenticated" && member?.role === requiredRole) {
+  if (status === "authenticated" && member?.role && allowedRoles.includes(member.role.toUpperCase())) {
     return { canRender: true, fallback: null };
   }
 

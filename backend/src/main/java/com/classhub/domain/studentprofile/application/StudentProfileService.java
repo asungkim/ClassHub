@@ -31,11 +31,14 @@ public class StudentProfileService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public StudentProfileResponse createProfile(UUID teacherId, StudentProfileCreateRequest request) {
-        Course course = getCourseOwnedByTeacher(request.courseId(), teacherId);
-        validateDuplicatePhoneNumber(teacherId, course.getId(), request.normalizedPhoneNumber());
+    public StudentProfileResponse createProfile(UUID principalId, StudentProfileCreateRequest request) {
+        Member actor = getMember(principalId);
+        ensureTeacher(actor);
 
-        Member assistant = getAssistant(request.assistantId(), teacherId);
+        Course course = getCourseOwnedByTeacher(request.courseId(), actor.getId());
+        validateDuplicatePhoneNumber(actor.getId(), course.getId(), request.normalizedPhoneNumber());
+
+        Member assistant = getAssistant(request.assistantId(), actor.getId());
 
         UUID memberId = null;
         if (request.memberId() != null) {
@@ -46,7 +49,7 @@ public class StudentProfileService {
 
         StudentProfile profile = StudentProfile.builder()
                 .courseId(course.getId())
-                .teacherId(course.getTeacherId())
+                .teacherId(actor.getId())
                 .assistantId(assistant.getId())
                 .memberId(memberId)
                 .name(request.normalizedName())
@@ -63,41 +66,65 @@ public class StudentProfileService {
     }
 
     @Transactional(readOnly = true)
-    public StudentProfileResponse getProfile(UUID teacherId, UUID profileId) {
+    public StudentProfileResponse getProfile(UUID principalId, UUID profileId) {
+        Member actor = getMember(principalId);
+        UUID teacherId = resolveTeacherId(actor);
         StudentProfile profile = getProfileForTeacher(teacherId, profileId);
         return StudentProfileResponse.from(profile);
     }
 
     @Transactional(readOnly = true)
     public Page<StudentProfileSummary> getProfiles(
-            UUID teacherId,
+            UUID principalId,
             StudentProfileSearchCondition condition,
             Pageable pageable
     ) {
+        Member actor = getMember(principalId);
+        UUID teacherId = resolveTeacherId(actor);
+        Boolean active = condition != null ? condition.active() : null;
         Page<StudentProfile> page;
         if (condition != null && condition.hasCourseFilter()) {
             ensureCourseOwnership(condition.courseId(), teacherId);
             if (condition.hasNameFilter()) {
-                page = studentProfileRepository
-                        .findAllByTeacherIdAndCourseIdAndActiveTrueAndNameContainingIgnoreCase(
+                page = active == null
+                        ? studentProfileRepository.findAllByTeacherIdAndCourseIdAndNameContainingIgnoreCase(
+                        teacherId,
+                        condition.courseId(),
+                        condition.name(),
+                        pageable
+                )
+                        : studentProfileRepository.findAllByTeacherIdAndCourseIdAndActiveAndNameContainingIgnoreCase(
                                 teacherId,
                                 condition.courseId(),
+                                active,
                                 condition.name(),
                                 pageable
                         );
             } else {
-                page = studentProfileRepository
-                        .findAllByTeacherIdAndCourseIdAndActiveTrue(teacherId, condition.courseId(), pageable);
+                page = active == null
+                        ? studentProfileRepository.findAllByTeacherIdAndCourseId(teacherId, condition.courseId(), pageable)
+                        : studentProfileRepository.findAllByTeacherIdAndCourseIdAndActive(
+                                teacherId, condition.courseId(), active, pageable
+                        );
             }
         } else if (condition != null && condition.hasNameFilter()) {
-            page = studentProfileRepository
-                    .findAllByTeacherIdAndActiveTrueAndNameContainingIgnoreCase(
-                            teacherId,
-                            condition.name(),
-                            pageable
-                    );
+            page = active == null
+                    ? studentProfileRepository.findAllByTeacherIdAndNameContainingIgnoreCase(
+                    teacherId,
+                    condition.name(),
+                    pageable
+            )
+                    : studentProfileRepository
+                            .findAllByTeacherIdAndActiveAndNameContainingIgnoreCase(
+                                    teacherId,
+                                    active,
+                                    condition.name(),
+                                    pageable
+                            );
         } else {
-            page = studentProfileRepository.findAllByTeacherIdAndActiveTrue(teacherId, pageable);
+            page = active == null
+                    ? studentProfileRepository.findAllByTeacherId(teacherId, pageable)
+                    : studentProfileRepository.findAllByTeacherIdAndActive(teacherId, active, pageable);
         }
 
         return page.map(StudentProfileSummary::from);
@@ -105,22 +132,25 @@ public class StudentProfileService {
 
     @Transactional
     public StudentProfileResponse updateProfile(
-            UUID teacherId,
+            UUID principalId,
             UUID profileId,
             StudentProfileUpdateRequest request
     ) {
-        StudentProfile profile = getProfileForTeacher(teacherId, profileId);
+        Member actor = getMember(principalId);
+        ensureTeacher(actor);
+
+        StudentProfile profile = getProfileForTeacher(actor.getId(), profileId);
 
         if (request.assistantId() != null && !request.assistantId().equals(profile.getAssistantId())) {
 
-            Member assistant = getAssistant(request.assistantId(), teacherId);
+            Member assistant = getAssistant(request.assistantId(), actor.getId());
             profile.assignAssistant(assistant.getId());
         }
 
         if (request.phoneNumber() != null
                 && !request.phoneNumber().equals(profile.getPhoneNumber())) {
             String normalized = request.phoneNumber().trim();
-            validateDuplicatePhoneNumber(teacherId, profile.getCourseId(), normalized);
+            validateDuplicatePhoneNumber(actor.getId(), profile.getCourseId(), normalized);
             profile.changePhoneNumber(normalized);
         }
 
@@ -148,16 +178,45 @@ public class StudentProfileService {
     }
 
     @Transactional
-    public void deleteProfile(UUID teacherId, UUID profileId) {
-        StudentProfile profile = getProfileForTeacher(teacherId, profileId);
+    public void deleteProfile(UUID principalId, UUID profileId) {
+        Member actor = getMember(principalId);
+        ensureTeacher(actor);
+
+        StudentProfile profile = getProfileForTeacher(actor.getId(), profileId);
         profile.deactivate();
         studentProfileRepository.save(profile);
+
+        if (profile.getMemberId() != null) {
+            memberRepository.findById(profile.getMemberId())
+                    .ifPresent(member -> {
+                        member.deactivate();
+                        memberRepository.save(member);
+                    });
+        }
+    }
+
+    @Transactional
+    public void activateProfile(UUID principalId, UUID profileId) {
+        Member actor = getMember(principalId);
+        ensureTeacher(actor);
+
+        StudentProfile profile = getProfileForTeacher(actor.getId(), profileId);
+        profile.activate();
+        studentProfileRepository.save(profile);
+
+        if (profile.getMemberId() != null) {
+            memberRepository.findById(profile.getMemberId())
+                    .ifPresent(member -> {
+                        member.activate();
+                        memberRepository.save(member);
+                    });
+        }
     }
 
     @Transactional(readOnly = true)
     public List<StudentProfileSummary> getCourseStudents(UUID teacherId, UUID courseId) {
         ensureCourseOwnership(courseId, teacherId);
-        return studentProfileRepository.findAllByTeacherIdAndCourseIdAndActiveTrue(teacherId, courseId)
+        return studentProfileRepository.findAllByTeacherIdAndCourseIdAndActive(teacherId, courseId, true)
                 .stream()
                 .map(StudentProfileSummary::from)
                 .toList();
@@ -218,5 +277,26 @@ public class StudentProfileService {
         if (studentProfileRepository.existsByMemberId(memberId)) {
             throw new BusinessException(RsCode.STUDENT_PROFILE_MEMBER_IN_USE);
         }
+    }
+
+    private Member getMember(UUID memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));
+    }
+
+    private void ensureTeacher(Member member) {
+        if (member.getRole() != MemberRole.TEACHER) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+    }
+
+    private UUID resolveTeacherId(Member actor) {
+        if (actor.getRole() == MemberRole.TEACHER) {
+            return actor.getId();
+        }
+        if (actor.getRole() == MemberRole.ASSISTANT && actor.getTeacherId() != null) {
+            return actor.getTeacherId();
+        }
+        throw new BusinessException(RsCode.FORBIDDEN);
     }
 }

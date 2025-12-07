@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { Toaster } from "sonner";
 import { NavigationBar } from "@/components/ui/navigation-bar";
 import { Footer } from "@/components/ui/footer";
 
@@ -42,9 +43,15 @@ export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isDashboard = pathname?.startsWith("/dashboard");
+  const toaster = <Toaster position="top-center" richColors closeButton />;
 
   if (isHome) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        {toaster}
+      </>
+    );
   }
 
   if (isDashboard) {
@@ -60,6 +67,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
         </div>
         <div id="portal-toast-root" className="pointer-events-none fixed inset-0 z-50" />
         <div id="portal-modal-root" className="pointer-events-none fixed inset-0 z-50" />
+        {toaster}
       </div>
     );
   }
@@ -79,6 +87,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
       </div>
       <div id="portal-toast-root" className="pointer-events-none fixed inset-0 z-50" />
       <div id="portal-modal-root" className="pointer-events-none fixed inset-0 z-50" />
+      {toaster}
     </div>
   );
 }

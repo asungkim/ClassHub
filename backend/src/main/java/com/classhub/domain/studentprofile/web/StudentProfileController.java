@@ -17,6 +17,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,7 @@ public class StudentProfileController {
 
     @PostMapping
     @Operation(summary = "학생 프로필 생성", description = "Teacher 소유 Course에 학생 프로필을 등록한다.")
+    @PreAuthorize("hasAuthority('TEACHER')")
     public RsData<StudentProfileResponse> createStudentProfile(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Valid @RequestBody StudentProfileCreateRequest request
@@ -48,13 +50,15 @@ public class StudentProfileController {
 
     @GetMapping
     @Operation(summary = "학생 프로필 목록", description = "Teacher가 소유한 학생 프로필 목록을 페이징 조회한다.")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
     public RsData<PageResponse<StudentProfileSummary>> getStudentProfiles(
             @AuthenticationPrincipal MemberPrincipal principal,
             @RequestParam(value = "courseId", required = false) UUID courseId,
             @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "active", required = false) Boolean active,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        StudentProfileSearchCondition condition = new StudentProfileSearchCondition(courseId, name);
+        StudentProfileSearchCondition condition = new StudentProfileSearchCondition(courseId, name, active);
         PageResponse<StudentProfileSummary> body = PageResponse.from(
                 studentProfileService.getProfiles(principal.id(), condition, pageable)
         );
@@ -63,6 +67,7 @@ public class StudentProfileController {
 
     @GetMapping("/{profileId}")
     @Operation(summary = "학생 프로필 상세 조회", description = "프로필 ID로 학생 정보를 조회한다.")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
     public RsData<StudentProfileResponse> getStudentProfile(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable UUID profileId
@@ -73,6 +78,7 @@ public class StudentProfileController {
 
     @PatchMapping("/{profileId}")
     @Operation(summary = "학생 프로필 수정", description = "학생 정보 및 담당 조교, 연락처 등을 수정한다.")
+    @PreAuthorize("hasAuthority('TEACHER')")
     public RsData<StudentProfileResponse> updateStudentProfile(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable UUID profileId,
@@ -84,11 +90,23 @@ public class StudentProfileController {
 
     @DeleteMapping("/{profileId}")
     @Operation(summary = "학생 프로필 비활성화", description = "학생 프로필을 비활성 상태로 변경한다.")
+    @PreAuthorize("hasAuthority('TEACHER')")
     public RsData<Void> deleteStudentProfile(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable UUID profileId
     ) {
         studentProfileService.deleteProfile(principal.id(), profileId);
+        return RsData.from(RsCode.SUCCESS, null);
+    }
+
+    @PatchMapping("/{profileId}/activate")
+    @Operation(summary = "학생 프로필 활성화", description = "비활성 학생 프로필을 활성 상태로 변경한다.")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public RsData<Void> activateStudentProfile(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID profileId
+    ) {
+        studentProfileService.activateProfile(principal.id(), profileId);
         return RsData.from(RsCode.SUCCESS, null);
     }
 }

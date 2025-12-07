@@ -248,6 +248,26 @@ export interface paths {
         patch: operations["updateStudentProfile"];
         trace?: never;
     };
+    "/api/v1/student-profiles/{profileId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 학생 프로필 활성화
+         * @description 비활성 학생 프로필을 활성 상태로 변경한다.
+         */
+        patch: operations["activateStudentProfile"];
+        trace?: never;
+    };
     "/api/v1/personal-lessons/{lessonId}": {
         parameters: {
             query?: never;
@@ -276,6 +296,46 @@ export interface paths {
         patch: operations["updatePersonalLesson"];
         trace?: never;
     };
+    "/api/v1/members/{memberId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 조교 비활성화
+         * @description Teacher가 소속 조교를 비활성화한다.
+         */
+        patch: operations["deactivateAssistant"];
+        trace?: never;
+    };
+    "/api/v1/members/{memberId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 조교 활성화
+         * @description Teacher가 소속 조교를 활성 상태로 변경한다.
+         */
+        patch: operations["activateAssistant"];
+        trace?: never;
+    };
     "/api/v1/student-profiles/{profileId}/personal-lessons": {
         parameters: {
             query?: never;
@@ -288,6 +348,26 @@ export interface paths {
          * @description 특정 학생 프로필에 대한 개별 진도를 조회한다.
          */
         get: operations["getLessonsByProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 멤버 목록 조회 (조교 전용)
+         * @description Teacher가 소속 조교 목록을 조회한다.
+         */
+        get: operations["getAssistants"];
         put?: never;
         post?: never;
         delete?: never;
@@ -633,6 +713,38 @@ export interface components {
             message?: string;
             data?: components["schemas"]["PageResponsePersonalLessonSummary"];
         };
+        MemberSummary: {
+            /** Format: uuid */
+            memberId?: string;
+            email?: string;
+            name?: string;
+            /** @enum {string} */
+            role?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+            active?: boolean;
+            /** Format: uuid */
+            teacherId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        PageResponseMemberSummary: {
+            content?: components["schemas"]["MemberSummary"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseMemberSummary: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseMemberSummary"];
+        };
         RsDataListInvitationResponse: {
             /** Format: int32 */
             code?: number;
@@ -673,6 +785,7 @@ export interface operations {
             query: {
                 courseId?: string;
                 name?: string;
+                active?: boolean;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -1067,6 +1180,28 @@ export interface operations {
             };
         };
     };
+    activateStudentProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
     getPersonalLesson: {
         parameters: {
             query?: never;
@@ -1137,6 +1272,50 @@ export interface operations {
             };
         };
     };
+    deactivateAssistant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    activateAssistant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
     getLessonsByProfile: {
         parameters: {
             query: {
@@ -1159,6 +1338,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataPageResponsePersonalLessonSummary"];
+                };
+            };
+        };
+    };
+    getAssistants: {
+        parameters: {
+            query: {
+                role: string;
+                name?: string;
+                active?: boolean;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseMemberSummary"];
                 };
             };
         };

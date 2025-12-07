@@ -3523,3 +3523,434 @@ TODO_UPDATE
   - docs/todo/v1.7.md
 - 다음 단계
   - 조교/학생 초대 연동을 위한 PLAN 문서를 작성·승인받은 뒤 구현을 진행한다.
+
+## [2025-12-07 14:23] 조교/학생 초대 UI 연동 설계 작성
+
+### Type
+DESIGN
+
+### Summary
+- 조교/학생 초대 생성·조회·취소를 대시보드에서 처리하기 위한 프런트엔드 설계 문서를 추가했다.
+
+### Details
+- 작업 사유
+  - 초대 관리 UI가 없어 백엔드 초대 API를 활용할 수 없는 상태를 해소하고, 역할/상태별 플로우를 정의하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/invitation-assistant-student_ui_plan.md
+- 다음 단계
+  - 설계 검토 후 승인되면 TDD 계획에 따라 초대 생성·목록·취소 UI를 구현하고 빌드 검증을 수행한다.
+
+## [2025-12-07 15:19] 조교/학생 관리 1차·2차 분리 설계 및 TODO 세분화
+
+### Type
+DESIGN
+
+### Summary
+- 조교/학생 관리(목록/비활성화/학생 CRUD) 1차 단계와 초대 연동 2차 단계를 분리한 프런트 설계 문서를 추가하고, TODO에 하위 작업을 명시했다.
+
+### Details
+- 작업 사유
+  - 초대 전에 실제 조교/학생 데이터를 조회·관리할 수 있는 목록/비활성화/CRUD가 필요해 단계를 분리했다.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/assistant-student_management_plan.md (신규)
+  - docs/todo/v1.7.md
+- 다음 단계
+  - 조교 목록/비활성화 백엔드 API 스펙 확인 후, 1차(목록/비활성화/CRUD) 구현 및 빌드 검증을 진행한다.
+
+## [2025-12-07 15:24] 조교/학생 관리 1차 전용 설계 재작성
+
+### Type
+DESIGN
+
+### Summary
+- 초대 연동을 제외하고 “조교/학생 관리(목록/비활성화/CRUD)” 1차 범위만 남기는 설계 문서를 다시 작성했다.
+
+### Details
+- 작업 사유
+  - 사용 요청에 따라 초대 기능을 후순위로 두고, 실제 데이터 관리(목록/비활성화/CRUD)에 집중한 1차 계획만 유지하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/assistant-student_management_plan.md
+- 다음 단계
+  - 조교 목록/비활성화 API 준비 상황을 확인하고, Teacher/Assistant별 목록/CRUD UI 구현 후 빌드 검증을 진행한다.
+
+## [2025-12-07 15:31] 조교/학생 관리 1차 백엔드 설계 재배치
+
+### Type
+DESIGN
+
+### Summary
+- 프런트 경로에 있던 조교/학생 관리 계획을 삭제하고, 백엔드 전용 계획(`assistant-student_management_plan.md`)을 새로 작성해 목록/비활성화/CRUD 중심으로 정의했다.
+
+### Details
+- 작업 사유
+  - 조교/학생 목록 및 비활성화(Teacher 전용) 백엔드 API가 선행되어야 하므로 backend 플랜으로 재작성·이관했다.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/assistant-student_management_plan.md (삭제)
+  - docs/plan/backend/assistant-student_management_plan.md (신규)
+- 다음 단계
+  - 조교 목록/비활성화 API 추가 및 StudentProfile 필터/퇴원 검증을 TDD로 진행하고, SpringDoc/OpenAPI를 갱신한다.
+
+## [2025-12-07 15:38] 학생 CRUD 권한(Assistant 조회 전용) 반영
+
+### Type
+DESIGN
+
+### Summary
+- 학생 생성/수정/퇴원은 Teacher 전용, Assistant는 학생 목록/상세 조회만 가능하도록 백엔드 계획을 수정했다.
+
+### Details
+- 작업 사유
+  - 요구에 따라 Assistant의 학생 관리 권한을 조회 전용으로 제한하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/assistant-student_management_plan.md
+- 다음 단계
+  - 권한 제한을 반영한 서비스/컨트롤러 테스트를 추가하고 구현 시 403/404 처리를 확인한다.
+
+## [2025-12-07 15:39] 학생 관리가 StudentProfile 기준임을 명시
+
+### Type
+DESIGN
+
+### Summary
+- 학생 관리는 Member가 아니라 StudentProfile을 통해서만 이뤄진다는 점을 플랜에 명시하고, 권한 설명을 StudentProfile 기준으로 정리했다.
+
+### Details
+- 작업 사유
+  - 학생 관리 범위 오해를 방지하고, CRUD/퇴원/조회가 모두 StudentProfile 엔티티 기준임을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/assistant-student_management_plan.md
+- 다음 단계
+  - StudentProfile 기반 권한/소유 검증을 구현·테스트하고, Assistant는 조회만 가능하도록 처리한다.
+
+## [2025-12-07 15:44] 학생 퇴원 시 Member 비활성화 & 조교 소속 기준 명확화
+
+### Type
+DESIGN
+
+### Summary
+- 학생 퇴원 시 StudentProfile이 아닌 해당 학생 Member.active를 false로 설정해 로그인 차단하도록 플랜을 보완하고, Assistant 소속 판단을 초대 가입 시 설정된 teacherId(Member.teacherId) 기준으로 명시했다.
+
+### Details
+- 작업 사유
+  - 학생 계정 비활성화 방식과 Assistant 소속 판별 기준을 구체화해 구현/테스트 범위를 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/assistant-student_management_plan.md
+- 다음 단계
+  - 퇴원 시 Member.active=false 처리와 teacherId 소속 검증을 포함한 테스트/구현을 진행한다.
+
+## [2025-12-07 15:49] 비활성 계정 로그인 차단 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 로그인 시 Member가 비활성화되어 있으면 `MEMBER_INACTIVE` 오류로 인증을 차단하도록 수정했다.
+
+### Details
+- 작업 사유
+  - 퇴원/비활성 처리된 계정이 다시 로그인하지 못하도록 인증 단계에서 바로 차단하기 위함.
+- 영향받은 테스트
+  - 미실행 (향후 비활성 계정 로그인 실패 테스트 필요)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/main/java/com/classhub/domain/auth/application/AuthService.java
+- 다음 단계
+  - 비활성 계정 로그인/토큰 재발급 실패 테스트 추가 후, 프런트에서 오류 메시지 확인 흐름을 검증한다.
+
+## [2025-12-07 15:53] 프런트 로그인 화면에 비활성 계정 메시지 노출
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 로그인 실패 시 백엔드의 비활성 계정 오류를 감지해 “비활성화된 계정입니다. 선생님에게 문의하세요.” 메시지를 표시하도록 홈 로그인 폼을 보완했다.
+
+### Details
+- 작업 사유
+  - 비활성 계정 차단 로직과 사용자 피드백을 연결해 혼선을 방지하기 위함.
+- 영향받은 테스트
+  - 미실행 (UI 문자열 변경)
+- 수정한 파일
+  - frontend/src/app/page.tsx
+- 다음 단계
+  - 비활성 계정 로그인 실패 UI를 수동 확인하거나 E2E/단위 테스트로 검증한다.
+
+## [2025-12-07 16:02] 조교 목록/비활성화 API 및 학생 목록 권한/퇴원 처리 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher 전용 조교 목록 조회/비활성화 API를 추가하고 Refresh 토큰까지 무효화한다.
+- 학생 목록 조회를 Assistant 읽기 전용으로 확장하고, 학생 퇴원 시 연결된 학생 Member.active를 false로 전환해 로그인 차단한다.
+
+### Details
+- 작업 사유
+  - 조교/학생 관리 1차 범위(목록/비활성화/CRUD) 구현 및 권한/비활성화 규칙 적용.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/application/MemberService.java
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+  - backend/src/main/java/com/classhub/domain/member/dto/MemberSummary.java
+  - backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/application/StudentProfileService.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/web/StudentProfileController.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/dto/request/StudentProfileSearchCondition.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/repository/StudentProfileRepository.java
+  - backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
+- 다음 단계
+  - 조교 목록/비활성화 및 학생 조회/퇴원에 대한 추가 단위 테스트 보강, SpringDoc/OpenAPI 스펙 동기화.
+
+## [2025-12-07 16:14] 조교/학생 API에 PreAuthorize 추가 및 권한 예외 처리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 목록/비활성화 및 학생 CRUD/조회 API에 역할 기반 `@PreAuthorize` 가드를 추가하고, AuthorizationDeniedException을 403으로 변환하도록 전역 예외 처리를 보강했다.
+
+### Details
+- 작업 사유
+  - API 레벨에서 역할이 맞지 않으면 즉시 차단하고, 403 응답을 일관되게 반환하기 위함.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/web/StudentProfileController.java
+  - backend/src/main/java/com/classhub/global/exception/GlobalExceptionHandler.java
+  - backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
+- 다음 단계
+  - SpringDoc/OpenAPI에 역할 제약 설명을 추가하고, E2E에서 403 응답 케이스를 확인한다.
+
+## [2025-12-07 16:33] MemberController PreAuthorize 복원
+
+### Type
+BUGFIX
+
+### Summary
+- 조교 목록/비활성화 API에서 누락된 `@PreAuthorize("hasAuthority('TEACHER')")`를 복원하고 컨트롤러 테스트를 다시 통과시켰다.
+
+### Details
+- 작업 사유
+  - 권한 가드가 누락되어 API 접근 제어가 약화된 상태를 수정.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+- 다음 단계
+  - OpenAPI에 TEACHER 전용임을 명시하고, 프런트에서 403 처리 흐름을 점검한다.
+
+## [2025-12-07 16:49] 프런트 OpenAPI 스키마 다운로드 URL 변경
+
+### Type
+STRUCTURAL
+
+### Summary
+- `npm run openapi`가 `https://local.classhub.dev/v3/api-docs`에서 스키마를 다운로드하도록 스크립트를 수정했다.
+
+### Details
+- 작업 사유
+  - 실제 백엔드 문서 호스트(local.classhub.dev)에 맞춰 OpenAPI 타입 갱신 경로를 통일하기 위함.
+- 영향받은 테스트
+  - N/A (스크립트 변경)
+- 수정한 파일
+  - frontend/package.json
+- 다음 단계
+  - 백엔드가 해당 도메인에서 문서를 노출 중인지 확인하고 `npm run openapi` 실행 후 타입 재생성한다.
+
+## [2025-12-07 16:35] 조교/학생 목록 프런트 설계 추가
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant 역할별로 조교/학생 목록을 조회하고(필터 포함), Teacher가 조교를 비활성화할 수 있는 1차 프런트 UI 설계 문서를 작성했다.
+
+### Details
+- 작업 사유
+  - 백엔드 목록/비활성화 API를 프런트에서 사용하기 위한 화면 구조와 상태 관리 방안을 정의.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+- docs/plan/frontend/assistant-student_management_ui_plan.md (신규)
+- 다음 단계
+  - 설계에 따라 프런트 구현(React Query, 필터/테이블/토스트) 후 `npm run build -- --webpack`으로 검증한다.
+
+## [2025-12-07 22:00] TODO 상태: 조교/학생 관리 프런트 작업 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.7.md`에서 조교/학생 관리(목록) 프런트엔드 작업을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - 조교/학생 목록 UI 개발을 시작해 단계별 구현을 추적하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.7.md
+- 다음 단계
+  - 조교 관리 UI 구현 및 검증 후 TODO 상태를 갱신한다.
+
+## [2025-12-07 22:01] 조교 관리 UI 1차 구현(목록/비활성화) 및 토스트 세팅
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 대시보드에 `sonner` 토스트를 전역 배치하고 사이드바에 Teacher/Assistant 전용 메뉴(조교/학생 관리)를 추가했다.
+- Teacher 전용 `/dashboard/assistants` 페이지를 추가해 조교 목록 조회/필터/페이지네이션, 비활성화(토스트+리페치), 로딩/빈/에러/반응형 상태를 구현했다.
+- React Query 훅(`useAssistantList`, `useDeactivateAssistant`)을 작성해 Pageable 쿼리 직렬화, mutation 성공/실패 토스트, 캐시 무효화를 처리했다.
+- `useRoleGuard`를 다중 역할 지원으로 확장하고, 학생 관리 경로는 차후 구현 알림용 페이지로 연결해 내비게이션 404를 방지했다.
+
+### Details
+- 작업 사유
+  - 백엔드 조교 목록/비활성화 API를 프런트에서 활용할 수 있도록 1차 UI를 제공하고, 알림/내비/권한 가드를 준비하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/package.json, frontend/package-lock.json (sonner 의존성 추가)
+  - frontend/src/components/ui/app-chrome.tsx (전역 Toaster 추가)
+  - frontend/src/components/dashboard/dashboard-shell.tsx (역할별 사이드바 링크)
+  - frontend/src/hooks/use-role-guard.tsx (다중 역할 허용)
+  - frontend/src/hooks/use-assistants.ts (목록/비활성화 React Query 훅)
+  - frontend/src/app/dashboard/assistants/page.tsx (조교 관리 화면)
+  - frontend/src/app/dashboard/students/page.tsx (추후 구현 안내 페이지)
+  - docs/todo/v1.7.md (상태 갱신)
+- 다음 단계
+  - 학생 관리(목록/CRUD) UI를 구현하고, 조교/학생 흐름 수동 테스트 경로를 기록한다.
+
+## [2025-12-07 22:13] 조교 활성/비활성 토글 추가 및 API 확장
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 계정 활성화 API(`PATCH /api/v1/members/{id}/activate`)를 추가하고 PreAuthorize를 적용했다.
+- 프런트 조교 관리 화면에서 버튼이 on/off 토글로 동작하도록 활성/비활성 전환을 지원했다.
+
+### Details
+- 작업 사유
+  - 비활성화 후 버튼이 비활성 상태로 굳어지는 문제를 해결하고 Teacher가 즉시 재활성화할 수 있도록 하기 위함.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest"`
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/application/MemberService.java
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+  - backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+  - frontend/src/types/openapi.json
+  - frontend/src/types/openapi.d.ts
+  - frontend/src/hooks/use-assistants.ts
+  - frontend/src/app/dashboard/assistants/page.tsx
+- 다음 단계
+  - 조교/학생 목록 UI 수동 테스트(활성↔비활성 토글, 토스트, 필터·페이지네이션) 후 학생 관리 기능 구현을 이어간다.
+
+## [2025-12-07 22:28] 학생 목록 UI 구현 (목록/필터/페이지네이션)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/dashboard/students` 페이지를 구현해 Teacher/Assistant가 학생 목록을 필터(활성/비활성/전체, 이름 검색)와 페이지네이션으로 조회할 수 있게 했다.
+- React Query 훅(`useStudentProfileList`)을 추가해 오픈API 타입 기반으로 페이징/쿼리 직렬화를 처리했고, 로딩/빈/에러/반응형 상태를 구성했다.
+- 학생 등록 버튼은 Teacher 전용으로 비활성 표시만 두어 이후 단계 구현 시 활성화할 수 있도록 배치했다.
+
+### Details
+- 작업 사유
+  - 계획 6번 중 3단계(학생 목록)를 완료해 학생 데이터를 조회·필터링할 수 있는 UI를 제공하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+- 다음 단계
+  - 학생 생성/수정/퇴원 흐름(단계 4~6)을 구현하고, Teacher/Assistant 권한 분기와 토스트/리다이렉트 처리를 추가한다.
+
+## [2025-12-07 22:50] 학생 생성 폼 구현 및 Teacher 전용 경로 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher 전용 학생 등록 페이지(`/dashboard/students/new`)를 추가해 StudentProfileCreateRequest 기반 필드를 입력/검증하고 등록 후 목록으로 이동하도록 했다.
+- 학생 목록 페이지에서 Teacher에게만 “학생 등록” 링크를 활성화하고, 생성 성공 시 목록 캐시를 무효화하는 React Query 훅(`useCreateStudentProfile`)을 추가했다.
+
+### Details
+- 작업 사유
+  - 계획 6단계 중 4번(학생 생성)을 완료해 실제 학생 등록 흐름을 제공하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+  - frontend/src/app/dashboard/students/new/page.tsx
+- 다음 단계
+  - 학생 수정/퇴원(단계 5~6) 페이지와 훅을 구현하고, 성공 토스트/리다이렉트 및 캐시 무효화를 연결한다.
+
+## [2025-12-07 23:05] 학생 수정 UI 및 상세 연동
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 수정 페이지(`/dashboard/students/[id]/edit`)를 Teacher 전용으로 추가해 기존 학생 정보를 조회(pre-fill) 후 수정/저장할 수 있게 했다.
+- 수정 성공 시 토스트, 목록 리다이렉트, 캐시 무효화 처리; 목록/모바일 카드에 Teacher 전용 “수정” 버튼을 추가했다.
+
+### Details
+- 작업 사유
+  - 계획 6단계 5번(학생 수정)을 구현해 학생 데이터 변경 흐름을 완성하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+  - frontend/src/app/dashboard/students/[id]/edit/page.tsx
+- 다음 단계
+  - 학생 퇴원(삭제) 흐름을 구현하고, 목록/권한 분기 및 토스트/캐시 무효화를 포함한다.
+
+## [2025-12-07 23:20] 학생 프로필 활성/비활성 토글 및 목록 액션 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 프로필 활성화 API(`PATCH /api/v1/student-profiles/{id}/activate`)를 추가하고 목록 조회 시 active=null이면 전체 조회되도록 서비스/리포지토리를 확장했다.
+- 프런트 학생 목록에 Teacher 전용 “수정/퇴원↔활성화” 버튼을 추가하고, 활성/비활성 토글 훅(`useToggleStudentProfileActive`)을 구현했다.
+
+### Details
+- 작업 사유
+  - 학생 관리도 조교와 동일하게 on/off 토글로 처리하고 목록 필터의 “전체”가 실제 전체 데이터를 반환하도록 하기 위함.
+- 영향받은 테스트
+  - `./backend/gradlew test --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/studentprofile/application/StudentProfileService.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/repository/StudentProfileRepository.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/web/StudentProfileController.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
+  - frontend/src/types/openapi.json
+  - frontend/src/types/openapi.d.ts
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+- 다음 단계
+  - 학생 퇴원/삭제 UX(확인 모달 등)와 Assistant 미노출 확인을 수동 테스트하고, 필요 시 추가 안전장치를 반영한다.

@@ -52,6 +52,10 @@ public class AuthService {
         Member member = memberRepository.findByEmail(request.normalizedEmail())
                 .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));
 
+        if (!member.isActive()) {
+            throw new BusinessException(RsCode.MEMBER_INACTIVE);
+        }
+
         if (!passwordEncoder.matches(request.password(), member.getPassword())) {
             throw new BusinessException(RsCode.UNAUTHENTICATED);
         }
