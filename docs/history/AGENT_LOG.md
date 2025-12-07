@@ -3523,3 +3523,168 @@ TODO_UPDATE
   - docs/todo/v1.7.md
 - 다음 단계
   - 조교/학생 초대 연동을 위한 PLAN 문서를 작성·승인받은 뒤 구현을 진행한다.
+
+## [2025-12-07 14:23] 조교/학생 초대 UI 연동 설계 작성
+
+### Type
+DESIGN
+
+### Summary
+- 조교/학생 초대 생성·조회·취소를 대시보드에서 처리하기 위한 프런트엔드 설계 문서를 추가했다.
+
+### Details
+- 작업 사유
+  - 초대 관리 UI가 없어 백엔드 초대 API를 활용할 수 없는 상태를 해소하고, 역할/상태별 플로우를 정의하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/invitation-assistant-student_ui_plan.md
+- 다음 단계
+  - 설계 검토 후 승인되면 TDD 계획에 따라 초대 생성·목록·취소 UI를 구현하고 빌드 검증을 수행한다.
+
+## [2025-12-07 15:19] 조교/학생 관리 1차·2차 분리 설계 및 TODO 세분화
+
+### Type
+DESIGN
+
+### Summary
+- 조교/학생 관리(목록/비활성화/학생 CRUD) 1차 단계와 초대 연동 2차 단계를 분리한 프런트 설계 문서를 추가하고, TODO에 하위 작업을 명시했다.
+
+### Details
+- 작업 사유
+  - 초대 전에 실제 조교/학생 데이터를 조회·관리할 수 있는 목록/비활성화/CRUD가 필요해 단계를 분리했다.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/assistant-student_management_plan.md (신규)
+  - docs/todo/v1.7.md
+- 다음 단계
+  - 조교 목록/비활성화 백엔드 API 스펙 확인 후, 1차(목록/비활성화/CRUD) 구현 및 빌드 검증을 진행한다.
+
+## [2025-12-07 15:24] 조교/학생 관리 1차 전용 설계 재작성
+
+### Type
+DESIGN
+
+### Summary
+- 초대 연동을 제외하고 “조교/학생 관리(목록/비활성화/CRUD)” 1차 범위만 남기는 설계 문서를 다시 작성했다.
+
+### Details
+- 작업 사유
+  - 사용 요청에 따라 초대 기능을 후순위로 두고, 실제 데이터 관리(목록/비활성화/CRUD)에 집중한 1차 계획만 유지하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/assistant-student_management_plan.md
+- 다음 단계
+  - 조교 목록/비활성화 API 준비 상황을 확인하고, Teacher/Assistant별 목록/CRUD UI 구현 후 빌드 검증을 진행한다.
+
+## [2025-12-07 15:31] 조교/학생 관리 1차 백엔드 설계 재배치
+
+### Type
+DESIGN
+
+### Summary
+- 프런트 경로에 있던 조교/학생 관리 계획을 삭제하고, 백엔드 전용 계획(`assistant-student_management_plan.md`)을 새로 작성해 목록/비활성화/CRUD 중심으로 정의했다.
+
+### Details
+- 작업 사유
+  - 조교/학생 목록 및 비활성화(Teacher 전용) 백엔드 API가 선행되어야 하므로 backend 플랜으로 재작성·이관했다.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/assistant-student_management_plan.md (삭제)
+  - docs/plan/backend/assistant-student_management_plan.md (신규)
+- 다음 단계
+  - 조교 목록/비활성화 API 추가 및 StudentProfile 필터/퇴원 검증을 TDD로 진행하고, SpringDoc/OpenAPI를 갱신한다.
+
+## [2025-12-07 15:38] 학생 CRUD 권한(Assistant 조회 전용) 반영
+
+### Type
+DESIGN
+
+### Summary
+- 학생 생성/수정/퇴원은 Teacher 전용, Assistant는 학생 목록/상세 조회만 가능하도록 백엔드 계획을 수정했다.
+
+### Details
+- 작업 사유
+  - 요구에 따라 Assistant의 학생 관리 권한을 조회 전용으로 제한하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/assistant-student_management_plan.md
+- 다음 단계
+  - 권한 제한을 반영한 서비스/컨트롤러 테스트를 추가하고 구현 시 403/404 처리를 확인한다.
+
+## [2025-12-07 15:39] 학생 관리가 StudentProfile 기준임을 명시
+
+### Type
+DESIGN
+
+### Summary
+- 학생 관리는 Member가 아니라 StudentProfile을 통해서만 이뤄진다는 점을 플랜에 명시하고, 권한 설명을 StudentProfile 기준으로 정리했다.
+
+### Details
+- 작업 사유
+  - 학생 관리 범위 오해를 방지하고, CRUD/퇴원/조회가 모두 StudentProfile 엔티티 기준임을 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/assistant-student_management_plan.md
+- 다음 단계
+  - StudentProfile 기반 권한/소유 검증을 구현·테스트하고, Assistant는 조회만 가능하도록 처리한다.
+
+## [2025-12-07 15:44] 학생 퇴원 시 Member 비활성화 & 조교 소속 기준 명확화
+
+### Type
+DESIGN
+
+### Summary
+- 학생 퇴원 시 StudentProfile이 아닌 해당 학생 Member.active를 false로 설정해 로그인 차단하도록 플랜을 보완하고, Assistant 소속 판단을 초대 가입 시 설정된 teacherId(Member.teacherId) 기준으로 명시했다.
+
+### Details
+- 작업 사유
+  - 학생 계정 비활성화 방식과 Assistant 소속 판별 기준을 구체화해 구현/테스트 범위를 명확히 하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/assistant-student_management_plan.md
+- 다음 단계
+  - 퇴원 시 Member.active=false 처리와 teacherId 소속 검증을 포함한 테스트/구현을 진행한다.
+
+## [2025-12-07 15:49] 비활성 계정 로그인 차단 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 로그인 시 Member가 비활성화되어 있으면 `MEMBER_INACTIVE` 오류로 인증을 차단하도록 수정했다.
+
+### Details
+- 작업 사유
+  - 퇴원/비활성 처리된 계정이 다시 로그인하지 못하도록 인증 단계에서 바로 차단하기 위함.
+- 영향받은 테스트
+  - 미실행 (향후 비활성 계정 로그인 실패 테스트 필요)
+- 수정한 파일
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/main/java/com/classhub/domain/auth/application/AuthService.java
+- 다음 단계
+  - 비활성 계정 로그인/토큰 재발급 실패 테스트 추가 후, 프런트에서 오류 메시지 확인 흐름을 검증한다.
+
+## [2025-12-07 15:53] 프런트 로그인 화면에 비활성 계정 메시지 노출
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 로그인 실패 시 백엔드의 비활성 계정 오류를 감지해 “비활성화된 계정입니다. 선생님에게 문의하세요.” 메시지를 표시하도록 홈 로그인 폼을 보완했다.
+
+### Details
+- 작업 사유
+  - 비활성 계정 차단 로직과 사용자 피드백을 연결해 혼선을 방지하기 위함.
+- 영향받은 테스트
+  - 미실행 (UI 문자열 변경)
+- 수정한 파일
+  - frontend/src/app/page.tsx
+- 다음 단계
+  - 비활성 계정 로그인 실패 UI를 수동 확인하거나 E2E/단위 테스트로 검증한다.

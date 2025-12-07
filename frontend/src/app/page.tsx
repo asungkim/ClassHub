@@ -16,6 +16,7 @@ type LoginResponseData = components["schemas"]["LoginResponse"];
 export default function HomePage() {
   const router = useRouter();
   const { status, member, error: sessionError, setToken } = useSession();
+  const inactiveMessage = "비활성화된 계정입니다. 선생님에게 문의하세요.";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,13 +39,16 @@ export default function HomePage() {
       });
 
       if (!response.data?.data?.accessToken || response.error) {
-        throw new Error(getApiErrorMessage(response.error, "로그인에 실패했어요. 입력값을 다시 확인해주세요."));
+        const rawMessage = getApiErrorMessage(response.error, "로그인에 실패했어요. 입력값을 다시 확인해주세요.");
+        const message = rawMessage.includes("비활성화된 계정") ? inactiveMessage : rawMessage;
+        throw new Error(message);
       }
 
       const loginData: LoginResponseData = response.data.data ?? {};
       await setToken(loginData.accessToken ?? null);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다.");
+      const rawMessage = error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다.";
+      setFormError(rawMessage.includes("비활성화된 계정") ? inactiveMessage : rawMessage);
     } finally {
       setIsLoading(false);
     }

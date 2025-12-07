@@ -21,6 +21,7 @@ public enum RsCode {
     DUPLICATE_EMAIL(RsConstant.CONFLICT, "이미 사용 중인 이메일입니다."),
     INVALID_INVITATION(RsConstant.BAD_REQUEST, "유효하지 않은 초대입니다."),
     INVITATION_ALREADY_EXISTS(RsConstant.CONFLICT, "이미 처리되지 않은 초대가 존재합니다."),
+    MEMBER_INACTIVE(RsConstant.UNAUTHORIZED, "비활성화된 계정입니다."),
 
     COURSE_NOT_FOUND(RsConstant.NOT_FOUND, "반 정보를 찾을 수 없습니다."),
     COURSE_FORBIDDEN(RsConstant.FORBIDDEN, "해당 반에 대한 권한이 없습니다."),
