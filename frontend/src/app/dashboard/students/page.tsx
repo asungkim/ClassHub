@@ -188,7 +188,7 @@ function StudentList({
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table className="hidden w-full table-fixed divide-y divide-slate-200 md:table">
+        <table className="hidden w-full table-auto divide-y divide-slate-200 md:table">
           <thead className="bg-slate-50">
             <tr className="text-left text-sm font-semibold text-slate-600">
               <th className="px-4 py-3">이름</th>
