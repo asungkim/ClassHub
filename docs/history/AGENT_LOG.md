@@ -3756,3 +3756,111 @@ BUGFIX
   - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
 - 다음 단계
   - OpenAPI에 TEACHER 전용임을 명시하고, 프런트에서 403 처리 흐름을 점검한다.
+
+## [2025-12-07 16:49] 프런트 OpenAPI 스키마 다운로드 URL 변경
+
+### Type
+STRUCTURAL
+
+### Summary
+- `npm run openapi`가 `https://local.classhub.dev/v3/api-docs`에서 스키마를 다운로드하도록 스크립트를 수정했다.
+
+### Details
+- 작업 사유
+  - 실제 백엔드 문서 호스트(local.classhub.dev)에 맞춰 OpenAPI 타입 갱신 경로를 통일하기 위함.
+- 영향받은 테스트
+  - N/A (스크립트 변경)
+- 수정한 파일
+  - frontend/package.json
+- 다음 단계
+  - 백엔드가 해당 도메인에서 문서를 노출 중인지 확인하고 `npm run openapi` 실행 후 타입 재생성한다.
+
+## [2025-12-07 16:35] 조교/학생 목록 프런트 설계 추가
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant 역할별로 조교/학생 목록을 조회하고(필터 포함), Teacher가 조교를 비활성화할 수 있는 1차 프런트 UI 설계 문서를 작성했다.
+
+### Details
+- 작업 사유
+  - 백엔드 목록/비활성화 API를 프런트에서 사용하기 위한 화면 구조와 상태 관리 방안을 정의.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+- docs/plan/frontend/assistant-student_management_ui_plan.md (신규)
+- 다음 단계
+  - 설계에 따라 프런트 구현(React Query, 필터/테이블/토스트) 후 `npm run build -- --webpack`으로 검증한다.
+
+## [2025-12-07 22:00] TODO 상태: 조교/학생 관리 프런트 작업 착수
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.7.md`에서 조교/학생 관리(목록) 프런트엔드 작업을 진행 중(🔄)으로 전환했다.
+
+### Details
+- 작업 사유
+  - 조교/학생 목록 UI 개발을 시작해 단계별 구현을 추적하기 위함.
+- 영향받은 테스트
+  - N/A
+- 수정한 파일
+  - docs/todo/v1.7.md
+- 다음 단계
+  - 조교 관리 UI 구현 및 검증 후 TODO 상태를 갱신한다.
+
+## [2025-12-07 22:01] 조교 관리 UI 1차 구현(목록/비활성화) 및 토스트 세팅
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 대시보드에 `sonner` 토스트를 전역 배치하고 사이드바에 Teacher/Assistant 전용 메뉴(조교/학생 관리)를 추가했다.
+- Teacher 전용 `/dashboard/assistants` 페이지를 추가해 조교 목록 조회/필터/페이지네이션, 비활성화(토스트+리페치), 로딩/빈/에러/반응형 상태를 구현했다.
+- React Query 훅(`useAssistantList`, `useDeactivateAssistant`)을 작성해 Pageable 쿼리 직렬화, mutation 성공/실패 토스트, 캐시 무효화를 처리했다.
+- `useRoleGuard`를 다중 역할 지원으로 확장하고, 학생 관리 경로는 차후 구현 알림용 페이지로 연결해 내비게이션 404를 방지했다.
+
+### Details
+- 작업 사유
+  - 백엔드 조교 목록/비활성화 API를 프런트에서 활용할 수 있도록 1차 UI를 제공하고, 알림/내비/권한 가드를 준비하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/package.json, frontend/package-lock.json (sonner 의존성 추가)
+  - frontend/src/components/ui/app-chrome.tsx (전역 Toaster 추가)
+  - frontend/src/components/dashboard/dashboard-shell.tsx (역할별 사이드바 링크)
+  - frontend/src/hooks/use-role-guard.tsx (다중 역할 허용)
+  - frontend/src/hooks/use-assistants.ts (목록/비활성화 React Query 훅)
+  - frontend/src/app/dashboard/assistants/page.tsx (조교 관리 화면)
+  - frontend/src/app/dashboard/students/page.tsx (추후 구현 안내 페이지)
+  - docs/todo/v1.7.md (상태 갱신)
+- 다음 단계
+  - 학생 관리(목록/CRUD) UI를 구현하고, 조교/학생 흐름 수동 테스트 경로를 기록한다.
+
+## [2025-12-07 22:13] 조교 활성/비활성 토글 추가 및 API 확장
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 계정 활성화 API(`PATCH /api/v1/members/{id}/activate`)를 추가하고 PreAuthorize를 적용했다.
+- 프런트 조교 관리 화면에서 버튼이 on/off 토글로 동작하도록 활성/비활성 전환을 지원했다.
+
+### Details
+- 작업 사유
+  - 비활성화 후 버튼이 비활성 상태로 굳어지는 문제를 해결하고 Teacher가 즉시 재활성화할 수 있도록 하기 위함.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest"`
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/application/MemberService.java
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+  - backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+  - frontend/src/types/openapi.json
+  - frontend/src/types/openapi.d.ts
+  - frontend/src/hooks/use-assistants.ts
+  - frontend/src/app/dashboard/assistants/page.tsx
+- 다음 단계
+  - 조교/학생 목록 UI 수동 테스트(활성↔비활성 토글, 토스트, 필터·페이지네이션) 후 학생 관리 기능 구현을 이어간다.
