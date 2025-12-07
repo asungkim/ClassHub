@@ -3864,3 +3864,24 @@ BEHAVIORAL
   - frontend/src/app/dashboard/assistants/page.tsx
 - 다음 단계
   - 조교/학생 목록 UI 수동 테스트(활성↔비활성 토글, 토스트, 필터·페이지네이션) 후 학생 관리 기능 구현을 이어간다.
+
+## [2025-12-07 22:28] 학생 목록 UI 구현 (목록/필터/페이지네이션)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/dashboard/students` 페이지를 구현해 Teacher/Assistant가 학생 목록을 필터(활성/비활성/전체, 이름 검색)와 페이지네이션으로 조회할 수 있게 했다.
+- React Query 훅(`useStudentProfileList`)을 추가해 오픈API 타입 기반으로 페이징/쿼리 직렬화를 처리했고, 로딩/빈/에러/반응형 상태를 구성했다.
+- 학생 등록 버튼은 Teacher 전용으로 비활성 표시만 두어 이후 단계 구현 시 활성화할 수 있도록 배치했다.
+
+### Details
+- 작업 사유
+  - 계획 6번 중 3단계(학생 목록)를 완료해 학생 데이터를 조회·필터링할 수 있는 UI를 제공하기 위함.
+- 영향받은 테스트
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+- 다음 단계
+  - 학생 생성/수정/퇴원 흐름(단계 4~6)을 구현하고, Teacher/Assistant 권한 분기와 토스트/리다이렉트 처리를 추가한다.
