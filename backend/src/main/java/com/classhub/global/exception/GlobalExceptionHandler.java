@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 
 import static com.classhub.global.response.RsCode.BAD_REQUEST;
 import static com.classhub.global.response.RsCode.INTERNAL_SERVER;
+import static com.classhub.global.response.RsCode.FORBIDDEN;
 
 @RestControllerAdvice
 @Slf4j
@@ -28,6 +30,12 @@ public class GlobalExceptionHandler {
                 .code(BAD_REQUEST.getCode())
                 .message(message)
                 .build();
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public RsData<?> handleAuthorizationDenied(AuthorizationDeniedException ex) {
+        logWarn(ex);
+        return RsData.from(FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)

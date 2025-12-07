@@ -5,7 +5,8 @@ import org.springframework.util.StringUtils;
 
 public record StudentProfileSearchCondition(
         UUID courseId,
-        String name
+        String name,
+        Boolean active
 ) {
 
     public boolean hasCourseFilter() {

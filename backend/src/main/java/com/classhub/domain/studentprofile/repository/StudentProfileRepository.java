@@ -12,28 +12,31 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
 
     Optional<StudentProfile> findByIdAndTeacherId(UUID id, UUID teacherId);
 
-    Page<StudentProfile> findAllByTeacherIdAndActiveTrue(UUID teacherId, Pageable pageable);
+    Page<StudentProfile> findAllByTeacherIdAndActive(UUID teacherId, boolean active, Pageable pageable);
 
-    Page<StudentProfile> findAllByTeacherIdAndActiveTrueAndNameContainingIgnoreCase(
+    Page<StudentProfile> findAllByTeacherIdAndActiveAndNameContainingIgnoreCase(
             UUID teacherId,
+            boolean active,
             String name,
             Pageable pageable
     );
 
-    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndActiveTrue(
+    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndActive(
             UUID teacherId,
             UUID courseId,
+            boolean active,
             Pageable pageable
     );
 
-    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndActiveTrueAndNameContainingIgnoreCase(
+    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndActiveAndNameContainingIgnoreCase(
             UUID teacherId,
             UUID courseId,
+            boolean active,
             String name,
             Pageable pageable
     );
 
-    List<StudentProfile> findAllByTeacherIdAndCourseIdAndActiveTrue(UUID teacherId, UUID courseId);
+    List<StudentProfile> findAllByTeacherIdAndCourseIdAndActive(UUID teacherId, UUID courseId, boolean active);
 
     boolean existsByTeacherIdAndCourseIdAndPhoneNumberIgnoreCase(UUID teacherId, UUID courseId, String phoneNumber);
 
