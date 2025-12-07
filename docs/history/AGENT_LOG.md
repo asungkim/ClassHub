@@ -3688,3 +3688,71 @@ BEHAVIORAL
   - frontend/src/app/page.tsx
 - 다음 단계
   - 비활성 계정 로그인 실패 UI를 수동 확인하거나 E2E/단위 테스트로 검증한다.
+
+## [2025-12-07 16:02] 조교 목록/비활성화 API 및 학생 목록 권한/퇴원 처리 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher 전용 조교 목록 조회/비활성화 API를 추가하고 Refresh 토큰까지 무효화한다.
+- 학생 목록 조회를 Assistant 읽기 전용으로 확장하고, 학생 퇴원 시 연결된 학생 Member.active를 false로 전환해 로그인 차단한다.
+
+### Details
+- 작업 사유
+  - 조교/학생 관리 1차 범위(목록/비활성화/CRUD) 구현 및 권한/비활성화 규칙 적용.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/application/MemberService.java
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+  - backend/src/main/java/com/classhub/domain/member/dto/MemberSummary.java
+  - backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/application/StudentProfileService.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/web/StudentProfileController.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/dto/request/StudentProfileSearchCondition.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/repository/StudentProfileRepository.java
+  - backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
+- 다음 단계
+  - 조교 목록/비활성화 및 학생 조회/퇴원에 대한 추가 단위 테스트 보강, SpringDoc/OpenAPI 스펙 동기화.
+
+## [2025-12-07 16:14] 조교/학생 API에 PreAuthorize 추가 및 권한 예외 처리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 목록/비활성화 및 학생 CRUD/조회 API에 역할 기반 `@PreAuthorize` 가드를 추가하고, AuthorizationDeniedException을 403으로 변환하도록 전역 예외 처리를 보강했다.
+
+### Details
+- 작업 사유
+  - API 레벨에서 역할이 맞지 않으면 즉시 차단하고, 403 응답을 일관되게 반환하기 위함.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/web/StudentProfileController.java
+  - backend/src/main/java/com/classhub/global/exception/GlobalExceptionHandler.java
+  - backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
+- 다음 단계
+  - SpringDoc/OpenAPI에 역할 제약 설명을 추가하고, E2E에서 403 응답 케이스를 확인한다.
+
+## [2025-12-07 16:33] MemberController PreAuthorize 복원
+
+### Type
+BUGFIX
+
+### Summary
+- 조교 목록/비활성화 API에서 누락된 `@PreAuthorize("hasAuthority('TEACHER')")`를 복원하고 컨트롤러 테스트를 다시 통과시켰다.
+
+### Details
+- 작업 사유
+  - 권한 가드가 누락되어 API 접근 제어가 약화된 상태를 수정.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/member/web/MemberController.java
+- 다음 단계
+  - OpenAPI에 TEACHER 전용임을 명시하고, 프런트에서 403 처리 흐름을 점검한다.

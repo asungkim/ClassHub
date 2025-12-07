@@ -14,17 +14,9 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
 
     Page<StudentProfile> findAllByTeacherIdAndActive(UUID teacherId, boolean active, Pageable pageable);
 
-    Page<StudentProfile> findAllByTeacherId(UUID teacherId, Pageable pageable);
-
     Page<StudentProfile> findAllByTeacherIdAndActiveAndNameContainingIgnoreCase(
             UUID teacherId,
             boolean active,
-            String name,
-            Pageable pageable
-    );
-
-    Page<StudentProfile> findAllByTeacherIdAndNameContainingIgnoreCase(
-            UUID teacherId,
             String name,
             Pageable pageable
     );
@@ -36,23 +28,10 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
             Pageable pageable
     );
 
-    Page<StudentProfile> findAllByTeacherIdAndCourseId(
-            UUID teacherId,
-            UUID courseId,
-            Pageable pageable
-    );
-
     Page<StudentProfile> findAllByTeacherIdAndCourseIdAndActiveAndNameContainingIgnoreCase(
             UUID teacherId,
             UUID courseId,
             boolean active,
-            String name,
-            Pageable pageable
-    );
-
-    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndNameContainingIgnoreCase(
-            UUID teacherId,
-            UUID courseId,
             String name,
             Pageable pageable
     );

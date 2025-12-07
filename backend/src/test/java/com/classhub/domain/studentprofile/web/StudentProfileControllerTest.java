@@ -183,8 +183,8 @@ class StudentProfileControllerTest {
     }
 
     @Test
-    @DisplayName("학생 프로필을 수정, 비활성화, 다시 활성화할 수 있다")
-    void updateAndToggleProfile() throws Exception {
+    @DisplayName("학생 프로필을 수정 및 삭제할 수 있다")
+    void updateAndDeleteProfile() throws Exception {
         com.classhub.domain.studentprofile.model.StudentProfile profile = studentProfileRepository.save(
                 com.classhub.domain.studentprofile.model.StudentProfile.builder()
                         .courseId(course.getId())
@@ -219,10 +219,6 @@ class StudentProfileControllerTest {
                 .andExpect(jsonPath("$.data.phoneNumber").value("010-3333-2222"));
 
         mockMvc.perform(delete("/api/v1/student-profiles/{id}", profile.getId())
-                        .with(teacherPrincipal()))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(patch("/api/v1/student-profiles/{id}/activate", profile.getId())
                         .with(teacherPrincipal()))
                 .andExpect(status().isOk());
     }
@@ -264,11 +260,6 @@ class StudentProfileControllerTest {
                 .andExpect(jsonPath("$.code").value(403));
 
         mockMvc.perform(delete("/api/v1/student-profiles/{id}", profile.getId())
-                        .with(assistantPrincipal()))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value(403));
-
-        mockMvc.perform(patch("/api/v1/student-profiles/{id}/activate", profile.getId())
                         .with(assistantPrincipal()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(403));
