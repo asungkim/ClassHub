@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import clsx from "clsx";
+import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { TextField } from "@/components/ui/text-field";
@@ -78,8 +79,8 @@ export default function StudentsPage() {
 
         {isTeacher ? (
           <div className="flex justify-end">
-            <Button className="h-11 px-4 text-sm" disabled title="학생 등록은 다음 단계에서 활성화됩니다.">
-              학생 등록
+            <Button asChild className="h-11 px-4 text-sm">
+              <Link href="/dashboard/students/new">학생 등록</Link>
             </Button>
           </div>
         ) : null}
@@ -102,6 +103,7 @@ export default function StudentsPage() {
             totalPages={totalPages}
             isFetching={isRefreshing}
             onPageChange={handlePageChange}
+            isTeacher={isTeacher}
           />
         )}
       </div>
@@ -158,9 +160,10 @@ type StudentListProps = {
   totalPages: number;
   isFetching: boolean;
   onPageChange: (page: number) => void;
+  isTeacher: boolean;
 };
 
-function StudentList({ students, currentPage, totalPages, isFetching, onPageChange }: StudentListProps) {
+function StudentList({ students, currentPage, totalPages, isFetching, onPageChange, isTeacher }: StudentListProps) {
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -172,6 +175,7 @@ function StudentList({ students, currentPage, totalPages, isFetching, onPageChan
               <th className="px-4 py-3 w-24">상태</th>
               <th className="px-4 py-3 w-20">나이</th>
               <th className="px-4 py-3 w-32">생성일</th>
+              {isTeacher ? <th className="px-4 py-3 w-32 text-right">액션</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -184,6 +188,13 @@ function StudentList({ students, currentPage, totalPages, isFetching, onPageChan
                 </td>
                 <td className="px-4 py-3">{formatAge(student.age)}</td>
                 <td className="px-4 py-3 text-slate-500">{formatDate(undefined)}</td>
+                {isTeacher ? (
+                  <td className="px-4 py-3 text-right">
+                    <Button variant="secondary" className="h-10 px-4 text-sm" asChild>
+                      <Link href={`/dashboard/students/${student.id}/edit`}>수정</Link>
+                    </Button>
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
@@ -207,6 +218,13 @@ function StudentList({ students, currentPage, totalPages, isFetching, onPageChan
                 <span>나이 {formatAge(student.age)}</span>
                 <span>{formatDate(undefined)}</span>
               </div>
+              {isTeacher ? (
+                <div className="mt-3 flex justify-end">
+                  <Button variant="secondary" className="h-9 px-3 text-xs" asChild>
+                    <Link href={`/dashboard/students/${student.id}/edit`}>수정</Link>
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
