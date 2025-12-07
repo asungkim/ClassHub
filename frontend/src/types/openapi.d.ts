@@ -248,6 +248,26 @@ export interface paths {
         patch: operations["updateStudentProfile"];
         trace?: never;
     };
+    "/api/v1/student-profiles/{profileId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 학생 프로필 활성화
+         * @description 비활성 학생 프로필을 활성 상태로 변경한다.
+         */
+        patch: operations["activateStudentProfile"];
+        trace?: never;
+    };
     "/api/v1/personal-lessons/{lessonId}": {
         parameters: {
             query?: never;
@@ -1156,6 +1176,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataStudentProfileResponse"];
+                };
+            };
+        };
+    };
+    activateStudentProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
                 };
             };
         };

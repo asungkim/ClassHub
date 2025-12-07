@@ -3927,3 +3927,30 @@ BEHAVIORAL
   - frontend/src/app/dashboard/students/[id]/edit/page.tsx
 - 다음 단계
   - 학생 퇴원(삭제) 흐름을 구현하고, 목록/권한 분기 및 토스트/캐시 무효화를 포함한다.
+
+## [2025-12-07 23:20] 학생 프로필 활성/비활성 토글 및 목록 액션 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 프로필 활성화 API(`PATCH /api/v1/student-profiles/{id}/activate`)를 추가하고 목록 조회 시 active=null이면 전체 조회되도록 서비스/리포지토리를 확장했다.
+- 프런트 학생 목록에 Teacher 전용 “수정/퇴원↔활성화” 버튼을 추가하고, 활성/비활성 토글 훅(`useToggleStudentProfileActive`)을 구현했다.
+
+### Details
+- 작업 사유
+  - 학생 관리도 조교와 동일하게 on/off 토글로 처리하고 목록 필터의 “전체”가 실제 전체 데이터를 반환하도록 하기 위함.
+- 영향받은 테스트
+  - `./backend/gradlew test --tests "com.classhub.domain.studentprofile.web.StudentProfileControllerTest"`
+  - `npm run build -- --webpack`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/studentprofile/application/StudentProfileService.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/repository/StudentProfileRepository.java
+  - backend/src/main/java/com/classhub/domain/studentprofile/web/StudentProfileController.java
+  - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
+  - frontend/src/types/openapi.json
+  - frontend/src/types/openapi.d.ts
+  - frontend/src/hooks/use-student-profiles.ts
+  - frontend/src/app/dashboard/students/page.tsx
+- 다음 단계
+  - 학생 퇴원/삭제 UX(확인 모달 등)와 Assistant 미노출 확인을 수동 테스트하고, 필요 시 추가 안전장치를 반영한다.

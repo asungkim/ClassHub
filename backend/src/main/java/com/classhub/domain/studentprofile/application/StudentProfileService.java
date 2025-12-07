@@ -81,13 +81,19 @@ public class StudentProfileService {
     ) {
         Member actor = getMember(principalId);
         UUID teacherId = resolveTeacherId(actor);
-        boolean active = condition != null && condition.active() != null ? condition.active() : true;
+        Boolean active = condition != null ? condition.active() : null;
         Page<StudentProfile> page;
         if (condition != null && condition.hasCourseFilter()) {
             ensureCourseOwnership(condition.courseId(), teacherId);
             if (condition.hasNameFilter()) {
-                page = studentProfileRepository
-                        .findAllByTeacherIdAndCourseIdAndActiveAndNameContainingIgnoreCase(
+                page = active == null
+                        ? studentProfileRepository.findAllByTeacherIdAndCourseIdAndNameContainingIgnoreCase(
+                        teacherId,
+                        condition.courseId(),
+                        condition.name(),
+                        pageable
+                )
+                        : studentProfileRepository.findAllByTeacherIdAndCourseIdAndActiveAndNameContainingIgnoreCase(
                                 teacherId,
                                 condition.courseId(),
                                 active,
@@ -95,19 +101,30 @@ public class StudentProfileService {
                                 pageable
                         );
             } else {
-                page = studentProfileRepository
-                        .findAllByTeacherIdAndCourseIdAndActive(teacherId, condition.courseId(), active, pageable);
+                page = active == null
+                        ? studentProfileRepository.findAllByTeacherIdAndCourseId(teacherId, condition.courseId(), pageable)
+                        : studentProfileRepository.findAllByTeacherIdAndCourseIdAndActive(
+                                teacherId, condition.courseId(), active, pageable
+                        );
             }
         } else if (condition != null && condition.hasNameFilter()) {
-            page = studentProfileRepository
-                    .findAllByTeacherIdAndActiveAndNameContainingIgnoreCase(
-                            teacherId,
-                            active,
-                            condition.name(),
-                            pageable
-                    );
+            page = active == null
+                    ? studentProfileRepository.findAllByTeacherIdAndNameContainingIgnoreCase(
+                    teacherId,
+                    condition.name(),
+                    pageable
+            )
+                    : studentProfileRepository
+                            .findAllByTeacherIdAndActiveAndNameContainingIgnoreCase(
+                                    teacherId,
+                                    active,
+                                    condition.name(),
+                                    pageable
+                            );
         } else {
-            page = studentProfileRepository.findAllByTeacherIdAndActive(teacherId, active, pageable);
+            page = active == null
+                    ? studentProfileRepository.findAllByTeacherId(teacherId, pageable)
+                    : studentProfileRepository.findAllByTeacherIdAndActive(teacherId, active, pageable);
         }
 
         return page.map(StudentProfileSummary::from);
@@ -173,6 +190,24 @@ public class StudentProfileService {
             memberRepository.findById(profile.getMemberId())
                     .ifPresent(member -> {
                         member.deactivate();
+                        memberRepository.save(member);
+                    });
+        }
+    }
+
+    @Transactional
+    public void activateProfile(UUID principalId, UUID profileId) {
+        Member actor = getMember(principalId);
+        ensureTeacher(actor);
+
+        StudentProfile profile = getProfileForTeacher(actor.getId(), profileId);
+        profile.activate();
+        studentProfileRepository.save(profile);
+
+        if (profile.getMemberId() != null) {
+            memberRepository.findById(profile.getMemberId())
+                    .ifPresent(member -> {
+                        member.activate();
                         memberRepository.save(member);
                     });
         }

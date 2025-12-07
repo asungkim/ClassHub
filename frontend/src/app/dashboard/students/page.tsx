@@ -8,7 +8,7 @@ import { useRoleGuard } from "@/hooks/use-role-guard";
 import { TextField } from "@/components/ui/text-field";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
-import { useStudentProfileList } from "@/hooks/use-student-profiles";
+import { useStudentProfileList, useToggleStudentProfileActive } from "@/hooks/use-student-profiles";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/components/session/session-provider";
 import type { components } from "@/types/openapi";
@@ -22,6 +22,7 @@ export default function StudentsPage() {
   const { canRender, fallback } = useRoleGuard(["TEACHER", "ASSISTANT"]);
   const { member } = useSession();
   const isTeacher = member?.role === "TEACHER";
+  const toggleMutation = useToggleStudentProfileActive();
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
   const [nameInput, setNameInput] = useState("");
   const [submittedName, setSubmittedName] = useState("");
@@ -65,6 +66,13 @@ export default function StudentsPage() {
     setPage(nextPage);
   };
 
+  const handleToggle = (student: StudentProfileSummary) => {
+    if (!student.id) return;
+    const name = student.name ?? "학생";
+    const isActive = student.active !== false;
+    toggleMutation.mutate({ profileId: student.id, active: isActive, name });
+  };
+
   return (
     <DashboardShell title="학생 관리" subtitle="학생 목록을 조회하고 상태를 확인할 수 있습니다.">
       <div className="space-y-6">
@@ -103,6 +111,8 @@ export default function StudentsPage() {
             totalPages={totalPages}
             isFetching={isRefreshing}
             onPageChange={handlePageChange}
+            onToggle={handleToggle}
+            isMutating={toggleMutation.isPending}
             isTeacher={isTeacher}
           />
         )}
@@ -139,7 +149,7 @@ function FilterBar({ activeFilter, nameInput, isFetching, onActiveChange, onName
               onChange={(e) => onNameChange(e.target.value)}
             />
           </div>
-          <Button type="submit" className="h-12 md:w-28">
+          <Button type="submit" className="h-12 md:w-28 cursor-pointer">
             검색
           </Button>
         </form>
@@ -161,9 +171,20 @@ type StudentListProps = {
   isFetching: boolean;
   onPageChange: (page: number) => void;
   isTeacher: boolean;
+  onToggle: (student: StudentProfileSummary) => void;
+  isMutating: boolean;
 };
 
-function StudentList({ students, currentPage, totalPages, isFetching, onPageChange, isTeacher }: StudentListProps) {
+function StudentList({
+  students,
+  currentPage,
+  totalPages,
+  isFetching,
+  onPageChange,
+  isTeacher,
+  onToggle,
+  isMutating
+}: StudentListProps) {
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -175,7 +196,7 @@ function StudentList({ students, currentPage, totalPages, isFetching, onPageChan
               <th className="px-4 py-3 w-24">상태</th>
               <th className="px-4 py-3 w-20">나이</th>
               <th className="px-4 py-3 w-32">생성일</th>
-              {isTeacher ? <th className="px-4 py-3 w-32 text-right">액션</th> : null}
+              {isTeacher ? <th className="px-4 py-3 w-44 min-w-[12rem] text-right">액션</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -189,10 +210,25 @@ function StudentList({ students, currentPage, totalPages, isFetching, onPageChan
                 <td className="px-4 py-3">{formatAge(student.age)}</td>
                 <td className="px-4 py-3 text-slate-500">{formatDate(undefined)}</td>
                 {isTeacher ? (
-                  <td className="px-4 py-3 text-right">
-                    <Button variant="secondary" className="h-10 px-4 text-sm" asChild>
-                      <Link href={`/dashboard/students/${student.id}/edit`}>수정</Link>
-                    </Button>
+                  <td className="flex flex-nowrap items-center justify-end gap-2 px-4 py-3 text-right">
+                    <Link
+                      href={`/dashboard/students/${student.id}/edit`}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 border border-primary/40 text-primary bg-white h-10 px-4 text-sm whitespace-nowrap cursor-pointer"
+                    >
+                      수정
+                    </Link>
+                    <button
+                      className={clsx(
+                        "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 h-10 px-4 text-sm whitespace-nowrap cursor-pointer",
+                        student.active === false
+                          ? "text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg"
+                          : "border border-primary/40 text-primary bg-white"
+                      )}
+                      disabled={isMutating}
+                      onClick={() => onToggle(student)}
+                    >
+                      {student.active === false ? "활성화" : "퇴원"}
+                    </button>
                   </td>
                 ) : null}
               </tr>
@@ -206,11 +242,11 @@ function StudentList({ students, currentPage, totalPages, isFetching, onPageChan
               key={student.id ?? student.memberId}
               className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-base font-semibold text-slate-900">{student.name ?? "-"}</p>
-                  <p className="text-sm text-slate-600">{student.phoneNumber ?? "-"}</p>
-                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-base font-semibold text-slate-900">{student.name ?? "-"}</p>
+                    <p className="text-sm text-slate-600">{student.phoneNumber ?? "-"}</p>
+                  </div>
                 <StatusBadge active={student.active} />
               </div>
 
@@ -219,10 +255,25 @@ function StudentList({ students, currentPage, totalPages, isFetching, onPageChan
                 <span>{formatDate(undefined)}</span>
               </div>
               {isTeacher ? (
-                <div className="mt-3 flex justify-end">
-                  <Button variant="secondary" className="h-9 px-3 text-xs" asChild>
-                    <Link href={`/dashboard/students/${student.id}/edit`}>수정</Link>
-                  </Button>
+                <div className="mt-3 flex flex-nowrap justify-end gap-2 overflow-x-auto">
+                  <Link
+                    href={`/dashboard/students/${student.id}/edit`}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 border border-primary/40 text-primary bg-white h-9 px-3 text-xs whitespace-nowrap cursor-pointer"
+                  >
+                    수정
+                  </Link>
+                  <button
+                    className={clsx(
+                      "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 h-9 px-3 text-xs whitespace-nowrap cursor-pointer",
+                      student.active === false
+                        ? "text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg"
+                        : "border border-primary/40 text-primary bg-white"
+                    )}
+                    disabled={isMutating}
+                    onClick={() => onToggle(student)}
+                  >
+                    {student.active === false ? "활성화" : "퇴원"}
+                  </button>
                 </div>
               ) : null}
             </div>

@@ -98,4 +98,15 @@ public class StudentProfileController {
         studentProfileService.deleteProfile(principal.id(), profileId);
         return RsData.from(RsCode.SUCCESS, null);
     }
+
+    @PatchMapping("/{profileId}/activate")
+    @Operation(summary = "학생 프로필 활성화", description = "비활성 학생 프로필을 활성 상태로 변경한다.")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public RsData<Void> activateStudentProfile(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID profileId
+    ) {
+        studentProfileService.activateProfile(principal.id(), profileId);
+        return RsData.from(RsCode.SUCCESS, null);
+    }
 }
