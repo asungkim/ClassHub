@@ -11,6 +11,7 @@ type Pageable = components["schemas"]["Pageable"];
 type StudentProfileCreateRequest = components["schemas"]["StudentProfileCreateRequest"];
 type StudentProfileUpdateRequest = components["schemas"]["StudentProfileUpdateRequest"];
 type StudentProfileResponse = components["schemas"]["StudentProfileResponse"];
+type StudentProfileSummary = components["schemas"]["StudentProfileSummary"];
 
 type StudentFilters = {
   active?: boolean;
@@ -160,6 +161,38 @@ export function useUpdateStudentProfile() {
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "학생 정보 수정에 실패했습니다."));
+    }
+  });
+}
+
+export function useToggleStudentProfileActive() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ profileId, active, name }: { profileId: string; active: boolean; name?: string }) => {
+      const response = active
+        ? await api.DELETE("/api/v1/student-profiles/{profileId}", { params: { path: { profileId } } })
+        : await api.PATCH("/api/v1/student-profiles/{profileId}/activate", { params: { path: { profileId } } });
+
+      const fetchError = getFetchError(response);
+      if (fetchError) {
+        throw fetchError;
+      }
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["student-profiles"] });
+      void queryClient.invalidateQueries({ queryKey: ["student-profile", variables.profileId] });
+      const message = variables.active
+        ? `${variables.name ?? "학생"} 학생을 퇴원 처리했습니다.`
+        : `${variables.name ?? "학생"} 학생을 활성화했습니다.`;
+      toast.success(message);
+    },
+    onError: (error, variables) => {
+      const fallback = variables.active
+        ? `${variables.name ?? "학생"} 학생 퇴원에 실패했습니다.`
+        : `${variables.name ?? "학생"} 학생 활성화에 실패했습니다.`;
+      toast.error(getApiErrorMessage(error, fallback));
     }
   });
 }
