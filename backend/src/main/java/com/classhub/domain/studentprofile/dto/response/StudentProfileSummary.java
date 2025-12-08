@@ -6,22 +6,32 @@ import java.util.UUID;
 public record StudentProfileSummary(
         UUID id,
         UUID courseId,
+        String courseName,
         String name,
+        String grade,
         String phoneNumber,
         UUID assistantId,
+        String assistantName,
         UUID memberId,
         String parentPhone,
         Integer age,
         boolean active
 ) {
 
-    public static StudentProfileSummary from(StudentProfile profile) {
+    public static StudentProfileSummary from(
+            StudentProfile profile,
+            String assistantName,
+            String courseName
+    ) {
         return new StudentProfileSummary(
                 profile.getId(),
                 profile.getCourseId(),
+                courseName,
                 profile.getName(),
+                profile.getGrade(),
                 profile.getPhoneNumber(),
                 profile.getAssistantId(),
+                assistantName,
                 profile.getMemberId(),
                 profile.getParentPhone(),
                 profile.getAge(),

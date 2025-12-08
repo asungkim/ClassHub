@@ -5,9 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { TextField } from "@/components/ui/text-field";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { useStudentProfileDetail, useUpdateStudentProfile } from "@/hooks/use-student-profiles";
+import { useAssistantList } from "@/hooks/use-assistants";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type { components } from "@/types/openapi";
 
@@ -22,7 +24,6 @@ type FormState = {
   grade: string;
   age: string;
   assistantId: string;
-  memberId?: string;
   defaultClinicSlotId?: string;
 };
 
@@ -34,7 +35,6 @@ const emptyForm: FormState = {
   grade: "",
   age: "",
   assistantId: "",
-  memberId: "",
   defaultClinicSlotId: ""
 };
 
@@ -45,12 +45,14 @@ export default function StudentEditPage() {
   const router = useRouter();
   const detailQuery = useStudentProfileDetail(profileId ?? "");
   const updateMutation = useUpdateStudentProfile();
+  const assistantsQuery = useAssistantList({ active: true, page: 0 });
   const [form, setForm] = useState<FormState>(emptyForm);
   const [clientError, setClientError] = useState<string | null>(null);
 
   const isLoading = detailQuery.isLoading;
   const isError = detailQuery.isError;
   const student = detailQuery.data;
+  const assistants = assistantsQuery.data?.content ?? [];
 
   useEffect(() => {
     if (student) {
@@ -65,6 +67,11 @@ export default function StudentEditPage() {
   }
 
   const handleChange = (field: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelectChange = (field: keyof FormState) => (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -129,19 +136,20 @@ export default function StudentEditPage() {
           <TextField label="부모 연락처" value={form.parentPhone} onChange={handleChange("parentPhone")} required />
           <TextField label="학교명" value={form.schoolName} onChange={handleChange("schoolName")} required />
           <TextField label="학년" value={form.grade} onChange={handleChange("grade")} required />
-          <TextField
-            label="담당 조교 ID"
-            placeholder="UUID"
+          <Select
+            label="담당 조교"
             value={form.assistantId}
-            onChange={handleChange("assistantId")}
+            onChange={handleSelectChange("assistantId")}
             required
-          />
-          <TextField
-            label="학생 Member ID (선택)"
-            placeholder="UUID"
-            value={form.memberId}
-            onChange={handleChange("memberId")}
-          />
+            disabled={assistantsQuery.isLoading}
+          >
+            <option value="">조교를 선택하세요</option>
+            {assistants.map((assistant) => (
+              <option key={assistant.memberId} value={assistant.memberId}>
+                {assistant.name ?? "이름 없음"}
+              </option>
+            ))}
+          </Select>
           <TextField
             label="기본 클리닉 슬롯 ID (선택)"
             placeholder="UUID"
@@ -182,7 +190,6 @@ function mapResponseToForm(student: StudentProfileResponse): FormState {
     grade: student.grade ?? "",
     age: student.age ? String(student.age) : "",
     assistantId: student.assistantId ?? "",
-    memberId: student.memberId ?? "",
     defaultClinicSlotId: student.defaultClinicSlotId ?? ""
   };
 }
@@ -192,7 +199,7 @@ function buildUpdatePayload(form: FormState): StudentProfileUpdateRequest | stri
     return "필수 항목을 모두 입력해주세요.";
   }
   if (!form.assistantId) {
-    return "담당 조교 ID를 입력해주세요.";
+    return "담당 조교를 선택해주세요.";
   }
 
   const ageValue = Number(form.age);
@@ -200,20 +207,17 @@ function buildUpdatePayload(form: FormState): StudentProfileUpdateRequest | stri
     return "나이는 0보다 큰 숫자로 입력해주세요.";
   }
 
-  const payload: StudentProfileUpdateRequest = {
+  return {
     name: form.name,
     phoneNumber: form.phoneNumber,
     parentPhone: form.parentPhone,
     schoolName: form.schoolName,
     grade: form.grade,
     age: ageValue,
-    assistantId: form.assistantId
+    assistantId: form.assistantId,
+    defaultClinicSlotId: form.defaultClinicSlotId || undefined,
+    memberId: undefined
   };
-
-  if (form.memberId) payload.memberId = form.memberId;
-  if (form.defaultClinicSlotId) payload.defaultClinicSlotId = form.defaultClinicSlotId;
-
-  return payload;
 }
 
 function EditSkeleton() {

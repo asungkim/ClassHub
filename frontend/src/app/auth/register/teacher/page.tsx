@@ -145,7 +145,7 @@ export default function TeacherRegisterPage() {
                   type="password"
                   value={form.password}
                   onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                  placeholder="영문 대/소문자+숫자+특수문자 8자 이상"
+                  placeholder="영문+숫자+특수문자 8자 이상"
                   required
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 />
