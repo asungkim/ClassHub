@@ -64,4 +64,19 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
     boolean existsByMemberId(UUID memberId);
 
     Optional<StudentProfile> findByCourseIdAndPhoneNumberIgnoreCase(UUID courseId, String phoneNumber);
+
+    // 학생 초대 후보 조회용 메서드 (memberId=null, active=true)
+    List<StudentProfile> findAllByTeacherIdAndMemberIdIsNullAndActiveTrue(UUID teacherId);
+
+    List<StudentProfile> findAllByAssistantIdAndMemberIdIsNullAndActiveTrue(UUID assistantId);
+
+    List<StudentProfile> findAllByTeacherIdAndMemberIdIsNullAndActiveTrueAndNameContainingIgnoreCase(
+            UUID teacherId,
+            String name
+    );
+
+    List<StudentProfile> findAllByAssistantIdAndMemberIdIsNullAndActiveTrueAndNameContainingIgnoreCase(
+            UUID assistantId,
+            String name
+    );
 }

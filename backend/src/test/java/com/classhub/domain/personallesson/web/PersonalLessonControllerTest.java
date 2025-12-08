@@ -125,7 +125,6 @@ class PersonalLessonControllerTest {
                         "Seoul High",
                         "1",
                         16,
-                        null,
                         null
                 )
         );
