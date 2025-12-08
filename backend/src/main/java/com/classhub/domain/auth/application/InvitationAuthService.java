@@ -5,13 +5,15 @@ import com.classhub.domain.auth.dto.request.InvitationVerifyRequest;
 import com.classhub.domain.auth.dto.request.LoginRequest;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.InvitationVerifyResponse;
+import com.classhub.domain.invitation.dto.response.StudentCandidateResponse;
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;
-import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentprofile.model.StudentProfile;
+import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDateTime;
@@ -30,6 +32,7 @@ public class InvitationAuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
+    private final StudentProfileRepository studentProfileRepository;
 
     @Transactional(readOnly = true)
     public InvitationVerifyResponse verify(InvitationVerifyRequest request) {
@@ -37,11 +40,19 @@ public class InvitationAuthService {
         Member inviter = memberRepository.findById(invitation.getSenderId())
                 .orElseThrow(() -> new BusinessException(RsCode.INVALID_INVITATION));
 
+        StudentCandidateResponse studentProfile = null;
+        if (invitation.getInviteeRole() == InvitationRole.STUDENT && invitation.getStudentProfileId() != null) {
+            StudentProfile profile = studentProfileRepository.findById(invitation.getStudentProfileId())
+                    .orElseThrow(() -> new BusinessException(RsCode.INVALID_INVITATION));
+            studentProfile = StudentCandidateResponse.from(profile);
+        }
+
         return new InvitationVerifyResponse(
                 inviter.getId(),
                 inviter.getName(),
                 invitation.getInviteeRole().name(),
-                invitation.getExpiredAt()
+                invitation.getExpiredAt(),
+                studentProfile
         );
     }
 
@@ -50,9 +61,6 @@ public class InvitationAuthService {
         Invitation invitation = loadActiveInvitation(request.code());
         String normalizedEmail = request.normalizedEmail();
 
-        if (!invitation.getTargetEmail().equalsIgnoreCase(normalizedEmail)) {
-            throw new BusinessException(RsCode.INVALID_INVITATION);
-        }
         if (memberRepository.existsByEmail(normalizedEmail)) {
             throw new BusinessException(RsCode.DUPLICATE_EMAIL);
         }
@@ -69,7 +77,18 @@ public class InvitationAuthService {
                 .build();
         memberRepository.save(member);
 
-        invitation.accept();
+        // 학생 초대인 경우 StudentProfile.memberId 연결
+        if (invitation.getInviteeRole() == InvitationRole.STUDENT && invitation.getStudentProfileId() != null) {
+            StudentProfile profile = studentProfileRepository.findById(invitation.getStudentProfileId())
+                    .orElseThrow(() -> new BusinessException(RsCode.INVALID_INVITATION));
+            profile.assignMember(member.getId());
+            studentProfileRepository.save(profile);
+        }
+
+        // useCount 증가
+        invitation.increaseUseCount();
+        // 단일 사용(학생 초대) 또는 제한 도달 시 ACCEPTED로 상태 변경
+        invitation.acceptIfLimitReached();
         invitationRepository.save(invitation);
 
         return authService.login(new LoginRequest(normalizedEmail, request.password()));
@@ -80,7 +99,7 @@ public class InvitationAuthService {
                 .orElseThrow(() -> new BusinessException(RsCode.INVALID_INVITATION));
 
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-        if (invitation.getStatus() != InvitationStatus.PENDING || invitation.getExpiredAt().isBefore(now)) {
+        if (!invitation.canUse(now)) {
             throw new BusinessException(RsCode.INVALID_INVITATION);
         }
         return invitation;
