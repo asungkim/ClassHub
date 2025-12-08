@@ -48,13 +48,13 @@ public class InvitationController {
 
     @PostMapping("/student")
     @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
-    @Operation(summary = "학생 초대 생성", description = "Teacher/Assistant가 Student 초대를 생성한다.")
-    public RsData<InvitationResponse> createStudentInvitation(
+    @Operation(summary = "학생 일괄 초대 생성", description = "Teacher/Assistant가 여러 StudentProfile에 대해 일괄로 Student 초대를 생성한다.")
+    public RsData<List<InvitationResponse>> createStudentInvitation(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Valid @RequestBody StudentInvitationCreateRequest request
     ) {
-        InvitationResponse response = invitationService.createStudentInvitation(principal.id(), request);
-        return RsData.from(RsCode.CREATED, response);
+        List<InvitationResponse> responses = invitationService.createStudentInvitations(principal.id(), request);
+        return RsData.from(RsCode.CREATED, responses);
     }
 
     @GetMapping("/assistant")

@@ -19,6 +19,7 @@ import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.jwt.JwtProvider;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,31 +105,78 @@ class InvitationControllerTest {
     }
 
     @Test
-    @DisplayName("Assistant는 학생 초대를 생성할 수 있다")
+    @DisplayName("Assistant는 학생 일괄 초대를 생성할 수 있다")
     void createStudentInvitation_byAssistant() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        String payload = objectMapper.writeValueAsString(new CreateStudentRequest("student@classhub.com", profileId));
+        // Given: Assistant에게 할당된 StudentProfile 생성
+        StudentProfile profile1 = studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("학생A")
+                .phoneNumber("010-1111-1111")
+                .parentPhone("010-9999-9999")
+                .schoolName("서울고")
+                .grade("고3")
+                .age(18)
+                .active(true)
+                .build());
+        StudentProfile profile2 = studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("학생B")
+                .phoneNumber("010-2222-2222")
+                .parentPhone("010-8888-8888")
+                .schoolName("서울고")
+                .grade("고2")
+                .age(17)
+                .active(true)
+                .build());
+
+        String payload = objectMapper.writeValueAsString(
+                new CreateStudentRequest(java.util.List.of(profile1.getId(), profile2.getId()))
+        );
 
         mockMvc.perform(post("/api/v1/invitations/student")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload)
                         .header("Authorization", bearer(assistant.getId(), MemberRole.ASSISTANT)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.inviteeRole").value("STUDENT"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].inviteeRole").value("STUDENT"))
+                .andExpect(jsonPath("$.data[1].inviteeRole").value("STUDENT"));
     }
 
     @Test
-    @DisplayName("Teacher도 학생 초대를 생성할 수 있다")
+    @DisplayName("Teacher도 학생 일괄 초대를 생성할 수 있다")
     void createStudentInvitation_byTeacher() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        String payload = objectMapper.writeValueAsString(new CreateStudentRequest("student2@classhub.com", profileId));
+        // Given: Teacher의 StudentProfile 생성
+        StudentProfile profile = studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("학생C")
+                .phoneNumber("010-3333-3333")
+                .parentPhone("010-7777-7777")
+                .schoolName("서울고")
+                .grade("고1")
+                .age(16)
+                .active(true)
+                .build());
+
+        String payload = objectMapper.writeValueAsString(
+                new CreateStudentRequest(java.util.List.of(profile.getId()))
+        );
 
         mockMvc.perform(post("/api/v1/invitations/student")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload)
                         .header("Authorization", bearer(teacher.getId(), MemberRole.TEACHER)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.inviteeRole").value("STUDENT"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].inviteeRole").value("STUDENT"));
     }
 
     @Test
@@ -333,6 +381,6 @@ class InvitationControllerTest {
     private record CreateAssistantRequest(String targetEmail) {
     }
 
-    private record CreateStudentRequest(String targetEmail, UUID studentProfileId) {
+    private record CreateStudentRequest(List<UUID> studentProfileIds) {
     }
 }
