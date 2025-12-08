@@ -57,6 +57,41 @@ public class InvitationService {
     }
 
     @Transactional
+    public InvitationResponse createAssistantLink(UUID senderId) {
+        Member sender = getMember(senderId);
+        if (sender.getRole() != MemberRole.TEACHER) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+
+        // 1. 기존 PENDING 조교 초대 자동 REVOKE
+        List<Invitation> existingPendingInvitations = invitationRepository
+                .findAllBySenderIdAndInviteeRoleAndStatus(
+                        senderId,
+                        InvitationRole.ASSISTANT,
+                        InvitationStatus.PENDING
+                );
+
+        existingPendingInvitations.forEach(inv -> {
+            inv.revoke();
+            invitationRepository.save(inv);
+        });
+
+        // 2. 새 조교 초대 링크 생성
+        Invitation invitation = Invitation.builder()
+                .senderId(sender.getId())
+                .inviteeRole(InvitationRole.ASSISTANT)
+                .targetEmail(null) // 공용 링크, 이메일 없음
+                .studentProfileId(null) // 조교는 StudentProfile과 무관
+                .code(UUID.randomUUID().toString())
+                .maxUses(-1) // 무제한
+                .useCount(0)
+                .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusYears(10)) // 사실상 무제한
+                .build();
+
+        return InvitationResponse.from(invitationRepository.save(invitation));
+    }
+
+    @Transactional
     public InvitationResponse createStudentInvitation(UUID senderId, StudentInvitationCreateRequest request) {
         // 하위 호환성을 위해 유지 - 단일 프로필 초대도 내부적으로 일괄 처리
         List<InvitationResponse> responses = createStudentInvitations(senderId, request);

@@ -656,4 +656,132 @@ class InvitationServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("rsCode", RsCode.INVALID_STUDENT_PROFILE);
     }
+
+    @Test
+    @DisplayName("Teacher는 조교 초대 링크를 생성할 수 있다")
+    void createAssistantLink_success() {
+        // When
+        InvitationResponse response = invitationService.createAssistantLink(teacher.getId());
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(response.inviteeRole()).isEqualTo(InvitationRole.ASSISTANT);
+        assertThat(response.status()).isEqualTo(InvitationStatus.PENDING);
+        assertThat(response.code()).isNotNull();
+
+        // DB에서 재조회하여 검증
+        Invitation invitation = invitationRepository.findByCode(response.code()).orElseThrow();
+        assertThat(invitation.getSenderId()).isEqualTo(teacher.getId());
+        assertThat(invitation.getTargetEmail()).isNull();
+        assertThat(invitation.getStudentProfileId()).isNull();
+        assertThat(invitation.getMaxUses()).isEqualTo(-1); // 무제한
+        assertThat(invitation.getUseCount()).isEqualTo(0);
+        // expiredAt은 now+10년 (대략 10년 후)
+        assertThat(invitation.getExpiredAt()).isAfter(LocalDateTime.now(ZoneOffset.UTC).plusYears(9));
+    }
+
+    @Test
+    @DisplayName("Teacher가 새 조교 초대 링크 생성 시 기존 PENDING 조교 초대는 자동으로 REVOKED된다")
+    void createAssistantLink_autoRevokePrevious() {
+        // Given: 기존 PENDING 조교 초대 2개 생성
+        Invitation old1 = invitationRepository.save(
+                Invitation.builder()
+                        .senderId(teacher.getId())
+                        .inviteeRole(InvitationRole.ASSISTANT)
+                        .status(InvitationStatus.PENDING)
+                        .code("old-code-1")
+                        .maxUses(-1)
+                        .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusYears(10))
+                        .build()
+        );
+        Invitation old2 = invitationRepository.save(
+                Invitation.builder()
+                        .senderId(teacher.getId())
+                        .inviteeRole(InvitationRole.ASSISTANT)
+                        .status(InvitationStatus.PENDING)
+                        .code("old-code-2")
+                        .maxUses(-1)
+                        .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusYears(10))
+                        .build()
+        );
+
+        // When: 새 조교 초대 링크 생성
+        InvitationResponse newInvitation = invitationService.createAssistantLink(teacher.getId());
+
+        // Then: 기존 PENDING 초대들이 REVOKED로 전환됨
+        Invitation refreshedOld1 = invitationRepository.findById(old1.getId()).orElseThrow();
+        Invitation refreshedOld2 = invitationRepository.findById(old2.getId()).orElseThrow();
+
+        assertThat(refreshedOld1.getStatus()).isEqualTo(InvitationStatus.REVOKED);
+        assertThat(refreshedOld2.getStatus()).isEqualTo(InvitationStatus.REVOKED);
+
+        // 새 초대는 PENDING
+        Invitation newInv = invitationRepository.findByCode(newInvitation.code()).orElseThrow();
+        assertThat(newInv.getStatus()).isEqualTo(InvitationStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("Teacher가 조교 초대 링크 생성 시 이미 REVOKED/ACCEPTED 상태인 초대는 영향받지 않는다")
+    void createAssistantLink_ignoreNonPendingInvitations() {
+        // Given: REVOKED 조교 초대 1개
+        Invitation revoked = invitationRepository.save(
+                Invitation.builder()
+                        .senderId(teacher.getId())
+                        .inviteeRole(InvitationRole.ASSISTANT)
+                        .status(InvitationStatus.REVOKED)
+                        .code("revoked-code")
+                        .maxUses(-1)
+                        .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusYears(10))
+                        .build()
+        );
+
+        // When: 새 조교 초대 링크 생성
+        invitationService.createAssistantLink(teacher.getId());
+
+        // Then: REVOKED 상태는 그대로 유지
+        Invitation refreshed = invitationRepository.findById(revoked.getId()).orElseThrow();
+        assertThat(refreshed.getStatus()).isEqualTo(InvitationStatus.REVOKED);
+    }
+
+    @Test
+    @DisplayName("Assistant는 조교 초대 링크를 생성할 수 없다")
+    void createAssistantLink_assistantForbidden() {
+        // When & Then
+        assertThatThrownBy(() -> invitationService.createAssistantLink(assistant.getId()))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("다른 Teacher의 조교 초대는 영향받지 않는다")
+    void createAssistantLink_otherTeacherNotAffected() {
+        // Given: 다른 Teacher 생성
+        Member otherTeacher = memberRepository.save(
+                Member.builder()
+                        .email("other-teacher@classhub.com")
+                        .password(passwordEncoder.encode("Classhub!1"))
+                        .name("Other Teacher")
+                        .role(MemberRole.TEACHER)
+                        .build()
+        );
+
+        // 다른 Teacher의 PENDING 조교 초대
+        Invitation otherInvitation = invitationRepository.save(
+                Invitation.builder()
+                        .senderId(otherTeacher.getId())
+                        .inviteeRole(InvitationRole.ASSISTANT)
+                        .status(InvitationStatus.PENDING)
+                        .code("other-teacher-code")
+                        .maxUses(-1)
+                        .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusYears(10))
+                        .build()
+        );
+
+        // When: 현재 Teacher가 조교 초대 링크 생성
+        invitationService.createAssistantLink(teacher.getId());
+
+        // Then: 다른 Teacher의 초대는 PENDING 유지
+        Invitation refreshed = invitationRepository.findById(otherInvitation.getId()).orElseThrow();
+        assertThat(refreshed.getStatus()).isEqualTo(InvitationStatus.PENDING);
+    }
 }

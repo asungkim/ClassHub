@@ -46,6 +46,16 @@ public class InvitationController {
         return RsData.from(RsCode.CREATED, response);
     }
 
+    @PostMapping("/assistant/link")
+    @PreAuthorize("hasAnyAuthority('TEACHER')")
+    @Operation(summary = "조교 초대 링크 생성/회전", description = "Teacher가 공용 조교 초대 링크를 생성한다. 기존 PENDING 조교 초대는 자동으로 REVOKED된다.")
+    public RsData<InvitationResponse> createAssistantLink(
+            @AuthenticationPrincipal MemberPrincipal principal
+    ) {
+        InvitationResponse response = invitationService.createAssistantLink(principal.id());
+        return RsData.from(RsCode.CREATED, response);
+    }
+
     @PostMapping("/student")
     @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
     @Operation(summary = "학생 일괄 초대 생성", description = "Teacher/Assistant가 여러 StudentProfile에 대해 일괄로 Student 초대를 생성한다.")
