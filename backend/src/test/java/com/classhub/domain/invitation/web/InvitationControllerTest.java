@@ -1,5 +1,6 @@
 package com.classhub.domain.invitation.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -376,6 +377,48 @@ class InvitationControllerTest {
 
     private String bearer(UUID memberId, MemberRole role) {
         return "Bearer " + jwtProvider.generateAccessToken(memberId, role.name());
+    }
+
+    @Test
+    @DisplayName("Teacher는 조교 초대 링크를 생성할 수 있다")
+    void createAssistantLink_success() throws Exception {
+        mockMvc.perform(post("/api/v1/invitations/assistant/link")
+                        .header("Authorization", bearer(teacher.getId(), MemberRole.TEACHER)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.inviteeRole").value("ASSISTANT"))
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.code").exists());
+    }
+
+    @Test
+    @DisplayName("Teacher가 새 조교 초대 링크를 생성하면 기존 PENDING 초대가 REVOKED된다")
+    void createAssistantLink_autoRevoke() throws Exception {
+        // Given: 기존 PENDING 조교 초대 생성
+        Invitation existing = invitationRepository.save(Invitation.builder()
+                .senderId(teacher.getId())
+                .inviteeRole(InvitationRole.ASSISTANT)
+                .status(InvitationStatus.PENDING)
+                .code("existing-code")
+                .maxUses(-1)
+                .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusYears(10))
+                .build());
+
+        // When: 새 조교 초대 링크 생성
+        mockMvc.perform(post("/api/v1/invitations/assistant/link")
+                        .header("Authorization", bearer(teacher.getId(), MemberRole.TEACHER)))
+                .andExpect(status().isCreated());
+
+        // Then: 기존 초대가 REVOKED로 전환
+        Invitation refreshed = invitationRepository.findById(existing.getId()).orElseThrow();
+        assertThat(refreshed.getStatus()).isEqualTo(InvitationStatus.REVOKED);
+    }
+
+    @Test
+    @DisplayName("Assistant는 조교 초대 링크를 생성할 수 없다")
+    void createAssistantLink_assistantForbidden() throws Exception {
+        mockMvc.perform(post("/api/v1/invitations/assistant/link")
+                        .header("Authorization", bearer(assistant.getId(), MemberRole.ASSISTANT)))
+                .andExpect(status().isForbidden());
     }
 
     private record CreateAssistantRequest(String targetEmail) {

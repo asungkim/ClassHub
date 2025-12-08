@@ -4,7 +4,9 @@
       "Bash(../gradlew compileJava:*)",
       "Bash(./gradlew compileJava:*)",
       "Bash(./gradlew compileTestJava:*)",
-      "Bash(./gradlew test:*)"
+      "Bash(./gradlew test:*)",
+      "Bash(bash -c \"cd backend && ./gradlew test 2>&1 | tail -50\")",
+      "Bash(bash -c \"cd backend && find src/test -name ''*InvitationAuth*Test.java'' -type f\")"
     ],
     "deny": [],
     "ask": []
