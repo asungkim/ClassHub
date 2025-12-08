@@ -453,8 +453,6 @@ export interface components {
             /** Format: int32 */
             age: number;
             /** Format: uuid */
-            memberId?: string;
-            /** Format: uuid */
             defaultClinicSlotId?: string;
         };
         RsDataStudentProfileResponse: {
@@ -674,10 +672,13 @@ export interface components {
             id?: string;
             /** Format: uuid */
             courseId?: string;
+            courseName?: string;
             name?: string;
+            grade?: string;
             phoneNumber?: string;
             /** Format: uuid */
             assistantId?: string;
+            assistantName?: string;
             /** Format: uuid */
             memberId?: string;
             parentPhone?: string;

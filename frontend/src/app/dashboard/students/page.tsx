@@ -193,9 +193,10 @@ function StudentList({
             <tr className="text-left text-sm font-semibold text-slate-600">
               <th className="px-4 py-3">이름</th>
               <th className="px-4 py-3">전화번호</th>
+              <th className="px-4 py-3 w-20">학년</th>
+              <th className="px-4 py-3">담당 조교</th>
+              <th className="px-4 py-3">소속 반</th>
               <th className="px-4 py-3 w-24">상태</th>
-              <th className="px-4 py-3 w-20">나이</th>
-              <th className="px-4 py-3 w-32">생성일</th>
               {isTeacher ? <th className="px-4 py-3 w-44 min-w-[12rem] text-right">액션</th> : null}
             </tr>
           </thead>
@@ -204,11 +205,12 @@ function StudentList({
               <tr key={student.id ?? student.memberId} className="text-sm text-slate-700">
                 <td className="px-4 py-3 font-semibold text-slate-900">{student.name ?? "-"}</td>
                 <td className="px-4 py-3">{student.phoneNumber ?? "-"}</td>
+                <td className="px-4 py-3">{student.grade ?? "-"}</td>
+                <td className="px-4 py-3">{student.assistantName ?? "-"}</td>
+                <td className="px-4 py-3">{student.courseName ?? "-"}</td>
                 <td className="px-4 py-3">
                   <StatusBadge active={student.active} />
                 </td>
-                <td className="px-4 py-3">{formatAge(student.age)}</td>
-                <td className="px-4 py-3 text-slate-500">{formatDate(undefined)}</td>
                 {isTeacher ? (
                   <td className="flex flex-nowrap items-center justify-end gap-2 px-4 py-3 text-right">
                     <Link
@@ -250,9 +252,16 @@ function StudentList({
                 <StatusBadge active={student.active} />
               </div>
 
-              <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                <span>나이 {formatAge(student.age)}</span>
-                <span>{formatDate(undefined)}</span>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                <div>
+                  <span className="text-slate-500">학년:</span> {student.grade ?? "-"}
+                </div>
+                <div>
+                  <span className="text-slate-500">담당 조교:</span> {student.assistantName ?? "-"}
+                </div>
+                <div className="col-span-2">
+                  <span className="text-slate-500">소속 반:</span> {student.courseName ?? "-"}
+                </div>
               </div>
               {isTeacher ? (
                 <div className="mt-3 flex flex-nowrap justify-end gap-2 overflow-x-auto">
@@ -415,18 +424,4 @@ function Pagination({
       </Button>
     </div>
   );
-}
-
-function formatAge(age?: number | null) {
-  if (age === null || age === undefined) return "-";
-  return `${age}세`;
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-  return new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }

@@ -3950,7 +3950,25 @@ BEHAVIORAL
   - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
   - frontend/src/types/openapi.json
   - frontend/src/types/openapi.d.ts
-  - frontend/src/hooks/use-student-profiles.ts
-  - frontend/src/app/dashboard/students/page.tsx
+- frontend/src/hooks/use-student-profiles.ts
+- frontend/src/app/dashboard/students/page.tsx
 - 다음 단계
   - 학생 퇴원/삭제 UX(확인 모달 등)와 Assistant 미노출 확인을 수동 테스트하고, 필요 시 추가 안전장치를 반영한다.
+
+## [2025-12-08 14:30] 초대 링크 재설계 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- 학생/조교 초대 흐름을 StudentProfile 연동, 만료/사용 정책(학생 7일·1회, 조교 무제한)으로 정리한 설계 문서를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 3 초대 연동 TODO를 진행하기 위해 백엔드 초대/가입 정책을 최신 요구사항에 맞춰 재정의하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/invitation-link-flow_plan.md
+- 다음 단계
+  - 사용자 승인 후 설계에 맞춰 초대/가입 API를 리팩터링하고 StudentProfile 연동·무제한 조교 링크 로직을 구현한다.
