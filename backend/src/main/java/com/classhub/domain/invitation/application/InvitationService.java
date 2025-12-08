@@ -159,6 +159,21 @@ public class InvitationService {
                 .filter(invite -> invite.expireIfPast(now))
                 .forEach(invitationRepository::save);
 
+        // 학생 초대인 경우 StudentProfile과 조인해서 이름 가져오기
+        if (role == InvitationRole.STUDENT) {
+            return invitations.stream()
+                    .map(invitation -> {
+                        String studentName = null;
+                        if (invitation.getStudentProfileId() != null) {
+                            studentName = studentProfileRepository.findById(invitation.getStudentProfileId())
+                                    .map(StudentProfile::getName)
+                                    .orElse(null);
+                        }
+                        return InvitationResponse.from(invitation, studentName);
+                    })
+                    .collect(Collectors.toList());
+        }
+
         return invitations.stream()
                 .map(InvitationResponse::from)
                 .collect(Collectors.toList());
