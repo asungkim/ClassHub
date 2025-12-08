@@ -134,19 +134,22 @@ public class StudentProfileInitData extends BaseInitData {
             UUID assistantId,
             UUID memberId
     ) {
-        StudentProfile profile = StudentProfile.builder()
+        StudentProfile.StudentProfileBuilder builder = StudentProfile.builder()
                 .courseId(courseId)
                 .teacherId(seed.teacher().getId())
                 .assistantId(assistantId)
-                .memberId(memberId)
                 .name(seed.name())
                 .phoneNumber(seed.phoneNumber())
                 .parentPhone(seed.parentPhone())
                 .schoolName(seed.schoolName())
                 .grade(seed.grade())
-                .age(seed.age())
-                .build();
-        return studentProfileRepository.save(profile);
+                .age(seed.age());
+
+        if (memberId != null) {
+            builder.memberId(memberId);
+        }
+
+        return studentProfileRepository.save(builder.build());
     }
 
     private record StudentProfileSeed(

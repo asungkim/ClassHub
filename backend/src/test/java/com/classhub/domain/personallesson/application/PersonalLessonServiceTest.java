@@ -100,7 +100,6 @@ class PersonalLessonServiceTest {
                         "Seoul High",
                         "1",
                         15,
-                        null,
                         null
                 )
         );

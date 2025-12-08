@@ -4,6 +4,7 @@ import com.classhub.domain.invitation.application.InvitationService;
 import com.classhub.domain.invitation.dto.request.AssistantInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.request.StudentInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.response.InvitationResponse;
+import com.classhub.domain.invitation.dto.response.StudentCandidateResponse;
 import com.classhub.domain.invitation.model.InvitationRole;
 import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
@@ -78,6 +79,17 @@ public class InvitationController {
         List<InvitationResponse> responses =
                 invitationService.listInvitations(principal.id(), InvitationRole.STUDENT, status);
         return RsData.from(RsCode.SUCCESS, responses);
+    }
+
+    @GetMapping("/student/candidates")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
+    @Operation(summary = "학생 초대 후보 조회", description = "초대되지 않은 StudentProfile 목록을 조회한다 (memberId=null, active=true, PENDING 초대 없음)")
+    public RsData<List<StudentCandidateResponse>> findStudentCandidates(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @RequestParam(value = "name", required = false) String name
+    ) {
+        List<StudentCandidateResponse> candidates = invitationService.findStudentCandidates(principal.id(), name);
+        return RsData.from(RsCode.SUCCESS, candidates);
     }
 
     @DeleteMapping("/{code}")

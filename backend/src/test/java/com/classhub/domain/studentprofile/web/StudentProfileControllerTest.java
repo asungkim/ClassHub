@@ -120,7 +120,6 @@ class StudentProfileControllerTest {
                 "Seoul High",
                 "1",
                 16,
-                null,
                 null
         );
 
@@ -284,7 +283,6 @@ class StudentProfileControllerTest {
                 + ",\"schoolName\":" + quote(request.schoolName())
                 + ",\"grade\":" + quote(request.grade())
                 + ",\"age\":" + quote(request.age())
-                + ",\"memberId\":" + quote(request.memberId())
                 + ",\"defaultClinicSlotId\":" + quote(request.defaultClinicSlotId())
                 + "}";
     }

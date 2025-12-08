@@ -9,10 +9,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;
+import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentprofile.model.StudentProfile;
+import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.jwt.JwtProvider;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -49,6 +52,9 @@ class InvitationControllerTest {
     private InvitationRepository invitationRepository;
 
     @Autowired
+    private StudentProfileRepository studentProfileRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -56,14 +62,19 @@ class InvitationControllerTest {
 
     private Member teacher;
     private Member assistant;
+    private UUID courseId;
 
     @BeforeEach
     void setUp() {
+        studentProfileRepository.deleteAll();
         invitationRepository.deleteAll();
         memberRepository.deleteAll();
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
+
+        courseId = UUID.randomUUID();
+
         teacher = memberRepository.save(Member.builder()
                 .email("teacher@classhub.com")
                 .password(passwordEncoder.encode("Classhub!1"))
@@ -151,6 +162,168 @@ class InvitationControllerTest {
         mockMvc.perform(delete("/api/v1/invitations/{code}", invitation.getCode())
                         .header("Authorization", bearer(teacher.getId(), MemberRole.TEACHER)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Teacher는 학생 초대 후보를 조회할 수 있다")
+    void findStudentCandidates_teacher() throws Exception {
+        // Given: 초대되지 않은 StudentProfile 2개
+        studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("김철수")
+                .phoneNumber("010-1111-1111")
+                .parentPhone("010-9999-9999")
+                .schoolName("서울고")
+                .grade("고3")
+                .age(18)
+                .active(true)
+                .build());
+        studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("이영희")
+                .phoneNumber("010-2222-2222")
+                .parentPhone("010-8888-8888")
+                .schoolName("서울고")
+                .grade("고2")
+                .age(17)
+                .active(true)
+                .build());
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/invitations/student/candidates")
+                        .header("Authorization", bearer(teacher.getId(), MemberRole.TEACHER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].name").exists())
+                .andExpect(jsonPath("$.data[0].phoneNumber").exists());
+    }
+
+    @Test
+    @DisplayName("Assistant는 자신에게 할당된 학생 초대 후보를 조회할 수 있다")
+    void findStudentCandidates_assistant() throws Exception {
+        // Given: Assistant에게 할당된 프로필 1개
+        studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("학생A")
+                .phoneNumber("010-1111-1111")
+                .parentPhone("010-9999-9999")
+                .schoolName("서울고")
+                .grade("고3")
+                .age(18)
+                .active(true)
+                .build());
+        // 다른 조교에게 할당된 프로필 (조회되지 않아야 함)
+        UUID otherAssistantId = UUID.randomUUID();
+        studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(otherAssistantId)
+                .name("학생B")
+                .phoneNumber("010-2222-2222")
+                .parentPhone("010-8888-8888")
+                .schoolName("서울고")
+                .grade("고2")
+                .age(17)
+                .active(true)
+                .build());
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/invitations/student/candidates")
+                        .header("Authorization", bearer(assistant.getId(), MemberRole.ASSISTANT)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("학생A"));
+    }
+
+    @Test
+    @DisplayName("학생 초대 후보 조회 시 이름으로 필터링할 수 있다")
+    void findStudentCandidates_withNameFilter() throws Exception {
+        // Given
+        studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("김철수")
+                .phoneNumber("010-1111-1111")
+                .parentPhone("010-9999-9999")
+                .schoolName("서울고")
+                .grade("고3")
+                .age(18)
+                .active(true)
+                .build());
+        studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("이영희")
+                .phoneNumber("010-2222-2222")
+                .parentPhone("010-8888-8888")
+                .schoolName("서울고")
+                .grade("고2")
+                .age(17)
+                .active(true)
+                .build());
+
+        // When & Then: "철수" 검색
+        mockMvc.perform(get("/api/v1/invitations/student/candidates")
+                        .param("name", "철수")
+                        .header("Authorization", bearer(teacher.getId(), MemberRole.TEACHER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("김철수"));
+    }
+
+    @Test
+    @DisplayName("PENDING 초대가 있는 학생은 후보에서 제외된다")
+    void findStudentCandidates_excludePending() throws Exception {
+        // Given: 초대된 프로필과 초대되지 않은 프로필
+        StudentProfile invitedProfile = studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("초대됨")
+                .phoneNumber("010-1111-1111")
+                .parentPhone("010-9999-9999")
+                .schoolName("서울고")
+                .grade("고3")
+                .age(18)
+                .active(true)
+                .build());
+        studentProfileRepository.save(StudentProfile.builder()
+                .courseId(courseId)
+                .teacherId(teacher.getId())
+                .assistantId(assistant.getId())
+                .name("초대안됨")
+                .phoneNumber("010-2222-2222")
+                .parentPhone("010-8888-8888")
+                .schoolName("서울고")
+                .grade("고2")
+                .age(17)
+                .active(true)
+                .build());
+
+        // PENDING 초대 생성
+        invitationRepository.save(Invitation.builder()
+                .senderId(teacher.getId())
+                .studentProfileId(invitedProfile.getId())
+                .inviteeRole(InvitationRole.STUDENT)
+                .status(InvitationStatus.PENDING)
+                .code(UUID.randomUUID().toString())
+                .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusDays(7))
+                .build());
+
+        // When & Then: "초대안됨"만 반환
+        mockMvc.perform(get("/api/v1/invitations/student/candidates")
+                        .header("Authorization", bearer(teacher.getId(), MemberRole.TEACHER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("초대안됨"));
     }
 
     private String bearer(UUID memberId, MemberRole role) {

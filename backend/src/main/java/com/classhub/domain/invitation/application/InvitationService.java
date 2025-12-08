@@ -3,6 +3,7 @@ package com.classhub.domain.invitation.application;
 import com.classhub.domain.invitation.dto.request.AssistantInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.request.StudentInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.response.InvitationResponse;
+import com.classhub.domain.invitation.dto.response.StudentCandidateResponse;
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;
 import com.classhub.domain.invitation.model.InvitationStatus;
@@ -10,6 +11,8 @@ import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentprofile.model.StudentProfile;
+import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.Duration;
@@ -31,6 +34,7 @@ public class InvitationService {
 
     private final InvitationRepository invitationRepository;
     private final MemberRepository memberRepository;
+    private final StudentProfileRepository studentProfileRepository;
 
     @Transactional
     public InvitationResponse createAssistantInvitation(UUID senderId, AssistantInvitationCreateRequest request) {
@@ -109,6 +113,42 @@ public class InvitationService {
         }
         invitation.revoke();
         invitationRepository.save(invitation);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentCandidateResponse> findStudentCandidates(UUID memberId, String name) {
+        Member member = getMember(memberId);
+        if (!canInviteStudent(member)) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+
+        // 1. 역할에 따라 StudentProfile 조회 (memberId=null, active=true)
+        List<StudentProfile> profiles;
+        if (member.getRole() == MemberRole.TEACHER) {
+            profiles = (name == null || name.isBlank())
+                    ? studentProfileRepository.findAllByTeacherIdAndMemberIdIsNullAndActiveTrue(memberId)
+                    : studentProfileRepository.findAllByTeacherIdAndMemberIdIsNullAndActiveTrueAndNameContainingIgnoreCase(
+                            memberId,
+                            name
+                    );
+        } else {
+            // ASSISTANT
+            profiles = (name == null || name.isBlank())
+                    ? studentProfileRepository.findAllByAssistantIdAndMemberIdIsNullAndActiveTrue(memberId)
+                    : studentProfileRepository.findAllByAssistantIdAndMemberIdIsNullAndActiveTrueAndNameContainingIgnoreCase(
+                            memberId,
+                            name
+                    );
+        }
+
+        // 2. PENDING 초대가 있는 StudentProfile 제외
+        return profiles.stream()
+                .filter(profile -> !invitationRepository.existsByStudentProfileIdAndStatusIn(
+                        profile.getId(),
+                        PENDING_STATUSES
+                ))
+                .map(StudentCandidateResponse::from)
+                .collect(Collectors.toList());
     }
 
     private void validateDuplicate(String email, InvitationRole role) {
