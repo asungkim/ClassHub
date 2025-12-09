@@ -69,7 +69,7 @@ export default function StudentInvitationsPage() {
 
   const handleCopyInvitationLink = async (code: string) => {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const inviteUrl = `${appUrl}/auth/register?code=${code}`;
+    const inviteUrl = `${appUrl}/auth/invitation/verify?code=${code}`;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       toast.success("초대 링크가 복사되었습니다.");

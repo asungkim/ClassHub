@@ -20,7 +20,7 @@ export default function AssistantInvitationsPage() {
   const activeInvitation = invitations?.[0];
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const inviteUrl = activeInvitation?.code
-    ? `${appUrl}/auth/register?code=${activeInvitation.code}`
+    ? `${appUrl}/auth/invitation/verify?code=${activeInvitation.code}`
     : "";
 
   const handleCopyLink = async () => {

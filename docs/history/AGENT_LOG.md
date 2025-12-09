@@ -4040,3 +4040,96 @@ STRUCTURAL
   - frontend/src/components/shared/loading-skeleton.tsx (신규)
 - 다음 단계
   - Plan 6-3단계(API Hooks 구현)를 진행해 `useAssistantInvitations`, `useCreateAssistantLink`, `useStudentCandidates`, `useCreateStudentInvitations`, `useStudentInvitations` 훅을 작성한다.
+
+## [2025-12-09 23:45] 초대 검증 및 회원가입 페이지 구현 (조교/학생)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교와 학생이 초대 링크를 통해 회원가입할 수 있는 프론트엔드 UI를 구현했다.
+- `/auth/invitation/verify` 검증 페이지와 `/auth/register/invited` 회원가입 페이지 추가
+
+### Details
+- 작업 사유
+  - 조교/학생은 선생님이 생성한 초대 링크로만 회원가입 가능
+  - 초대 코드 검증 및 회원가입 플로우를 위한 프론트엔드 UI 필요
+  
+- 구현 내용
+  1. **초대 검증 페이지** (`/auth/invitation/verify?code=xxx`)
+     - `POST /api/v1/auth/invitations/verify` API 호출하여 초대 코드 검증
+     - 선생님 이름, 역할(ASSISTANT/STUDENT), 만료일 표시
+     - 학생인 경우 `studentProfile.name` 추가 표시
+     - "확인" 버튼 클릭 시 `/auth/register/invited?code=xxx`로 이동
+     - `inviteeRole`을 sessionStorage에 저장하여 회원가입 페이지에서 UI 분기
+     - 검증 실패 시 에러 메시지 및 홈으로 돌아가기 버튼 제공
+     
+  2. **초대 기반 회원가입 페이지** (`/auth/register/invited?code=xxx`)
+     - 선생님 회원가입 페이지(`/auth/register/teacher`)와 동일한 디자인
+     - sessionStorage에서 `inviteeRole` 읽어 역할별 UI 분기
+       - 조교: "조교 회원가입", "조교 계정 만들기"
+       - 학생: "학생 회원가입", "학생 계정 만들기"
+     - `POST /api/v1/auth/register/invited` API 호출
+     - 회원가입 성공 시:
+       - `SessionProvider.setToken(accessToken)` 호출하여 자동으로 `/me` 호출 및 역할 정보 확보
+       - `member.role`로 대시보드 경로 결정:
+         - ASSISTANT → `/dashboard/assistant`
+         - STUDENT → `/dashboard/student`
+       - 1.5초 후 자동 리디렉트
+     - 비밀번호 강도 힌트, 비밀번호 확인, 약관 동의 UI 포함
+     
+  3. **Suspense boundary 추가**
+     - Next.js `useSearchParams()` 사용 시 Suspense boundary 필요
+     - 각 페이지를 Content 컴포넌트로 분리하고 Suspense로 감싸서 해결
+
+- 영향받은 테스트
+  - 타입 검증 통과: `npm run build -- --webpack` 성공
+  - 빌드 결과: 새 라우트 추가됨
+    - `/auth/invitation/verify`
+    - `/auth/register/invited`
+
+- 수정한 파일
+  - `frontend/src/app/auth/invitation/verify/page.tsx` (신규)
+  - `frontend/src/app/auth/register/invited/page.tsx` (신규)
+  - `docs/plan/frontend/invitation-verify-register_plan.md` (계획 문서)
+
+- 다음 단계
+  - 수동 기능 테스트 (조교/학생 시나리오)
+  - 백엔드에서 초대 링크 생성 시 URL을 `/auth/invitation/verify?code=xxx`로 변경 요청
+
+
+## [2025-12-09 23:55] 학생 이름 자동 채우기 기능 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 회원가입 시 StudentProfile에 등록된 이름을 자동으로 채우고 읽기 전용으로 설정
+
+### Details
+- 작업 사유
+  - 학생은 StudentProfile에 이미 이름이 등록되어 있으므로, 검증 시 확인한 이름을 회원가입 페이지에서 재사용
+  - 이름 불일치로 인한 오류 방지 및 사용자 경험 개선
+
+- 구현 내용
+  1. **검증 페이지 수정** (`/auth/invitation/verify/page.tsx`)
+     - 학생인 경우 `studentProfile.name`을 sessionStorage에 저장
+     - "확인" 버튼 클릭 시 `studentName` 함께 전달
+     
+  2. **회원가입 페이지 수정** (`/auth/register/invited/page.tsx`)
+     - sessionStorage에서 `studentName` 읽기
+     - 학생인 경우 이름 필드 자동 채우기 및 `readOnly` 설정
+     - 읽기 전용일 때 회색 배경(`bg-gray-100`) 및 `cursor-not-allowed` 스타일 적용
+     - 안내 문구 표시: "학생 프로필에 등록된 이름이 자동으로 입력되었습니다."
+     - 회원가입 완료 후 `studentName` sessionStorage 정리
+
+- 영향받은 테스트
+  - 타입 검증 통과: `npm run build -- --webpack` 성공
+
+- 수정한 파일
+  - `frontend/src/app/auth/invitation/verify/page.tsx`
+  - `frontend/src/app/auth/register/invited/page.tsx`
+
+- 다음 단계
+  - 수동 기능 테스트 (조교/학생 시나리오)
+
