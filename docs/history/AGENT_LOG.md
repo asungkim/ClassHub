@@ -3950,7 +3950,186 @@ BEHAVIORAL
   - backend/src/test/java/com/classhub/domain/studentprofile/web/StudentProfileControllerTest.java
   - frontend/src/types/openapi.json
   - frontend/src/types/openapi.d.ts
-  - frontend/src/hooks/use-student-profiles.ts
-  - frontend/src/app/dashboard/students/page.tsx
+- frontend/src/hooks/use-student-profiles.ts
+- frontend/src/app/dashboard/students/page.tsx
 - 다음 단계
   - 학생 퇴원/삭제 UX(확인 모달 등)와 Assistant 미노출 확인을 수동 테스트하고, 필요 시 추가 안전장치를 반영한다.
+
+## [2025-12-08 14:30] 초대 링크 재설계 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- 학생/조교 초대 흐름을 StudentProfile 연동, 만료/사용 정책(학생 7일·1회, 조교 무제한)으로 정리한 설계 문서를 추가했다.
+
+### Details
+- 작업 사유
+  - Phase 3 초대 연동 TODO를 진행하기 위해 백엔드 초대/가입 정책을 최신 요구사항에 맞춰 재정의하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/backend/invitation-link-flow_plan.md
+- 다음 단계
+  - 사용자 승인 후 설계에 맞춰 초대/가입 API를 리팩터링하고 StudentProfile 연동·무제한 조교 링크 로직을 구현한다.
+
+## [2025-12-08 22:10] 초대 링크 플로우 Phase 5 완료 (검증/가입 확장)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 초대 검증 시 학생 프로필 정보를 포함하고, 회원가입 시 targetEmail 검증을 제거하며 StudentProfile.memberId를 연결하도록 InvitationAuthService를 확장했다.
+- useCount 증가 및 acceptIfLimitReached()로 학생 초대는 단일 사용 후 ACCEPTED 상태로 전환하고, 조교 초대는 무제한 링크로 PENDING을 유지하도록 구현했다.
+- 10개 테스트 케이스(조교/학생 검증, 회원가입, 재사용 불가, 다중 사용 등)를 작성하고 전체 통과를 확인했다.
+
+### Details
+- 작업 사유
+  - Phase 5(초대 검증/가입 로직 확장)를 완료해 새 초대 시스템(targetEmail 제거, studentProfile 연동, useCount 관리)을 적용하기 위함.
+- 영향받은 테스트
+  - `./gradlew test --tests "com.classhub.domain.auth.application.InvitationAuthServiceTest"`
+  - `./gradlew test --tests "com.classhub.domain.invitation.*"`
+- 수정한 파일
+  - backend/src/main/java/com/classhub/domain/auth/application/InvitationAuthService.java (verify, registerInvited, loadActiveInvitation 확장)
+  - backend/src/main/java/com/classhub/domain/auth/dto/response/InvitationVerifyResponse.java (studentProfile 필드 추가)
+  - backend/src/test/java/com/classhub/domain/auth/application/InvitationAuthServiceTest.java (전체 재작성: 10개 테스트)
+- 다음 단계
+  - Phase 6~8(revoke, 상태/만료 쿼리 필터)은 사용자가 완료했으므로, 프론트엔드 초대 관리 UI 구현을 시작한다.
+
+## [2025-12-08 22:15] 초대 관리 UI Plan 보완 (환경변수, 컴포넌트, URL 형식 등)
+
+### Type
+DESIGN
+
+### Summary
+- `invitation-management-ui_plan.md`에 0. 사전 준비 섹션을 추가해 환경변수(`NEXT_PUBLIC_APP_URL`) 설정, Table 컴포넌트 설치 명령, 초대 URL 형식(통합 경로 `/auth/register?code={code}`)을 명시했다.
+- InvitationStatusBadge 색상 매핑 테이블, 반응형 Mobile 카드 레이아웃, 학생 초대 페이지 Tab 구성(탭1: 후보, 탭2: 생성된 초대), 초대 생성 후 체크박스 초기화 등을 상세히 추가했다.
+- Teacher/Assistant 사이드바 메뉴 구조(Teacher: 서브메뉴, Assistant: 단일 링크), 링크 복사 토스트, 에러 UI(테이블 영역 + 재시도 버튼)를 명확히 정의했다.
+
+### Details
+- 작업 사유
+  - 프론트엔드 구현 전 모호한 부분(URL 형식, 컴포넌트 설치, 색상 매핑, 반응형 레이아웃 등)을 명확히 해 구현 시 혼란을 방지하기 위함.
+- 영향받은 테스트
+  - N/A (문서 작업)
+- 수정한 파일
+  - docs/plan/frontend/invitation-management-ui_plan.md (0. 사전 준비, 2. Requirements, 4. UI/State Structure 보강)
+  - frontend/.env (NEXT_PUBLIC_APP_URL 추가)
+  - frontend/.env.local.example (NEXT_PUBLIC_APP_URL 추가)
+- 다음 단계
+  - Plan 6-2단계(공통 컴포넌트 구현)를 시작해 InvitationStatusBadge, EmptyState, LoadingSkeleton을 만든다.
+
+## [2025-12-08 22:30] 초대 관리 UI 공통 컴포넌트 구현 (Phase 6-2)
+
+### Type
+STRUCTURAL
+
+### Summary
+- Badge, Skeleton 기본 컴포넌트를 직접 구현하고(shadcn 설치 실패), InvitationStatusBadge(4가지 상태별 색상/텍스트 매핑), EmptyState(빈 상태 메시지), LoadingSkeleton(테이블 형태 스켈레톤)을 추가했다.
+- Plan에 정의한 색상 매핑(PENDING: blue, ACCEPTED: green, REVOKED: gray, EXPIRED: red)을 정확히 구현하고, 행/열 커스터마이징 가능한 스켈레톤 UI를 제공했다.
+
+### Details
+- 작업 사유
+  - Plan 6-2단계(공통 컴포넌트 구현)를 완료해 초대 관리 페이지에서 재사용할 컴포넌트 기반을 마련하기 위함.
+- 영향받은 테스트
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일
+  - frontend/src/components/ui/badge.tsx (신규)
+  - frontend/src/components/ui/skeleton.tsx (신규)
+  - frontend/src/components/shared/invitation-status-badge.tsx (신규)
+  - frontend/src/components/shared/empty-state.tsx (신규)
+  - frontend/src/components/shared/loading-skeleton.tsx (신규)
+- 다음 단계
+  - Plan 6-3단계(API Hooks 구현)를 진행해 `useAssistantInvitations`, `useCreateAssistantLink`, `useStudentCandidates`, `useCreateStudentInvitations`, `useStudentInvitations` 훅을 작성한다.
+
+## [2025-12-09 23:45] 초대 검증 및 회원가입 페이지 구현 (조교/학생)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교와 학생이 초대 링크를 통해 회원가입할 수 있는 프론트엔드 UI를 구현했다.
+- `/auth/invitation/verify` 검증 페이지와 `/auth/register/invited` 회원가입 페이지 추가
+
+### Details
+- 작업 사유
+  - 조교/학생은 선생님이 생성한 초대 링크로만 회원가입 가능
+  - 초대 코드 검증 및 회원가입 플로우를 위한 프론트엔드 UI 필요
+  
+- 구현 내용
+  1. **초대 검증 페이지** (`/auth/invitation/verify?code=xxx`)
+     - `POST /api/v1/auth/invitations/verify` API 호출하여 초대 코드 검증
+     - 선생님 이름, 역할(ASSISTANT/STUDENT), 만료일 표시
+     - 학생인 경우 `studentProfile.name` 추가 표시
+     - "확인" 버튼 클릭 시 `/auth/register/invited?code=xxx`로 이동
+     - `inviteeRole`을 sessionStorage에 저장하여 회원가입 페이지에서 UI 분기
+     - 검증 실패 시 에러 메시지 및 홈으로 돌아가기 버튼 제공
+     
+  2. **초대 기반 회원가입 페이지** (`/auth/register/invited?code=xxx`)
+     - 선생님 회원가입 페이지(`/auth/register/teacher`)와 동일한 디자인
+     - sessionStorage에서 `inviteeRole` 읽어 역할별 UI 분기
+       - 조교: "조교 회원가입", "조교 계정 만들기"
+       - 학생: "학생 회원가입", "학생 계정 만들기"
+     - `POST /api/v1/auth/register/invited` API 호출
+     - 회원가입 성공 시:
+       - `SessionProvider.setToken(accessToken)` 호출하여 자동으로 `/me` 호출 및 역할 정보 확보
+       - `member.role`로 대시보드 경로 결정:
+         - ASSISTANT → `/dashboard/assistant`
+         - STUDENT → `/dashboard/student`
+       - 1.5초 후 자동 리디렉트
+     - 비밀번호 강도 힌트, 비밀번호 확인, 약관 동의 UI 포함
+     
+  3. **Suspense boundary 추가**
+     - Next.js `useSearchParams()` 사용 시 Suspense boundary 필요
+     - 각 페이지를 Content 컴포넌트로 분리하고 Suspense로 감싸서 해결
+
+- 영향받은 테스트
+  - 타입 검증 통과: `npm run build -- --webpack` 성공
+  - 빌드 결과: 새 라우트 추가됨
+    - `/auth/invitation/verify`
+    - `/auth/register/invited`
+
+- 수정한 파일
+  - `frontend/src/app/auth/invitation/verify/page.tsx` (신규)
+  - `frontend/src/app/auth/register/invited/page.tsx` (신규)
+  - `docs/plan/frontend/invitation-verify-register_plan.md` (계획 문서)
+
+- 다음 단계
+  - 수동 기능 테스트 (조교/학생 시나리오)
+  - 백엔드에서 초대 링크 생성 시 URL을 `/auth/invitation/verify?code=xxx`로 변경 요청
+
+
+## [2025-12-09 23:55] 학생 이름 자동 채우기 기능 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 회원가입 시 StudentProfile에 등록된 이름을 자동으로 채우고 읽기 전용으로 설정
+
+### Details
+- 작업 사유
+  - 학생은 StudentProfile에 이미 이름이 등록되어 있으므로, 검증 시 확인한 이름을 회원가입 페이지에서 재사용
+  - 이름 불일치로 인한 오류 방지 및 사용자 경험 개선
+
+- 구현 내용
+  1. **검증 페이지 수정** (`/auth/invitation/verify/page.tsx`)
+     - 학생인 경우 `studentProfile.name`을 sessionStorage에 저장
+     - "확인" 버튼 클릭 시 `studentName` 함께 전달
+     
+  2. **회원가입 페이지 수정** (`/auth/register/invited/page.tsx`)
+     - sessionStorage에서 `studentName` 읽기
+     - 학생인 경우 이름 필드 자동 채우기 및 `readOnly` 설정
+     - 읽기 전용일 때 회색 배경(`bg-gray-100`) 및 `cursor-not-allowed` 스타일 적용
+     - 안내 문구 표시: "학생 프로필에 등록된 이름이 자동으로 입력되었습니다."
+     - 회원가입 완료 후 `studentName` sessionStorage 정리
+
+- 영향받은 테스트
+  - 타입 검증 통과: `npm run build -- --webpack` 성공
+
+- 수정한 파일
+  - `frontend/src/app/auth/invitation/verify/page.tsx`
+  - `frontend/src/app/auth/register/invited/page.tsx`
+
+- 다음 단계
+  - 수동 기능 테스트 (조교/학생 시나리오)
+

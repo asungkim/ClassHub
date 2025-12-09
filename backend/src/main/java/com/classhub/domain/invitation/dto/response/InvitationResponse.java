@@ -11,7 +11,9 @@ public record InvitationResponse(
         InvitationRole inviteeRole,
         InvitationStatus status,
         LocalDateTime expiredAt,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String studentProfileId,
+        String studentName
 ) {
     public static InvitationResponse from(Invitation invitation) {
         return new InvitationResponse(
@@ -20,7 +22,22 @@ public record InvitationResponse(
                 invitation.getInviteeRole(),
                 invitation.getStatus(),
                 invitation.getExpiredAt(),
-                invitation.getCreatedAt()
+                invitation.getCreatedAt(),
+                invitation.getStudentProfileId() != null ? invitation.getStudentProfileId().toString() : null,
+                null  // 학생 이름은 서비스에서 조인해서 채워야 함
+        );
+    }
+
+    public static InvitationResponse from(Invitation invitation, String studentName) {
+        return new InvitationResponse(
+                invitation.getCode(),
+                invitation.getTargetEmail(),
+                invitation.getInviteeRole(),
+                invitation.getStatus(),
+                invitation.getExpiredAt(),
+                invitation.getCreatedAt(),
+                invitation.getStudentProfileId() != null ? invitation.getStudentProfileId().toString() : null,
+                studentName
         );
     }
 }

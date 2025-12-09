@@ -30,6 +30,7 @@ public enum RsCode {
     STUDENT_PROFILE_NOT_FOUND(RsConstant.NOT_FOUND, "학생 프로필을 찾을 수 없습니다."),
     STUDENT_PROFILE_DUPLICATE_PHONE(RsConstant.CONFLICT, "이미 사용 중인 연락처입니다."),
     STUDENT_PROFILE_MEMBER_IN_USE(RsConstant.CONFLICT, "이미 다른 학생 프로필에 연결된 계정입니다."),
+    INVALID_STUDENT_PROFILE(RsConstant.BAD_REQUEST, "초대할 수 없는 학생 프로필입니다."),
     PERSONAL_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "개별 진도 기록을 찾을 수 없습니다.");
 
     private final Integer code;

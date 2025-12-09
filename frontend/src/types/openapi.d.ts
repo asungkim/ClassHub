@@ -66,8 +66,8 @@ export interface paths {
         get: operations["listStudentInvitations"];
         put?: never;
         /**
-         * 학생 초대 생성
-         * @description Teacher/Assistant가 Student 초대를 생성한다.
+         * 학생 일괄 초대 생성
+         * @description Teacher/Assistant가 여러 StudentProfile에 대해 일괄로 Student 초대를 생성한다.
          */
         post: operations["createStudentInvitation"];
         delete?: never;
@@ -94,6 +94,26 @@ export interface paths {
          * @description Teacher가 Assistant 초대를 생성한다.
          */
         post: operations["createAssistantInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/assistant/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 조교 초대 링크 생성/회전
+         * @description Teacher가 공용 조교 초대 링크를 생성한다. 기존 PENDING 조교 초대는 자동으로 REVOKED된다.
+         */
+        post: operations["createAssistantLink"];
         delete?: never;
         options?: never;
         head?: never;
@@ -376,6 +396,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/invitations/student/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 학생 초대 후보 조회
+         * @description 초대되지 않은 StudentProfile 목록을 조회한다 (memberId=null, active=true, PENDING 초대 없음)
+         */
+        get: operations["findStudentCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/courses/{courseId}/students": {
         parameters: {
             query?: never;
@@ -453,8 +493,6 @@ export interface components {
             /** Format: int32 */
             age: number;
             /** Format: uuid */
-            memberId?: string;
-            /** Format: uuid */
             defaultClinicSlotId?: string;
         };
         RsDataStudentProfileResponse: {
@@ -522,10 +560,7 @@ export interface components {
             data?: components["schemas"]["PersonalLessonResponse"];
         };
         StudentInvitationCreateRequest: {
-            /** Format: email */
-            targetEmail: string;
-            /** Format: uuid */
-            studentProfileId: string;
+            studentProfileIds: string[];
         };
         InvitationResponse: {
             code?: string;
@@ -538,16 +573,24 @@ export interface components {
             expiredAt?: string;
             /** Format: date-time */
             createdAt?: string;
+            studentProfileId?: string;
+            studentName?: string;
+        };
+        RsDataListInvitationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["InvitationResponse"][];
+        };
+        AssistantInvitationCreateRequest: {
+            /** Format: email */
+            targetEmail: string;
         };
         RsDataInvitationResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
             data?: components["schemas"]["InvitationResponse"];
-        };
-        AssistantInvitationCreateRequest: {
-            /** Format: email */
-            targetEmail: string;
         };
         TeacherRegisterRequest: {
             /** Format: email */
@@ -616,12 +659,24 @@ export interface components {
             inviteeRole?: string;
             /** Format: date-time */
             expiresAt?: string;
+            studentProfile?: components["schemas"]["StudentCandidateResponse"];
         };
         RsDataInvitationVerifyResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
             data?: components["schemas"]["InvitationVerifyResponse"];
+        };
+        StudentCandidateResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            phoneNumber?: string;
+            parentPhone?: string;
+            schoolName?: string;
+            grade?: string;
+            /** Format: int32 */
+            age?: number;
         };
         StudentProfileUpdateRequest: {
             name?: string;
@@ -674,10 +729,13 @@ export interface components {
             id?: string;
             /** Format: uuid */
             courseId?: string;
+            courseName?: string;
             name?: string;
+            grade?: string;
             phoneNumber?: string;
             /** Format: uuid */
             assistantId?: string;
+            assistantName?: string;
             /** Format: uuid */
             memberId?: string;
             parentPhone?: string;
@@ -745,11 +803,11 @@ export interface components {
             message?: string;
             data?: components["schemas"]["PageResponseMemberSummary"];
         };
-        RsDataListInvitationResponse: {
+        RsDataListStudentCandidateResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
-            data?: components["schemas"]["InvitationResponse"][];
+            data?: components["schemas"]["StudentCandidateResponse"][];
         };
         RsDataListStudentProfileSummary: {
             /** Format: int32 */
@@ -919,7 +977,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["RsDataInvitationResponse"];
+                    "*/*": components["schemas"]["RsDataListInvitationResponse"];
                 };
             };
         };
@@ -958,6 +1016,26 @@ export interface operations {
                 "application/json": components["schemas"]["AssistantInvitationCreateRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataInvitationResponse"];
+                };
+            };
+        };
+    };
+    createAssistantLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -1363,6 +1441,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataPageResponseMemberSummary"];
+                };
+            };
+        };
+    };
+    findStudentCandidates: {
+        parameters: {
+            query?: {
+                name?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListStudentCandidateResponse"];
                 };
             };
         };

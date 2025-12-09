@@ -26,4 +26,14 @@ public interface InvitationRepository extends JpaRepository<Invitation, UUID> {
             InvitationRole inviteeRole,
             Collection<InvitationStatus> statuses
     );
+
+    // 학생 초대 후보 조회용: StudentProfile에 PENDING 초대가 있는지 확인
+    boolean existsByStudentProfileIdAndStatusIn(UUID studentProfileId, Collection<InvitationStatus> statuses);
+
+    // 조교 초대 회전용: Teacher의 PENDING 조교 초대 찾기
+    List<Invitation> findAllBySenderIdAndInviteeRoleAndStatus(
+            UUID senderId,
+            InvitationRole inviteeRole,
+            InvitationStatus status
+    );
 }

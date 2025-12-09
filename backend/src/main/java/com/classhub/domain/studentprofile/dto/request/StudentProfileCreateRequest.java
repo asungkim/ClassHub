@@ -15,7 +15,6 @@ public record StudentProfileCreateRequest(
         @NotBlank @Size(max = 60) String schoolName,
         @NotBlank @Size(max = 20) String grade,
         @NotNull Integer age,
-        UUID memberId,
         UUID defaultClinicSlotId
 ) {
 

@@ -32,7 +32,7 @@ public class Invitation extends BaseEntity {
     @Column(name = "student_profile_id", columnDefinition = "BINARY(16)")
     private UUID studentProfileId;
 
-    @Column(nullable = false, length = 120)
+    @Column(length = 120)
     private String targetEmail;
 
     @Enumerated(EnumType.STRING)
@@ -50,6 +50,14 @@ public class Invitation extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime expiredAt;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private int useCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int maxUses = 1;
+
     public void accept() {
         this.status = InvitationStatus.ACCEPTED;
     }
@@ -64,6 +72,36 @@ public class Invitation extends BaseEntity {
             return true;
         }
         return false;
+    }
+
+    public boolean canUse(LocalDateTime now) {
+        if (status != InvitationStatus.PENDING) {
+            return false;
+        }
+        if (expiredAt.isBefore(now)) {
+            return false;
+        }
+        // maxUses=-1이면 무제한 (조교 초대)
+        if (maxUses == -1) {
+            return true;
+        }
+        // useCount < maxUses이면 사용 가능
+        return useCount < maxUses;
+    }
+
+    public void increaseUseCount() {
+        this.useCount++;
+    }
+
+    public void acceptIfLimitReached() {
+        // maxUses=-1이면 무제한이므로 ACCEPTED로 전환하지 않음
+        if (maxUses == -1) {
+            return;
+        }
+        // useCount >= maxUses이면 ACCEPTED
+        if (useCount >= maxUses) {
+            this.status = InvitationStatus.ACCEPTED;
+        }
     }
 
     public void refresh(

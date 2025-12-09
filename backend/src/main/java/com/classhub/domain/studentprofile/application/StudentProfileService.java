@@ -15,7 +15,10 @@ import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,18 +43,11 @@ public class StudentProfileService {
 
         Member assistant = getAssistant(request.assistantId(), actor.getId());
 
-        UUID memberId = null;
-        if (request.memberId() != null) {
-            Member student = getStudentMember(request.memberId());
-            ensureMemberNotLinked(student.getId());
-            memberId = student.getId();
-        }
-
         StudentProfile profile = StudentProfile.builder()
                 .courseId(course.getId())
                 .teacherId(actor.getId())
                 .assistantId(assistant.getId())
-                .memberId(memberId)
+                .memberId(null)
                 .name(request.normalizedName())
                 .phoneNumber(request.normalizedPhoneNumber())
                 .parentPhone(request.parentPhone())
@@ -127,7 +123,7 @@ public class StudentProfileService {
                     : studentProfileRepository.findAllByTeacherIdAndActive(teacherId, active, pageable);
         }
 
-        return page.map(StudentProfileSummary::from);
+        return enrichPageWithNames(page);
     }
 
     @Transactional
@@ -216,10 +212,9 @@ public class StudentProfileService {
     @Transactional(readOnly = true)
     public List<StudentProfileSummary> getCourseStudents(UUID teacherId, UUID courseId) {
         ensureCourseOwnership(courseId, teacherId);
-        return studentProfileRepository.findAllByTeacherIdAndCourseIdAndActive(teacherId, courseId, true)
-                .stream()
-                .map(StudentProfileSummary::from)
-                .toList();
+        List<StudentProfile> profiles = studentProfileRepository
+                .findAllByTeacherIdAndCourseIdAndActive(teacherId, courseId, true);
+        return enrichListWithNames(profiles);
     }
 
     private Course getCourseOwnedByTeacher(UUID courseId, UUID teacherId) {
@@ -298,5 +293,45 @@ public class StudentProfileService {
             return actor.getTeacherId();
         }
         throw new BusinessException(RsCode.FORBIDDEN);
+    }
+
+    private Page<StudentProfileSummary> enrichPageWithNames(Page<StudentProfile> page) {
+        List<StudentProfile> profiles = page.getContent();
+        List<StudentProfileSummary> enriched = enrichListWithNames(profiles);
+        return page.map(profile -> {
+            return enriched.stream()
+                    .filter(summary -> summary.id().equals(profile.getId()))
+                    .findFirst()
+                    .orElseThrow();
+        });
+    }
+
+    private List<StudentProfileSummary> enrichListWithNames(List<StudentProfile> profiles) {
+        if (profiles.isEmpty()) {
+            return List.of();
+        }
+
+        Set<UUID> assistantIds = profiles.stream()
+                .map(StudentProfile::getAssistantId)
+                .collect(Collectors.toSet());
+        Set<UUID> courseIds = profiles.stream()
+                .map(StudentProfile::getCourseId)
+                .collect(Collectors.toSet());
+
+        Map<UUID, String> assistantNames = memberRepository.findAllById(assistantIds)
+                .stream()
+                .collect(Collectors.toMap(Member::getId, Member::getName));
+
+        Map<UUID, String> courseNames = courseRepository.findAllById(courseIds)
+                .stream()
+                .collect(Collectors.toMap(Course::getId, Course::getName));
+
+        return profiles.stream()
+                .map(profile -> StudentProfileSummary.from(
+                        profile,
+                        assistantNames.getOrDefault(profile.getAssistantId(), "Unknown"),
+                        courseNames.getOrDefault(profile.getCourseId(), "Unknown")
+                ))
+                .toList();
     }
 }

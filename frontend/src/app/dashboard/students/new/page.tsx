@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { TextField } from "@/components/ui/text-field";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useCreateStudentProfile } from "@/hooks/use-student-profiles";
+import { useAssistantList } from "@/hooks/use-assistants";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type { components } from "@/types/openapi";
 
@@ -21,7 +23,6 @@ type FormState = {
   age: string;
   courseId: string;
   assistantId: string;
-  memberId?: string;
   defaultClinicSlotId?: string;
 };
 
@@ -34,7 +35,6 @@ const initialForm: FormState = {
   age: "",
   courseId: "",
   assistantId: "",
-  memberId: "",
   defaultClinicSlotId: ""
 };
 
@@ -44,12 +44,20 @@ export default function StudentCreatePage() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [clientError, setClientError] = useState<string | null>(null);
   const createMutation = useCreateStudentProfile();
+  const assistantsQuery = useAssistantList({ active: true, page: 0 });
 
   if (!canRender) {
     return fallback;
   }
 
+  const assistants = assistantsQuery.data?.content ?? [];
+
   const handleChange = (field: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelectChange = (field: keyof FormState) => (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -81,15 +89,9 @@ export default function StudentCreatePage() {
       grade: form.grade,
       age: ageValue,
       courseId: form.courseId,
-      assistantId: form.assistantId
+      assistantId: form.assistantId,
+      defaultClinicSlotId: form.defaultClinicSlotId || undefined
     };
-
-    if (form.memberId) {
-      payload.memberId = form.memberId;
-    }
-    if (form.defaultClinicSlotId) {
-      payload.defaultClinicSlotId = form.defaultClinicSlotId;
-    }
 
     try {
       await createMutation.mutateAsync(payload);
@@ -148,19 +150,20 @@ export default function StudentCreatePage() {
             onChange={handleChange("courseId")}
             required
           />
-          <TextField
-            label="담당 조교 ID"
-            placeholder="UUID"
+          <Select
+            label="담당 조교"
             value={form.assistantId}
-            onChange={handleChange("assistantId")}
+            onChange={handleSelectChange("assistantId")}
             required
-          />
-          <TextField
-            label="학생 Member ID (선택)"
-            placeholder="UUID"
-            value={form.memberId}
-            onChange={handleChange("memberId")}
-          />
+            disabled={assistantsQuery.isLoading}
+          >
+            <option value="">조교를 선택하세요</option>
+            {assistants.map((assistant) => (
+              <option key={assistant.memberId} value={assistant.memberId}>
+                {assistant.name ?? "이름 없음"}
+              </option>
+            ))}
+          </Select>
           <TextField
             label="기본 클리닉 슬롯 ID (선택)"
             placeholder="UUID"

@@ -13,6 +13,7 @@ type SidebarItem = {
   label: string;
   href?: Route;
   badge?: string;
+  children?: SidebarItem[];
 };
 
 type DashboardShellProps = {
@@ -26,6 +27,7 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [invitationMenuOpen, setInvitationMenuOpen] = useState(false);
   const role = member?.role ?? "";
   const isTeacher = role === "TEACHER";
   const isAssistant = role === "ASSISTANT";
@@ -43,6 +45,18 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
 
       if (isTeacher || isAssistant) {
         items.push({ label: "학생 관리", href: "/dashboard/students" as Route });
+      }
+
+      // 초대 관리 (접기/펼치기)
+      const invitationChildren: SidebarItem[] = [];
+      if (isTeacher) {
+        invitationChildren.push({ label: "조교 초대", href: "/dashboard/invitations/assistant" as Route });
+      }
+      if (isTeacher || isAssistant) {
+        invitationChildren.push({ label: "학생 초대", href: "/dashboard/invitations/student" as Route });
+      }
+      if (invitationChildren.length > 0) {
+        items.push({ label: "초대 관리", children: invitationChildren });
       }
 
       items.push(
@@ -102,6 +116,63 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
               const isActive = item.href
                 ? pathname === item.href || pathname?.startsWith(`${item.href}/`)
                 : false;
+
+              // 자식 메뉴가 있는 경우 (초대 관리)
+              if (item.children) {
+                const hasActiveChild = item.children.some(
+                  (child) => child.href && (pathname === child.href || pathname?.startsWith(`${child.href}/`))
+                );
+                const isOpen = invitationMenuOpen || hasActiveChild;
+
+                return (
+                  <div key={item.label}>
+                    <button
+                      onClick={() => setInvitationMenuOpen(!invitationMenuOpen)}
+                      className={clsx(
+                        "flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition",
+                        hasActiveChild
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      )}
+                    >
+                      <span>{item.label}</span>
+                      <svg
+                        className={clsx("h-4 w-4 transition-transform", isOpen && "rotate-180")}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {isOpen && (
+                      <div className="mt-1 space-y-1 pl-4">
+                        {item.children.map((child) => {
+                          const isChildActive = child.href
+                            ? pathname === child.href || pathname?.startsWith(`${child.href}/`)
+                            : false;
+                          return child.href ? (
+                            <Link
+                              key={child.label}
+                              href={child.href}
+                              className={clsx(
+                                "flex items-center rounded-xl px-4 py-2 text-sm font-medium transition",
+                                isChildActive
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                              )}
+                            >
+                              {child.label}
+                            </Link>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // 일반 메뉴
               return item.href ? (
                 <Link
                   key={item.label}

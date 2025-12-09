@@ -94,7 +94,6 @@ class StudentProfileServiceTest {
                         "Seoul High",
                         "1",
                         15,
-                        null,
                         null
                 )
         );
@@ -118,7 +117,6 @@ class StudentProfileServiceTest {
                         "Seoul High",
                         "1",
                         15,
-                        null,
                         null
                 )
         );
@@ -134,7 +132,6 @@ class StudentProfileServiceTest {
                         "Seoul High",
                         "1",
                         15,
-                        null,
                         null
                 )
         )).isInstanceOf(BusinessException.class);
@@ -154,7 +151,6 @@ class StudentProfileServiceTest {
                         "Seoul High",
                         "1",
                         15,
-                        null,
                         null
                 )
         );
@@ -204,7 +200,6 @@ class StudentProfileServiceTest {
                         "Seoul High",
                         "1",
                         15,
-                        null,
                         null
                 )
         );

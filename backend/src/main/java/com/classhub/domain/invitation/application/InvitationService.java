@@ -3,6 +3,7 @@ package com.classhub.domain.invitation.application;
 import com.classhub.domain.invitation.dto.request.AssistantInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.request.StudentInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.response.InvitationResponse;
+import com.classhub.domain.invitation.dto.response.StudentCandidateResponse;
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;
 import com.classhub.domain.invitation.model.InvitationStatus;
@@ -10,6 +11,8 @@ import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentprofile.model.StudentProfile;
+import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.Duration;
@@ -31,6 +34,7 @@ public class InvitationService {
 
     private final InvitationRepository invitationRepository;
     private final MemberRepository memberRepository;
+    private final StudentProfileRepository studentProfileRepository;
 
     @Transactional
     public InvitationResponse createAssistantInvitation(UUID senderId, AssistantInvitationCreateRequest request) {
@@ -53,24 +57,84 @@ public class InvitationService {
     }
 
     @Transactional
+    public InvitationResponse createAssistantLink(UUID senderId) {
+        Member sender = getMember(senderId);
+        if (sender.getRole() != MemberRole.TEACHER) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+
+        // 1. 기존 PENDING 조교 초대 자동 REVOKE
+        List<Invitation> existingPendingInvitations = invitationRepository
+                .findAllBySenderIdAndInviteeRoleAndStatus(
+                        senderId,
+                        InvitationRole.ASSISTANT,
+                        InvitationStatus.PENDING
+                );
+
+        existingPendingInvitations.forEach(inv -> {
+            inv.revoke();
+            invitationRepository.save(inv);
+        });
+
+        // 2. 새 조교 초대 링크 생성
+        Invitation invitation = Invitation.builder()
+                .senderId(sender.getId())
+                .inviteeRole(InvitationRole.ASSISTANT)
+                .targetEmail(null) // 공용 링크, 이메일 없음
+                .studentProfileId(null) // 조교는 StudentProfile과 무관
+                .code(UUID.randomUUID().toString())
+                .maxUses(-1) // 무제한
+                .useCount(0)
+                .expiredAt(LocalDateTime.now(ZoneOffset.UTC).plusYears(10)) // 사실상 무제한
+                .build();
+
+        return InvitationResponse.from(invitationRepository.save(invitation));
+    }
+
+    @Transactional
     public InvitationResponse createStudentInvitation(UUID senderId, StudentInvitationCreateRequest request) {
+        // 하위 호환성을 위해 유지 - 단일 프로필 초대도 내부적으로 일괄 처리
+        List<InvitationResponse> responses = createStudentInvitations(senderId, request);
+        return responses.isEmpty() ? null : responses.get(0);
+    }
+
+    @Transactional
+    public List<InvitationResponse> createStudentInvitations(UUID senderId, StudentInvitationCreateRequest request) {
         Member sender = getMember(senderId);
         if (!canInviteStudent(sender)) {
             throw new BusinessException(RsCode.FORBIDDEN);
         }
-        String email = request.normalizedEmail();
-        validateDuplicate(email, InvitationRole.STUDENT);
 
-        Invitation invitation = Invitation.builder()
-                .senderId(sender.getId())
-                .targetEmail(email)
-                .inviteeRole(InvitationRole.STUDENT)
-                .studentProfileId(request.studentProfileId())
-                .code(UUID.randomUUID().toString())
-                .expiredAt(defaultExpiry())
-                .build();
+        // 1. 모든 StudentProfile 조회 및 검증
+        List<StudentProfile> profiles = request.studentProfileIds().stream()
+                .map(profileId -> studentProfileRepository.findById(profileId)
+                        .orElseThrow(() -> new BusinessException(RsCode.NOT_FOUND)))
+                .toList();
 
-        return InvitationResponse.from(invitationRepository.save(invitation));
+        // 2. 권한 검증: 각 프로필이 sender의 관리 범위 내에 있는지 확인
+        for (StudentProfile profile : profiles) {
+            validateProfileOwnership(sender, profile);
+        }
+
+        // 3. 초대 가능 여부 검증
+        for (StudentProfile profile : profiles) {
+            validateProfileInvitable(profile);
+        }
+
+        // 4. 초대 생성
+        List<Invitation> invitations = profiles.stream()
+                .map(profile -> Invitation.builder()
+                        .senderId(sender.getId())
+                        .inviteeRole(InvitationRole.STUDENT)
+                        .studentProfileId(profile.getId())
+                        .code(UUID.randomUUID().toString())
+                        .expiredAt(defaultExpiry())
+                        .build())
+                .toList();
+
+        return invitationRepository.saveAll(invitations).stream()
+                .map(InvitationResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -95,6 +159,21 @@ public class InvitationService {
                 .filter(invite -> invite.expireIfPast(now))
                 .forEach(invitationRepository::save);
 
+        // 학생 초대인 경우 StudentProfile과 조인해서 이름 가져오기
+        if (role == InvitationRole.STUDENT) {
+            return invitations.stream()
+                    .map(invitation -> {
+                        String studentName = null;
+                        if (invitation.getStudentProfileId() != null) {
+                            studentName = studentProfileRepository.findById(invitation.getStudentProfileId())
+                                    .map(StudentProfile::getName)
+                                    .orElse(null);
+                        }
+                        return InvitationResponse.from(invitation, studentName);
+                    })
+                    .collect(Collectors.toList());
+        }
+
         return invitations.stream()
                 .map(InvitationResponse::from)
                 .collect(Collectors.toList());
@@ -109,6 +188,42 @@ public class InvitationService {
         }
         invitation.revoke();
         invitationRepository.save(invitation);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentCandidateResponse> findStudentCandidates(UUID memberId, String name) {
+        Member member = getMember(memberId);
+        if (!canInviteStudent(member)) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+
+        // 1. 역할에 따라 StudentProfile 조회 (memberId=null, active=true)
+        List<StudentProfile> profiles;
+        if (member.getRole() == MemberRole.TEACHER) {
+            profiles = (name == null || name.isBlank())
+                    ? studentProfileRepository.findAllByTeacherIdAndMemberIdIsNullAndActiveTrue(memberId)
+                    : studentProfileRepository.findAllByTeacherIdAndMemberIdIsNullAndActiveTrueAndNameContainingIgnoreCase(
+                            memberId,
+                            name
+                    );
+        } else {
+            // ASSISTANT
+            profiles = (name == null || name.isBlank())
+                    ? studentProfileRepository.findAllByAssistantIdAndMemberIdIsNullAndActiveTrue(memberId)
+                    : studentProfileRepository.findAllByAssistantIdAndMemberIdIsNullAndActiveTrueAndNameContainingIgnoreCase(
+                            memberId,
+                            name
+                    );
+        }
+
+        // 2. PENDING 초대가 있는 StudentProfile 제외
+        return profiles.stream()
+                .filter(profile -> !invitationRepository.existsByStudentProfileIdAndStatusIn(
+                        profile.getId(),
+                        PENDING_STATUSES
+                ))
+                .map(StudentCandidateResponse::from)
+                .collect(Collectors.toList());
     }
 
     private void validateDuplicate(String email, InvitationRole role) {
@@ -146,5 +261,32 @@ public class InvitationService {
 
     private LocalDateTime defaultExpiry() {
         return LocalDateTime.now(ZoneOffset.UTC).plus(DEFAULT_EXPIRATION);
+    }
+
+    private void validateProfileOwnership(Member sender, StudentProfile profile) {
+        if (sender.getRole() == MemberRole.TEACHER) {
+            if (!profile.getTeacherId().equals(sender.getId())) {
+                throw new BusinessException(RsCode.FORBIDDEN);
+            }
+        } else if (sender.getRole() == MemberRole.ASSISTANT) {
+            if (!profile.getAssistantId().equals(sender.getId())) {
+                throw new BusinessException(RsCode.FORBIDDEN);
+            }
+        }
+    }
+
+    private void validateProfileInvitable(StudentProfile profile) {
+        // memberId가 있으면 이미 계정 연동됨
+        if (profile.getMemberId() != null) {
+            throw new BusinessException(RsCode.INVALID_STUDENT_PROFILE);
+        }
+        // active가 false면 초대 불가
+        if (!profile.isActive()) {
+            throw new BusinessException(RsCode.INVALID_STUDENT_PROFILE);
+        }
+        // 이미 PENDING 초대가 있으면 중복
+        if (invitationRepository.existsByStudentProfileIdAndStatusIn(profile.getId(), PENDING_STATUSES)) {
+            throw new BusinessException(RsCode.INVITATION_ALREADY_EXISTS);
+        }
     }
 }

@@ -4,6 +4,7 @@ import com.classhub.domain.invitation.application.InvitationService;
 import com.classhub.domain.invitation.dto.request.AssistantInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.request.StudentInvitationCreateRequest;
 import com.classhub.domain.invitation.dto.response.InvitationResponse;
+import com.classhub.domain.invitation.dto.response.StudentCandidateResponse;
 import com.classhub.domain.invitation.model.InvitationRole;
 import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
@@ -45,15 +46,25 @@ public class InvitationController {
         return RsData.from(RsCode.CREATED, response);
     }
 
+    @PostMapping("/assistant/link")
+    @PreAuthorize("hasAnyAuthority('TEACHER')")
+    @Operation(summary = "조교 초대 링크 생성/회전", description = "Teacher가 공용 조교 초대 링크를 생성한다. 기존 PENDING 조교 초대는 자동으로 REVOKED된다.")
+    public RsData<InvitationResponse> createAssistantLink(
+            @AuthenticationPrincipal MemberPrincipal principal
+    ) {
+        InvitationResponse response = invitationService.createAssistantLink(principal.id());
+        return RsData.from(RsCode.CREATED, response);
+    }
+
     @PostMapping("/student")
     @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
-    @Operation(summary = "학생 초대 생성", description = "Teacher/Assistant가 Student 초대를 생성한다.")
-    public RsData<InvitationResponse> createStudentInvitation(
+    @Operation(summary = "학생 일괄 초대 생성", description = "Teacher/Assistant가 여러 StudentProfile에 대해 일괄로 Student 초대를 생성한다.")
+    public RsData<List<InvitationResponse>> createStudentInvitation(
             @AuthenticationPrincipal MemberPrincipal principal,
             @Valid @RequestBody StudentInvitationCreateRequest request
     ) {
-        InvitationResponse response = invitationService.createStudentInvitation(principal.id(), request);
-        return RsData.from(RsCode.CREATED, response);
+        List<InvitationResponse> responses = invitationService.createStudentInvitations(principal.id(), request);
+        return RsData.from(RsCode.CREATED, responses);
     }
 
     @GetMapping("/assistant")
@@ -78,6 +89,17 @@ public class InvitationController {
         List<InvitationResponse> responses =
                 invitationService.listInvitations(principal.id(), InvitationRole.STUDENT, status);
         return RsData.from(RsCode.SUCCESS, responses);
+    }
+
+    @GetMapping("/student/candidates")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
+    @Operation(summary = "학생 초대 후보 조회", description = "초대되지 않은 StudentProfile 목록을 조회한다 (memberId=null, active=true, PENDING 초대 없음)")
+    public RsData<List<StudentCandidateResponse>> findStudentCandidates(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @RequestParam(value = "name", required = false) String name
+    ) {
+        List<StudentCandidateResponse> candidates = invitationService.findStudentCandidates(principal.id(), name);
+        return RsData.from(RsCode.SUCCESS, candidates);
     }
 
     @DeleteMapping("/{code}")
