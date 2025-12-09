@@ -17,7 +17,8 @@ export default function AssistantInvitationsPage() {
     return fallback;
   }
 
-  const activeInvitation = invitations?.[0];
+  // code가 있는 유효한 초대만 활성 초대로 간주
+  const activeInvitation = invitations?.find((inv) => inv.code);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const inviteUrl = activeInvitation?.code
     ? `${appUrl}/auth/invitation/verify?code=${activeInvitation.code}`
