@@ -19,9 +19,15 @@ import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,6 +93,9 @@ class InvitationAuthServiceTest {
                         .teacherId(teacher.getId())
                         .name("Test Course")
                         .company("Test Company")
+                        .startTime(LocalTime.now())
+                        .endTime(LocalTime.now())
+                        .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
                         .build()
         );
     }

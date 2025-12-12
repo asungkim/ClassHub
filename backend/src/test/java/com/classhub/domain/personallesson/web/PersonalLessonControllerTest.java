@@ -20,7 +20,12 @@ import com.classhub.domain.studentprofile.application.StudentProfileService;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileCreateRequest;
 import com.classhub.domain.studentprofile.dto.response.StudentProfileResponse;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -109,9 +114,12 @@ class PersonalLessonControllerTest {
         );
         course = courseRepository.save(
                 Course.builder()
-                        .name("Course Controller")
-                        .company("ClassHub")
                         .teacherId(teacher.getId())
+                        .name("Test Course")
+                        .company("Test Company")
+                        .startTime(LocalTime.now())
+                        .endTime(LocalTime.now())
+                        .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
                         .build()
         );
         studentProfile = studentProfileService.createProfile(
