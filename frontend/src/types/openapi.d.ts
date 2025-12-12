@@ -120,6 +120,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 반 목록 조회
+         * @description 로그인한 Teacher의 반 목록을 조회한다. isActive 파라미터로 필터링 가능.
+         */
+        get: operations["getCourses"];
+        put?: never;
+        /**
+         * 반 생성
+         * @description 새로운 반을 생성한다.
+         */
+        post: operations["createCourse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register/teacher": {
         parameters: {
             query?: never;
@@ -354,6 +378,70 @@ export interface paths {
          * @description Teacher가 소속 조교를 활성 상태로 변경한다.
          */
         patch: operations["activateAssistant"];
+        trace?: never;
+    };
+    "/api/v1/courses/{courseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 반 상세 조회
+         * @description 특정 반의 상세 정보를 조회한다.
+         */
+        get: operations["getCourse"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 반 수정
+         * @description 반 정보를 수정한다.
+         */
+        patch: operations["updateCourse"];
+        trace?: never;
+    };
+    "/api/v1/courses/{courseId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 반 비활성화
+         * @description 반을 비활성화한다.
+         */
+        patch: operations["deactivateCourse"];
+        trace?: never;
+    };
+    "/api/v1/courses/{courseId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 반 활성화
+         * @description 비활성화된 반을 다시 활성화한다.
+         */
+        patch: operations["activateCourse"];
         trace?: never;
     };
     "/api/v1/student-profiles/{profileId}/personal-lessons": {
@@ -592,6 +680,35 @@ export interface components {
             message?: string;
             data?: components["schemas"]["InvitationResponse"];
         };
+        CourseCreateRequest: {
+            name: string;
+            company: string;
+            daysOfWeek: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+            startTime: string;
+            endTime: string;
+        };
+        CourseResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            company?: string;
+            /** Format: uuid */
+            teacherId?: string;
+            daysOfWeek?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+            startTime?: string;
+            endTime?: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        RsDataCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["CourseResponse"];
+        };
         TeacherRegisterRequest: {
             /** Format: email */
             email: string;
@@ -697,6 +814,19 @@ export interface components {
             /** Format: date */
             date?: string;
             content?: string;
+        };
+        CourseUpdateRequest: {
+            name?: string;
+            company?: string;
+            daysOfWeek?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+            startTime?: string;
+            endTime?: string;
+        };
+        RsDataObject: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: unknown;
         };
         Pageable: {
             /** Format: int32 */
@@ -808,6 +938,12 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["StudentCandidateResponse"][];
+        };
+        RsDataListCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["CourseResponse"][];
         };
         RsDataListStudentProfileSummary: {
             /** Format: int32 */
@@ -1044,6 +1180,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataInvitationResponse"];
+                };
+            };
+        };
+    };
+    getCourses: {
+        parameters: {
+            query?: {
+                isActive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListCourseResponse"];
+                };
+            };
+        };
+    };
+    createCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCourseResponse"];
                 };
             };
         };
@@ -1390,6 +1572,98 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    getCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCourseResponse"];
+                };
+            };
+        };
+    };
+    updateCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCourseResponse"];
+                };
+            };
+        };
+    };
+    deactivateCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataObject"];
+                };
+            };
+        };
+    };
+    activateCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataObject"];
                 };
             };
         };

@@ -40,7 +40,10 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
       const items: SidebarItem[] = [{ label: "대시보드", href: dashboardHref }];
 
       if (isTeacher) {
-        items.push({ label: "조교 관리", href: "/dashboard/assistants" as Route });
+        items.push(
+          { label: "반 관리", href: "/dashboard/teacher/courses" as Route },
+          { label: "조교 관리", href: "/dashboard/assistants" as Route }
+        );
       }
 
       if (isTeacher || isAssistant) {

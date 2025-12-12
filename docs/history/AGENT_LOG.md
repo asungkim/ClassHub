@@ -113,6 +113,102 @@ BEHAVIORAL
 ### 다음 단계
 - Controller에서 추가 실패 케이스(예: 인증 누락) 커버 여부 점검 및 필요 시 테스트 보강.
 
+## [2025-12-13 09:15] Course 백엔드 모듈 구축
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Course 엔티티/Repository/Service/Controller 전체 CRUD를 구현해 Teacher 전용 반 관리 API를 완성했다.
+- 초기 데이터 시드, DTO(request/response), PLAN/TODO 문서를 정리했고 Repository/Service/Controller 테스트를 추가했다.
+
+### Details
+- Teacher 권한 검증과 요일·시간 검증 로직을 포함한 Service 작성, Controller에서 RsData 응답 및 인증 체크 구현.
+- CourseRepository/Service/Controller 테스트로 저장/조회/필터/권한/비활성화/활성화 시나리오 검증.
+- CourseInitData seed, CourseResponse DTO, course_plan 설계 문서, TODO 상태 반영.
+- 실행: `cd backend && ./gradlew test --tests "com.classhub.domain.course.*"` (성공)
+
+### 수정한 파일
+- `backend/src/main/java/com/classhub/domain/course/**`
+- `backend/src/test/java/com/classhub/domain/course/**`
+- `backend/src/main/java/com/classhub/global/init/data/CourseInitData.java`
+- `docs/plan/backend/course_plan.md`
+- `docs/todo/v1.8.md`
+
+### 다음 단계
+- Course 프론트엔드 개발 계획 수립 및 UI 구현
+
+## [2025-12-13 10:20] Course 프론트 UI 및 TODO 반영
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher 전용 Course 관리 UI 전체(페이지/모달/Hook)를 구현하고, TODO에서 프론트 작업을 완료 처리했다.
+- 폼 시간 필드가 기존 값 그대로 제출되도록 개선했으며, 새 PLAN 문서와 OpenAPI 타입을 반영했다.
+
+### Details
+- `docs/plan/frontend/course-management-ui_plan.md` 작성, `docs/todo/v1.8.md`에서 Course 프론트 작업 ✅ 처리.
+- `/dashboard/teacher/courses` 페이지, `use-courses` React Query 훅, `CourseFormModal`, `Modal`, `TimeSelect` 컴포넌트 구현.
+- `course-form-modal.tsx`에서 시간 값을 `HH:mm`으로 정규화하고 setValue 옵션을 추가해 종료 시간 재선택 버그 해결.
+- OpenAPI 스키마/타입, `package*.json`, 공통 UI(`dashboard-shell`, `text-field`) 업데이트.
+- (확인 예정) `cd frontend && npm run build -- --webpack`
+
+### 수정한 파일
+- `docs/plan/frontend/course-management-ui_plan.md`
+- `docs/todo/v1.8.md`
+- `frontend/package*.json`
+- `frontend/src/app/dashboard/teacher/courses/page.tsx`
+- `frontend/src/components/course/course-form-modal.tsx`
+- `frontend/src/components/ui/modal.tsx`
+- `frontend/src/components/ui/time-select.tsx`
+- `frontend/src/components/dashboard/dashboard-shell.tsx`
+- `frontend/src/components/ui/text-field.tsx`
+- `frontend/src/hooks/use-courses.ts`
+- `frontend/src/types/openapi.{d.ts,json}`
+
+### 다음 단계
+- 프론트 빌드/수동 테스트 실행 및 결과 기록
+
+## [2025-12-13 01:30] 반 관리 UI 구현 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Course Management UI를 구현해 Teacher가 반을 생성/수정/목록조회/토글(활성/비활성)할 수 있게 함
+- Modal, TimeSelect 신규 컴포넌트 추가, react-hook-form + zod 폼 검증 적용
+- 사이드바 메뉴에 "반 관리" 링크 추가로 Teacher 전용 네비게이션 완성
+
+### Details
+- **새 컴포넌트**:
+  - `frontend/src/components/ui/modal.tsx`: Portal 기반 모달 (ESC 핸들링, focus trap, body scroll lock)
+  - `frontend/src/components/ui/time-select.tsx`: 시:분 선택 드롭다운 (15분 단위)
+- **API Hooks**:
+  - `frontend/src/hooks/use-courses.ts`: `useCourses`, `useCreateCourse`, `useUpdateCourse`, `useActivateCourse`, `useDeactivateCourse`, `useToggleCourse`
+  - openapi-fetch 패턴 적용 (GET/POST/PATCH 대문자, params.path, getFetchError)
+- **페이지 & 폼**:
+  - `frontend/src/app/dashboard/teacher/courses/page.tsx`: 반 목록/필터(전체/활성/비활성)/카드 그리드
+  - `frontend/src/components/course/course-form-modal.tsx`: 생성/수정 폼 (zod schema로 검증)
+- **UI 개선**:
+  - `frontend/src/components/ui/text-field.tsx`에 `error` prop 추가 (rose 스타일)
+  - `frontend/src/components/dashboard/dashboard-shell.tsx`에 "반 관리" 메뉴 항목 추가 (Teacher 전용)
+- **빌드 & 타입 검증**: `npm run build -- --webpack` 성공 (TypeScript 에러 0개)
+
+### 수정한 파일
+- `frontend/src/components/ui/modal.tsx` (신규)
+- `frontend/src/components/ui/time-select.tsx` (신규)
+- `frontend/src/hooks/use-courses.ts` (신규)
+- `frontend/src/app/dashboard/teacher/courses/page.tsx` (신규)
+- `frontend/src/components/course/course-form-modal.tsx` (신규)
+- `frontend/src/components/ui/text-field.tsx` (error prop 추가)
+- `frontend/src/components/dashboard/dashboard-shell.tsx` (반 관리 메뉴 추가)
+- `docs/plan/frontend/course-management-ui_plan.md` (계획 문서 업데이트)
+
+### 다음 단계
+- 사용자가 수동 시나리오 테스트 진행 (생성/수정/토글/필터/빈 상태/반응형)
+- 필요 시 UX 피드백 반영 및 버그 수정
+
 ## [2025-12-12 23:15] MCP 활용 지침 추가
 
 ### Type
