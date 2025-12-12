@@ -222,3 +222,18 @@ docs/
   - PR 제목은 Conventional Commits 형식
   - PR 본문은 `.github/PULL_REQUEST_TEMPLATE.md` 사용
 - 머지 후 브랜치 삭제(원격/로컬) 권장
+
+# 9. MCP 활용 지침
+
+- **GitHub MCP 필수 사용**
+  - 브랜치 생성/삭제, PR 확인, 리뷰, 이슈 업데이트 등 Git 관련 작업은 가급적 GitHub MCP를 통해 수행한다.
+  - 로컬 Git 명령이 필요한 경우에도 동일 작업을 MCP로 미러링하거나 결과를 비교해 기록한다.
+  - 승인 없이 원격 기록을 바꿀 수 있는 직접 push·force push는 금지며, 필요한 경우 GitHub MCP를 통해 명확히 절차를 남긴다.
+- **Context7 MCP 기반 레퍼런스 확인**
+  - Next.js 16, React 19, Spring Boot 4 등 프로젝트에서 사용하는 모든 주요 라이브러리 문서는 Context7 MCP로 조회한다.
+  - 문서 조회 시 `resolve-library-id` → `get-library-docs` 순서로 호출하고, 기능 구현 시 참조한 문서/버전을 커밋 메시지나 AGENT_LOG에 남긴다.
+  - 외부 검색보다 Context7 문서를 우선 사용하며, 필요한 페이지가 없을 때만 다른 소스를 검토한다.
+- **실행 흐름**
+  1. 작업 시작 시 필요한 문맥(브랜치/이슈/TODO)을 GitHub MCP로 확인한다.
+  2. 구현/리뷰 과정 중 라이브러리 API나 버전 확인이 필요하면 Context7 MCP로 최신 문서를 조회한다.
+  3. 모든 기록(PLAN, TODO, AGENT_LOG)에는 사용한 MCP 리소스를 명시해 추후 감사가 가능하도록 한다.

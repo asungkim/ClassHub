@@ -9,7 +9,9 @@
       "Bash(bash -c \"cd backend && find src/test -name ''*InvitationAuth*Test.java'' -type f\")",
       "Bash(npm run build:*)",
       "Bash(npx shadcn@latest add table:*)",
-      "Bash(bash -c \"cd frontend && npm run build 2>&1 | tail -50\")"
+      "Bash(bash -c \"cd frontend && npm run build 2>&1 | tail -50\")",
+      "Bash(bash:*)",
+      "Bash(./gradlew build:*)"
     ],
     "deny": [],
     "ask": []

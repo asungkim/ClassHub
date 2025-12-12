@@ -105,11 +105,11 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 
 ## 작업 워크플로
 
-이 프로젝트는 `docs/todo/v1.7.md`에 정의된 구조화된 계획 워크플로를 따름:
+이 프로젝트는 `docs/todo/v1.8.md`에 정의된 구조화된 계획 워크플로를 따름:
 
 1. 작업은 Phase/Epic/Task 계층으로 구성
 2. 각 작업마다 `docs/plan/<feature>_plan.md`에 계획 문서 작성
-3. TDD(레드-그린-리팩터)로 구현
+3. 백엔드는 TDD(레드-그린-리팩터)로 구현
 4. 구조적 변경(refactor)과 행위 변경(feat/fix)을 별도 커밋으로 분리
 5. 의미 있는 이벤트는 `docs/history/AGENT_LOG.md`에 기록
 
@@ -140,7 +140,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 ## 주요 문서
 
 - **스펙**: `docs/spec/v1.2.md` - 기술 스펙, 도메인 엔티티, 관계
-- **TODO**: `docs/todo/v1.7.md` - 현재 작업 항목 (Phase별 구성)
+- **TODO**: `docs/todo/v1.8.md` - 현재 작업 항목 (Phase별 구성)
 - **표준**:
   - `docs/standards/java-style.md` - Java 코딩 규칙
   - `docs/standards/commit-branch.md` - Git 워크플로
@@ -186,6 +186,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 ### 프론트엔드 테스트 & 검증 프로세스
 
 **개발 단계별 검증**:
+
 1. **타입 검증 (필수)**: 코드 작성 후 `cd frontend && npm run build -- --webpack` 실행, 컴파일 에러 0개 확인
 2. **수동 기능 테스트 (필수)**: `npm run dev`로 개발 서버 실행 후 실제 UI에서 주요 시나리오 테스트
    - 역할별 접근 제어, API 성공/실패, 로딩/에러/빈 상태, 반응형 동작 확인
@@ -214,3 +215,18 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 - 모든 타임스탬프는 JPA Auditing으로 관리
 - 보안: 회원가입 허용 전 초대 코드 검증 필수
 - 테스트는 성공과 실패 시나리오 모두 검증해야 함
+
+## MCP 활용 지침
+
+- **GitHub MCP 우선 사용**
+  - 브랜치 생성/삭제, PR 확인, 리뷰, 이슈 업데이트 등 GitHub 상호작용은 가급적 GitHub MCP로 수행한다.
+  - 로컬 Git 명령을 병행할 때는 동일 작업을 MCP로 미러링하거나 결과를 기록해 차이를 추적 가능하게 유지한다.
+  - push/force push처럼 원격 이력에 영향이 있는 작업은 GitHub MCP로 실행하고, 필요한 경우 사전 승인을 문서화한다.
+- **Context7 MCP 기반 레퍼런스 확인**
+  - Next.js 16, React 19, Spring Boot 4 등 주요 의존성 문서는 Context7 MCP에서 `resolve-library-id` → `get-library-docs` 순으로 조회한다.
+  - 구현·리뷰 과정에서 참고한 문서와 버전은 가능하면 AGENT_LOG나 PR 설명에 남긴다.
+  - Context7에 원하는 페이지가 없을 때만 외부 자료를 사용하고, 출처 및 사유를 기록한다.
+- **작업 흐름**
+  1. 작업 시작 시 GitHub MCP로 브랜치/이슈/리뷰 상태를 확인한다.
+  2. 구현 중 레퍼런스가 필요하면 Context7 MCP에서 최신 문서를 조회한다.
+  3. 결과 보고 시 사용한 MCP 리소스(문서/리뷰 링크 등)를 함께 언급해 추적 가능성을 높인다.

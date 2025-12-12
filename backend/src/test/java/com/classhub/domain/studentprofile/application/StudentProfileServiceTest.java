@@ -14,6 +14,10 @@ import com.classhub.domain.studentprofile.dto.response.StudentProfileResponse;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -73,9 +77,12 @@ class StudentProfileServiceTest {
 
         course = courseRepository.save(
                 Course.builder()
-                        .name("Math 101")
-                        .company("ClassHub")
                         .teacherId(teacher.getId())
+                        .name("Test Course")
+                        .company("Test Company")
+                        .startTime(LocalTime.now())
+                        .endTime(LocalTime.now())
+                        .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
                         .build()
         );
     }
