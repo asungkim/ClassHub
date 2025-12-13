@@ -3,6 +3,7 @@ package com.classhub.domain.personallesson.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
@@ -20,7 +21,8 @@ import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -91,9 +93,10 @@ class PersonalLessonServiceTest {
                         .teacherId(teacher.getId())
                         .name("Test Course")
                         .company("Test Company")
-                        .startTime(LocalTime.now())
-                        .endTime(LocalTime.now())
-                        .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
+                        .schedules(new HashSet<>(Arrays.asList(
+                                new CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(16, 0)),
+                                new CourseSchedule(DayOfWeek.FRIDAY, LocalTime.of(14, 0), LocalTime.of(16, 0))
+                        )))
                         .build()
         );
 

@@ -1,9 +1,11 @@
 package com.classhub.domain.course.application;
 
 import com.classhub.domain.course.dto.request.CourseCreateRequest;
+import com.classhub.domain.course.dto.request.CourseScheduleRequest;
 import com.classhub.domain.course.dto.request.CourseUpdateRequest;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
@@ -12,10 +14,10 @@ import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,15 +34,13 @@ public class CourseService {
     public CourseResponse createCourse(UUID teacherId, CourseCreateRequest request) {
 
         validateTeacher(teacherId);
-        validateSchedule(request.daysOfWeek(), request.startTime(), request.endTime());
+        Set<CourseSchedule> schedules = toSchedulesWithValidation(request.schedules());
 
         Course course = Course.builder()
                 .name(request.name())
                 .company(request.company())
                 .teacherId(teacherId)
-                .daysOfWeek(request.daysOfWeek())
-                .startTime(request.startTime())
-                .endTime(request.endTime())
+                .schedules(schedules)
                 .build();
 
         Course saved = courseRepository.save(course);
@@ -77,18 +77,14 @@ public class CourseService {
         validateTeacher(teacherId);
 
         Course course = getCourseOwnedByTeacher(courseId, teacherId);
-        validateSchedule(
-                resolveDaysOfWeek(course, request.daysOfWeek()),
-                resolveStartTime(course, request.startTime()),
-                resolveEndTime(course, request.endTime())
-        );
+        Set<CourseSchedule> schedules = request.schedules() != null
+                ? toSchedulesWithValidation(request.schedules())
+                : course.getSchedules();
 
         course.update(
                 request.name(),
                 request.company(),
-                request.daysOfWeek(),
-                request.startTime(),
-                request.endTime()
+                schedules
         );
 
         return CourseResponse.from(course);
@@ -128,24 +124,24 @@ public class CourseService {
                 .orElseThrow(() -> new BusinessException(RsCode.COURSE_NOT_FOUND));
     }
 
-    private void validateSchedule(Set<DayOfWeek> daysOfWeek, LocalTime startTime, LocalTime endTime) {
-        if (daysOfWeek == null || daysOfWeek.isEmpty()) {
+    private Set<CourseSchedule> toSchedulesWithValidation(Set<CourseScheduleRequest> scheduleRequests) {
+        if (scheduleRequests == null || scheduleRequests.isEmpty()) {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
-        if (startTime == null || endTime == null || !startTime.isBefore(endTime)) {
-            throw new BusinessException(RsCode.BAD_REQUEST);
+        Set<DayOfWeek> seenDays = new java.util.HashSet<>();
+        for (CourseScheduleRequest schedule : scheduleRequests) {
+            if (schedule.dayOfWeek() == null
+                    || schedule.startTime() == null
+                    || schedule.endTime() == null
+                    || !schedule.startTime().isBefore(schedule.endTime())) {
+                throw new BusinessException(RsCode.BAD_REQUEST);
+            }
+            if (!seenDays.add(schedule.dayOfWeek())) {
+                throw new BusinessException(RsCode.BAD_REQUEST);
+            }
         }
-    }
-
-    private Set<DayOfWeek> resolveDaysOfWeek(Course course, Set<DayOfWeek> daysOfWeek) {
-        return daysOfWeek != null ? daysOfWeek : course.getDaysOfWeek();
-    }
-
-    private LocalTime resolveStartTime(Course course, LocalTime startTime) {
-        return startTime != null ? startTime : course.getStartTime();
-    }
-
-    private LocalTime resolveEndTime(Course course, LocalTime endTime) {
-        return endTime != null ? endTime : course.getEndTime();
+        return scheduleRequests.stream()
+                .map(req -> new CourseSchedule(req.dayOfWeek(), req.startTime(), req.endTime()))
+                .collect(Collectors.toSet());
     }
 }

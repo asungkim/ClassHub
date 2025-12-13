@@ -15,6 +15,39 @@ import type { components } from "@/types/openapi";
 type CourseResponse = components["schemas"]["CourseResponse"];
 type ActiveFilter = "all" | "active" | "inactive";
 
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: "월",
+  TUESDAY: "화",
+  WEDNESDAY: "수",
+  THURSDAY: "목",
+  FRIDAY: "금",
+  SATURDAY: "토",
+  SUNDAY: "일"
+};
+
+const DAY_ORDER: Record<string, number> = {
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+  SUNDAY: 7
+};
+
+const formatCourseSchedule = (course: CourseResponse): string => {
+  return (
+    course.schedules
+      ?.slice()
+      .sort((a, b) => (DAY_ORDER[a.dayOfWeek ?? ""] || 0) - (DAY_ORDER[b.dayOfWeek ?? ""] || 0))
+      .map((schedule) => {
+        const dayLabel = DAY_LABELS[schedule.dayOfWeek ?? ""] ?? schedule.dayOfWeek ?? "";
+        return `${dayLabel} ${schedule.startTime ?? ""} - ${schedule.endTime ?? ""}`.trim();
+      })
+      .join(", ") ?? "시간표 없음"
+  );
+};
+
 export default function CoursesPage() {
   const { canRender, fallback } = useRoleGuard("TEACHER");
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
@@ -187,45 +220,7 @@ export default function CoursesPage() {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      <span>
-                        {course.daysOfWeek
-                          ?.map((day) =>
-                            day === "MONDAY"
-                              ? "월"
-                              : day === "TUESDAY"
-                              ? "화"
-                              : day === "WEDNESDAY"
-                              ? "수"
-                              : day === "THURSDAY"
-                              ? "목"
-                              : day === "FRIDAY"
-                              ? "금"
-                              : day === "SATURDAY"
-                              ? "토"
-                              : "일"
-                          )
-                          .join(", ")}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span>
-                        {course.startTime} - {course.endTime}
-                      </span>
+                      <span>{formatCourseSchedule(course)}</span>
                     </div>
                   </div>
 

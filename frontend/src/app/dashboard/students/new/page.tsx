@@ -8,8 +8,10 @@ import { TextField } from "@/components/ui/text-field";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useCreateStudentProfile } from "@/hooks/use-student-profiles";
+import { useCourses } from "@/hooks/use-courses";
 import { useAssistantList } from "@/hooks/use-assistants";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { CoursePicker } from "@/components/course/course-picker";
 import type { components } from "@/types/openapi";
 
 type StudentProfileCreateRequest = components["schemas"]["StudentProfileCreateRequest"];
@@ -21,7 +23,6 @@ type FormState = {
   schoolName: string;
   grade: string;
   age: string;
-  courseId: string;
   assistantId: string;
   defaultClinicSlotId?: string;
 };
@@ -33,7 +34,6 @@ const initialForm: FormState = {
   schoolName: "",
   grade: "",
   age: "",
-  courseId: "",
   assistantId: "",
   defaultClinicSlotId: ""
 };
@@ -43,8 +43,10 @@ export default function StudentCreatePage() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
   const [clientError, setClientError] = useState<string | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
   const createMutation = useCreateStudentProfile();
   const assistantsQuery = useAssistantList({ active: true, page: 0 });
+  const coursesQuery = useCourses(true);
 
   if (!canRender) {
     return fallback;
@@ -70,8 +72,12 @@ export default function StudentCreatePage() {
       setClientError("필수 항목을 모두 입력해주세요.");
       return;
     }
-    if (!form.courseId || !form.assistantId) {
-      setClientError("코스 ID와 조교 ID를 입력해주세요.");
+    if (!selectedCourseId) {
+      setClientError("수업을 선택해주세요.");
+      return;
+    }
+    if (!form.assistantId) {
+      setClientError("담당 조교를 선택해주세요.");
       return;
     }
 
@@ -88,7 +94,7 @@ export default function StudentCreatePage() {
       schoolName: form.schoolName,
       grade: form.grade,
       age: ageValue,
-      courseId: form.courseId,
+      courseId: selectedCourseId,
       assistantId: form.assistantId,
       defaultClinicSlotId: form.defaultClinicSlotId || undefined
     };
@@ -143,13 +149,14 @@ export default function StudentCreatePage() {
             onChange={handleChange("grade")}
             required
           />
-          <TextField
-            label="코스 ID"
-            placeholder="UUID"
-            value={form.courseId}
-            onChange={handleChange("courseId")}
-            required
-          />
+          <div className="md:col-span-2">
+            <CoursePicker
+              courses={coursesQuery.data ?? []}
+              selectedCourseId={selectedCourseId}
+              onSelect={setSelectedCourseId}
+              isLoading={coursesQuery.isLoading}
+            />
+          </div>
           <Select
             label="담당 조교"
             value={form.assistantId}
@@ -186,7 +193,11 @@ export default function StudentCreatePage() {
           >
             취소
           </Button>
-          <Button type="submit" className="h-11 px-5 text-sm" disabled={createMutation.isPending}>
+          <Button
+            type="submit"
+            className="h-11 px-5 text-sm"
+            disabled={createMutation.isPending || (coursesQuery.data?.length ?? 0) === 0}
+          >
             {createMutation.isPending ? "등록 중..." : "학생 등록"}
           </Button>
         </div>

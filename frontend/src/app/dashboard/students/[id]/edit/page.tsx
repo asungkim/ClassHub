@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { useStudentProfileDetail, useUpdateStudentProfile } from "@/hooks/use-student-profiles";
 import { useAssistantList } from "@/hooks/use-assistants";
+import { useCourses } from "@/hooks/use-courses";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { CoursePicker } from "@/components/course/course-picker";
 import type { components } from "@/types/openapi";
 
 type StudentProfileUpdateRequest = components["schemas"]["StudentProfileUpdateRequest"];
@@ -23,6 +25,7 @@ type FormState = {
   schoolName: string;
   grade: string;
   age: string;
+  courseId: string;
   assistantId: string;
   defaultClinicSlotId?: string;
 };
@@ -34,6 +37,7 @@ const emptyForm: FormState = {
   schoolName: "",
   grade: "",
   age: "",
+  courseId: "",
   assistantId: "",
   defaultClinicSlotId: ""
 };
@@ -46,6 +50,7 @@ export default function StudentEditPage() {
   const detailQuery = useStudentProfileDetail(profileId ?? "");
   const updateMutation = useUpdateStudentProfile();
   const assistantsQuery = useAssistantList({ active: true, page: 0 });
+  const coursesQuery = useCourses(true);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [clientError, setClientError] = useState<string | null>(null);
 
@@ -136,6 +141,14 @@ export default function StudentEditPage() {
           <TextField label="부모 연락처" value={form.parentPhone} onChange={handleChange("parentPhone")} required />
           <TextField label="학교명" value={form.schoolName} onChange={handleChange("schoolName")} required />
           <TextField label="학년" value={form.grade} onChange={handleChange("grade")} required />
+          <div className="md:col-span-2">
+            <CoursePicker
+              courses={coursesQuery.data ?? []}
+              selectedCourseId={form.courseId}
+              onSelect={(nextCourse) => setForm((prev) => ({ ...prev, courseId: nextCourse }))}
+              isLoading={coursesQuery.isLoading}
+            />
+          </div>
           <Select
             label="담당 조교"
             value={form.assistantId}
@@ -189,6 +202,7 @@ function mapResponseToForm(student: StudentProfileResponse): FormState {
     schoolName: student.schoolName ?? "",
     grade: student.grade ?? "",
     age: student.age ? String(student.age) : "",
+    courseId: student.courseId ?? "",
     assistantId: student.assistantId ?? "",
     defaultClinicSlotId: student.defaultClinicSlotId ?? ""
   };
@@ -197,6 +211,9 @@ function mapResponseToForm(student: StudentProfileResponse): FormState {
 function buildUpdatePayload(form: FormState): StudentProfileUpdateRequest | string {
   if (!form.name || !form.phoneNumber || !form.parentPhone || !form.schoolName || !form.grade || !form.age) {
     return "필수 항목을 모두 입력해주세요.";
+  }
+  if (!form.courseId) {
+    return "수업을 선택해주세요.";
   }
   if (!form.assistantId) {
     return "담당 조교를 선택해주세요.";
@@ -214,6 +231,7 @@ function buildUpdatePayload(form: FormState): StudentProfileUpdateRequest | stri
     schoolName: form.schoolName,
     grade: form.grade,
     age: ageValue,
+    courseId: form.courseId,
     assistantId: form.assistantId,
     defaultClinicSlotId: form.defaultClinicSlotId || undefined,
     memberId: undefined

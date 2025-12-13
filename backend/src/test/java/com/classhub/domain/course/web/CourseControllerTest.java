@@ -100,9 +100,10 @@ class CourseControllerTest {
                 {
                   "name": "중등 수학 A반",
                   "company": "ABC 학원",
-                  "daysOfWeek": ["MONDAY", "FRIDAY"],
-                  "startTime": "14:00",
-                  "endTime": "16:00"
+                  "schedules": [
+                    { "dayOfWeek": "MONDAY", "startTime": "14:00", "endTime": "16:00" },
+                    { "dayOfWeek": "FRIDAY", "startTime": "14:00", "endTime": "16:00" }
+                  ]
                 }
                 """;
 
@@ -122,9 +123,7 @@ class CourseControllerTest {
                 {
                   "name": "중등 수학 A반",
                   "company": "ABC 학원",
-                  "daysOfWeek": [],
-                  "startTime": "14:00",
-                  "endTime": "16:00"
+                  "schedules": []
                 }
                 """;
 
@@ -167,8 +166,9 @@ class CourseControllerTest {
         Course course = createCourse("중등 수학 A반", teacher.getId());
         String payload = """
                 {
-                  "startTime": "16:00",
-                  "endTime": "14:00"
+                  "schedules": [
+                    { "dayOfWeek": "MONDAY", "startTime": "16:00", "endTime": "14:00" }
+                  ]
                 }
                 """;
 
@@ -184,9 +184,10 @@ class CourseControllerTest {
                 .name(name)
                 .company("ABC 학원")
                 .teacherId(teacherId)
-                .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
-                .startTime(LocalTime.of(14, 0))
-                .endTime(LocalTime.of(16, 0))
+                .schedules(new java.util.HashSet<>(java.util.Arrays.asList(
+                        new com.classhub.domain.course.model.CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(16, 0)),
+                        new com.classhub.domain.course.model.CourseSchedule(DayOfWeek.FRIDAY, LocalTime.of(14, 0), LocalTime.of(16, 0))
+                )))
                 .build();
         return courseRepository.save(course);
     }

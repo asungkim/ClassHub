@@ -1,11 +1,9 @@
 package com.classhub.domain.course.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.Set;
 
 public record CourseCreateRequest(
@@ -19,12 +17,6 @@ public record CourseCreateRequest(
 
         @NotNull
         @NotEmpty
-        Set<DayOfWeek> daysOfWeek,
-
-        @NotNull
-        LocalTime startTime,
-
-        @NotNull
-        LocalTime endTime
+        Set<CourseScheduleRequest> schedules
 ) {
 }

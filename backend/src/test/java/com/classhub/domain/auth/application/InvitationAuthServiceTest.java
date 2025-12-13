@@ -7,6 +7,7 @@ import com.classhub.domain.auth.dto.request.InvitationRegisterRequest;
 import com.classhub.domain.auth.dto.request.InvitationVerifyRequest;
 import com.classhub.domain.auth.dto.response.InvitationVerifyResponse;
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.invitation.model.Invitation;
 import com.classhub.domain.invitation.model.InvitationRole;
@@ -25,7 +26,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -93,9 +95,10 @@ class InvitationAuthServiceTest {
                         .teacherId(teacher.getId())
                         .name("Test Course")
                         .company("Test Company")
-                        .startTime(LocalTime.now())
-                        .endTime(LocalTime.now())
-                        .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
+                        .schedules(new HashSet<>(Arrays.asList(
+                                new CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(16, 0)),
+                                new CourseSchedule(DayOfWeek.FRIDAY, LocalTime.of(14, 0), LocalTime.of(16, 0))
+                        )))
                         .build()
         );
     }

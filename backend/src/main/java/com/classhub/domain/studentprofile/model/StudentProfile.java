@@ -95,6 +95,12 @@ public class StudentProfile extends BaseEntity {
         }
     }
 
+    public void moveToCourse(UUID courseId) {
+        if (courseId != null) {
+            this.courseId = courseId;
+        }
+    }
+
     public void changePhoneNumber(String phoneNumber) {
         if (phoneNumber != null) {
             this.phoneNumber = phoneNumber;

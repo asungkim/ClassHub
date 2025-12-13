@@ -138,16 +138,34 @@ public class StudentProfileService {
         StudentProfile profile = getProfileForTeacher(actor.getId(), profileId);
 
         if (request.assistantId() != null && !request.assistantId().equals(profile.getAssistantId())) {
-
             Member assistant = getAssistant(request.assistantId(), actor.getId());
             profile.assignAssistant(assistant.getId());
         }
 
-        if (request.phoneNumber() != null
-                && !request.phoneNumber().equals(profile.getPhoneNumber())) {
-            String normalized = request.phoneNumber().trim();
-            validateDuplicatePhoneNumber(actor.getId(), profile.getCourseId(), normalized);
-            profile.changePhoneNumber(normalized);
+        UUID targetCourseId = profile.getCourseId();
+        boolean courseChangeRequested = request.courseId() != null
+                && !request.courseId().equals(profile.getCourseId());
+        if (courseChangeRequested) {
+            Course newCourse = getCourseOwnedByTeacher(request.courseId(), actor.getId());
+            targetCourseId = newCourse.getId();
+        }
+
+        boolean phoneChangeRequested = request.phoneNumber() != null;
+        String normalizedPhone = profile.getPhoneNumber();
+        if (phoneChangeRequested) {
+            normalizedPhone = request.phoneNumber().trim();
+            phoneChangeRequested = !normalizedPhone.equals(profile.getPhoneNumber());
+        }
+
+        if (courseChangeRequested || phoneChangeRequested) {
+            validateDuplicatePhoneNumber(actor.getId(), targetCourseId, normalizedPhone);
+        }
+
+        if (courseChangeRequested) {
+            profile.moveToCourse(targetCourseId);
+        }
+        if (phoneChangeRequested) {
+            profile.changePhoneNumber(normalizedPhone);
         }
 
         if (request.memberId() != null && !request.memberId().equals(profile.getMemberId())) {
