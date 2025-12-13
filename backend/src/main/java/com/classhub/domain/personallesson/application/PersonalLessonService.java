@@ -31,7 +31,6 @@ public class PersonalLessonService {
 
         PersonalLesson lesson = PersonalLesson.builder()
                 .studentProfile(profile)
-                .courseId(profile.getCourseId())
                 .teacherId(teacherId)
                 .writerId(teacherId)
                 .date(request.date())
@@ -103,4 +102,5 @@ public class PersonalLessonService {
         }
         return profile;
     }
+
 }

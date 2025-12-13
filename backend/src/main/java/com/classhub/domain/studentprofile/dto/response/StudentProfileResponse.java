@@ -2,11 +2,11 @@ package com.classhub.domain.studentprofile.dto.response;
 
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record StudentProfileResponse(
         UUID id,
-        UUID courseId,
         UUID teacherId,
         UUID assistantId,
         UUID memberId,
@@ -18,14 +18,17 @@ public record StudentProfileResponse(
         UUID defaultClinicSlotId,
         Integer age,
         boolean active,
+        List<EnrolledCourseInfo> enrolledCourses,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
 
-    public static StudentProfileResponse from(StudentProfile profile) {
+    public static StudentProfileResponse of(
+            StudentProfile profile,
+            List<EnrolledCourseInfo> enrolledCourses
+    ) {
         return new StudentProfileResponse(
                 profile.getId(),
-                profile.getCourseId(),
                 profile.getTeacherId(),
                 profile.getAssistantId(),
                 profile.getMemberId(),
@@ -37,6 +40,7 @@ public record StudentProfileResponse(
                 profile.getDefaultClinicSlotId(),
                 profile.getAge(),
                 profile.isActive(),
+                enrolledCourses,
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()
         );

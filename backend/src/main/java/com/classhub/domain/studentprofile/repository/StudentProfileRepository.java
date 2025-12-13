@@ -29,41 +29,39 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
             Pageable pageable
     );
 
-    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndActive(
+    Page<StudentProfile> findAllByTeacherIdAndIdIn(
             UUID teacherId,
-            UUID courseId,
-            boolean active,
+            List<UUID> profileIds,
             Pageable pageable
     );
 
-    Page<StudentProfile> findAllByTeacherIdAndCourseId(
+    Page<StudentProfile> findAllByTeacherIdAndActiveAndIdIn(
             UUID teacherId,
-            UUID courseId,
+            boolean active,
+            List<UUID> profileIds,
             Pageable pageable
     );
 
-    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndActiveAndNameContainingIgnoreCase(
+    Page<StudentProfile> findAllByTeacherIdAndIdInAndNameContainingIgnoreCase(
             UUID teacherId,
-            UUID courseId,
-            boolean active,
+            List<UUID> profileIds,
             String name,
             Pageable pageable
     );
 
-    Page<StudentProfile> findAllByTeacherIdAndCourseIdAndNameContainingIgnoreCase(
+    Page<StudentProfile> findAllByTeacherIdAndActiveAndIdInAndNameContainingIgnoreCase(
             UUID teacherId,
-            UUID courseId,
+            boolean active,
+            List<UUID> profileIds,
             String name,
             Pageable pageable
     );
 
-    List<StudentProfile> findAllByTeacherIdAndCourseIdAndActive(UUID teacherId, UUID courseId, boolean active);
+    Optional<StudentProfile> findByTeacherIdAndPhoneNumberIgnoreCase(UUID teacherId, String phoneNumber);
 
-    boolean existsByTeacherIdAndCourseIdAndPhoneNumberIgnoreCase(UUID teacherId, UUID courseId, String phoneNumber);
+    boolean existsByTeacherIdAndPhoneNumberIgnoreCase(UUID teacherId, String phoneNumber);
 
     boolean existsByMemberId(UUID memberId);
-
-    Optional<StudentProfile> findByCourseIdAndPhoneNumberIgnoreCase(UUID courseId, String phoneNumber);
 
     // 학생 초대 후보 조회용 메서드 (memberId=null, active=true)
     List<StudentProfile> findAllByTeacherIdAndMemberIdIsNullAndActiveTrue(UUID teacherId);

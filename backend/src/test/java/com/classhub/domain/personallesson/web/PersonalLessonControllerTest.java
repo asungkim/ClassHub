@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -128,7 +129,7 @@ class PersonalLessonControllerTest {
         studentProfile = studentProfileService.createProfile(
                 teacher.getId(),
                 new StudentProfileCreateRequest(
-                        course.getId(),
+                        List.of(course.getId()),
                         "Jane Controller",
                         "010-2222-1111",
                         assistant.getId(),

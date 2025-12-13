@@ -283,7 +283,6 @@ class InvitationAuthServiceTest {
 
     private StudentProfile createStudentProfile(UUID courseId, UUID teacherId, UUID assistantId) {
         return studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacherId)
                 .assistantId(assistantId)
                 .name("홍길동")

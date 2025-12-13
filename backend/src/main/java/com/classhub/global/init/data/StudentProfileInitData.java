@@ -2,6 +2,8 @@ package com.classhub.global.init.data;
 
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.member.model.Member;
+import com.classhub.domain.studentcourseenrollment.model.StudentCourseEnrollment;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import java.util.ArrayList;
@@ -20,14 +22,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentProfileInitData extends BaseInitData {
 
     private final StudentProfileRepository studentProfileRepository;
+    private final StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
     private final BootstrapSeedContext seedContext;
 
     public StudentProfileInitData(
             StudentProfileRepository studentProfileRepository,
+            StudentCourseEnrollmentRepository studentCourseEnrollmentRepository,
             BootstrapSeedContext seedContext
     ) {
         super("student-profile-seed", 300);
         this.studentProfileRepository = studentProfileRepository;
+        this.studentCourseEnrollmentRepository = studentCourseEnrollmentRepository;
         this.seedContext = seedContext;
     }
 
@@ -107,9 +112,10 @@ public class StudentProfileInitData extends BaseInitData {
                 .orElse(null);
 
         StudentProfile profile = studentProfileRepository
-                .findByCourseIdAndPhoneNumberIgnoreCase(course.getId(), seed.phoneNumber())
+                .findByTeacherIdAndPhoneNumberIgnoreCase(seed.teacher().getId(), seed.phoneNumber())
                 .map(existing -> updateProfile(existing, seed, assistant.getId(), memberId))
-                .orElseGet(() -> createProfile(seed, course.getId(), assistant.getId(), memberId));
+                .orElseGet(() -> createProfile(seed, assistant.getId(), memberId));
+        syncEnrollment(profile, course.getId(), seed.teacher().getId());
         seedContext.storeStudentProfile(seed.key(), profile);
     }
 
@@ -130,12 +136,10 @@ public class StudentProfileInitData extends BaseInitData {
 
     private StudentProfile createProfile(
             StudentProfileSeed seed,
-            UUID courseId,
             UUID assistantId,
             UUID memberId
     ) {
         StudentProfile.StudentProfileBuilder builder = StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(seed.teacher().getId())
                 .assistantId(assistantId)
                 .name(seed.name())
@@ -150,6 +154,26 @@ public class StudentProfileInitData extends BaseInitData {
         }
 
         return studentProfileRepository.save(builder.build());
+    }
+
+    private void syncEnrollment(StudentProfile profile, UUID courseId, UUID teacherId) {
+        List<StudentCourseEnrollment> enrollments =
+                studentCourseEnrollmentRepository.findAllByStudentProfileId(profile.getId());
+        enrollments.stream()
+                .filter(enrollment -> !enrollment.getCourseId().equals(courseId))
+                .forEach(enrollment -> studentCourseEnrollmentRepository
+                        .deleteByStudentProfileIdAndCourseId(profile.getId(), enrollment.getCourseId()));
+        boolean alreadyAssigned = enrollments.stream()
+                .anyMatch(enrollment -> enrollment.getCourseId().equals(courseId));
+        if (!alreadyAssigned) {
+            studentCourseEnrollmentRepository.save(
+                    StudentCourseEnrollment.builder()
+                            .studentProfileId(profile.getId())
+                            .courseId(courseId)
+                            .teacherId(teacherId)
+                            .build()
+            );
+        }
     }
 
     private record StudentProfileSeed(

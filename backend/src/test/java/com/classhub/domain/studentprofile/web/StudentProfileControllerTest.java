@@ -14,17 +14,18 @@ import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentcourseenrollment.model.StudentCourseEnrollment;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileCreateRequest;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileUpdateRequest;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
-
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,17 +59,25 @@ class StudentProfileControllerTest {
     private StudentProfileRepository studentProfileRepository;
 
     @Autowired
+    private StudentCourseEnrollmentRepository enrollmentRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private WebApplicationContext context;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private Member teacher;
     private Member assistant;
     private Course course;
+    private Course secondCourse;
 
     @BeforeEach
     void setUp() {
+        enrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
         courseRepository.deleteAll();
         memberRepository.deleteAll();
@@ -105,14 +114,18 @@ class StudentProfileControllerTest {
                         .teacherId(teacher.getId())
                         .build()
         );
-        course = courseRepository.save(
+        course = createCourse("Test Course", DayOfWeek.MONDAY);
+        secondCourse = createCourse("Second Course", DayOfWeek.WEDNESDAY);
+    }
+
+    private Course createCourse(String name, DayOfWeek dayOfWeek) {
+        return courseRepository.save(
                 Course.builder()
                         .teacherId(teacher.getId())
-                        .name("Test Course")
+                        .name(name)
                         .company("Test Company")
                         .schedules(new HashSet<>(Arrays.asList(
-                                new CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(16, 0)),
-                                new CourseSchedule(DayOfWeek.FRIDAY, LocalTime.of(14, 0), LocalTime.of(16, 0))
+                                new CourseSchedule(dayOfWeek, LocalTime.of(14, 0), LocalTime.of(16, 0))
                         )))
                         .build()
         );
@@ -122,7 +135,7 @@ class StudentProfileControllerTest {
     @DisplayName("학생 프로필 생성 API는 201을 응답한다")
     void createStudentProfile() throws Exception {
         StudentProfileCreateRequest request = new StudentProfileCreateRequest(
-                course.getId(),
+                List.of(course.getId(), secondCourse.getId()),
                 "Jane Controller",
                 "010-9999-1111",
                 assistant.getId(),
@@ -138,65 +151,15 @@ class StudentProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.phoneNumber").value("010-9999-1111"));
+                .andExpect(jsonPath("$.data.phoneNumber").value("010-9999-1111"))
+                .andExpect(jsonPath("$.data.enrolledCourses.length()").value(2));
     }
 
     @Test
     @DisplayName("학생 프로필 목록을 조회할 수 있다")
     void listStudentProfiles() throws Exception {
-        studentProfileRepository.saveAll(
-                java.util.List.of(
-                        com.classhub.domain.studentprofile.model.StudentProfile.builder()
-                                .courseId(course.getId())
-                                .teacherId(teacher.getId())
-                                .assistantId(assistant.getId())
-                                .name("Jane")
-                                .phoneNumber("010-9999-0001")
-                                .parentPhone("01012345678")
-                                .schoolName("Seoul High")
-                                .grade("1")
-                                .age(15)
-                                .build()
-                )
-        );
-
-        mockMvc.perform(get("/api/v1/student-profiles")
-                .with(teacherPrincipal()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content[0].name").value("Jane"));
-    }
-
-    @Test
-    @DisplayName("Assistant는 소속 Teacher의 학생 목록을 조회할 수 있다")
-    void listStudentProfiles_asAssistant() throws Exception {
-        studentProfileRepository.saveAll(
-                List.of(
-                        StudentProfile.builder()
-                                .courseId(course.getId())
-                                .teacherId(teacher.getId())
-                                .assistantId(assistant.getId())
-                                .name("Jane")
-                                .phoneNumber("010-9999-0001")
-                                .parentPhone("01012345678")
-                                .schoolName("Seoul High")
-                                .grade("1")
-                                .age(15)
-                                .build()
-                )
-        );
-
-        mockMvc.perform(get("/api/v1/student-profiles")
-                        .with(assistantPrincipal()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content[0].name").value("Jane"));
-    }
-
-    @Test
-    @DisplayName("학생 프로필을 수정, 비활성화, 다시 활성화할 수 있다")
-    void updateAndToggleProfile() throws Exception {
-        com.classhub.domain.studentprofile.model.StudentProfile profile = studentProfileRepository.save(
-                com.classhub.domain.studentprofile.model.StudentProfile.builder()
-                        .courseId(course.getId())
+        StudentProfile profile = studentProfileRepository.save(
+                StudentProfile.builder()
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("Jane")
@@ -207,13 +170,72 @@ class StudentProfileControllerTest {
                         .age(15)
                         .build()
         );
+        enrollmentRepository.save(StudentCourseEnrollment.builder()
+                .studentProfileId(profile.getId())
+                .courseId(course.getId())
+                .teacherId(teacher.getId())
+                .build());
+
+        mockMvc.perform(get("/api/v1/student-profiles")
+                .with(teacherPrincipal()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("Jane"));
+    }
+
+    @Test
+    @DisplayName("Assistant는 소속 Teacher의 학생 목록을 조회할 수 있다")
+    void listStudentProfiles_asAssistant() throws Exception {
+        StudentProfile profile = studentProfileRepository.save(
+                StudentProfile.builder()
+                        .teacherId(teacher.getId())
+                        .assistantId(assistant.getId())
+                        .name("Jane")
+                        .phoneNumber("010-9999-0001")
+                        .parentPhone("01012345678")
+                        .schoolName("Seoul High")
+                        .grade("1")
+                        .age(15)
+                        .build()
+        );
+        enrollmentRepository.save(StudentCourseEnrollment.builder()
+                .studentProfileId(profile.getId())
+                .courseId(course.getId())
+                .teacherId(teacher.getId())
+                .build());
+
+        mockMvc.perform(get("/api/v1/student-profiles")
+                        .with(assistantPrincipal()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].name").value("Jane"));
+    }
+
+    @Test
+    @DisplayName("학생 프로필을 수정, 비활성화, 다시 활성화할 수 있다")
+    void updateAndToggleProfile() throws Exception {
+        StudentProfile profile = studentProfileRepository.save(
+                StudentProfile.builder()
+                        .teacherId(teacher.getId())
+                        .assistantId(assistant.getId())
+                        .name("Jane")
+                        .phoneNumber("010-9999-0001")
+                        .parentPhone("01012345678")
+                        .schoolName("Seoul High")
+                        .grade("1")
+                        .age(15)
+                        .build()
+        );
+        enrollmentRepository.save(StudentCourseEnrollment.builder()
+                .studentProfileId(profile.getId())
+                .courseId(course.getId())
+                .teacherId(teacher.getId())
+                .build());
 
         StudentProfileUpdateRequest updateRequest = new StudentProfileUpdateRequest(
                 "Jane Updated",
                 "01098765432",
                 "Seoul High",
                 "2",
-                null,
+                List.of(secondCourse.getId()),
                 assistant.getId(),
                 "010-3333-2222",
                 null,
@@ -226,7 +248,8 @@ class StudentProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.phoneNumber").value("010-3333-2222"));
+                .andExpect(jsonPath("$.data.phoneNumber").value("010-3333-2222"))
+                .andExpect(jsonPath("$.data.enrolledCourses[0].courseId").value(secondCourse.getId().toString()));
 
         mockMvc.perform(delete("/api/v1/student-profiles/{id}", profile.getId())
                         .with(teacherPrincipal()))
@@ -240,9 +263,8 @@ class StudentProfileControllerTest {
     @Test
     @DisplayName("Assistant는 학생 프로필을 수정하거나 삭제할 수 없다")
     void assistantCannotModifyProfile() throws Exception {
-        com.classhub.domain.studentprofile.model.StudentProfile profile = studentProfileRepository.save(
-                com.classhub.domain.studentprofile.model.StudentProfile.builder()
-                        .courseId(course.getId())
+        StudentProfile profile = studentProfileRepository.save(
+                StudentProfile.builder()
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("Jane")
@@ -253,13 +275,18 @@ class StudentProfileControllerTest {
                         .age(15)
                         .build()
         );
+        enrollmentRepository.save(StudentCourseEnrollment.builder()
+                .studentProfileId(profile.getId())
+                .courseId(course.getId())
+                .teacherId(teacher.getId())
+                .build());
 
         StudentProfileUpdateRequest updateRequest = new StudentProfileUpdateRequest(
                 "Jane Updated",
                 "01098765432",
                 "Seoul High",
                 "2",
-                null,
+                List.of(secondCourse.getId()),
                 assistant.getId(),
                 "010-3333-2222",
                 null,
@@ -285,43 +312,8 @@ class StudentProfileControllerTest {
                 .andExpect(jsonPath("$.code").value(403));
     }
 
-    private String toJson(StudentProfileCreateRequest request) {
-        return "{"
-                + "\"courseId\":" + quote(request.courseId())
-                + ",\"name\":" + quote(request.name())
-                + ",\"phoneNumber\":" + quote(request.phoneNumber())
-                + ",\"assistantId\":" + quote(request.assistantId())
-                + ",\"parentPhone\":" + quote(request.parentPhone())
-                + ",\"schoolName\":" + quote(request.schoolName())
-                + ",\"grade\":" + quote(request.grade())
-                + ",\"age\":" + quote(request.age())
-                + ",\"defaultClinicSlotId\":" + quote(request.defaultClinicSlotId())
-                + "}";
-    }
-
-    private String toJson(StudentProfileUpdateRequest request) {
-        return "{"
-                + "\"name\":" + quote(request.name())
-                + ",\"parentPhone\":" + quote(request.parentPhone())
-                + ",\"schoolName\":" + quote(request.schoolName())
-                + ",\"grade\":" + quote(request.grade())
-                + ",\"courseId\":" + quote(request.courseId())
-                + ",\"assistantId\":" + quote(request.assistantId())
-                + ",\"phoneNumber\":" + quote(request.phoneNumber())
-                + ",\"memberId\":" + quote(request.memberId())
-                + ",\"defaultClinicSlotId\":" + quote(request.defaultClinicSlotId())
-                + ",\"age\":" + quote(request.age())
-                + "}";
-    }
-
-    private String quote(Object value) {
-        if (value == null) {
-            return "null";
-        }
-        if (value instanceof Boolean || value instanceof Number) {
-            return value.toString();
-        }
-        return "\"" + value.toString() + "\"";
+    private String toJson(Object request) throws Exception {
+        return objectMapper.writeValueAsString(request);
     }
 
     private RequestPostProcessor teacherPrincipal() {

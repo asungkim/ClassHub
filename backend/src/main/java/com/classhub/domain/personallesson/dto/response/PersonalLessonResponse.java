@@ -8,7 +8,6 @@ import java.util.UUID;
 public record PersonalLessonResponse(
         UUID id,
         UUID studentProfileId,
-        UUID courseId,
         UUID teacherId,
         UUID writerId,
         LocalDate date,
@@ -21,7 +20,6 @@ public record PersonalLessonResponse(
         return new PersonalLessonResponse(
                 lesson.getId(),
                 lesson.getStudentProfile().getId(),
-                lesson.getCourseId(),
                 lesson.getTeacherId(),
                 lesson.getWriterId(),
                 lesson.getDate(),

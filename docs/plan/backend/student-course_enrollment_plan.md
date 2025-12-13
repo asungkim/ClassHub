@@ -1,82 +1,348 @@
 # Feature: StudentProfile ↔ Course M:N Enrollment
 
 ## 1. Problem Definition
-- 현재 `StudentProfile`이 `courseId` 단일 필드로만 Course를 참조해 “학생=1개 반” 구조에 묶여 있다.
-- 학생이 여러 반에 속하거나, 반 간 이동 이력을 남기려면 Course ↔ StudentProfile 구조를 M:N 으로 확장해야 한다.
-- 기존 API (학생 등록/수정, Course별 학생 조회 등)는 새 Enrollment 구조를 기반으로 재동작해야 하며, seed 데이터 및 테스트도 일관되게 업데이트되어야 한다.
+
+- 현재 `StudentProfile`이 `courseId` 단일 필드로만 Course를 참조해 "학생=1개 반" 구조에 묶여 있다.
+- **학생 프로필 생성/수정 시 여러 개의 반을 선택**할 수 있도록 Course ↔ StudentProfile 구조를 M:N으로 확장해야 한다.
+- 기존 StudentProfile API는 `courseId` 하나만 받던 것을 `courseIds` 배열로 받아 여러 Course에 동시 등록할 수 있어야 한다.
 
 ## 2. Requirements
 
 ### Functional
+
 1. **새 엔티티 `StudentCourseEnrollment`**
-   - 필드: `studentProfileId (UUID)`, `courseId (UUID)`, `teacherId (Course.teacherId)`, `assignedAt (LocalDateTime)`, `assignedBy (UUID)`, `status (enum: ACTIVE, INACTIVE)`, `primary (boolean, 기본 true)` 등.
-   - `StudentProfile` ↔ `Course` 관계를 이 엔티티를 통해서만 관리한다.
-   - Course가 삭제되면 해당 Course의 Enrollment도 함께 삭제된다. 학생 프로필 삭제 시에도 연관 Enrollment를 비활성화.
+
+   - 필드: `studentProfileId (UUID)`, `courseId (UUID)`, `teacherId (UUID)` + BaseEntity 공통 필드(`createdAt`, `updatedAt`).
+   - JPA 연관 없이 **UUID만 저장**하는 기존 패턴 유지.
+   - `StudentProfile` ↔ `Course` 관계는 이 엔티티를 통해서만 관리하며, 다수 수강 허용.
+   - Course/StudentProfile 삭제 시에는 Service 레이어에서 연관 Enrollment를 함께 삭제한다 (DB FK 사용 안 함).
 
 2. **StudentProfile API 수정**
-   - 생성/수정 DTO에서 `courseId` 필드는 “primaryCourseId”로 유지하되, 내부적으로 Enrollment를 생성/업데이트.
-   - 이미 primary Enrollment가 존재하면 업데이트 시 `primary=true`를 새 Course에 지정하고 기존은 `primary=false` 처리.
-   - 전화번호 중복 검증은 “Teacher + Course 조합 내 unique” 조건을 Enrollment 기준으로 변경.
 
-3. **조회 API 업데이트**
-   - `GET /api/v1/student-profiles?courseId=...` 는 Enrollment를 조인해 Course 필터링.
-   - `GET /api/v1/courses/{courseId}/students` 는 Enrollment 테이블을 기준으로 학생 목록 반환 (기존 StudentProfileRepository 메서드 수정).
+   - **생성**: `POST /api/v1/student-profiles`
+
+     - Request DTO: `courseIds (List<UUID>)` - **여러 개 반 선택 가능**
+     - 각 courseId마다 Enrollment 레코드 생성
+
+   - **수정**: `PATCH /api/v1/student-profiles/{id}`
+
+     - Request DTO: `courseIds (List<UUID>)` - *nullable*
+     - `courseIds == null` → 수강 정보 변경 없음
+     - `courseIds != null` → 기존 Enrollment와 비교:
+       - 새 Course → Enrollment 생성
+       - 빠진 Course → Enrollment 삭제
+
+   - **조회**: `GET /api/v1/student-profiles/{id}`
+     - Response DTO: `enrolledCourses (List<EnrolledCourseInfo>)` 포함
+     - EnrolledCourseInfo: `{ courseId, courseName, enrolledAt }`
+
+3. **권한 & 검증**
+
+   - Teacher만 StudentProfile 생성/수정 가능
+   - courseIds에 포함된 모든 Course는 해당 Teacher가 소유해야 함
+   - assistantId는 해당 Teacher에 속한 Assistant여야 함 (Course와는 독립적)
+   - 전화번호 중복 검증: 동일 Teacher 내에서 phoneNumber 중복 방지 (Course 무관)
 
 4. **도메인 서비스 영향**
-   - StudentProfileService: EnrollmentRepository 주입, `assignPrimaryCourse` 로직 추가.
-   - PersonalLessonService: StudentProfile → Course 소유 검증 시 Enrollment를 참조하거나 StudentProfile에 `teacherId` 필드를 계속 활용하되, Course 관계는 Enrollment로 확인.
+
+   - StudentProfileService:
+     - StudentCourseEnrollmentRepository 주입
+     - 생성 시: courseIds 순회하며 Enrollment 레코드 생성
+     - 수정 시: 기존 Enrollment 조회 → 추가/삭제 처리
+   - PersonalLessonService:
+     - StudentProfile의 teacherId 필드 유지 (비정규화)
+     - Course 관계는 Enrollment로 확인 (선택 사항)
 
 5. **InitData & Seed**
-   - `StudentProfileInitData` 생성 시 StudentCourseEnrollment를 함께 생성하여 과거 구조와 동일한 결과가 되도록 한다.
-   - 기존 seed에서 “학생 1~30명”을 각 반에 배정하던 로직을 Enrollment 생성으로 대체.
+   - `StudentProfileInitData` 생성 시 StudentCourseEnrollment를 함께 생성
+   - 기존 seed에서 "학생이 courseId 하나"였던 것을 Enrollment 레코드로 변환
 
 ### Non-functional
-- Enrollment 테이블 인덱스: `(student_profile_id, course_id)` unique, `(course_id, primary)` 필터 인덱스.
-- Migration/마이그레이션 시 기존 데이터에서 `courseId`를 Enrollment 레코드로 변환하는 데이터 스크립트를 준비 (이번 작업에서는 seed/test만 대상으로 함).
-- Service/Repository 테스트는 모두 Enrollment 기준으로 갱신하고, N+1 이슈 없도록 fetch 전략 단순화(ID 기반 조회 유지).
+
+- Enrollment 테이블 인덱스:
+  - `(student_profile_id, course_id)` unique constraint (중복 수강 방지)
+  - `(student_profile_id)` index (학생의 수강 목록 조회)
+  - `(course_id)` index (반별 학생 조회)
+  - `(teacher_id)` index (Teacher별 관리)
+- DB FK 대신 Service 레벨 검증/삭제로 일관성 유지.
+- Repository는 UUID 기반 조회(PersonalLesson 패턴 일관성), N+1 방지.
 
 ## 3. API Design (Draft)
-| Endpoint | 변경 사항 |
-| --- | --- |
-| `POST /api/v1/student-profiles` | body에 `courseId`를 계속 받지만, 응답 `StudentProfileResponse`에는 `primaryCourseId`, `enrolledCourseIds` 필드 추가 |
-| `PATCH /api/v1/student-profiles/{id}` | courseId 변경 시 Enrollment 업데이트, 기존 Course는 `primary=false` |
-| `GET /api/v1/student-profiles?courseId=` | Enrollment 기준으로 필터 (새 Repository 메서드 사용) |
-| `GET /api/v1/courses/{courseId}/students` | Enrollment에서 ACTIVE + primary 기준으로 학생 반환 |
-| (추가 고려) `GET /api/v1/student-profiles/{id}/courses` | 학생이 속한 Course 목록 조회 (필요시) |
+
+### 3.1 StudentProfile API 변경
+
+**기존 Request DTO**:
+
+```java
+StudentProfileCreateRequest {
+    UUID courseId;  // 단일 Course
+    UUID assistantId;
+    String name;
+    String phoneNumber;
+    // ...
+}
+```
+
+**새로운 Request DTO**:
+
+```java
+StudentProfileCreateRequest {
+    List<UUID> courseIds;  // 여러 Course 선택 가능
+    UUID assistantId;
+    String name;
+    String phoneNumber;
+    // ...
+}
+```
+
+**Response DTO 변경**:
+
+```java
+StudentProfileResponse {
+    UUID id;
+    String name;
+    String phoneNumber;
+    List<EnrolledCourseInfo> enrolledCourses;  // 수강 중인 반 목록
+    // ...
+}
+
+EnrolledCourseInfo {
+    UUID courseId;
+    String courseName;
+    LocalDateTime enrolledAt;
+}
+```
+
+### 3.2 API Endpoints
+
+| Method | URL                                   | Request                  | Response                      | 변경 사항                              |
+| ------ | ------------------------------------- | ------------------------ | ----------------------------- | -------------------------------------- |
+| POST   | `/api/v1/student-profiles`            | `courseIds: List<UUID>`  | `StudentProfileResponse`      | courseId → courseIds 배열              |
+| PATCH  | `/api/v1/student-profiles/{id}`       | `courseIds?: List<UUID>` | `StudentProfileResponse`      | null=변경 없음, []=전부 해제, 값 있으면 diff 적용 |
+| GET    | `/api/v1/student-profiles/{id}`       | -                        | `StudentProfileResponse`      | enrolledCourses 포함                   |
+| GET    | `/api/v1/student-profiles?courseId=`  | query                    | `Page<StudentProfileSummary>` | Enrollment 기준 필터링                 |
+| GET    | `/api/v1/courses/{courseId}/students` | -                        | `Page<StudentProfileSummary>` | Enrollment 조회                        |
 
 ## 4. Domain Model (Draft)
-- **StudentProfile**
-  - 기존 `courseId` 필드는 `primaryCourseId` (nullable) 로 변경하거나 제거.
-  - `assignPrimaryCourse(UUID courseId)`는 EnrollmentService를 통해 처리.
-- **StudentCourseEnrollment**
-  - PK `UUID id`, FK `studentProfileId`, FK `courseId`, `UUID teacherId`, `Boolean primary`, `EnrollmentStatus status`, `LocalDateTime assignedAt`.
-  - Service 계층에서 생성/비활성화/재할당 메서드 제공.
-- **Repositories**
-  - `StudentCourseEnrollmentRepository`:
-    - `List<StudentCourseEnrollment> findByStudentProfileIdAndStatus(UUID profileId, EnrollmentStatus status)`
-    - `Optional<StudentCourseEnrollment> findByStudentProfileIdAndPrimaryTrue(UUID profileId)`
-    - `Page<StudentProfile> findAllByTeacherIdAndCourseId(UUID teacherId, UUID courseId, Pageable pageable)` (쿼리 dsl 또는 JPA @Query)
-- **Services**
-  - `StudentCourseEnrollmentService` (내부용): primary enforcement, 권한 체크.
-  - `StudentProfileService`: EnrollmentService 호출, DTO ↔ 응답 매핑에서 enrolled course list 포함.
+
+### 4.1 엔티티
+
+**StudentProfile** (courseId 필드 제거):
+
+- `UUID id`
+- ~~`UUID courseId`~~ - **제거** (Enrollment로 대체)
+- `UUID teacherId`
+- `UUID assistantId`
+- `String name`, `String phoneNumber`, ...
+- Course 관계는 StudentCourseEnrollment 테이블에서만 관리
+
+**StudentCourseEnrollment** (신규):
+
+```java
+@Entity
+@Table(name = "student_course_enrollment",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_enrollment_student_course",
+        columnNames = {"student_profile_id", "course_id"}
+    ),
+    indexes = {
+        @Index(name = "idx_enrollment_student", columnList = "student_profile_id"),
+        @Index(name = "idx_enrollment_course", columnList = "course_id"),
+        @Index(name = "idx_enrollment_teacher", columnList = "teacher_id")
+    }
+)
+public class StudentCourseEnrollment extends BaseEntity {
+
+    @Column(name = "student_profile_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID studentProfileId;
+
+    @Column(name = "course_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID courseId;
+
+    @Column(name = "teacher_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID teacherId;
+
+}
+```
+
+### 4.2 Repository
+
+**StudentCourseEnrollmentRepository**:
+
+```java
+List<StudentCourseEnrollment> findAllByStudentProfileId(UUID studentProfileId);
+List<StudentCourseEnrollment> findAllByCourseId(UUID courseId);
+Optional<StudentCourseEnrollment> findByStudentProfileIdAndCourseId(UUID studentProfileId, UUID courseId);
+boolean existsByStudentProfileIdAndCourseId(UUID studentProfileId, UUID courseId);
+void deleteByStudentProfileIdAndCourseId(UUID studentProfileId, UUID courseId);
+```
+
+### 4.3 Service 로직
+
+**StudentProfileService 변경**:
+
+1. **생성 시**:
+
+   ```java
+   // courseIds 순회하며 각각 Enrollment 생성
+   for (UUID courseId : request.courseIds()) {
+       Course course = getCourseOwnedByTeacher(courseId, teacherId);
+       StudentCourseEnrollment enrollment = StudentCourseEnrollment.builder()
+           .studentProfileId(savedProfile.getId())
+           .courseId(courseId)
+           .teacherId(teacherId)
+           .assistantId(request.assistantId())
+           .build();
+       enrollmentRepository.save(enrollment);
+   }
+   ```
+
+2. **수정 시**:
+
+   ```java
+   if (request.courseIds() != null) {
+       Set<UUID> existingCourseIds = enrollmentRepository
+           .findAllByStudentProfileId(profileId)
+           .stream().map(StudentCourseEnrollment::getCourseId)
+           .collect(Collectors.toSet());
+
+       Set<UUID> newCourseIds = new HashSet<>(request.courseIds());
+
+       // 추가할 Course
+       for (UUID courseId : newCourseIds) {
+           if (!existingCourseIds.contains(courseId)) {
+               // Enrollment 생성
+           }
+       }
+
+       // 제거할 Course
+       for (UUID courseId : existingCourseIds) {
+           if (!newCourseIds.contains(courseId)) {
+               enrollmentRepository.deleteByStudentProfileIdAndCourseId(profileId, courseId);
+           }
+       }
+   }
+   ```
+
+3. **조회 시**:
+
+   ```java
+   List<StudentCourseEnrollment> enrollments =
+       enrollmentRepository.findAllByStudentProfileId(profileId);
+
+   List<UUID> courseIds = enrollments.stream()
+       .map(StudentCourseEnrollment::getCourseId)
+       .toList();
+
+   Map<UUID, Course> courseMap = courseRepository.findAllById(courseIds)
+       .stream().collect(Collectors.toMap(Course::getId, c -> c));
+
+   List<EnrolledCourseInfo> enrolledCourses = enrollments.stream()
+       .map(e -> new EnrolledCourseInfo(
+           e.getCourseId(),
+           courseMap.get(e.getCourseId()).getName(),
+           e.getCreatedAt()
+       ))
+       .toList();
+   ```
 
 ## 5. TDD Plan
-1. **Repository Tests**
-   - EnrollmentRepositoryTest: primary uniqueness, course filtering, 상태 변경 확인.
-   - StudentProfileRepositoryTest: `findAllByTeacherIdAndCourseId`가 Enrollment join 기반으로 정상 동작.
 
-2. **Service Tests**
-   - StudentProfileServiceTest:
-     - 생성 시 Enrollment 생성/primary 표시.
-     - 코스 변경 시 기존 primary false, 새 Course primary true.
-     - 코스별 검색/dup phone 검증 로직이 Enrollment 기반으로 작동.
-   - StudentCourseEnrollmentServiceTest (신규):
-     - `assignPrimaryCourse`/`removeCourse` 시나리오.
+### 5.1 RepositoryTest (StudentCourseEnrollmentRepositoryTest)
 
-3. **Controller Tests**
-   - StudentProfileControllerTest: 코스 변경, Course 필터로 GET 시 정상 동작.
-   - CourseControllerTest (학생 목록 API): Enrollment 기반 데이터 확인.
+1. `shouldFindAllByStudentProfileId_whenEnrollmentsExist()`
+   - 특정 학생의 모든 수강 목록 조회
+2. `shouldFindAllByCourseId_whenEnrollmentsExist()`
+   - 특정 반의 모든 수강생 조회
+3. `shouldFindByStudentProfileIdAndCourseId_whenExists()`
+   - StudentProfile + Course 조합으로 단건 조회
+4. `shouldReturnTrue_whenEnrollmentExists()`
+   - existsByStudentProfileIdAndCourseId 중복 확인
+5. `shouldThrowException_whenDuplicateEnrollment()`
+   - unique constraint 위반 시 예외 발생
+6. `shouldDeleteEnrollment_whenExists()`
+   - deleteByStudentProfileIdAndCourseId 정상 동작
 
-4. **InitData Tests/Validation**
-   - Seed 실행 후 Enrollment 수 체크 (teacher 별로 기대 값과 일치).
-   - PersonalLesson/Invitation 테스트에서 Enrollment 데이터가 자동 생성되는지 확인.
+### 5.2 ServiceTest (StudentProfileServiceTest 수정)
+
+**생성 (createProfile)**
+
+1. `shouldCreateProfile_withMultipleCourses()`
+   - courseIds 배열로 여러 Course에 등록
+   - 각 courseId마다 Enrollment 생성 확인
+2. `shouldCreateProfile_withSingleCourse()`
+   - courseIds에 하나만 있을 때도 정상 동작
+3. `shouldFailToCreate_whenCourseNotOwned()`
+   - courseIds 중 Teacher 소유가 아닌 Course 포함 시 예외
+4. `shouldFailToCreate_whenDuplicateCourse()`
+   - courseIds에 중복된 courseId 포함 시 예외
+
+**수정 (updateProfile)** 5. `shouldAddNewCourse_whenCourseIdsUpdated()`
+
+- courseIds에 새 Course 추가 → Enrollment 생성
+
+6. `shouldRemoveCourse_whenCourseIdsUpdated()`
+   - courseIds에서 기존 Course 제거 → Enrollment 삭제
+7. `shouldKeepExistingCourses_whenNoChange()`
+   - 변경 없는 Course는 유지
+8. `shouldNotUpdateCourses_whenCourseIdsIsNull()`
+   - courseIds가 null이면 Enrollment 변경 없음
+
+**조회 (getProfile)** 9. `shouldReturnEnrolledCourses_whenMultipleEnrollments()`
+
+- Response DTO에 enrolledCourses 포함 확인
+
+10. `shouldReturnEmptyList_whenNoEnrollments()`
+    - Enrollment 없을 때 빈 리스트 반환
+
+### 5.3 ControllerTest (StudentProfileControllerTest 수정)
+
+**Validation**
+
+1. `shouldReturn400_whenCourseIdsEmpty()`
+   - courseIds 빈 배열 시 400 에러
+2. `shouldReturn400_whenCourseIdsNull()`
+   - courseIds null 시 400 에러
+
+**기능** 3. `shouldCreateProfile_withMultipleCourses_201()`
+
+- courseIds 배열로 생성 성공
+
+4. `shouldUpdateProfile_withCourseIdsChange_200()`
+   - courseIds 변경 성공
+5. `shouldGetProfile_withEnrolledCourses_200()`
+   - enrolledCourses 포함된 응답 확인
+
+### 5.4 구현 & 기존 코드 수정
+
+1. **StudentProfile 엔티티 수정**:
+   - `courseId` 필드 제거
+   - 관련 getter/setter 제거
+
+2. **StudentCourseEnrollment 엔티티 생성**:
+   - JPA가 자동으로 테이블 생성 (ddl-auto 설정)
+   - 또는 수동으로 DB에 테이블 생성 후 코드 작성
+
+3. **StudentProfileService 수정**:
+   - `courseId` 기반 로직 → `courseIds` 배열로 변경
+   - Enrollment 생성/수정/삭제 로직 추가
+
+4. **StudentProfileRepository 수정**:
+   - `findByCourseId` 등 메서드 제거 또는 Enrollment 조인으로 변경
+
+5. **DTO 수정**:
+   - Request: `courseId` → `courseIds` (List)
+   - Response: `enrolledCourses` 추가
+
+6. **InitData 수정**:
+   - StudentProfile 생성 시 Enrollment도 함께 생성
+   - 기존 `courseId` 설정 제거
+
+7. **모든 테스트 수정**:
+   - `courseId` 참조 제거
+   - Enrollment 검증 추가
+
+8. **검증**:
+   - 애플리케이션 실행 후 테이블 생성 확인
+   - Seed 데이터 정상 생성 확인
+   - API 테스트로 기능 검증
