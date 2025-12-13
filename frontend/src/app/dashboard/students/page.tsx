@@ -207,7 +207,7 @@ function StudentList({
                 <td className="px-4 py-3">{student.phoneNumber ?? "-"}</td>
                 <td className="px-4 py-3">{student.grade ?? "-"}</td>
                 <td className="px-4 py-3">{student.assistantName ?? "-"}</td>
-                <td className="px-4 py-3">{student.courseName ?? "-"}</td>
+                <td className="px-4 py-3">{renderCourseNames(student.courseNames)}</td>
                 <td className="px-4 py-3">
                   <StatusBadge active={student.active} />
                 </td>
@@ -260,7 +260,7 @@ function StudentList({
                   <span className="text-slate-500">담당 조교:</span> {student.assistantName ?? "-"}
                 </div>
                 <div className="col-span-2">
-                  <span className="text-slate-500">소속 반:</span> {student.courseName ?? "-"}
+                  <span className="text-slate-500">소속 반:</span> {renderCourseNames(student.courseNames)}
                 </div>
               </div>
               {isTeacher ? (
@@ -424,4 +424,16 @@ function Pagination({
       </Button>
     </div>
   );
+}
+
+function renderCourseNames(courseNames?: string[]) {
+  const filtered = courseNames?.filter(Boolean) ?? [];
+  if (!filtered.length) {
+    return "-";
+  }
+  if (filtered.length <= 2) {
+    return filtered.join(", ");
+  }
+  const [first, second] = filtered;
+  return `${first}, ${second} 외 ${filtered.length - 2}개`;
 }
