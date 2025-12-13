@@ -25,4 +25,6 @@ public interface SharedLessonRepository extends JpaRepository<SharedLesson, UUID
     );
 
     Optional<SharedLesson> findByIdAndCourse_TeacherId(UUID sharedLessonId, UUID teacherId);
+
+    Optional<SharedLesson> findByCourse_IdAndDateAndTitleIgnoreCase(UUID courseId, LocalDate date, String title);
 }
