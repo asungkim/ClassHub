@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classhub.domain.course.dto.request.CourseCreateRequest;
+import com.classhub.domain.course.dto.request.CourseScheduleRequest;
 import com.classhub.domain.course.dto.request.CourseUpdateRequest;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
@@ -66,9 +68,10 @@ class CourseServiceTest {
         CourseCreateRequest request = new CourseCreateRequest(
                 "중등 수학 A반",
                 "ABC 학원",
-                Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY),
-                LocalTime.of(14, 0),
-                LocalTime.of(16, 0)
+                schedules(
+                        schedule(DayOfWeek.MONDAY, 14, 0, 16, 0),
+                        schedule(DayOfWeek.FRIDAY, 14, 0, 16, 0)
+                )
         );
 
         // when
@@ -79,9 +82,9 @@ class CourseServiceTest {
         assertThat(response.name()).isEqualTo("중등 수학 A반");
         assertThat(response.company()).isEqualTo("ABC 학원");
         assertThat(response.teacherId()).isEqualTo(teacherId);
-        assertThat(response.daysOfWeek()).contains(DayOfWeek.MONDAY);
-        assertThat(response.startTime()).isEqualTo(LocalTime.of(14, 0));
-        assertThat(response.endTime()).isEqualTo(LocalTime.of(16, 0));
+        assertThat(response.schedules()).hasSize(2);
+        assertThat(response.schedules())
+                .anyMatch(schedule -> schedule.dayOfWeek().equals("MONDAY") && schedule.startTime().equals("14:00"));
         assertThat(response.isActive()).isTrue();
     }
 
@@ -92,9 +95,7 @@ class CourseServiceTest {
         CourseCreateRequest request = new CourseCreateRequest(
                 "중등 수학 A반",
                 "ABC 학원",
-                Set.of(),
-                LocalTime.of(14, 0),
-                LocalTime.of(16, 0)
+                Set.of()
         );
 
         // when & then
@@ -110,9 +111,9 @@ class CourseServiceTest {
         CourseCreateRequest request = new CourseCreateRequest(
                 "중등 수학 A반",
                 "ABC 학원",
-                Set.of(DayOfWeek.MONDAY),
-                LocalTime.of(16, 0),
-                LocalTime.of(14, 0)
+                schedules(
+                        schedule(DayOfWeek.MONDAY, 16, 0, 14, 0)
+                )
         );
 
         // when & then
@@ -221,9 +222,10 @@ class CourseServiceTest {
         CourseUpdateRequest request = new CourseUpdateRequest(
                 "중등 수학 B반",
                 "XYZ 학원",
-                Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY),
-                LocalTime.of(15, 0),
-                LocalTime.of(17, 0)
+                schedules(
+                        schedule(DayOfWeek.MONDAY, 15, 0, 17, 0),
+                        schedule(DayOfWeek.FRIDAY, 15, 0, 17, 0)
+                )
         );
 
         // when
@@ -232,9 +234,9 @@ class CourseServiceTest {
         // then
         assertThat(response.name()).isEqualTo("중등 수학 B반");
         assertThat(response.company()).isEqualTo("XYZ 학원");
-        assertThat(response.daysOfWeek()).contains(DayOfWeek.MONDAY);
-        assertThat(response.startTime()).isEqualTo(LocalTime.of(15, 0));
-        assertThat(response.endTime()).isEqualTo(LocalTime.of(17, 0));
+        assertThat(response.schedules()).hasSize(2);
+        assertThat(response.schedules())
+                .anyMatch(schedule -> schedule.dayOfWeek().equals("MONDAY") && schedule.startTime().equals("15:00"));
     }
 
     @Test
@@ -245,8 +247,6 @@ class CourseServiceTest {
         UUID anotherTeacherId = createAnotherTeacher();
         CourseUpdateRequest request = new CourseUpdateRequest(
                 "중등 수학 B반",
-                null,
-                null,
                 null,
                 null
         );
@@ -330,9 +330,9 @@ class CourseServiceTest {
         CourseCreateRequest request = new CourseCreateRequest(
                 "중등 수학 A반",
                 "ABC 학원",
-                Set.of(DayOfWeek.MONDAY),
-                LocalTime.of(14, 0),
-                LocalTime.of(16, 0)
+                schedules(
+                        schedule(DayOfWeek.MONDAY, 14, 0, 16, 0)
+                )
         );
 
         // when & then
@@ -348,9 +348,9 @@ class CourseServiceTest {
         CourseCreateRequest request = new CourseCreateRequest(
                 "중등 수학 A반",
                 "ABC 학원",
-                Set.of(DayOfWeek.MONDAY),
-                LocalTime.of(14, 0),
-                LocalTime.of(16, 0)
+                schedules(
+                        schedule(DayOfWeek.MONDAY, 14, 0, 16, 0)
+                )
         );
 
         // when & then
@@ -373,9 +373,10 @@ class CourseServiceTest {
                 .name(name)
                 .company("ABC 학원")
                 .teacherId(teacherId)
-                .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
-                .startTime(LocalTime.of(14, 0))
-                .endTime(LocalTime.of(16, 0))
+                .schedules(scheduleEntities(
+                        scheduleEntity(DayOfWeek.MONDAY, 14, 0, 16, 0),
+                        scheduleEntity(DayOfWeek.FRIDAY, 14, 0, 16, 0)
+                ))
                 .build();
         return courseRepository.save(course);
     }
@@ -389,5 +390,21 @@ class CourseServiceTest {
                         .role(MemberRole.TEACHER)
                         .build()
         ).getId();
+    }
+
+    private Set<CourseScheduleRequest> schedules(CourseScheduleRequest... requests) {
+        return new java.util.HashSet<>(java.util.Arrays.asList(requests));
+    }
+
+    private CourseScheduleRequest schedule(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
+        return new CourseScheduleRequest(day, LocalTime.of(startHour, startMinute), LocalTime.of(endHour, endMinute));
+    }
+
+    private Set<CourseSchedule> scheduleEntities(CourseSchedule... schedules) {
+        return new java.util.HashSet<>(java.util.Arrays.asList(schedules));
+    }
+
+    private CourseSchedule scheduleEntity(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
+        return new CourseSchedule(day, LocalTime.of(startHour, startMinute), LocalTime.of(endHour, endMinute));
     }
 }

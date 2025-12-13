@@ -1,12 +1,15 @@
 package com.classhub.global.init.data;
 
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.model.Member;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.classhub.global.init.BootstrapSeedContext;
@@ -41,7 +44,7 @@ public class CourseInitData extends BaseInitData {
     }
 
     private Course updateCourse(Course course, CourseSeed seed) {
-        course.update(seed.name(), seed.company(), seed.daysOfWeek(), seed.startTime(), seed.endTime());
+        course.update(seed.name(), seed.company(), seed.schedules());
         course.activate();
         return course;
     }
@@ -51,25 +54,85 @@ public class CourseInitData extends BaseInitData {
                 .name(seed.name())
                 .company(seed.company())
                 .teacherId(teacherId)
-                .daysOfWeek(seed.daysOfWeek())
-                .startTime(seed.startTime())
-                .endTime(seed.endTime())
+                .schedules(seed.schedules())
                 .build();
         return courseRepository.save(course);
     }
 
     private List<CourseSeed> buildSeeds() {
         List<CourseSeed> seeds = new ArrayList<>();
-        seeds.add(new CourseSeed(SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 1), "Alpha Course A", "Alpha Academy", Set.of(DayOfWeek.MONDAY,DayOfWeek.FRIDAY), LocalTime.of(14, 0), LocalTime.of(16, 0), SeedKeys.TEACHER_ALPHA));
-        seeds.add(new CourseSeed(SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 2), "Alpha Course B", "Alpha Academy", Set.of(DayOfWeek.MONDAY,DayOfWeek.FRIDAY), LocalTime.of(16, 0), LocalTime.of(18, 0), SeedKeys.TEACHER_ALPHA));
-        seeds.add(new CourseSeed(SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 3), "Alpha Course C", "Alpha Academy", Set.of(DayOfWeek.MONDAY,DayOfWeek.FRIDAY), LocalTime.of(14, 0), LocalTime.of(16, 0), SeedKeys.TEACHER_ALPHA));
+        seeds.add(new CourseSeed(
+                SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 1),
+                "Alpha Course A",
+                "Alpha Academy",
+                scheduleSet(
+                        schedule(DayOfWeek.MONDAY, 14, 0, 16, 0),
+                        schedule(DayOfWeek.FRIDAY, 14, 0, 16, 0)
+                ),
+                SeedKeys.TEACHER_ALPHA
+        ));
+        seeds.add(new CourseSeed(
+                SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 2),
+                "Alpha Course B",
+                "Alpha Academy",
+                scheduleSet(
+                        schedule(DayOfWeek.MONDAY, 16, 0, 18, 0),
+                        schedule(DayOfWeek.FRIDAY, 16, 0, 18, 0)
+                ),
+                SeedKeys.TEACHER_ALPHA
+        ));
+        seeds.add(new CourseSeed(
+                SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 3),
+                "Alpha Course C",
+                "Alpha Academy",
+                scheduleSet(
+                        schedule(DayOfWeek.WEDNESDAY, 10, 0, 12, 0),
+                        schedule(DayOfWeek.SATURDAY, 16, 0, 18, 0)
+                ),
+                SeedKeys.TEACHER_ALPHA
+        ));
 
-        seeds.add(new CourseSeed(SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 1), "Beta Course A", "Beta Institute", Set.of(DayOfWeek.MONDAY,DayOfWeek.FRIDAY), LocalTime.of(15, 0), LocalTime.of(17, 0), SeedKeys.TEACHER_BETA));
-        seeds.add(new CourseSeed(SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 2), "Beta Course B", "Beta Institute", Set.of(DayOfWeek.MONDAY,DayOfWeek.FRIDAY), LocalTime.of(17, 0), LocalTime.of(19, 0), SeedKeys.TEACHER_BETA));
-        seeds.add(new CourseSeed(SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 3), "Beta Course C", "Beta Institute", Set.of(DayOfWeek.MONDAY,DayOfWeek.FRIDAY), LocalTime.of(10, 0), LocalTime.of(12, 0), SeedKeys.TEACHER_BETA));
+        seeds.add(new CourseSeed(
+                SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 1),
+                "Beta Course A",
+                "Beta Institute",
+                scheduleSet(
+                        schedule(DayOfWeek.MONDAY, 15, 0, 17, 0),
+                        schedule(DayOfWeek.FRIDAY, 15, 0, 17, 0)
+                ),
+                SeedKeys.TEACHER_BETA
+        ));
+        seeds.add(new CourseSeed(
+                SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 2),
+                "Beta Course B",
+                "Beta Institute",
+                scheduleSet(
+                        schedule(DayOfWeek.MONDAY, 17, 0, 19, 0),
+                        schedule(DayOfWeek.FRIDAY, 17, 0, 19, 0)
+                ),
+                SeedKeys.TEACHER_BETA
+        ));
+        seeds.add(new CourseSeed(
+                SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 3),
+                "Beta Course C",
+                "Beta Institute",
+                scheduleSet(
+                        schedule(DayOfWeek.MONDAY, 10, 0, 12, 0),
+                        schedule(DayOfWeek.SATURDAY, 10, 0, 12, 0)
+                ),
+                SeedKeys.TEACHER_BETA
+        ));
         return seeds;
     }
 
-    private record CourseSeed(String key, String name, String company, Set<DayOfWeek> daysOfWeek, LocalTime startTime, LocalTime endTime, String teacherKey) {
+    private Set<CourseSchedule> scheduleSet(CourseSchedule... schedules) {
+        return new HashSet<>(Arrays.asList(schedules));
+    }
+
+    private CourseSchedule schedule(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
+        return new CourseSchedule(day, LocalTime.of(startHour, startMinute), LocalTime.of(endHour, endMinute));
+    }
+
+    private record CourseSeed(String key, String name, String company, Set<CourseSchedule> schedules, String teacherKey) {
     }
 }

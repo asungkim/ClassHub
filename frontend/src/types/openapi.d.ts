@@ -683,7 +683,11 @@ export interface components {
         CourseCreateRequest: {
             name: string;
             company: string;
-            daysOfWeek: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+            schedules: components["schemas"]["CourseScheduleRequest"][];
+        };
+        CourseScheduleRequest: {
+            /** @enum {string} */
+            dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
             startTime: string;
             endTime: string;
         };
@@ -694,14 +698,17 @@ export interface components {
             company?: string;
             /** Format: uuid */
             teacherId?: string;
-            daysOfWeek?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
-            startTime?: string;
-            endTime?: string;
+            schedules?: components["schemas"]["CourseScheduleResponse"][];
             isActive?: boolean;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        CourseScheduleResponse: {
+            dayOfWeek?: string;
+            startTime?: string;
+            endTime?: string;
         };
         RsDataCourseResponse: {
             /** Format: int32 */
@@ -801,6 +808,8 @@ export interface components {
             schoolName?: string;
             grade?: string;
             /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
             assistantId?: string;
             phoneNumber?: string;
             /** Format: uuid */
@@ -818,9 +827,7 @@ export interface components {
         CourseUpdateRequest: {
             name?: string;
             company?: string;
-            daysOfWeek?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
-            startTime?: string;
-            endTime?: string;
+            schedules?: components["schemas"]["CourseScheduleRequest"][];
         };
         RsDataObject: {
             /** Format: int32 */

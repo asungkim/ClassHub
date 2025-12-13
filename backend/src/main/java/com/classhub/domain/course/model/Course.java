@@ -1,14 +1,21 @@
 package com.classhub.domain.course.model;
 
 import com.classhub.global.entity.BaseEntity;
-import jakarta.persistence.*;
-
-import java.time.DayOfWeek;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,17 +42,17 @@ public class Course extends BaseEntity {
     private UUID teacherId;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "course_days", joinColumns = @JoinColumn(name = "course_id"))
-    @Column(name = "day_of_week", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "course_schedule", joinColumns = @JoinColumn(name = "course_id"))
     @Builder.Default
-    private Set<DayOfWeek> daysOfWeek = new HashSet<>();
+    private Set<CourseSchedule> schedules = new HashSet<>();
 
+    @Builder.Default
     @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
+    private LocalTime aggregatedStartTime = LocalTime.of(0, 0);
 
+    @Builder.Default
     @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
+    private LocalTime aggregatedEndTime = LocalTime.of(0, 0);
 
     @Builder.Default
     @Column(nullable = false)
@@ -55,21 +62,15 @@ public class Course extends BaseEntity {
         return teacherId != null && teacherId.equals(this.teacherId);
     }
 
-    public void update(String name, String company, Set<DayOfWeek> daysOfWeek, LocalTime startTime, LocalTime endTime) {
+    public void update(String name, String company, Set<CourseSchedule> schedules) {
         if (name != null) {
             this.name = name;
         }
         if (company != null) {
             this.company = company;
         }
-        if (daysOfWeek != null && !daysOfWeek.isEmpty()) {
-            this.daysOfWeek = daysOfWeek;
-        }
-        if (startTime != null) {
-            this.startTime = startTime;
-        }
-        if (endTime != null) {
-            this.endTime = endTime;
+        if (schedules != null && !schedules.isEmpty()) {
+            this.schedules = schedules;
         }
     }
 
@@ -79,5 +80,21 @@ public class Course extends BaseEntity {
 
     public void activate() {
         this.active = true;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void updateAggregateTimes() {
+        if (schedules == null || schedules.isEmpty()) {
+            throw new IllegalStateException("Course schedules must not be empty");
+        }
+        this.aggregatedStartTime = schedules.stream()
+                .min(Comparator.comparing(CourseSchedule::getStartTime))
+                .orElseThrow()
+                .getStartTime();
+        this.aggregatedEndTime = schedules.stream()
+                .max(Comparator.comparing(CourseSchedule::getEndTime))
+                .orElseThrow()
+                .getEndTime();
     }
 }

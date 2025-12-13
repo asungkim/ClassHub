@@ -37,17 +37,10 @@
      - label: "소속 학원/회사"
      - placeholder: "예: ABC 학원"
      - required, max 100자
-  3. **수업 요일**: Checkbox 그룹
-     - label: "수업 요일"
-     - 월/화/수/목/금/토/일 7개 체크박스 (MONDAY ~ SUNDAY)
-     - required, 최소 1개 선택
-  4. **시작 시간**: TimeSelect (Select 2개 조합)
-     - 시 드롭다운: 00 ~ 23
-     - 분 드롭다운: 00, 15, 30, 45
-  5. **종료 시간**: TimeSelect (Select 2개 조합)
-     - 시 드롭다운: 00 ~ 23
-     - 분 드롭다운: 00, 15, 30, 45
-     - Validation: startTime보다 이후여야 함
+  3. **수업 요일/시간표 입력**:
+     - 요일 선택 토글(UI 버튼)로 원하는 요일 활성화
+     - 선택된 각 요일마다 TimeSelect 2개(시작/종료)를 제공해 서로 다른 시간 설정 지원
+     - Validation: 요일 중복 불가, 각 요일에서 시작 < 종료
 - **Validation 규칙**:
   - 반 이름: required, max 100자
   - 회사: required, max 100자
@@ -89,7 +82,6 @@
 - ✅ Button (`@/components/ui/button`)
 - ✅ Card (`@/components/ui/card`)
 - ✅ TextField (`@/components/ui/text-field`)
-- ✅ Checkbox (`@/components/ui/checkbox`)
 - ✅ Select (`@/components/ui/select`)
 - ✅ Tabs (TabsList, TabsTrigger, TabsContent) (`@/components/ui/tabs`)
 - ✅ EmptyState (`@/components/shared/empty-state`)
@@ -155,9 +147,10 @@
       "id": "uuid",
       "name": "중등 수학 A반",
       "company": "ABC 학원",
-      "daysOfWeek": ["MONDAY", "FRIDAY"],
-      "startTime": "14:00",
-      "endTime": "16:00",
+      "schedules": [
+        { "dayOfWeek": "MONDAY", "startTime": "14:00", "endTime": "16:00" },
+        { "dayOfWeek": "FRIDAY", "startTime": "16:00", "endTime": "18:00" }
+      ],
       "isActive": true,
       "teacherId": "teacher-uuid",
       "createdAt": "2025-12-09T10:00:00",
@@ -175,9 +168,10 @@
 {
   "name": "중등 수학 A반",
   "company": "ABC 학원",
-  "daysOfWeek": ["MONDAY", "FRIDAY"],
-  "startTime": "14:00",
-  "endTime": "16:00"
+  "schedules": [
+    { "dayOfWeek": "MONDAY", "startTime": "14:00", "endTime": "16:00" },
+    { "dayOfWeek": "FRIDAY", "startTime": "16:00", "endTime": "18:00" }
+  ]
 }
 ```
 
@@ -190,9 +184,10 @@
     "id": "uuid",
     "name": "중등 수학 A반",
     "company": "ABC 학원",
-    "daysOfWeek": ["MONDAY", "FRIDAY"],
-    "startTime": "14:00",
-    "endTime": "16:00",
+      "schedules": [
+        { "dayOfWeek": "MONDAY", "startTime": "14:00", "endTime": "16:00" },
+        { "dayOfWeek": "FRIDAY", "startTime": "16:00", "endTime": "18:00" }
+      ],
     "isActive": true,
     "teacherId": "teacher-uuid",
     "createdAt": "2025-12-09T10:00:00",
@@ -209,9 +204,10 @@
 {
   "name": "중등 수학 B반",
   "company": "XYZ 학원",
-  "daysOfWeek": ["TUESDAY", "THURSDAY"],
-  "startTime": "15:00",
-  "endTime": "17:00"
+  "schedules": [
+    { "dayOfWeek": "TUESDAY", "startTime": "15:00", "endTime": "17:00" },
+    { "dayOfWeek": "THURSDAY", "startTime": "18:00", "endTime": "20:00" }
+  ]
 }
 ```
 

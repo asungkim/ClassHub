@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
@@ -17,6 +18,8 @@ import com.classhub.global.exception.BusinessException;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,9 +83,10 @@ class StudentProfileServiceTest {
                         .teacherId(teacher.getId())
                         .name("Test Course")
                         .company("Test Company")
-                        .startTime(LocalTime.now())
-                        .endTime(LocalTime.now())
-                        .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
+                        .schedules(new HashSet<>(Arrays.asList(
+                                new CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(16, 0)),
+                                new CourseSchedule(DayOfWeek.FRIDAY, LocalTime.of(14, 0), LocalTime.of(16, 0))
+                        )))
                         .build()
         );
     }
@@ -180,6 +184,7 @@ class StudentProfileServiceTest {
                         "01098765432",
                         "Seoul High",
                         "2",
+                        null,
                         newAssistant.getId(),
                         "010-0000-2222",
                         null,
@@ -215,5 +220,54 @@ class StudentProfileServiceTest {
 
         StudentProfile profile = studentProfileRepository.findById(created.id()).orElseThrow();
         assertThat(profile.isActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Teacher는 학생 프로필을 다른 Course로 이동할 수 있다")
+    void updateProfile_changeCourse() {
+        Course secondCourse = courseRepository.save(
+                Course.builder()
+                        .teacherId(teacher.getId())
+                        .name("Second Course")
+                        .company("Another Company")
+                        .schedules(new HashSet<>(Arrays.asList(
+                                new CourseSchedule(DayOfWeek.TUESDAY, LocalTime.of(10, 0), LocalTime.of(12, 0))
+                        )))
+                        .build()
+        );
+
+        StudentProfileResponse created = studentProfileService.createProfile(
+                teacher.getId(),
+                new StudentProfileCreateRequest(
+                        course.getId(),
+                        "Jane Doe",
+                        "010-9999-0001",
+                        assistant.getId(),
+                        "01012345678",
+                        "Seoul High",
+                        "1",
+                        15,
+                        null
+                )
+        );
+
+        StudentProfileResponse updated = studentProfileService.updateProfile(
+                teacher.getId(),
+                created.id(),
+                new StudentProfileUpdateRequest(
+                        null,
+                        null,
+                        null,
+                        null,
+                        secondCourse.getId(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                )
+        );
+
+        assertThat(updated.courseId()).isEqualTo(secondCourse.getId());
     }
 }

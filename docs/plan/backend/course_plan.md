@@ -3,7 +3,7 @@
 ## 1. Problem Definition
 
 - 선생님이 본인이 관리하는 수업(반)에 대한 정보를 저장하고 관리할 수 있는 Course 엔티티가 필요하다.
-- Course는 반 이름, 소속 학원(회사), 수업 요일 및 시간, 활성 상태를 포함하며, 이후 SharedLesson, StudentProfile 등 다른 도메인과 연결된다.
+- Course는 반 이름, 소속 학원(회사), **요일별 수업 시간표(각 요일마다 다른 시작/종료 시각)**, 활성 상태를 포함하며, 이후 SharedLesson, StudentProfile 등 다른 도메인과 연결된다.
 - Teacher만 Course를 생성/수정/삭제할 수 있으며, Course 기반으로 학생을 배정하고 공통 진도를 작성한다.
 
 ## 2. Requirements
@@ -14,17 +14,15 @@
   - `name`: 반 이름 (string, 필수, max 100자)
   - `company`: 소속 학원/회사명 (string, 필수, max 100자)
   - `teacherId`: 반을 생성한 선생님 (FK → Member.id, 필수)
-  - `daysOfWeek`: 수업 요일 (Set<DayOfWeek>, 필수) - 하나의 반이 여러 요일에 수업할 수 있음
-  - `startTime`: 수업 시작 시간 (LocalTime, 필수)
-  - `endTime`: 수업 종료 시간 (LocalTime, 필수)
+  - `schedules`: 요일별 수업 정보 리스트 (각 항목에 `dayOfWeek`, `startTime`, `endTime`)
   - `active`: 활성 상태 (boolean, 기본값 true)
   - BaseEntity 상속 (id, createdAt, updatedAt)
 
 - **CRUD 기능**
-  1. **생성**: Teacher가 새로운 Course 생성
+  1. **생성**: Teacher가 새로운 Course를 만들 때 요일/시간표를 함께 등록
   2. **목록 조회**: Teacher가 본인이 생성한 Course 목록 조회 (활성/비활성 필터 가능)
-  3. **상세 조회**: 특정 Course의 상세 정보 조회
-  4. **수정**: Course 정보(이름, 회사, 요일, 시간) 수정
+  3. **상세 조회**: 특정 Course의 상세 정보 및 요일별 시간표 조회
+  4. **수정**: Course 정보(이름, 회사, 요일별 시간표) 수정
   5. **비활성화**: `isActive`를 false로 변경 (물리 삭제 X)
   6. **활성화**: 비활성화된 Course를 다시 `isActive`를 true로 변경
 
@@ -55,9 +53,10 @@
 {
   "name": "중등 수학 A반",
   "company": "ABC 학원",
-  "daysOfWeek": ["MONDAY", "FRIDAY"],
-  "startTime": "14:00",
-  "endTime": "16:00"
+  "schedules": [
+    { "dayOfWeek": "WEDNESDAY", "startTime": "10:00", "endTime": "12:00" },
+    { "dayOfWeek": "SATURDAY", "startTime": "16:00", "endTime": "18:00" }
+  ]
 }
 ```
 
@@ -70,9 +69,10 @@
     "id": "uuid-string",
     "name": "중등 수학 A반",
     "company": "ABC 학원",
-    "daysOfWeek": ["MONDAY", "FRIDAY"],
-    "startTime": "14:00",
-    "endTime": "16:00",
+    "schedules": [
+      { "dayOfWeek": "WEDNESDAY", "startTime": "10:00", "endTime": "12:00" },
+      { "dayOfWeek": "SATURDAY", "startTime": "16:00", "endTime": "18:00" }
+    ],
     "isActive": true,
     "teacherId": "teacher-uuid",
     "createdAt": "2025-12-09T10:00:00",
@@ -95,9 +95,10 @@
       "id": "uuid-string",
       "name": "중등 수학 A반",
       "company": "ABC 학원",
-      "daysOfWeek": ["MONDAY", "FRIDAY"],
-      "startTime": "14:00",
-      "endTime": "16:00",
+      "schedules": [
+        { "dayOfWeek": "WEDNESDAY", "startTime": "10:00", "endTime": "12:00" },
+        { "dayOfWeek": "SATURDAY", "startTime": "16:00", "endTime": "18:00" }
+      ],
       "isActive": true,
       "teacherId": "teacher-uuid",
       "createdAt": "2025-12-09T10:00:00",
@@ -120,9 +121,10 @@
     "id": "uuid-string",
     "name": "중등 수학 A반",
     "company": "ABC 학원",
-    "daysOfWeek": ["MONDAY", "FRIDAY"],
-    "startTime": "14:00",
-    "endTime": "16:00",
+      "schedules": [
+        { "dayOfWeek": "WEDNESDAY", "startTime": "10:00", "endTime": "12:00" },
+        { "dayOfWeek": "SATURDAY", "startTime": "16:00", "endTime": "18:00" }
+      ],
     "isActive": true,
     "teacherId": "teacher-uuid",
     "createdAt": "2025-12-09T10:00:00",
@@ -140,9 +142,10 @@
 {
   "name": "중등 수학 B반",
   "company": "XYZ 학원",
-  "daysOfWeek": ["TUESDAY", "THURSDAY"],
-  "startTime": "15:00",
-  "endTime": "17:00"
+  "schedules": [
+    { "dayOfWeek": "TUESDAY", "startTime": "15:00", "endTime": "17:00" },
+    { "dayOfWeek": "THURSDAY", "startTime": "18:00", "endTime": "20:00" }
+  ]
 }
 ```
 
@@ -155,9 +158,10 @@
     "id": "uuid-string",
     "name": "중등 수학 B반",
     "company": "XYZ 학원",
-    "daysOfWeek": ["TUESDAY", "THURSDAY"],
-    "startTime": "15:00",
-    "endTime": "17:00",
+      "schedules": [
+        { "dayOfWeek": "TUESDAY", "startTime": "15:00", "endTime": "17:00" },
+        { "dayOfWeek": "THURSDAY", "startTime": "18:00", "endTime": "20:00" }
+      ],
     "isActive": true,
     "teacherId": "teacher-uuid",
     "createdAt": "2025-12-09T10:00:00",
@@ -198,9 +202,7 @@
 
 ```java
 @Entity
-@Table(name = "course", indexes = {
-    @Index(name = "idx_course_teacher", columnList = "teacher_id")
-})
+@Table(name = "course", indexes = @Index(name = "idx_course_teacher", columnList = "teacher_id"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -216,37 +218,19 @@ public class Course extends BaseEntity {
     @Column(name = "teacher_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID teacherId;
 
-    @ElementCollection
-    @CollectionTable(
-        name = "course_days",
-        joinColumns = @JoinColumn(name = "course_id")
-    )
-    @Column(name = "day_of_week", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "course_schedule", joinColumns = @JoinColumn(name = "course_id"))
     @Builder.Default
-    private Set<DayOfWeek> daysOfWeek = new HashSet<>();
-
-    @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
-
-    @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
+    private Set<CourseSchedule> schedules = new HashSet<>();
 
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 
-    public boolean isOwnedBy(UUID teacherId) {
-        return teacherId != null && teacherId.equals(this.teacherId);
-    }
-
-    public void update(String name, String company, Set<DayOfWeek> daysOfWeek,
-                       LocalTime startTime, LocalTime endTime) {
+    public void update(String name, String company, Set<CourseSchedule> schedules) {
         if (name != null) this.name = name;
         if (company != null) this.company = company;
-        if (daysOfWeek != null && !daysOfWeek.isEmpty()) this.daysOfWeek = daysOfWeek;
-        if (startTime != null) this.startTime = startTime;
-        if (endTime != null) this.endTime = endTime;
+        if (schedules != null && !schedules.isEmpty()) this.schedules = schedules;
     }
 
     public void deactivate() {
@@ -256,6 +240,23 @@ public class Course extends BaseEntity {
     public void activate() {
         this.active = true;
     }
+}
+
+@Embeddable
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class CourseSchedule {
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false)
+    private DayOfWeek dayOfWeek;
+
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
+
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
 }
 ```
 

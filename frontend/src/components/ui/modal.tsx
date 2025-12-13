@@ -104,7 +104,7 @@ export function Modal({ open, onClose, title, children, size = "md", className }
       <div
         ref={contentRef}
         className={clsx(
-          "w-full rounded-3xl border border-slate-200 bg-white shadow-xl",
+          "flex w-full max-h-[90vh] flex-col rounded-3xl border border-slate-200 bg-white shadow-xl",
           sizeClasses[size],
           className
         )}
@@ -132,7 +132,7 @@ export function Modal({ open, onClose, title, children, size = "md", className }
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6">{children}</div>
+        <div className="flex-1 overflow-y-auto px-6 py-6">{children}</div>
       </div>
     </div>,
     document.body

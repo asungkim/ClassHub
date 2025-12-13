@@ -3,11 +3,11 @@ package com.classhub.domain.course.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -32,9 +32,10 @@ class CourseRepositoryTest {
                 .name("중등 수학 A반")
                 .company("ABC 학원")
                 .teacherId(teacherId)
-                .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
-                .startTime(LocalTime.of(14, 0))
-                .endTime(LocalTime.of(16, 0))
+                .schedules(scheduleEntities(
+                        schedule(DayOfWeek.MONDAY, 14, 0, 16, 0),
+                        schedule(DayOfWeek.FRIDAY, 14, 0, 16, 0)
+                ))
                 .build();
 
         // when
@@ -45,9 +46,7 @@ class CourseRepositoryTest {
         assertThat(saved.getName()).isEqualTo("중등 수학 A반");
         assertThat(saved.getCompany()).isEqualTo("ABC 학원");
         assertThat(saved.getTeacherId()).isEqualTo(teacherId);
-        assertThat(saved.getDaysOfWeek()).contains(DayOfWeek.MONDAY);
-        assertThat(saved.getStartTime()).isEqualTo(LocalTime.of(14, 0));
-        assertThat(saved.getEndTime()).isEqualTo(LocalTime.of(16, 0));
+        assertThat(saved.getSchedules()).hasSize(2);
         assertThat(saved.isActive()).isTrue();
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
@@ -140,9 +139,18 @@ class CourseRepositoryTest {
                 .name(name)
                 .company("ABC 학원")
                 .teacherId(teacherId)
-                .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
-                .startTime(LocalTime.of(14, 0))
-                .endTime(LocalTime.of(16, 0))
+                .schedules(scheduleEntities(
+                        schedule(DayOfWeek.MONDAY, 14, 0, 16, 0),
+                        schedule(DayOfWeek.FRIDAY, 14, 0, 16, 0)
+                ))
                 .build();
+    }
+
+    private CourseSchedule schedule(DayOfWeek day, int startHour, int startMinute, int endHour, int endMinute) {
+        return new CourseSchedule(day, LocalTime.of(startHour, startMinute), LocalTime.of(endHour, endMinute));
+    }
+
+    private java.util.Set<CourseSchedule> scheduleEntities(CourseSchedule... schedules) {
+        return new java.util.HashSet<>(java.util.Arrays.asList(schedules));
     }
 }

@@ -1,10 +1,9 @@
 package com.classhub.domain.course.dto.response;
 
 import com.classhub.domain.course.model.Course;
-import java.time.DayOfWeek;
+import com.classhub.domain.course.model.CourseSchedule;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 public record CourseResponse(
@@ -12,9 +11,7 @@ public record CourseResponse(
         String name,
         String company,
         UUID teacherId,
-        Set<DayOfWeek> daysOfWeek,
-        LocalTime startTime,
-        LocalTime endTime,
+        List<CourseScheduleResponse> schedules,
         boolean isActive,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -25,12 +22,23 @@ public record CourseResponse(
                 course.getName(),
                 course.getCompany(),
                 course.getTeacherId(),
-                course.getDaysOfWeek(),
-                course.getStartTime(),
-                course.getEndTime(),
+                course.getSchedules().stream()
+                        .map(CourseScheduleResponse::from)
+                        .sorted(java.util.Comparator.comparing(CourseScheduleResponse::dayOfWeek))
+                        .toList(),
                 course.isActive(),
                 course.getCreatedAt(),
                 course.getUpdatedAt()
         );
+    }
+
+    public record CourseScheduleResponse(String dayOfWeek, String startTime, String endTime) {
+        public static CourseScheduleResponse from(CourseSchedule schedule) {
+            return new CourseScheduleResponse(
+                    schedule.getDayOfWeek().name(),
+                    schedule.getStartTime().toString(),
+                    schedule.getEndTime().toString()
+            );
+        }
     }
 }

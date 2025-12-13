@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.model.CourseSchedule;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.Member;
@@ -20,8 +21,9 @@ import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -108,9 +110,10 @@ class StudentProfileControllerTest {
                         .teacherId(teacher.getId())
                         .name("Test Course")
                         .company("Test Company")
-                        .startTime(LocalTime.now())
-                        .endTime(LocalTime.now())
-                        .daysOfWeek(Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY))
+                        .schedules(new HashSet<>(Arrays.asList(
+                                new CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(16, 0)),
+                                new CourseSchedule(DayOfWeek.FRIDAY, LocalTime.of(14, 0), LocalTime.of(16, 0))
+                        )))
                         .build()
         );
     }
@@ -210,6 +213,7 @@ class StudentProfileControllerTest {
                 "01098765432",
                 "Seoul High",
                 "2",
+                null,
                 assistant.getId(),
                 "010-3333-2222",
                 null,
@@ -255,6 +259,7 @@ class StudentProfileControllerTest {
                 "01098765432",
                 "Seoul High",
                 "2",
+                null,
                 assistant.getId(),
                 "010-3333-2222",
                 null,
@@ -300,6 +305,7 @@ class StudentProfileControllerTest {
                 + ",\"parentPhone\":" + quote(request.parentPhone())
                 + ",\"schoolName\":" + quote(request.schoolName())
                 + ",\"grade\":" + quote(request.grade())
+                + ",\"courseId\":" + quote(request.courseId())
                 + ",\"assistantId\":" + quote(request.assistantId())
                 + ",\"phoneNumber\":" + quote(request.phoneNumber())
                 + ",\"memberId\":" + quote(request.memberId())
