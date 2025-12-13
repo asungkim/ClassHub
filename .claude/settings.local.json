@@ -11,7 +11,8 @@
       "Bash(npx shadcn@latest add table:*)",
       "Bash(bash -c \"cd frontend && npm run build 2>&1 | tail -50\")",
       "Bash(bash:*)",
-      "Bash(./gradlew build:*)"
+      "Bash(./gradlew build:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
