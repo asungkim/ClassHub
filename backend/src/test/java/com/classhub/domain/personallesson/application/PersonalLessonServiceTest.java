@@ -13,6 +13,7 @@ import com.classhub.domain.personallesson.dto.request.PersonalLessonUpdateReques
 import com.classhub.domain.personallesson.dto.response.PersonalLessonResponse;
 import com.classhub.domain.personallesson.dto.response.PersonalLessonSummary;
 import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.application.StudentProfileService;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileCreateRequest;
 import com.classhub.domain.studentprofile.dto.response.StudentProfileResponse;
@@ -60,6 +61,9 @@ class PersonalLessonServiceTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
+
     private Member teacher;
     private Member assistant;
     private Course course;
@@ -68,6 +72,7 @@ class PersonalLessonServiceTest {
     @BeforeEach
     void setUp() {
         personalLessonRepository.deleteAll();
+        studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
         courseRepository.deleteAll();
         memberRepository.deleteAll();

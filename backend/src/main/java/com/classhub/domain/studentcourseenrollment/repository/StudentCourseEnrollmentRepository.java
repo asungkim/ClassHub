@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface StudentCourseEnrollmentRepository extends JpaRepository<StudentCourseEnrollment, UUID> {
 
@@ -20,4 +21,10 @@ public interface StudentCourseEnrollmentRepository extends JpaRepository<Student
     boolean existsByStudentProfileIdAndCourseId(UUID studentProfileId, UUID courseId);
 
     void deleteByStudentProfileIdAndCourseId(UUID studentProfileId, UUID courseId);
+
+    boolean existsByTeacherIdAndStudentProfileId(UUID teacherId, UUID studentProfileId);
+
+    @Query("select enrollment.courseId from StudentCourseEnrollment enrollment "
+            + "where enrollment.studentProfileId = :studentProfileId")
+    List<UUID> findAllCourseIdsByStudentProfileId(UUID studentProfileId);
 }

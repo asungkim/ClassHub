@@ -14,6 +14,8 @@ import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
@@ -49,7 +51,13 @@ class InvitationServiceTest {
     private StudentProfileRepository studentProfileRepository;
 
     @Autowired
+    private PersonalLessonRepository personalLessonRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
 
     private Member teacher;
     private Member assistant;
@@ -57,7 +65,9 @@ class InvitationServiceTest {
 
     @BeforeEach
     void setUp() {
+        studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
+        personalLessonRepository.deleteAll();
         invitationRepository.deleteAll();
         memberRepository.deleteAll();
 

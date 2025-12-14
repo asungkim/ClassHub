@@ -17,6 +17,7 @@ import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.domain.personallesson.dto.request.PersonalLessonCreateRequest;
 import com.classhub.domain.personallesson.dto.request.PersonalLessonUpdateRequest;
 import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.application.StudentProfileService;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileCreateRequest;
 import com.classhub.domain.studentprofile.dto.response.StudentProfileResponse;
@@ -72,6 +73,9 @@ class PersonalLessonControllerTest {
     @Autowired
     private WebApplicationContext context;
 
+    @Autowired
+    private StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
+
     private Member teacher;
     private Member assistant;
     private Course course;
@@ -79,6 +83,7 @@ class PersonalLessonControllerTest {
     @BeforeEach
     void setUp() {
         personalLessonRepository.deleteAll();
+        studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
         courseRepository.deleteAll();
         memberRepository.deleteAll();

@@ -296,3 +296,170 @@ STRUCTURAL
   - `backend/src/main/java/com/classhub/domain/sharedlesson/repository/SharedLessonRepository.java` (중복 방지 조회 메서드 추가)
   - `docs/todo/v1.8.md`
 - 다음 단계: Gradle 캐시가 준비된 환경에서 sharedlesson 도메인 테스트를 재실행하고 Seed 데이터로 UI/Swagger에서 확인
+
+## [2025-12-13 20:08] 학생별 캘린더 백엔드 계획 초안
+
+### Type
+DESIGN
+
+### Summary
+- 학생별 월간 캘린더 API 범위를 정의하고 SharedLesson/PersonalLesson를 한 번에 내려주는 설계를 문서화했다.
+
+### Details
+- 작업 사유: Teacher/Assistant가 학생 단위 일정 뷰를 구성하기 위해 단일 API와 권한 흐름이 필요함.
+- 영향받은 테스트: 없음 (설계 단계).
+- 수정한 파일: `docs/plan/backend/student-calendar_plan.md`
+- 다음 단계: 사용자 검토 후 PLAN 승인 시 TDD/구현 진행
+
+## [2025-12-13 20:08] 학생별 캘린더 API TODO 상태 업데이트
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 학생별 캘린더 중 "조회용 API 개발(백엔드)" 작업을 착수 상태(🔄)로 표시했다.
+
+### Details
+- 작업 사유: 백엔드 설계를 시작했으므로 해당 TODO를 진행 중으로 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일: `docs/todo/v1.8.md`
+- 다음 단계: PLAN 승인 후 구현 착수, 완료 시 ✅로 갱신
+
+## [2025-12-13 20:32] 학생별 캘린더 조회 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `StudentCalendarController`/`StudentCalendarQueryService`를 추가해 SharedLesson과 PersonalLesson을 월 단위로 합산하는 학생 캘린더 API를 완성했다.
+- SharedLesson/PersonalLesson Repository에 월간 조회용 메서드를 확장하고 DTO 묶음을 만들어 프런트가 바로 섹션별 데이터를 사용할 수 있게 했다.
+- `StudentCalendarQueryServiceTest`를 작성해 Teacher 성공 시나리오와 권한 거부 케이스(다른 Teacher 소속 Assistant)를 검증하려 했으며, Gradle 테스트 실행은 네트워크 차단으로 실패했다.
+
+### Details
+- 작업 사유: Phase4 학생별 캘린더 Epic의 백엔드 조회 API를 구현해 Teacher/Assistant가 학생 단위 진행 현황을 한 번에 확인할 수 있도록 하기 위함.
+- 영향받은 테스트: `GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.application.StudentCalendarQueryServiceTest"` 실행 시 Gradle 배포본 다운로드에서 `services.gradle.org` UnknownHost 예외로 실패함(네트워크 제한).
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/calendar/**` (신규 DTO/Service/Controller)
+  - `backend/src/main/java/com/classhub/domain/sharedlesson/repository/SharedLessonRepository.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/repository/PersonalLessonRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourseenrollment/repository/StudentCourseEnrollmentRepository.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarQueryServiceTest.java`
+- 다음 단계: Gradle 캐시(gradle-9.2.1) 다운로드가 가능한 환경에서 위 테스트를 재실행해 통과 여부 확인
+
+## [2025-12-13 20:32] 학생별 캘린더 TODO 완료 처리
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 "학생별 캘린더 개발" 중 "조회용 API 개발(백엔드)" 항목을 완료(✅)로 업데이트했다.
+
+### Details
+- 작업 사유: 캘린더 조회 API 및 테스트 코드 추가가 완료되어 상태 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일: `docs/todo/v1.8.md`
+- 다음 단계: 프론트엔드 조회 UI 작업 진행 시 🔄/✅ 상태 업데이트
+
+## [2025-12-13 20:36] 학생 캘린더 권한 검증 강화
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `StudentCalendarQueryService`에서 Teacher/Assistant만 접근하도록 역할 검증을 추가하고, Student/SuperAdmin 등의 요청은 즉시 403을 던지도록 조정했다.
+- 권한 거부 케이스를 다루는 단위 테스트(`shouldDenyStudentRole`)를 추가해 학생 역할 접근 시 예외가 발생하는지 확인했다.
+
+### Details
+- 작업 사유: API 요구사항에 맞춰 requester가 Teacher 또는 Assistant인지 명시적으로 검사해 안정성을 높이기 위함.
+- 영향받은 테스트: `GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.application.StudentCalendarQueryServiceTest"` 실행 시 Gradle 9.2.1 배포본 다운로드 단계에서 `services.gradle.org` UnknownHost 예외가 발생해 실행 불가(네트워크 제한). 테스트는 로컬 캐시 확보 후 재실행 필요.
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/calendar/application/StudentCalendarQueryService.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarQueryServiceTest.java`
+- 다음 단계: 네트워크가 허용된 환경에서 위 테스트를 재실행해 권한 검증 로직 회귀 여부 확인
+
+## [2025-12-13 20:45] 학생 캘린더 컨트롤러/서비스 테스트 정비
+
+### Type
+STRUCTURAL
+
+### Summary
+- `StudentCalendarControllerTest`를 `@AutoConfigureMockMvc` 기반으로 단순화하고 공통 요청 헬퍼를 추가해 각 시나리오가 더 읽기 쉬워졌다.
+- 서비스 테스트에는 학생 역할 접근 거부 검증을 추가해 새로운 role guard를 커버했다.
+
+### Details
+- 작업 사유: 새로 추가한 캘린더 API 테스트를 정돈하고 role 검증 로직을 확실히 보장하기 위함.
+- 영향받은 테스트: `GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.application.StudentCalendarQueryServiceTest"` 실행은 Gradle 9.2.1 배포본 다운로드 단계에서 `services.gradle.org` UnknownHost 예외로 막혔다(네트워크 제한). 캐시 후 재실행 필요.
+- 수정한 파일:
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarQueryServiceTest.java`
+- 다음 단계: Gradle 배포본이 준비된 환경에서 위 테스트를 실제 실행해 결과 확인
+
+## [2025-12-13 20:54] 학생 캘린더 컨트롤러 테스트 보완
+
+### Type
+STRUCTURAL
+
+### Summary
+- `StudentCalendarControllerTest`를 기존 패턴(WebApplicationContext + SecurityContext RequestPostProcessor)으로 변경하고, 토큰 의존성을 제거해 다른 컨트롤러 테스트와 일관되게 했다.
+
+### Details
+- 작업 사유: MockMvc 테스트 문법을 레포 표준에 맞추어, 인증 컨텍스트를 직접 주입하도록 수정 요청.
+- 영향받은 테스트: `GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.web.StudentCalendarControllerTest"` 시도 시에도 Gradle 9.2.1 다운로드 단계에서 `services.gradle.org` UnknownHost로 실패(네트워크 제한). 캐시 확보 후 재실행 필요.
+- 수정한 파일: `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- 다음 단계: Gradle 의존성을 내려받을 수 있는 환경에서 해당 테스트 실행
+
+## [2025-12-13 20:56] 학생 캘린더 year/month 검증 예외 수정
+
+### Type
+STRUCTURAL
+
+### Summary
+- `StudentCalendarQueryService`의 `validateYearMonth`가 존재하지 않는 BusinessException 생성자를 호출하고 있었던 문제를 해결해, 기존 `RsCode.BAD_REQUEST.toException()`을 사용하도록 수정했다.
+
+### Details
+- 작업 사유: 컴파일 오류(존재하지 않는 생성자)와 컨트롤러 테스트 실패를 유발하던 잘못된 예외 생성 로직을 표준 패턴으로 교체.
+- 영향받은 테스트: 해당 메서드를 호출하는 테스트들은 여전히 Gradle 배포본 다운로드 실패로 실행하지 못함.
+- 수정한 파일: `backend/src/main/java/com/classhub/domain/calendar/application/StudentCalendarQueryService.java`
+- 다음 단계: Gradle 캐시 확보 후 StudentCalendar 관련 테스트 실행
+
+## [2025-12-13 20:57] 학생 캘린더 인증 검증 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `StudentCalendarController`에서 인증되지 않은 요청 시 명확히 `UNAUTHORIZED` 예외를 던지도록 `principal` null 체크를 추가해 컨트롤러 테스트가 기대하는 401 흐름을 보장했다.
+
+### Details
+- 작업 사유: Controller 테스트의 `shouldReturn401_whenUnauthenticated` 케이스가 통과하도록 인증 여부를 명시적으로 검증.
+- 영향받은 테스트: Gradle 캐시 부재로 실행 불가 상태 유지.
+- 수정한 파일: `backend/src/main/java/com/classhub/domain/calendar/web/StudentCalendarController.java`
+- 다음 단계: Gradle 배포본 다운로드 가능 시 Controller/Service 테스트를 다시 실행해 통과 확인
+
+## [2025-12-13 21:06] 학생 캘린더 컨트롤러 테스트 재작성
+
+### Type
+STRUCTURAL
+
+### Summary
+- 삭제된 `StudentCalendarControllerTest`를 WebApplicationContext + SecurityContext 패턴으로 새로 작성해 인증/권한/검증/빈 결과 시나리오를 모두 커버했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 컨트롤러 테스트 파일을 완전히 새로 만들어야 했음.
+- 영향받은 테스트: `GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.web.StudentCalendarControllerTest"` 실행은 Gradle 9.2.1 배포본 다운로드 단계에서 `services.gradle.org` UnknownHost 예외로 실패(네트워크 제한). 캐시 확보 후 재실행 필요.
+- 수정한 파일: `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- 다음 단계: Gradle 다운로드 가능한 환경에서 테스트 실행해 동작 검증
+
+## [2025-12-13 21:07] 학생 캘린더 컨트롤러 테스트 MockMvc 표준화
+
+### Type
+STRUCTURAL
+
+### Summary
+- Spring Boot 문서의 권장 패턴(`/spring-projects/spring-boot` Testing 가이드)대로 `@SpringBootTest + @AutoConfigureMockMvc`와 `SecurityMockMvcRequestPostProcessors.authentication`을 사용해 컨트롤러 테스트를 다시 구성했다.
+
+### Details
+- 작업 사유: 사용자 요청(문법 불일치)과 Spring Boot 공식 Testing 문서에 맞춰 MockMvc 구성을 단순화하기 위함.
+- 영향받은 테스트: `GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.web.StudentCalendarControllerTest"` 실행 시 Gradle 9.2.1 다운로드 차단으로 실패.
+- 수정한 파일: `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- 다음 단계: Gradle 캐시 확보 후 테스트 실행
