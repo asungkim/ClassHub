@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -48,11 +49,14 @@ public class StudentProfileService {
         ensureCoursesOwnedByTeacher(courseIds, actor.getId());
         validateDuplicatePhoneNumber(actor.getId(), request.normalizedPhoneNumber());
 
-        Member assistant = getAssistant(request.assistantId(), actor.getId());
+        UUID assistantId = null;
+        if (request.assistantId() != null) {
+            assistantId = getAssistant(request.assistantId(), actor.getId()).getId();
+        }
 
         StudentProfile profile = StudentProfile.builder()
                 .teacherId(actor.getId())
-                .assistantId(assistant.getId())
+                .assistantId(assistantId)
                 .memberId(null)
                 .name(request.normalizedName())
                 .phoneNumber(request.normalizedPhoneNumber())
@@ -150,9 +154,13 @@ public class StudentProfileService {
 
         StudentProfile profile = getProfileForTeacher(actor.getId(), profileId);
 
-        if (request.assistantId() != null && !request.assistantId().equals(profile.getAssistantId())) {
-            Member assistant = getAssistant(request.assistantId(), actor.getId());
-            profile.assignAssistant(assistant.getId());
+        if (request.assistantId() != null) {
+            if (!request.assistantId().equals(profile.getAssistantId())) {
+                Member assistant = getAssistant(request.assistantId(), actor.getId());
+                profile.assignAssistant(assistant.getId());
+            }
+        } else if (profile.getAssistantId() != null) {
+            profile.assignAssistant(null);
         }
 
         if (request.courseIds() != null) {
@@ -442,6 +450,7 @@ public class StudentProfileService {
 
         Set<UUID> assistantIds = profiles.stream()
                 .map(StudentProfile::getAssistantId)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         Map<UUID, String> assistantNames = memberRepository.findAllById(assistantIds)
                 .stream()
@@ -473,7 +482,9 @@ public class StudentProfileService {
                             .toList();
                     return StudentProfileSummary.of(
                             profile,
-                            assistantNames.getOrDefault(profile.getAssistantId(), "Unknown"),
+                            profile.getAssistantId() != null
+                                    ? assistantNames.getOrDefault(profile.getAssistantId(), "Unknown")
+                                    : "미배정",
                             courseNameList
                     );
                 })

@@ -128,6 +128,27 @@ class StudentProfileServiceTest {
     }
 
     @Test
+    @DisplayName("담당 조교 없이도 학생 프로필을 생성할 수 있다")
+    void createProfile_withoutAssistant() {
+        StudentProfileResponse response = studentProfileService.createProfile(
+                teacher.getId(),
+                new StudentProfileCreateRequest(
+                        List.of(courseA.getId()),
+                        "No Assistant",
+                        "010-1111-0001",
+                        null,
+                        "01012345678",
+                        "Seoul High",
+                        "1",
+                        14,
+                        null
+                )
+        );
+
+        assertThat(response.assistantId()).isNull();
+    }
+
+    @Test
     @DisplayName("동일 Teacher 내에서 전화번호가 중복되면 등록이 실패한다")
     void createProfile_duplicatePhoneNumber() {
         studentProfileService.createProfile(

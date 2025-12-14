@@ -156,6 +156,29 @@ class StudentProfileControllerTest {
     }
 
     @Test
+    @DisplayName("담당 조교 없이 학생 프로필을 생성할 수 있다")
+    void createStudentProfile_withoutAssistant() throws Exception {
+        StudentProfileCreateRequest request = new StudentProfileCreateRequest(
+                List.of(course.getId()),
+                "Assistant Free",
+                "010-2222-2222",
+                null,
+                "01012345679",
+                "Seoul High",
+                "2",
+                15,
+                null
+        );
+
+        mockMvc.perform(post("/api/v1/student-profiles")
+                        .with(teacherPrincipal())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.assistantId").isEmpty());
+    }
+
+    @Test
     @DisplayName("학생 프로필 목록을 조회할 수 있다")
     void listStudentProfiles() throws Exception {
         StudentProfile profile = studentProfileRepository.save(

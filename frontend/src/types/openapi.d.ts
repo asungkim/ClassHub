@@ -496,6 +496,26 @@ export interface paths {
         patch: operations["activateCourse"];
         trace?: never;
     };
+    "/api/v1/students/{studentId}/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 학생 캘린더 조회
+         * @description SharedLesson과 PersonalLesson을 통합한 학생 월간 캘린더를 조회한다.
+         */
+        get: operations["getStudentCalendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/student-profiles/{profileId}/personal-lessons": {
         parameters: {
             query?: never;
@@ -625,7 +645,7 @@ export interface components {
             name: string;
             phoneNumber: string;
             /** Format: uuid */
-            assistantId: string;
+            assistantId?: string;
             parentPhone: string;
             schoolName: string;
             grade: string;
@@ -924,6 +944,64 @@ export interface components {
             code?: number;
             message?: string;
             data?: unknown;
+        };
+        CalendarClinicRecordDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            clinicSlotId?: string;
+            /** Format: date */
+            date?: string;
+            note?: string;
+            /** Format: uuid */
+            writerId?: string;
+            /** @enum {string} */
+            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+        };
+        CalendarPersonalLessonDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: date */
+            date?: string;
+            content?: string;
+            /** Format: uuid */
+            writerId?: string;
+            /** @enum {string} */
+            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+        };
+        CalendarSharedLessonDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            courseId?: string;
+            courseName?: string;
+            /** Format: date */
+            date?: string;
+            title?: string;
+            content?: string;
+            /** Format: uuid */
+            writerId?: string;
+            /** @enum {string} */
+            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+        };
+        RsDataStudentCalendarResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentCalendarResponse"];
+        };
+        StudentCalendarResponse: {
+            /** Format: int32 */
+            schemaVersion?: number;
+            /** Format: uuid */
+            studentId?: string;
+            /** Format: int32 */
+            year?: number;
+            /** Format: int32 */
+            month?: number;
+            sharedLessons?: components["schemas"]["CalendarSharedLessonDto"][];
+            personalLessons?: components["schemas"]["CalendarPersonalLessonDto"][];
+            clinicRecords?: components["schemas"]["CalendarClinicRecordDto"][];
         };
         Pageable: {
             /** Format: int32 */
@@ -1908,6 +1986,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataObject"];
+                };
+            };
+        };
+    };
+    getStudentCalendar: {
+        parameters: {
+            query: {
+                year: number;
+                month: number;
+            };
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentCalendarResponse"];
                 };
             };
         };
