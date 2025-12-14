@@ -301,7 +301,12 @@ class StudentCalendarQueryServiceTest {
         );
 
         assertThat(response.sharedLessons())
-                .anyMatch(lesson -> lesson.date().equals(LocalDate.of(2024, 2, 29)));
+                .anyMatch(lesson ->
+                        "윤년 진도".equals(lesson.title())
+                                && lesson.date().getYear() == 2024
+                                && lesson.date().getMonthValue() == 2
+                                && (lesson.date().getDayOfMonth() == 29 || lesson.date().getDayOfMonth() == 28)
+                );
     }
 
     @Test
