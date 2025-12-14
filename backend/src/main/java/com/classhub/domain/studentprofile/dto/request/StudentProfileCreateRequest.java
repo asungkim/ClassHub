@@ -12,7 +12,7 @@ public record StudentProfileCreateRequest(
         @NotEmpty List<UUID> courseIds,
         @NotBlank @Size(max = 60) String name,
         @NotBlank @Size(max = 40) String phoneNumber,
-        @NotNull UUID assistantId,
+        UUID assistantId,
         @NotBlank @Pattern(regexp = "^[0-9\\-]{7,20}$") String parentPhone,
         @NotBlank @Size(max = 60) String schoolName,
         @NotBlank @Size(max = 20) String grade,

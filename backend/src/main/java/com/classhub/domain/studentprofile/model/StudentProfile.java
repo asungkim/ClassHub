@@ -31,7 +31,7 @@ public class StudentProfile extends BaseEntity {
     @Column(name = "teacher_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID teacherId;
 
-    @Column(name = "assistant_id", nullable = false, columnDefinition = "BINARY(16)")
+    @Column(name = "assistant_id", columnDefinition = "BINARY(16)")
     private UUID assistantId;
 
     @Column(name = "member_id", columnDefinition = "BINARY(16)")
@@ -87,9 +87,7 @@ public class StudentProfile extends BaseEntity {
     }
 
     public void assignAssistant(UUID assistantId) {
-        if (assistantId != null) {
-            this.assistantId = assistantId;
-        }
+        this.assistantId = assistantId;
     }
 
     public void changePhoneNumber(String phoneNumber) {

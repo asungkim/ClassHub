@@ -76,10 +76,6 @@ export default function StudentCreatePage() {
       setClientError("수업을 하나 이상 선택해주세요.");
       return;
     }
-    if (!form.assistantId) {
-      setClientError("담당 조교를 선택해주세요.");
-      return;
-    }
 
     const ageValue = Number(form.age);
     if (Number.isNaN(ageValue) || ageValue <= 0) {
@@ -95,7 +91,7 @@ export default function StudentCreatePage() {
       grade: form.grade,
       age: ageValue,
       courseIds: selectedCourseIds,
-      assistantId: form.assistantId,
+      assistantId: form.assistantId || undefined,
       defaultClinicSlotId: form.defaultClinicSlotId || undefined
     };
 
@@ -158,13 +154,12 @@ export default function StudentCreatePage() {
             />
           </div>
           <Select
-            label="담당 조교"
+            label="담당 조교 (선택)"
             value={form.assistantId}
             onChange={handleSelectChange("assistantId")}
-            required
             disabled={assistantsQuery.isLoading}
           >
-            <option value="">조교를 선택하세요</option>
+            <option value="">담당 조교 없음</option>
             {assistants.map((assistant) => (
               <option key={assistant.memberId} value={assistant.memberId}>
                 {assistant.name ?? "이름 없음"}
