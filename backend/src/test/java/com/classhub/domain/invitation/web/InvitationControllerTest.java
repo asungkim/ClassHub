@@ -15,6 +15,7 @@ import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
 import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
@@ -66,12 +67,17 @@ class InvitationControllerTest {
     @Autowired
     private StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
 
+    @Autowired
+    private PersonalLessonRepository personalLessonRepository;
+
     private Member teacher;
     private Member assistant;
     private UUID courseId;
 
+
     @BeforeEach
     void setUp() {
+        personalLessonRepository.deleteAll();
         studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
         invitationRepository.deleteAll();

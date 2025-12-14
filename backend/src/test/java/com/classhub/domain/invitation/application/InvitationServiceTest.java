@@ -65,9 +65,9 @@ class InvitationServiceTest {
 
     @BeforeEach
     void setUp() {
+        personalLessonRepository.deleteAll();
         studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
-        personalLessonRepository.deleteAll();
         invitationRepository.deleteAll();
         memberRepository.deleteAll();
 
