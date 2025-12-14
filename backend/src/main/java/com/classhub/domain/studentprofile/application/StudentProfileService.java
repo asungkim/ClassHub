@@ -5,15 +5,20 @@ import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentcourseenrollment.model.StudentCourseEnrollment;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileCreateRequest;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileSearchCondition;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileUpdateRequest;
+import com.classhub.domain.studentprofile.dto.response.EnrolledCourseInfo;
 import com.classhub.domain.studentprofile.dto.response.StudentProfileResponse;
 import com.classhub.domain.studentprofile.dto.response.StudentProfileSummary;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentProfileService {
 
     private final StudentProfileRepository studentProfileRepository;
+    private final StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
     private final CourseRepository courseRepository;
     private final MemberRepository memberRepository;
 
@@ -38,13 +44,13 @@ public class StudentProfileService {
         Member actor = getMember(principalId);
         ensureTeacher(actor);
 
-        Course course = getCourseOwnedByTeacher(request.courseId(), actor.getId());
-        validateDuplicatePhoneNumber(actor.getId(), course.getId(), request.normalizedPhoneNumber());
+        List<UUID> courseIds = normalizeCourseIds(request.courseIds());
+        ensureCoursesOwnedByTeacher(courseIds, actor.getId());
+        validateDuplicatePhoneNumber(actor.getId(), request.normalizedPhoneNumber());
 
         Member assistant = getAssistant(request.assistantId(), actor.getId());
 
         StudentProfile profile = StudentProfile.builder()
-                .courseId(course.getId())
                 .teacherId(actor.getId())
                 .assistantId(assistant.getId())
                 .memberId(null)
@@ -58,7 +64,8 @@ public class StudentProfileService {
                 .build();
 
         StudentProfile saved = studentProfileRepository.save(profile);
-        return StudentProfileResponse.from(saved);
+        createEnrollments(saved.getId(), actor.getId(), courseIds);
+        return StudentProfileResponse.of(saved, buildEnrolledCourses(saved.getId()));
     }
 
     @Transactional(readOnly = true)
@@ -66,7 +73,7 @@ public class StudentProfileService {
         Member actor = getMember(principalId);
         UUID teacherId = resolveTeacherId(actor);
         StudentProfile profile = getProfileForTeacher(teacherId, profileId);
-        return StudentProfileResponse.from(profile);
+        return StudentProfileResponse.of(profile, buildEnrolledCourses(profile.getId()));
     }
 
     @Transactional(readOnly = true)
@@ -81,26 +88,32 @@ public class StudentProfileService {
         Page<StudentProfile> page;
         if (condition != null && condition.hasCourseFilter()) {
             ensureCourseOwnership(condition.courseId(), teacherId);
-            if (condition.hasNameFilter()) {
+            List<UUID> profileIds = extractProfileIdsForCourse(condition.courseId());
+            if (profileIds.isEmpty()) {
+                page = Page.empty(pageable);
+            } else if (condition.hasNameFilter()) {
                 page = active == null
-                        ? studentProfileRepository.findAllByTeacherIdAndCourseIdAndNameContainingIgnoreCase(
-                        teacherId,
-                        condition.courseId(),
-                        condition.name(),
-                        pageable
-                )
-                        : studentProfileRepository.findAllByTeacherIdAndCourseIdAndActiveAndNameContainingIgnoreCase(
+                        ? studentProfileRepository.findAllByTeacherIdAndIdInAndNameContainingIgnoreCase(
                                 teacherId,
-                                condition.courseId(),
+                                profileIds,
+                                condition.name(),
+                                pageable
+                        )
+                        : studentProfileRepository.findAllByTeacherIdAndActiveAndIdInAndNameContainingIgnoreCase(
+                                teacherId,
                                 active,
+                                profileIds,
                                 condition.name(),
                                 pageable
                         );
             } else {
                 page = active == null
-                        ? studentProfileRepository.findAllByTeacherIdAndCourseId(teacherId, condition.courseId(), pageable)
-                        : studentProfileRepository.findAllByTeacherIdAndCourseIdAndActive(
-                                teacherId, condition.courseId(), active, pageable
+                        ? studentProfileRepository.findAllByTeacherIdAndIdIn(teacherId, profileIds, pageable)
+                        : studentProfileRepository.findAllByTeacherIdAndActiveAndIdIn(
+                                teacherId,
+                                active,
+                                profileIds,
+                                pageable
                         );
             }
         } else if (condition != null && condition.hasNameFilter()) {
@@ -142,12 +155,9 @@ public class StudentProfileService {
             profile.assignAssistant(assistant.getId());
         }
 
-        UUID targetCourseId = profile.getCourseId();
-        boolean courseChangeRequested = request.courseId() != null
-                && !request.courseId().equals(profile.getCourseId());
-        if (courseChangeRequested) {
-            Course newCourse = getCourseOwnedByTeacher(request.courseId(), actor.getId());
-            targetCourseId = newCourse.getId();
+        if (request.courseIds() != null) {
+            List<UUID> courseIds = normalizeCourseIds(request.courseIds());
+            syncEnrollments(profile.getId(), actor.getId(), courseIds);
         }
 
         boolean phoneChangeRequested = request.phoneNumber() != null;
@@ -157,14 +167,8 @@ public class StudentProfileService {
             phoneChangeRequested = !normalizedPhone.equals(profile.getPhoneNumber());
         }
 
-        if (courseChangeRequested || phoneChangeRequested) {
-            validateDuplicatePhoneNumber(actor.getId(), targetCourseId, normalizedPhone);
-        }
-
-        if (courseChangeRequested) {
-            profile.moveToCourse(targetCourseId);
-        }
         if (phoneChangeRequested) {
+            validateDuplicatePhoneNumber(actor.getId(), normalizedPhone);
             profile.changePhoneNumber(normalizedPhone);
         }
 
@@ -188,7 +192,7 @@ public class StudentProfileService {
         );
 
         StudentProfile saved = studentProfileRepository.save(profile);
-        return StudentProfileResponse.from(saved);
+        return StudentProfileResponse.of(saved, buildEnrolledCourses(saved.getId()));
     }
 
     @Transactional
@@ -230,9 +234,120 @@ public class StudentProfileService {
     @Transactional(readOnly = true)
     public List<StudentProfileSummary> getCourseStudents(UUID teacherId, UUID courseId) {
         ensureCourseOwnership(courseId, teacherId);
-        List<StudentProfile> profiles = studentProfileRepository
-                .findAllByTeacherIdAndCourseIdAndActive(teacherId, courseId, true);
+        List<UUID> profileIds = extractProfileIdsForCourse(courseId);
+        if (profileIds.isEmpty()) {
+            return List.of();
+        }
+        List<StudentProfile> profiles = studentProfileRepository.findAllById(profileIds)
+                .stream()
+                .filter(profile -> teacherId.equals(profile.getTeacherId()) && profile.isActive())
+                .toList();
         return enrichListWithNames(profiles);
+    }
+
+    private List<UUID> extractProfileIdsForCourse(UUID courseId) {
+        return studentCourseEnrollmentRepository.findAllByCourseId(courseId)
+                .stream()
+                .map(StudentCourseEnrollment::getStudentProfileId)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(LinkedHashSet::new),
+                        ArrayList::new
+                ));
+    }
+
+    private List<UUID> normalizeCourseIds(List<UUID> courseIds) {
+        if (courseIds == null) {
+            return List.of();
+        }
+        LinkedHashSet<UUID> uniqueIds = new LinkedHashSet<>(courseIds);
+        if (uniqueIds.contains(null)) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        if (uniqueIds.size() != courseIds.size()) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        return List.copyOf(uniqueIds);
+    }
+
+    private void ensureCoursesOwnedByTeacher(List<UUID> courseIds, UUID teacherId) {
+        if (courseIds.isEmpty()) {
+            return;
+        }
+        List<Course> courses = courseRepository.findAllById(courseIds);
+        if (courses.size() != courseIds.size()) {
+            throw new BusinessException(RsCode.COURSE_NOT_FOUND);
+        }
+        boolean invalidOwner = courses.stream().anyMatch(course -> !course.isOwnedBy(teacherId));
+        if (invalidOwner) {
+            throw new BusinessException(RsCode.COURSE_FORBIDDEN);
+        }
+        boolean inactiveCourse = courses.stream().anyMatch(course -> !course.isActive());
+        if (inactiveCourse) {
+            throw new BusinessException(RsCode.COURSE_FORBIDDEN);
+        }
+    }
+
+    private void createEnrollments(UUID profileId, UUID teacherId, List<UUID> courseIds) {
+        for (UUID courseId : courseIds) {
+            studentCourseEnrollmentRepository.save(
+                    StudentCourseEnrollment.builder()
+                            .studentProfileId(profileId)
+                            .courseId(courseId)
+                            .teacherId(teacherId)
+                            .build()
+            );
+        }
+    }
+
+    private void syncEnrollments(UUID profileId, UUID teacherId, List<UUID> courseIds) {
+        if (!courseIds.isEmpty()) {
+            ensureCoursesOwnedByTeacher(courseIds, teacherId);
+        }
+        Set<UUID> targetCourseIds = new LinkedHashSet<>(courseIds);
+        List<StudentCourseEnrollment> currentEnrollments =
+                studentCourseEnrollmentRepository.findAllByStudentProfileId(profileId);
+        Set<UUID> currentCourseIds = currentEnrollments.stream()
+                .map(StudentCourseEnrollment::getCourseId)
+                .collect(Collectors.toSet());
+
+        for (UUID courseId : targetCourseIds) {
+            if (!currentCourseIds.contains(courseId)) {
+                studentCourseEnrollmentRepository.save(
+                        StudentCourseEnrollment.builder()
+                                .studentProfileId(profileId)
+                                .courseId(courseId)
+                                .teacherId(teacherId)
+                                .build()
+                );
+            }
+        }
+
+        for (UUID courseId : currentCourseIds) {
+            if (!targetCourseIds.contains(courseId)) {
+                studentCourseEnrollmentRepository.deleteByStudentProfileIdAndCourseId(profileId, courseId);
+            }
+        }
+    }
+
+    private List<EnrolledCourseInfo> buildEnrolledCourses(UUID profileId) {
+        List<StudentCourseEnrollment> enrollments =
+                studentCourseEnrollmentRepository.findAllByStudentProfileId(profileId);
+        if (enrollments.isEmpty()) {
+            return List.of();
+        }
+        Set<UUID> courseIds = enrollments.stream()
+                .map(StudentCourseEnrollment::getCourseId)
+                .collect(Collectors.toSet());
+        Map<UUID, String> courseNames = courseRepository.findAllById(courseIds)
+                .stream()
+                .collect(Collectors.toMap(Course::getId, Course::getName));
+        return enrollments.stream()
+                .map(enrollment -> new EnrolledCourseInfo(
+                        enrollment.getCourseId(),
+                        courseNames.getOrDefault(enrollment.getCourseId(), "Unknown"),
+                        enrollment.getCreatedAt()
+                ))
+                .toList();
     }
 
     private Course getCourseOwnedByTeacher(UUID courseId, UUID teacherId) {
@@ -253,12 +368,8 @@ public class StudentProfileService {
         }
     }
 
-    private void validateDuplicatePhoneNumber(UUID teacherId, UUID courseId, String phoneNumber) {
-        if (studentProfileRepository.existsByTeacherIdAndCourseIdAndPhoneNumberIgnoreCase(
-                teacherId,
-                courseId,
-                phoneNumber
-        )) {
+    private void validateDuplicatePhoneNumber(UUID teacherId, String phoneNumber) {
+        if (studentProfileRepository.existsByTeacherIdAndPhoneNumberIgnoreCase(teacherId, phoneNumber)) {
             throw new BusinessException(RsCode.STUDENT_PROFILE_DUPLICATE_PHONE);
         }
     }
@@ -316,12 +427,12 @@ public class StudentProfileService {
     private Page<StudentProfileSummary> enrichPageWithNames(Page<StudentProfile> page) {
         List<StudentProfile> profiles = page.getContent();
         List<StudentProfileSummary> enriched = enrichListWithNames(profiles);
-        return page.map(profile -> {
-            return enriched.stream()
-                    .filter(summary -> summary.id().equals(profile.getId()))
-                    .findFirst()
-                    .orElseThrow();
-        });
+        Map<UUID, StudentProfileSummary> summaryMap = enriched.stream()
+                .collect(Collectors.toMap(StudentProfileSummary::id, summary -> summary));
+        return page.map(profile -> summaryMap.getOrDefault(
+                profile.getId(),
+                StudentProfileSummary.of(profile, "Unknown", List.of())
+        ));
     }
 
     private List<StudentProfileSummary> enrichListWithNames(List<StudentProfile> profiles) {
@@ -332,24 +443,40 @@ public class StudentProfileService {
         Set<UUID> assistantIds = profiles.stream()
                 .map(StudentProfile::getAssistantId)
                 .collect(Collectors.toSet());
-        Set<UUID> courseIds = profiles.stream()
-                .map(StudentProfile::getCourseId)
-                .collect(Collectors.toSet());
-
         Map<UUID, String> assistantNames = memberRepository.findAllById(assistantIds)
                 .stream()
                 .collect(Collectors.toMap(Member::getId, Member::getName));
+
+        Set<UUID> profileIds = profiles.stream()
+                .map(StudentProfile::getId)
+                .collect(Collectors.toSet());
+
+        List<StudentCourseEnrollment> enrollments =
+                studentCourseEnrollmentRepository.findAllByStudentProfileIdIn(profileIds);
+        Map<UUID, List<StudentCourseEnrollment>> enrollmentsByProfile = enrollments.stream()
+                .collect(Collectors.groupingBy(StudentCourseEnrollment::getStudentProfileId));
+
+        Set<UUID> courseIds = enrollments.stream()
+                .map(StudentCourseEnrollment::getCourseId)
+                .collect(Collectors.toSet());
 
         Map<UUID, String> courseNames = courseRepository.findAllById(courseIds)
                 .stream()
                 .collect(Collectors.toMap(Course::getId, Course::getName));
 
         return profiles.stream()
-                .map(profile -> StudentProfileSummary.from(
-                        profile,
-                        assistantNames.getOrDefault(profile.getAssistantId(), "Unknown"),
-                        courseNames.getOrDefault(profile.getCourseId(), "Unknown")
-                ))
+                .map(profile -> {
+                    List<String> courseNameList = enrollmentsByProfile
+                            .getOrDefault(profile.getId(), List.of())
+                            .stream()
+                            .map(enrollment -> courseNames.getOrDefault(enrollment.getCourseId(), "Unknown"))
+                            .toList();
+                    return StudentProfileSummary.of(
+                            profile,
+                            assistantNames.getOrDefault(profile.getAssistantId(), "Unknown"),
+                            courseNameList
+                    );
+                })
                 .toList();
     }
 }

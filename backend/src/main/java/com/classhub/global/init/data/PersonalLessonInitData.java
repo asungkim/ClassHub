@@ -56,7 +56,6 @@ public class PersonalLessonInitData extends BaseInitData {
     private PersonalLesson createLesson(StudentProfile profile, LessonSeed seed) {
         PersonalLesson lesson = PersonalLesson.builder()
                 .studentProfile(profile)
-                .courseId(profile.getCourseId())
                 .teacherId(profile.getTeacherId())
                 .writerId(profile.getTeacherId())
                 .date(seed.date())

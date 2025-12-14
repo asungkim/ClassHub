@@ -6,8 +6,8 @@ type CourseScheduleResponse = components["schemas"]["CourseScheduleResponse"];
 
 type CoursePickerProps = {
   courses: CourseResponse[];
-  selectedCourseId?: string;
-  onSelect: (courseId: string) => void;
+  selectedCourseIds: string[];
+  onChange: (courseIds: string[]) => void;
   isLoading?: boolean;
 };
 
@@ -21,7 +21,7 @@ const DAY_LABELS: Record<string, string> = {
   SUNDAY: "일"
 };
 
-export function CoursePicker({ courses, selectedCourseId, onSelect, isLoading }: CoursePickerProps) {
+export function CoursePicker({ courses, selectedCourseIds, onChange, isLoading }: CoursePickerProps) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -46,11 +46,23 @@ export function CoursePicker({ courses, selectedCourseId, onSelect, isLoading }:
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-slate-700">수업 선택</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-slate-700">수업 선택</p>
+        <span className="text-xs font-semibold text-blue-600">
+          {selectedCourseIds.length > 0 ? `${selectedCourseIds.length}개 선택됨` : "선택된 수업 없음"}
+        </span>
+      </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {courses.map((course) => {
           const courseId = course.id ?? "";
-          const isSelected = selectedCourseId === courseId;
+          const isSelected = !!courseId && selectedCourseIds.includes(courseId);
+          const handleToggle = () => {
+            if (!courseId) return;
+            const nextSelection = isSelected
+              ? selectedCourseIds.filter((id) => id !== courseId)
+              : [...selectedCourseIds, courseId];
+            onChange(nextSelection);
+          };
           return (
             <button
               key={courseId}
@@ -61,7 +73,7 @@ export function CoursePicker({ courses, selectedCourseId, onSelect, isLoading }:
                         ? "border-blue-400 bg-blue-50 shadow"
                         : "border-slate-200 bg-white hover:border-blue-200"
               )}
-              onClick={() => courseId && onSelect(courseId)}
+              onClick={handleToggle}
             >
               <p className="text-base font-semibold text-slate-900">{course.name ?? "이름 없음"}</p>
               <p className="text-sm text-slate-600">{course.company ?? "소속 미입력"}</p>

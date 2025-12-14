@@ -32,9 +32,6 @@ public class PersonalLesson extends BaseEntity {
     @JoinColumn(name = "student_profile_id", nullable = false, columnDefinition = "BINARY(16)")
     private StudentProfile studentProfile;
 
-    @Column(name = "course_id", nullable = false, columnDefinition = "BINARY(16)")
-    private UUID courseId;
-
     @Column(name = "teacher_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID teacherId;
 

@@ -25,9 +25,9 @@ type FormState = {
   schoolName: string;
   grade: string;
   age: string;
-  courseId: string;
   assistantId: string;
   defaultClinicSlotId?: string;
+  selectedCourseIds: string[];
 };
 
 const emptyForm: FormState = {
@@ -37,9 +37,9 @@ const emptyForm: FormState = {
   schoolName: "",
   grade: "",
   age: "",
-  courseId: "",
   assistantId: "",
-  defaultClinicSlotId: ""
+  defaultClinicSlotId: "",
+  selectedCourseIds: []
 };
 
 export default function StudentEditPage() {
@@ -144,8 +144,8 @@ export default function StudentEditPage() {
           <div className="md:col-span-2">
             <CoursePicker
               courses={coursesQuery.data ?? []}
-              selectedCourseId={form.courseId}
-              onSelect={(nextCourse) => setForm((prev) => ({ ...prev, courseId: nextCourse }))}
+              selectedCourseIds={form.selectedCourseIds}
+              onChange={(nextSelection) => setForm((prev) => ({ ...prev, selectedCourseIds: nextSelection }))}
               isLoading={coursesQuery.isLoading}
             />
           </div>
@@ -195,6 +195,10 @@ export default function StudentEditPage() {
 }
 
 function mapResponseToForm(student: StudentProfileResponse): FormState {
+  const enrolledCourseIds =
+    student.enrolledCourses
+      ?.map((course) => course.courseId)
+      .filter((courseId): courseId is string => Boolean(courseId)) ?? [];
   return {
     name: student.name ?? "",
     phoneNumber: student.phoneNumber ?? "",
@@ -202,9 +206,9 @@ function mapResponseToForm(student: StudentProfileResponse): FormState {
     schoolName: student.schoolName ?? "",
     grade: student.grade ?? "",
     age: student.age ? String(student.age) : "",
-    courseId: student.courseId ?? "",
     assistantId: student.assistantId ?? "",
-    defaultClinicSlotId: student.defaultClinicSlotId ?? ""
+    defaultClinicSlotId: student.defaultClinicSlotId ?? "",
+    selectedCourseIds: enrolledCourseIds
   };
 }
 
@@ -212,8 +216,8 @@ function buildUpdatePayload(form: FormState): StudentProfileUpdateRequest | stri
   if (!form.name || !form.phoneNumber || !form.parentPhone || !form.schoolName || !form.grade || !form.age) {
     return "필수 항목을 모두 입력해주세요.";
   }
-  if (!form.courseId) {
-    return "수업을 선택해주세요.";
+  if (form.selectedCourseIds.length === 0) {
+    return "수업을 하나 이상 선택해주세요.";
   }
   if (!form.assistantId) {
     return "담당 조교를 선택해주세요.";
@@ -231,7 +235,7 @@ function buildUpdatePayload(form: FormState): StudentProfileUpdateRequest | stri
     schoolName: form.schoolName,
     grade: form.grade,
     age: ageValue,
-    courseId: form.courseId,
+    courseIds: form.selectedCourseIds,
     assistantId: form.assistantId,
     defaultClinicSlotId: form.defaultClinicSlotId || undefined,
     memberId: undefined

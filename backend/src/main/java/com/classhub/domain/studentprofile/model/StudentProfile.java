@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "student_profile", uniqueConstraints = {
         @UniqueConstraint(
-                name = "uk_student_profile_course_phone",
-                columnNames = {"course_id", "phone_number"}
+                name = "uk_student_profile_teacher_phone",
+                columnNames = {"teacher_id", "phone_number"}
         )
 }, indexes = {
         @Index(name = "idx_student_profile_teacher", columnList = "teacher_id")
@@ -27,9 +27,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class StudentProfile extends BaseEntity {
-
-    @Column(name = "course_id", nullable = false, columnDefinition = "BINARY(16)")
-    private UUID courseId;
 
     @Column(name = "teacher_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID teacherId;
@@ -92,12 +89,6 @@ public class StudentProfile extends BaseEntity {
     public void assignAssistant(UUID assistantId) {
         if (assistantId != null) {
             this.assistantId = assistantId;
-        }
-    }
-
-    public void moveToCourse(UUID courseId) {
-        if (courseId != null) {
-            this.courseId = courseId;
         }
     }
 

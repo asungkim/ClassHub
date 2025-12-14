@@ -13,6 +13,7 @@ import com.classhub.domain.personallesson.dto.request.PersonalLessonUpdateReques
 import com.classhub.domain.personallesson.dto.response.PersonalLessonResponse;
 import com.classhub.domain.personallesson.dto.response.PersonalLessonSummary;
 import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.application.StudentProfileService;
 import com.classhub.domain.studentprofile.dto.request.StudentProfileCreateRequest;
 import com.classhub.domain.studentprofile.dto.response.StudentProfileResponse;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -59,6 +61,9 @@ class PersonalLessonServiceTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
+
     private Member teacher;
     private Member assistant;
     private Course course;
@@ -67,6 +72,7 @@ class PersonalLessonServiceTest {
     @BeforeEach
     void setUp() {
         personalLessonRepository.deleteAll();
+        studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
         courseRepository.deleteAll();
         memberRepository.deleteAll();
@@ -103,7 +109,7 @@ class PersonalLessonServiceTest {
         studentProfile = studentProfileService.createProfile(
                 teacher.getId(),
                 new StudentProfileCreateRequest(
-                        course.getId(),
+                        List.of(course.getId()),
                         "Jane Doe",
                         "010-5555-0001",
                         assistant.getId(),

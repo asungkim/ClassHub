@@ -28,6 +28,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/shared-lessons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SharedLesson 목록
+         * @description Course ID로 공통 진도 목록을 조회한다.
+         */
+        get: operations["getSharedLessons"];
+        put?: never;
+        /**
+         * SharedLesson 생성
+         * @description Course에 공통 진도를 작성한다.
+         */
+        post: operations["createSharedLesson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/personal-lessons": {
         parameters: {
             query?: never;
@@ -312,6 +336,34 @@ export interface paths {
         patch: operations["activateStudentProfile"];
         trace?: never;
     };
+    "/api/v1/shared-lessons/{lessonId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SharedLesson 상세
+         * @description 공통 진도 상세를 조회한다.
+         */
+        get: operations["getSharedLesson"];
+        put?: never;
+        post?: never;
+        /**
+         * SharedLesson 삭제
+         * @description 공통 진도를 삭제한다.
+         */
+        delete: operations["deleteSharedLesson"];
+        options?: never;
+        head?: never;
+        /**
+         * SharedLesson 수정
+         * @description 공통 진도의 날짜/제목/내용을 수정한다.
+         */
+        patch: operations["updateSharedLesson"];
+        trace?: never;
+    };
     "/api/v1/personal-lessons/{lessonId}": {
         parameters: {
             query?: never;
@@ -569,8 +621,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         StudentProfileCreateRequest: {
-            /** Format: uuid */
-            courseId: string;
+            courseIds: string[];
             name: string;
             phoneNumber: string;
             /** Format: uuid */
@@ -583,6 +634,13 @@ export interface components {
             /** Format: uuid */
             defaultClinicSlotId?: string;
         };
+        EnrolledCourseInfo: {
+            /** Format: uuid */
+            courseId?: string;
+            courseName?: string;
+            /** Format: date-time */
+            enrolledAt?: string;
+        };
         RsDataStudentProfileResponse: {
             /** Format: int32 */
             code?: number;
@@ -592,8 +650,6 @@ export interface components {
         StudentProfileResponse: {
             /** Format: uuid */
             id?: string;
-            /** Format: uuid */
-            courseId?: string;
             /** Format: uuid */
             teacherId?: string;
             /** Format: uuid */
@@ -610,6 +666,37 @@ export interface components {
             /** Format: int32 */
             age?: number;
             active?: boolean;
+            enrolledCourses?: components["schemas"]["EnrolledCourseInfo"][];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        SharedLessonCreateRequest: {
+            /** Format: uuid */
+            courseId: string;
+            /** Format: date */
+            date?: string;
+            title: string;
+            content: string;
+        };
+        RsDataSharedLessonResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["SharedLessonResponse"];
+        };
+        SharedLessonResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            writerId?: string;
+            /** Format: date */
+            date?: string;
+            title?: string;
+            content?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -627,8 +714,6 @@ export interface components {
             id?: string;
             /** Format: uuid */
             studentProfileId?: string;
-            /** Format: uuid */
-            courseId?: string;
             /** Format: uuid */
             teacherId?: string;
             /** Format: uuid */
@@ -807,8 +892,7 @@ export interface components {
             parentPhone?: string;
             schoolName?: string;
             grade?: string;
-            /** Format: uuid */
-            courseId?: string;
+            courseIds?: string[];
             /** Format: uuid */
             assistantId?: string;
             phoneNumber?: string;
@@ -818,6 +902,12 @@ export interface components {
             defaultClinicSlotId?: string;
             /** Format: int32 */
             age?: number;
+        };
+        SharedLessonUpdateRequest: {
+            /** Format: date */
+            date?: string;
+            title?: string;
+            content?: string;
         };
         PersonalLessonUpdateRequest: {
             /** Format: date */
@@ -864,9 +954,7 @@ export interface components {
         StudentProfileSummary: {
             /** Format: uuid */
             id?: string;
-            /** Format: uuid */
-            courseId?: string;
-            courseName?: string;
+            courseNames?: string[];
             name?: string;
             grade?: string;
             phoneNumber?: string;
@@ -907,6 +995,36 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["PageResponsePersonalLessonSummary"];
+        };
+        PageResponseSharedLessonSummary: {
+            content?: components["schemas"]["SharedLessonSummary"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseSharedLessonSummary: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseSharedLessonSummary"];
+        };
+        SharedLessonSummary: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: date */
+            date?: string;
+            title?: string;
+            /** Format: date-time */
+            createdAt?: string;
         };
         MemberSummary: {
             /** Format: uuid */
@@ -1026,6 +1144,55 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataStudentProfileResponse"];
+                };
+            };
+        };
+    };
+    getSharedLessons: {
+        parameters: {
+            query: {
+                courseId: string;
+                from?: string;
+                to?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseSharedLessonSummary"];
+                };
+            };
+        };
+    };
+    createSharedLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SharedLessonCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataSharedLessonResponse"];
                 };
             };
         };
@@ -1465,6 +1632,76 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    getSharedLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataSharedLessonResponse"];
+                };
+            };
+        };
+    };
+    deleteSharedLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    updateSharedLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SharedLessonUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataSharedLessonResponse"];
                 };
             };
         };

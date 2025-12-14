@@ -14,6 +14,8 @@ import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.exception.BusinessException;
@@ -49,7 +51,13 @@ class InvitationServiceTest {
     private StudentProfileRepository studentProfileRepository;
 
     @Autowired
+    private PersonalLessonRepository personalLessonRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
 
     private Member teacher;
     private Member assistant;
@@ -57,6 +65,8 @@ class InvitationServiceTest {
 
     @BeforeEach
     void setUp() {
+        personalLessonRepository.deleteAll();
+        studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
         invitationRepository.deleteAll();
         memberRepository.deleteAll();
@@ -100,7 +110,6 @@ class InvitationServiceTest {
         // Given: Assistant에게 할당된 StudentProfile
         StudentProfile profile = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("학생A")
@@ -127,7 +136,6 @@ class InvitationServiceTest {
         // Given: Teacher의 StudentProfile
         StudentProfile profile = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("학생B")
@@ -201,7 +209,6 @@ class InvitationServiceTest {
         // Given: Teacher의 StudentProfile 3개 생성 (memberId=null, active=true)
         StudentProfile profile1 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("김철수")
@@ -215,7 +222,6 @@ class InvitationServiceTest {
         );
         StudentProfile profile2 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("이영희")
@@ -230,7 +236,6 @@ class InvitationServiceTest {
         // profile3은 이미 초대된 상태 (PENDING 초대 존재)
         StudentProfile profile3 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("박민수")
@@ -268,7 +273,6 @@ class InvitationServiceTest {
         // Given: Assistant에게 할당된 StudentProfile 2개
         StudentProfile profile1 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("학생A")
@@ -284,7 +288,6 @@ class InvitationServiceTest {
         UUID otherAssistantId = UUID.randomUUID();
         studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(otherAssistantId)
                         .name("학생B")
@@ -311,7 +314,6 @@ class InvitationServiceTest {
         // Given
         studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("김철수")
@@ -325,7 +327,6 @@ class InvitationServiceTest {
         );
         studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("이영희")
@@ -352,7 +353,6 @@ class InvitationServiceTest {
         // Given: memberId가 있는 프로필 (이미 회원가입 완료)
         studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .memberId(UUID.randomUUID()) // memberId 존재
@@ -379,7 +379,6 @@ class InvitationServiceTest {
         // Given: active=false인 프로필
         studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("비활성학생")
@@ -405,7 +404,6 @@ class InvitationServiceTest {
         // Given: Teacher의 StudentProfile 3개 생성
         StudentProfile profile1 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("김철수")
@@ -419,7 +417,6 @@ class InvitationServiceTest {
         );
         StudentProfile profile2 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("이영희")
@@ -433,7 +430,6 @@ class InvitationServiceTest {
         );
         StudentProfile profile3 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("박민수")
@@ -474,7 +470,6 @@ class InvitationServiceTest {
         // Given: Assistant에게 할당된 StudentProfile 2개
         StudentProfile profile1 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("학생A")
@@ -488,7 +483,6 @@ class InvitationServiceTest {
         );
         StudentProfile profile2 = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("학생B")
@@ -520,7 +514,6 @@ class InvitationServiceTest {
         UUID otherAssistantId = UUID.randomUUID();
         StudentProfile profile = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(otherAssistantId)
                         .name("학생C")
@@ -549,7 +542,6 @@ class InvitationServiceTest {
         // Given: 이미 PENDING 초대가 있는 프로필
         StudentProfile profile = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("김철수")
@@ -604,7 +596,6 @@ class InvitationServiceTest {
         // Given: memberId가 있는 프로필 (이미 회원가입 완료)
         StudentProfile profile = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .memberId(UUID.randomUUID()) // 이미 계정 연동됨
@@ -634,7 +625,6 @@ class InvitationServiceTest {
         // Given: active=false인 프로필
         StudentProfile profile = studentProfileRepository.save(
                 StudentProfile.builder()
-                        .courseId(courseId)
                         .teacherId(teacher.getId())
                         .assistantId(assistant.getId())
                         .name("비활성학생")

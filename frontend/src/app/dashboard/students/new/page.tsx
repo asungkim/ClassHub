@@ -43,7 +43,7 @@ export default function StudentCreatePage() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
   const [clientError, setClientError] = useState<string | null>(null);
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const createMutation = useCreateStudentProfile();
   const assistantsQuery = useAssistantList({ active: true, page: 0 });
   const coursesQuery = useCourses(true);
@@ -72,8 +72,8 @@ export default function StudentCreatePage() {
       setClientError("필수 항목을 모두 입력해주세요.");
       return;
     }
-    if (!selectedCourseId) {
-      setClientError("수업을 선택해주세요.");
+    if (selectedCourseIds.length === 0) {
+      setClientError("수업을 하나 이상 선택해주세요.");
       return;
     }
     if (!form.assistantId) {
@@ -94,7 +94,7 @@ export default function StudentCreatePage() {
       schoolName: form.schoolName,
       grade: form.grade,
       age: ageValue,
-      courseId: selectedCourseId,
+      courseIds: selectedCourseIds,
       assistantId: form.assistantId,
       defaultClinicSlotId: form.defaultClinicSlotId || undefined
     };
@@ -152,8 +152,8 @@ export default function StudentCreatePage() {
           <div className="md:col-span-2">
             <CoursePicker
               courses={coursesQuery.data ?? []}
-              selectedCourseId={selectedCourseId}
-              onSelect={setSelectedCourseId}
+              selectedCourseIds={selectedCourseIds}
+              onChange={setSelectedCourseIds}
               isLoading={coursesQuery.isLoading}
             />
           </div>
@@ -196,7 +196,11 @@ export default function StudentCreatePage() {
           <Button
             type="submit"
             className="h-11 px-5 text-sm"
-            disabled={createMutation.isPending || (coursesQuery.data?.length ?? 0) === 0}
+            disabled={
+              createMutation.isPending ||
+              (coursesQuery.data?.length ?? 0) === 0 ||
+              selectedCourseIds.length === 0
+            }
           >
             {createMutation.isPending ? "등록 중..." : "학생 등록"}
           </Button>

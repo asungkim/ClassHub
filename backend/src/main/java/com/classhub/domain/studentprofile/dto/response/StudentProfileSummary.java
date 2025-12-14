@@ -1,12 +1,12 @@
 package com.classhub.domain.studentprofile.dto.response;
 
 import com.classhub.domain.studentprofile.model.StudentProfile;
+import java.util.List;
 import java.util.UUID;
 
 public record StudentProfileSummary(
         UUID id,
-        UUID courseId,
-        String courseName,
+        List<String> courseNames,
         String name,
         String grade,
         String phoneNumber,
@@ -18,15 +18,14 @@ public record StudentProfileSummary(
         boolean active
 ) {
 
-    public static StudentProfileSummary from(
+    public static StudentProfileSummary of(
             StudentProfile profile,
             String assistantName,
-            String courseName
+            List<String> courseNames
     ) {
         return new StudentProfileSummary(
                 profile.getId(),
-                profile.getCourseId(),
-                courseName,
+                courseNames,
                 profile.getName(),
                 profile.getGrade(),
                 profile.getPhoneNumber(),

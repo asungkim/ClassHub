@@ -15,6 +15,8 @@ import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.personallesson.repository.PersonalLessonRepository;
+import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
 import com.classhub.global.jwt.JwtProvider;
@@ -62,12 +64,21 @@ class InvitationControllerTest {
     @Autowired
     private JwtProvider jwtProvider;
 
+    @Autowired
+    private StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
+
+    @Autowired
+    private PersonalLessonRepository personalLessonRepository;
+
     private Member teacher;
     private Member assistant;
     private UUID courseId;
 
+
     @BeforeEach
     void setUp() {
+        personalLessonRepository.deleteAll();
+        studentCourseEnrollmentRepository.deleteAll();
         studentProfileRepository.deleteAll();
         invitationRepository.deleteAll();
         memberRepository.deleteAll();
@@ -110,7 +121,6 @@ class InvitationControllerTest {
     void createStudentInvitation_byAssistant() throws Exception {
         // Given: Assistant에게 할당된 StudentProfile 생성
         StudentProfile profile1 = studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("학생A")
@@ -122,7 +132,6 @@ class InvitationControllerTest {
                 .active(true)
                 .build());
         StudentProfile profile2 = studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("학생B")
@@ -154,7 +163,6 @@ class InvitationControllerTest {
     void createStudentInvitation_byTeacher() throws Exception {
         // Given: Teacher의 StudentProfile 생성
         StudentProfile profile = studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("학생C")
@@ -218,7 +226,6 @@ class InvitationControllerTest {
     void findStudentCandidates_teacher() throws Exception {
         // Given: 초대되지 않은 StudentProfile 2개
         studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("김철수")
@@ -230,7 +237,6 @@ class InvitationControllerTest {
                 .active(true)
                 .build());
         studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("이영희")
@@ -256,7 +262,6 @@ class InvitationControllerTest {
     void findStudentCandidates_assistant() throws Exception {
         // Given: Assistant에게 할당된 프로필 1개
         studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("학생A")
@@ -270,7 +275,6 @@ class InvitationControllerTest {
         // 다른 조교에게 할당된 프로필 (조회되지 않아야 함)
         UUID otherAssistantId = UUID.randomUUID();
         studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(otherAssistantId)
                 .name("학생B")
@@ -295,7 +299,6 @@ class InvitationControllerTest {
     void findStudentCandidates_withNameFilter() throws Exception {
         // Given
         studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("김철수")
@@ -307,7 +310,6 @@ class InvitationControllerTest {
                 .active(true)
                 .build());
         studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("이영희")
@@ -333,7 +335,6 @@ class InvitationControllerTest {
     void findStudentCandidates_excludePending() throws Exception {
         // Given: 초대된 프로필과 초대되지 않은 프로필
         StudentProfile invitedProfile = studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("초대됨")
@@ -345,7 +346,6 @@ class InvitationControllerTest {
                 .active(true)
                 .build());
         studentProfileRepository.save(StudentProfile.builder()
-                .courseId(courseId)
                 .teacherId(teacher.getId())
                 .assistantId(assistant.getId())
                 .name("초대안됨")

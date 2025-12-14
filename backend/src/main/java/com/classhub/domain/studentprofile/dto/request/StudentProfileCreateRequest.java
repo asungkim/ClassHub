@@ -1,13 +1,15 @@
 package com.classhub.domain.studentprofile.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import java.util.UUID;
 
 public record StudentProfileCreateRequest(
-        @NotNull UUID courseId,
+        @NotEmpty List<UUID> courseIds,
         @NotBlank @Size(max = 60) String name,
         @NotBlank @Size(max = 40) String phoneNumber,
         @NotNull UUID assistantId,
