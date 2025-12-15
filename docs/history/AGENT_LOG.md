@@ -639,3 +639,46 @@ BUGFIX
 - 영향받은 테스트: 아직 `npm run build -- --webpack`을 돌리지 못했으며, 추후 프론트 빌드 및 수동 테스트에서 새로고침 시 오류가 재발하지 않는지 확인 필요.
 - 수정한 파일: `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
 - 다음 단계: 학생별 캘린더 페이지 새로고침/권한 가드 플로우를 수동 검증하고, 전체 빌드를 통해 타입/훅 경고가 없는지 확인.
+
+## [2025-12-13 23:05] 로컬/DEV 초기 데이터 한국형 시나리오로 갱신
+
+### Type
+
+STRUCTURAL
+
+### Summary
+
+- StudentProfile/Course/PersonalLesson/SharedLesson 시드 데이터를 실제 학원 환경과 유사한 한국어 정보로 재작성해 데모 데이터의 현실감을 높였다.
+- 학생 이름, 학교, 학년·나이를 한국 현장 스타일로 다양화하고, 코스 및 진도 기록도 실제 학원 일정을 반영하도록 수정했다.
+
+### Details
+
+- `StudentProfileInitData`: 한글 이름 생성 로직, 지역별 학교 리스트, 학년/나이 매핑(중2~재수, 14~19세)을 도입해 60명의 학생이 자연스러운 데이터를 갖도록 변경.
+- `CourseInitData`: “대치 메가프렙 수학심화반”, “분당 리더스 영어독해반” 등 실제 학원 네이밍과 다양한 요일/시간표를 적용해 코스 정보를 현실화.
+- `PersonalLessonInitData`: 2025년 10~12월에 걸친 코칭 기록을 고정 날짜 + 이름 기반 오프셋으로 생성해 과거 진도가 지속적으로 남아 있도록 변경.
+- `SharedLessonInitData`: 각 코스의 실제 수업 요일과 연동된 2025년 10~12월 주차별 진도 기록을 생성하고, 콘텐츠 문구를 한국어 서술로 업데이트.
+- 영향받은 테스트: 시드 데이터 변경만 수행했으며, `./gradlew test` 등은 실행하지 못함. 이후 로컬에서 `./gradlew bootRun` 혹은 특정 도메인 테스트를 통해 시드 로딩 여부를 점검 필요.
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/init/data/StudentProfileInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/CourseInitData.java`
+- `backend/src/main/java/com/classhub/global/init/data/PersonalLessonInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/SharedLessonInitData.java`
+- 다음 단계: 로컬/DEV 환경에서 부트스트랩 시드 실행 후 UI/Swagger에서 한글 데이터가 정상 노출되는지 확인.
+
+## [2025-12-13 23:12] Member 시드 한글 이름 적용
+
+### Type
+
+STRUCTURAL
+
+### Summary
+
+- 로컬/DEV Member 시드에서 Teacher/Assistant 이름을 한국 학원 현장 스타일로 변경해 다른 데이터와 톤을 맞췄다.
+
+### Details
+
+- 작업 사유: 기존 "Alice Teacher", "Alpha Assistant 1" 등의 영문 이름을 한글화된 시드 값과 일관되게 맞추기 위함.
+- 구현 내용: Teacher ALPHA/BETA를 각각 “김서현 선생님”, “이도윤 선생님”으로, 조교들은 “대치 조교 N”, “분당 조교 N” 패턴으로 변경.
+- 영향받은 테스트: 시드 변경만 수행, 추가 테스트 미실행.
+- 수정한 파일: `backend/src/main/java/com/classhub/global/init/data/MemberInitData.java`
+- 다음 단계: 부트스트랩 실행 시 새로운 이름으로 계정이 생성되는지 확인.
