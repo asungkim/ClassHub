@@ -929,3 +929,28 @@ BEHAVIORAL
   - `frontend/src/contexts/lesson-composer-context.tsx`
   - `frontend/src/components/lesson/lesson-composer-modal.tsx`
 - 다음 단계: 통합 수업 작성 모달에서 자동으로 채워지는 기본 제목 전략(예: 공통 진도 제목 복사)을 운영팀과 상의하고, 추가 UI 개선이 필요한지 검토한다.
+
+## [2025-12-15 22:50] ClinicSlot 서비스/컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSlot 도메인의 Service/Controller를 PLAN에 맞춰 TDD로 작성하고 CRUD + 활성/비활성화 API를 완성했다.
+
+### Details
+- 작업 사유: TODO Phase 4 ClinicSlot Epic의 서비스/컨트롤러 계층이 비어 있어 CRUD API를 노출할 수 없었음.
+- 구현 내용:
+  - `ClinicSlotService`에서 Teacher 검증, 시간 파싱/검증, 중복 슬롯 방지, 활성/비활성 토글을 포함한 모든 비즈니스 로직을 작성하고 비즈니스 전용 RsCode(`CLINIC_SLOT_NOT_FOUND`, `CLINIC_SLOT_CONFLICT`)를 추가.
+  - 서비스 단위 테스트(`ClinicSlotServiceTest`)로 생성/조회/수정/삭제/비활성/활성/충돌 케이스 15가지를 검증.
+  - `ClinicSlotController` 및 `ClinicSlotControllerTest`를 통해 REST API (POST/GET/PATCH/DELETE/activate/deactivate)와 권한 체크/유효성 응답을 검증.
+  - Repository에 Teacher별 조회 메서드와 NULL-safe 겹침 쿼리를 추가.
+- 영향받은 테스트: `cd backend && ./gradlew test`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotControllerTest.java`
+- 다음 단계: ClinicSlot API를 기반으로 ClinicSession 기능(TODO Phase 4) 설계 및 연동을 준비한다.
