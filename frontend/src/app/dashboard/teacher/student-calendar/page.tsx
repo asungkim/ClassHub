@@ -1,14 +1,15 @@
 "use client";
 
-import { Suspense, useState, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useStudentProfiles, useStudentCalendar } from "@/hooks/use-student-calendar";
+import { useStudentProfileDetail } from "@/hooks/use-student-profiles";
 import {
-  useDeleteSharedLesson,
   useDeletePersonalLesson,
-  useUpdateSharedLesson,
-  useUpdatePersonalLesson
+  useDeleteSharedLesson,
+  useUpdatePersonalLesson,
+  useUpdateSharedLesson
 } from "@/hooks/use-lesson-mutations";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { TextField } from "@/components/ui/text-field";
@@ -236,6 +237,8 @@ function StudentCalendarContent() {
 
   // 학생 검색 훅 (디바운스 적용)
   const { data: searchResults = [], isLoading: isSearching } = useStudentProfiles(searchName);
+  const selectedStudentId = selectedStudent?.id;
+  const { data: selectedStudentDetail } = useStudentProfileDetail(selectedStudentId ?? "");
 
   // 캘린더 데이터 조회 훅
   const {
@@ -253,6 +256,17 @@ function StudentCalendarContent() {
 
   // Toast 훅
   const { showToast } = useToast();
+  const detailedCourseNames = useMemo(() => {
+    if (!selectedStudentDetail?.enrolledCourses?.length) {
+      return undefined;
+    }
+    return selectedStudentDetail.enrolledCourses
+      .map((course) => course.courseName)
+      .filter((name): name is string => Boolean(name && name.trim()));
+  }, [selectedStudentDetail]);
+  const selectedCourseNames = detailedCourseNames?.length
+    ? detailedCourseNames
+    : selectedStudent?.courseNames;
 
   // 캘린더 매트릭스 생성 (가드 여부와 무관하게 훅 순서 유지)
   const calendarMatrix = useMemo(
@@ -397,7 +411,7 @@ function StudentCalendarContent() {
           <div className="relative">
             <TextField
               label="학생 검색"
-              placeholder="학생 이름을 입력하세요 (최소 2자)"
+              placeholder="학생 이름을 입력하세요 (최소 1자)"
               value={searchName}
               onChange={(e) => {
                 setSearchName(e.target.value);
@@ -423,7 +437,7 @@ function StudentCalendarContent() {
             />
 
             {/* 검색 결과 드롭다운 */}
-            {showSearchResults && searchName.length >= 2 && (
+            {showSearchResults && searchName.trim().length >= 1 && (
               <div className="absolute z-10 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
                 {isSearching ? (
                   <div className="p-4 text-center text-sm text-slate-500">검색 중...</div>
@@ -440,7 +454,7 @@ function StudentCalendarContent() {
                           <div>
                             <div className="font-medium text-slate-900">{student.name}</div>
                             <div className="text-xs text-slate-500">
-                              {student.courseNames?.join(", ") ?? "코스 없음"} • {student.grade ?? ""}
+                              {formatCourseNames(student.courseNames)} • {student.grade ?? ""}
                             </div>
                           </div>
                           {student.active !== false && (
@@ -466,8 +480,8 @@ function StudentCalendarContent() {
                 <h3 className="text-lg font-semibold text-slate-900">{selectedStudent.name}</h3>
                 <div className="space-y-1 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">코스:</span>
-                    <span>{selectedStudent.courseNames?.join(", ") ?? "코스 없음"}</span>
+                    <span className="font-medium">반:</span>
+                    <span>{formatCourseNames(selectedCourseNames)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">연락처:</span>
@@ -846,6 +860,18 @@ function StudentCalendarContent() {
   );
 }
 
+
+function formatCourseNames(courseNames?: string[]) {
+  const filtered = courseNames?.filter((name) => Boolean(name && name.trim())) ?? [];
+  if (!filtered.length) {
+    return "반 없음";
+  }
+  if (filtered.length <= 2) {
+    return filtered.join(', ');
+  }
+  const [first, second] = filtered;
+  return `${first}, ${second} 외 ${filtered.length - 2}개`;
+}
 export default function StudentCalendarPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">로딩 중...</div>}>

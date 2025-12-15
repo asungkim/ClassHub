@@ -682,3 +682,62 @@ STRUCTURAL
 - 영향받은 테스트: 시드 변경만 수행, 추가 테스트 미실행.
 - 수정한 파일: `backend/src/main/java/com/classhub/global/init/data/MemberInitData.java`
 - 다음 단계: 부트스트랩 실행 시 새로운 이름으로 계정이 생성되는지 확인.
+
+## [2025-12-13 23:30] 학생 캘린더 검색/목록 UI 개선
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- 학생별 캘린더 페이지의 검색/선택 UX를 보완해 한 글자 입력만으로도 검색이 가능하고 다중 반 정보를 정확히 표시하도록 수정했다.
+
+### Details
+
+- 작업 사유: 최소 2자 제약 때문에 검색 UX가 불편했고, 다중 코스를 수강 중인 학생 선택 시 코스명이 하나만 보이는 문제가 있었다.
+- 구현 내용:
+  - `useStudentProfiles` 훅의 최소 글자 수를 1자로 완화하고 PLAN 문서도 동일하게 업데이트.
+  - 검색 결과와 학생 카드에서 다중 코스 목록을 요약하는 `formatCourseNames` 헬퍼를 도입, 선택한 학생은 상세 API(`useStudentProfileDetail`)로 최신 코스 목록을 가져와 표시.
+  - 학생 검색 입력 placeholder/조건 텍스트를 수정하고, 빌드(`npm run build -- --webpack`)로 TypeScript 검증 완료.
+- 영향받은 테스트: 프론트 빌드 실행(`npm run build -- --webpack`)으로 타입/정적 검증 통과.
+- 수정한 파일:
+  - `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
+  - `frontend/src/hooks/use-student-calendar.ts`
+  - `docs/plan/frontend/student-calendar-ui_plan.md`
+- 다음 단계: 수동으로 학생 검색→선택→캘린더 로드를 확인해 다중 코스/검색 UX가 정상 동작하는지 검증.
+
+## [2025-12-13 23:38] 조교 초대 링크 빈 상태 UI 개선
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- `dashboard/invitations/assistant` 페이지에서 초대 링크가 한 번도 생성되지 않은 Teacher에게는 빈 URL 대신 “초대 링크 생성” 안내와 CTA만 노출되도록 UI를 다듬었다.
+
+### Details
+
+- 작업 사유: 링크가 없는데도 빈 문자열이 노출되어 UX가 혼란스러웠음.
+- 구현 내용: `frontend/src/app/dashboard/invitations/assistant/page.tsx`의 분기 로직을 정리해 `activeInvitation`이 없을 때 설명 문구 + CTA 버튼만 렌더링하고, 링크가 존재할 때에만 복사/만료 정보 카드가 나타나게 변경.
+- 영향받은 테스트: 해당 페이지는 정적 UI 변경으로 별도 테스트는 수행하지 않았으며, 필요 시 `npm run build -- --webpack`으로 재검증 가능.
+- 수정한 파일: `frontend/src/app/dashboard/invitations/assistant/page.tsx`
+- 다음 단계: 조교 초대 페이지에서 링크 미생성 → 생성 → 복사 플로우를 수동 확인해 안내 문구가 기대대로 보이는지 검증.
+
+## [2025-12-13 23:45] 학생 초대 후보 목록 연락처 표시
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- 학생 초대 페이지(`/dashboard/invitations/student`)의 후보 목록에서 잘못된 코스명 대신 실제 연락처를 노출하고, Desktop/Mobile 카드 UI 모두 동일하게 반영했다.
+
+### Details
+
+- 작업 사유: 학생 후보 응답 모델에는 `courseName` 필드가 없으므로 화면에 “N/A”만 표시되어 의미가 없었음. 초대 목적상 연락처를 바로 확인할 수 있어야 함.
+- 구현 내용: 테이블 헤더를 “연락처”로 바꾸고, Desktop/Mobile 리스트 모두 `candidate.phoneNumber || "연락처 미등록"`을 표시하도록 수정. 빌드(`npm run build -- --webpack`)로 검증 완료.
+- 수정한 파일: `frontend/src/app/dashboard/invitations/student/page.tsx`
+- 다음 단계: 초대 후보 목록에서 다중 선택 후 초대 생성까지 수동으로 확인해 UI가 기대대로 보이는지 검증.

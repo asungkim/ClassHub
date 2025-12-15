@@ -145,7 +145,7 @@ export default function StudentInvitationsPage() {
                           <TableHead>이름</TableHead>
                           <TableHead>학년</TableHead>
                           <TableHead>나이</TableHead>
-                          <TableHead>코스명</TableHead>
+                          <TableHead>연락처</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -161,7 +161,7 @@ export default function StudentInvitationsPage() {
                             <TableCell>{candidate.grade}</TableCell>
                             <TableCell>{candidate.age}세</TableCell>
                             <TableCell className="text-sm text-gray-500">
-                              {(candidate as any).courseName || "N/A"}
+                              {candidate.phoneNumber || "연락처 미등록"}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -187,7 +187,7 @@ export default function StudentInvitationsPage() {
                               {candidate.grade} · {candidate.age}세
                             </div>
                             <div className="mt-1 text-xs text-gray-500">
-                              {(candidate as any).courseName || "N/A"}
+                              {candidate.phoneNumber || "연락처 미등록"}
                             </div>
                           </div>
                         </div>

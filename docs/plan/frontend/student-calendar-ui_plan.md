@@ -156,7 +156,7 @@
 ### 6.3 Student Search & Selection
 
 - `TextField` + Search icon 버튼 조합으로 학생 이름 입력을 받는다.
-- 입력 2글자 이상에서 React Query로 `student-profiles` API를 호출하고 결과를 dropdown list(예: `Command`/`Popover`)로 노출한다.
+- 입력 1글자 이상에서 React Query로 `student-profiles` API를 호출하고 결과를 dropdown list(예: `Command`/`Popover`)로 노출한다.
 - 학생을 선택하면 검색 영역 아래에 `StudentCard`와 유사한 요약 박스가 붙는다.
   - 내용: 이름, 담당 코스 뱃지, 연락처, 활성/비활성 상태.
   - 오른쪽에 “변경” 버튼으로 다른 학생을 선택할 수 있다.
@@ -275,7 +275,7 @@
    - `TextField` + 자동완성 드롭다운 구현
    - 참고: `frontend/src/components/ui/TextField.tsx`
    - 참고: Radix UI `Command` 또는 `Popover` 컴포넌트 활용
-   - 2글자 이상 입력 시 API 호출 확인 (섹션 3.2 참고)
+   - 1글자 이상 입력 시 API 호출 확인 (섹션 3.2 참고)
    - 로딩 인디케이터 표시
 
 6. **학생 카드 컴포넌트**
