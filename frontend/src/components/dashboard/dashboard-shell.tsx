@@ -47,7 +47,10 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
       }
 
       if (isTeacher || isAssistant) {
-        items.push({ label: "학생 관리", href: "/dashboard/students" as Route });
+        items.push(
+          { label: "학생 관리", href: "/dashboard/students" as Route },
+          { label: "학생별 캘린더", href: "/dashboard/teacher/student-calendar" as Route }
+        );
       }
 
       // 초대 관리 (접기/펼치기)

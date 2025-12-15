@@ -3,6 +3,7 @@
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 import { SessionProvider } from "@/components/session/session-provider";
+import { ToastProvider } from "@/components/ui/toast";
 import { clearAuthToken } from "@/lib/api";
 
 function createQueryClient() {
@@ -36,7 +37,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>{children}</SessionProvider>
+      <SessionProvider>
+        <ToastProvider>{children}</ToastProvider>
+      </SessionProvider>
     </QueryClientProvider>
   );
 }

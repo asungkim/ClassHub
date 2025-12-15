@@ -10,16 +10,22 @@ public record CalendarPersonalLessonDto(
         LocalDate date,
         String content,
         UUID writerId,
-        MemberRole writerRole
+        MemberRole writerRole,
+        boolean editable
 ) {
 
-    public static CalendarPersonalLessonDto from(PersonalLesson lesson, MemberRole writerRole) {
+    public static CalendarPersonalLessonDto from(
+            PersonalLesson lesson,
+            MemberRole writerRole,
+            boolean editable
+    ) {
         return new CalendarPersonalLessonDto(
                 lesson.getId(),
                 lesson.getDate(),
                 lesson.getContent(),
                 lesson.getWriterId(),
-                writerRole
+                writerRole,
+                editable
         );
     }
 }

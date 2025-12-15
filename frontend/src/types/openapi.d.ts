@@ -957,6 +957,7 @@ export interface components {
             writerId?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+            editable?: boolean;
         };
         CalendarPersonalLessonDto: {
             /** Format: uuid */
@@ -968,6 +969,7 @@ export interface components {
             writerId?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+            editable?: boolean;
         };
         CalendarSharedLessonDto: {
             /** Format: uuid */
@@ -983,6 +985,7 @@ export interface components {
             writerId?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+            editable?: boolean;
         };
         RsDataStudentCalendarResponse: {
             /** Format: int32 */

@@ -90,7 +90,8 @@ public class StudentCalendarQueryService {
                         .thenComparing(lesson -> lesson.getCourse().getName(), String.CASE_INSENSITIVE_ORDER))
                 .map(lesson -> CalendarSharedLessonDto.from(
                         lesson,
-                        writerRoles.getOrDefault(lesson.getWriterId(), MemberRole.TEACHER)
+                        writerRoles.getOrDefault(lesson.getWriterId(), MemberRole.TEACHER),
+                        canEditSharedLesson(requester, lesson)
                 ))
                 .toList();
 
@@ -100,7 +101,8 @@ public class StudentCalendarQueryService {
                         .thenComparing(PersonalLesson::getCreatedAt))
                 .map(lesson -> CalendarPersonalLessonDto.from(
                         lesson,
-                        writerRoles.getOrDefault(lesson.getWriterId(), MemberRole.TEACHER)
+                        writerRoles.getOrDefault(lesson.getWriterId(), MemberRole.TEACHER),
+                        canEditPersonalLesson(requester, lesson)
                 ))
                 .toList();
 
@@ -147,5 +149,15 @@ public class StudentCalendarQueryService {
         if (month < 1 || month > 12) {
             throw RsCode.BAD_REQUEST.toException();
         }
+    }
+
+    private boolean canEditSharedLesson(Member requester, SharedLesson lesson) {
+        return requester.getRole() == MemberRole.TEACHER
+                && requester.getId().equals(lesson.getCourse().getTeacherId());
+    }
+
+    private boolean canEditPersonalLesson(Member requester, PersonalLesson lesson) {
+        return requester.getRole() == MemberRole.TEACHER
+                && requester.getId().equals(lesson.getTeacherId());
     }
 }

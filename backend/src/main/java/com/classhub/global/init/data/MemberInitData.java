@@ -80,21 +80,21 @@ public class MemberInitData extends BaseInitData {
     private List<MemberSeed> buildSeeds() {
         List<MemberSeed> seeds = new ArrayList<>();
         seeds.add(new MemberSeed(SeedKeys.SUPERADMIN, "admin@classhub.dev", "Super Admin", MemberRole.SUPERADMIN, null));
-        seeds.add(new MemberSeed(SeedKeys.TEACHER_ALPHA, "teacher_alpha@classhub.dev", "Alice Teacher", MemberRole.TEACHER, null));
-        seeds.add(new MemberSeed(SeedKeys.TEACHER_BETA, "teacher_beta@classhub.dev", "Ben Teacher", MemberRole.TEACHER, null));
+        seeds.add(new MemberSeed(SeedKeys.TEACHER_ALPHA, "teacher_alpha@classhub.dev", "김서현 선생님", MemberRole.TEACHER, null));
+        seeds.add(new MemberSeed(SeedKeys.TEACHER_BETA, "teacher_beta@classhub.dev", "이도윤 선생님", MemberRole.TEACHER, null));
 
         for (int i = 1; i <= 3; i++) {
             seeds.add(new MemberSeed(
                     SeedKeys.assistantKey(SeedKeys.TEACHER_ALPHA, i),
                     "assistant_alpha_" + i + "@classhub.dev",
-                    "Alpha Assistant " + i,
+                    "대치 조교 " + i,
                     MemberRole.ASSISTANT,
                     SeedKeys.TEACHER_ALPHA
             ));
             seeds.add(new MemberSeed(
                     SeedKeys.assistantKey(SeedKeys.TEACHER_BETA, i),
                     "assistant_beta_" + i + "@classhub.dev",
-                    "Beta Assistant " + i,
+                    "분당 조교 " + i,
                     MemberRole.ASSISTANT,
                     SeedKeys.TEACHER_BETA
             ));
@@ -105,14 +105,14 @@ public class MemberInitData extends BaseInitData {
                 "student_alpha_main@classhub.dev",
                 "Alpha Student Account",
                 MemberRole.STUDENT,
-                null
+                SeedKeys.TEACHER_ALPHA
         ));
         seeds.add(new MemberSeed(
                 SeedKeys.studentMemberKey(SeedKeys.TEACHER_BETA),
                 "student_beta_main@classhub.dev",
                 "Beta Student Account",
                 MemberRole.STUDENT,
-                null
+                SeedKeys.TEACHER_BETA
         ));
         return seeds;
     }

@@ -13,6 +13,7 @@ public record CalendarClinicRecordDto(
         LocalDate date,
         String note,
         UUID writerId,
-        MemberRole writerRole
+        MemberRole writerRole,
+        boolean editable
 ) {
 }

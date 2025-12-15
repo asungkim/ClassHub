@@ -63,62 +63,62 @@ public class CourseInitData extends BaseInitData {
         List<CourseSeed> seeds = new ArrayList<>();
         seeds.add(new CourseSeed(
                 SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 1),
-                "Alpha Course A",
-                "Alpha Academy",
+                "대치 메가프렙 수학심화반",
+                "대치 메가프렙",
                 scheduleSet(
-                        schedule(DayOfWeek.MONDAY, 14, 0, 16, 0),
-                        schedule(DayOfWeek.FRIDAY, 14, 0, 16, 0)
+                        schedule(DayOfWeek.TUESDAY, 18, 0, 20, 0),
+                        schedule(DayOfWeek.THURSDAY, 18, 0, 20, 0)
                 ),
                 SeedKeys.TEACHER_ALPHA
         ));
         seeds.add(new CourseSeed(
                 SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 2),
-                "Alpha Course B",
-                "Alpha Academy",
+                "잠실 루멘 과학탐구반",
+                "루멘프라임 아카데미",
                 scheduleSet(
-                        schedule(DayOfWeek.MONDAY, 16, 0, 18, 0),
-                        schedule(DayOfWeek.FRIDAY, 16, 0, 18, 0)
+                        schedule(DayOfWeek.WEDNESDAY, 17, 30, 19, 30),
+                        schedule(DayOfWeek.SATURDAY, 9, 0, 11, 0)
                 ),
                 SeedKeys.TEACHER_ALPHA
         ));
         seeds.add(new CourseSeed(
                 SeedKeys.courseKey(SeedKeys.TEACHER_ALPHA, 3),
-                "Alpha Course C",
-                "Alpha Academy",
+                "서초 로하스 영어토론반",
+                "서초 로하스 어학원",
                 scheduleSet(
-                        schedule(DayOfWeek.WEDNESDAY, 10, 0, 12, 0),
-                        schedule(DayOfWeek.SATURDAY, 16, 0, 18, 0)
+                        schedule(DayOfWeek.TUESDAY, 10, 0, 12, 0),
+                        schedule(DayOfWeek.SUNDAY, 13, 0, 15, 0)
                 ),
                 SeedKeys.TEACHER_ALPHA
         ));
 
         seeds.add(new CourseSeed(
                 SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 1),
-                "Beta Course A",
-                "Beta Institute",
+                "분당 리더스 영어독해반",
+                "분당 리더스 학원",
                 scheduleSet(
-                        schedule(DayOfWeek.MONDAY, 15, 0, 17, 0),
-                        schedule(DayOfWeek.FRIDAY, 15, 0, 17, 0)
+                        schedule(DayOfWeek.MONDAY, 19, 0, 21, 0),
+                        schedule(DayOfWeek.WEDNESDAY, 19, 0, 21, 0)
                 ),
                 SeedKeys.TEACHER_BETA
         ));
         seeds.add(new CourseSeed(
                 SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 2),
-                "Beta Course B",
-                "Beta Institute",
+                "수원 프라임 물리연구반",
+                "수원 프라임 과학관",
                 scheduleSet(
-                        schedule(DayOfWeek.MONDAY, 17, 0, 19, 0),
-                        schedule(DayOfWeek.FRIDAY, 17, 0, 19, 0)
+                        schedule(DayOfWeek.TUESDAY, 16, 0, 18, 0),
+                        schedule(DayOfWeek.THURSDAY, 16, 0, 18, 0)
                 ),
                 SeedKeys.TEACHER_BETA
         ));
         seeds.add(new CourseSeed(
                 SeedKeys.courseKey(SeedKeys.TEACHER_BETA, 3),
-                "Beta Course C",
-                "Beta Institute",
+                "평촌 비전 수학올림피아드",
+                "평촌 비전 아카데미",
                 scheduleSet(
-                        schedule(DayOfWeek.MONDAY, 10, 0, 12, 0),
-                        schedule(DayOfWeek.SATURDAY, 10, 0, 12, 0)
+                        schedule(DayOfWeek.SATURDAY, 14, 0, 17, 0),
+                        schedule(DayOfWeek.SUNDAY, 9, 0, 12, 0)
                 ),
                 SeedKeys.TEACHER_BETA
         ));

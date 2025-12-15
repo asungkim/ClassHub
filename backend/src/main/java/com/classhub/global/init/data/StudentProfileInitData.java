@@ -6,13 +6,12 @@ import com.classhub.domain.studentcourseenrollment.model.StudentCourseEnrollment
 import com.classhub.domain.studentcourseenrollment.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentprofile.model.StudentProfile;
 import com.classhub.domain.studentprofile.repository.StudentProfileRepository;
+import com.classhub.global.init.BootstrapSeedContext;
+import com.classhub.global.init.SeedKeys;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.classhub.global.init.BootstrapSeedContext;
-import com.classhub.global.init.SeedKeys;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +19,34 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile({"local", "dev"})
 public class StudentProfileInitData extends BaseInitData {
+
+    private static final String[] FAMILY_NAMES = {"김", "이", "박", "최", "정", "한", "장", "조", "윤", "임"};
+    private static final String[] GIVEN_FIRST = {"서", "민", "도", "하", "예", "지", "현", "승", "시", "채"};
+    private static final String[] GIVEN_SECOND = {"연", "준", "윤", "율", "빈", "진", "람", "후", "아", "솔"};
+    private static final List<String> SEOUL_SCHOOLS = List.of(
+            "대치고등학교",
+            "휘문고등학교",
+            "청담중학교",
+            "풍문여자고등학교",
+            "잠신중학교",
+            "중동고등학교"
+    );
+    private static final List<String> BUNDANG_SCHOOLS = List.of(
+            "분당정자중학교",
+            "분당서울고등학교",
+            "정자고등학교",
+            "서현중학교",
+            "수내고등학교",
+            "야탑중학교"
+    );
+    private static final GradeBand[] GRADE_BANDS = {
+            new GradeBand("중2", 14),
+            new GradeBand("중3", 15),
+            new GradeBand("고1", 16),
+            new GradeBand("고2", 17),
+            new GradeBand("고3", 18),
+            new GradeBand("재수", 19)
+    };
 
     private final StudentProfileRepository studentProfileRepository;
     private final StudentCourseEnrollmentRepository studentCourseEnrollmentRepository;
@@ -82,12 +109,13 @@ public class StudentProfileInitData extends BaseInitData {
             String memberKey,
             int phoneBlock
     ) {
-        String studentName = label + " Student " + index;
+        String studentName = buildKoreanName(index, label);
         String phoneNumber = String.format("010-%03d-%04d", phoneBlock + index, 1000 + index);
         String parentPhone = String.format("010-%03d-%04d", phoneBlock + 300 + index, 2000 + index);
-        String schoolName = label + " Middle School " + ((index % 5) + 1);
-        String grade = "G" + ((index % 3) + 1);
-        int age = 13 + (index % 5);
+        String schoolName = resolveSchoolName(label, index);
+        GradeBand gradeBand = GRADE_BANDS[(index - 1) % GRADE_BANDS.length];
+        String grade = gradeBand.grade();
+        int age = gradeBand.age();
         return new StudentProfileSeed(
                 key,
                 teacher,
@@ -101,6 +129,19 @@ public class StudentProfileInitData extends BaseInitData {
                 age,
                 memberKey
         );
+    }
+
+    private String buildKoreanName(int index, String label) {
+        int base = index - 1;
+        String surname = FAMILY_NAMES[base % FAMILY_NAMES.length];
+        String givenFirst = GIVEN_FIRST[(base + ("Alpha".equals(label) ? 0 : 3)) % GIVEN_FIRST.length];
+        String givenSecond = GIVEN_SECOND[(base * 2) % GIVEN_SECOND.length];
+        return surname + givenFirst + givenSecond;
+    }
+
+    private String resolveSchoolName(String label, int index) {
+        List<String> schools = "Alpha".equals(label) ? SEOUL_SCHOOLS : BUNDANG_SCHOOLS;
+        return schools.get((index - 1) % schools.size());
     }
 
     private void persistStudentProfile(StudentProfileSeed seed) {
@@ -189,5 +230,8 @@ public class StudentProfileInitData extends BaseInitData {
             int age,
             String memberKey
     ) {
+    }
+
+    private record GradeBand(String grade, int age) {
     }
 }

@@ -13,10 +13,15 @@ public record CalendarSharedLessonDto(
         String title,
         String content,
         UUID writerId,
-        MemberRole writerRole
+        MemberRole writerRole,
+        boolean editable
 ) {
 
-    public static CalendarSharedLessonDto from(SharedLesson lesson, MemberRole writerRole) {
+    public static CalendarSharedLessonDto from(
+            SharedLesson lesson,
+            MemberRole writerRole,
+            boolean editable
+    ) {
         return new CalendarSharedLessonDto(
                 lesson.getId(),
                 lesson.getCourse().getId(),
@@ -25,7 +30,8 @@ public record CalendarSharedLessonDto(
                 lesson.getTitle(),
                 lesson.getContent(),
                 lesson.getWriterId(),
-                writerRole
+                writerRole,
+                editable
         );
     }
 }
