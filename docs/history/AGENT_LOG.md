@@ -741,3 +741,56 @@ BUGFIX
 - 구현 내용: 테이블 헤더를 “연락처”로 바꾸고, Desktop/Mobile 리스트 모두 `candidate.phoneNumber || "연락처 미등록"`을 표시하도록 수정. 빌드(`npm run build -- --webpack`)로 검증 완료.
 - 수정한 파일: `frontend/src/app/dashboard/invitations/student/page.tsx`
 - 다음 단계: 초대 후보 목록에서 다중 선택 후 초대 생성까지 수동으로 확인해 UI가 기대대로 보이는지 검증.
+## [2025-12-15 13:46] 수업 내용 작성 모달 Frontend 설계
+
+### Type
+DESIGN
+
+### Summary
+- Teacher 전용 `+ 수업 내용 작성` 전역 모달 UX와 SharedLesson/PersonalLesson 동시 작성 흐름을 정의했다.
+
+### Details
+- 작업 사유: TODO v1.8 Phase 4의 "수업 내용 작성" 기능에 대응하는 프런트 플로우가 없어 설계 문서가 필요했다.
+- 영향받은 테스트: 설계 단계로 아직 실행한 테스트 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/lesson-content-composer_plan.md`
+- 다음 단계: 사용자 승인 후 PLAN을 기준으로 전역 CTA + 모달 UI 구현을 진행한다.
+
+## [2025-12-15 14:48] 수업 내용 작성 모달 개발 순서 정의
+
+### Type
+DESIGN
+
+### Summary
+- Lesson Content Composer PLAN에 Phase별 개발 순서를 추가해 구현 흐름과 검증 절차를 명확히 했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 plan 하단에 student-calendar 문서와 동일한 형식의 개발 순서 지침이 필요했다.
+- 영향받은 테스트: 설계 변경으로 아직 실행한 테스트 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/lesson-content-composer_plan.md`
+- 다음 단계: PLAN 승인 후 Phase 1부터 순차적으로 구현하며 빌드/수동 테스트 결과를 추가로 기록한다.
+
+## [2025-12-15 14:56] Lesson Composer Phase 1-2 기본 구조 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Lesson Content Composer 1~2단계(타입/데이터 훅 + 컨텍스트 & 전역 CTA)를 구축해 이후 UI 작업의 기반을 마련하고 Teacher 대시보드 헤더에 `+ 수업 내용 작성` 버튼을 노출했다.
+
+### Details
+- 작업 사유: PLAN 8단계 중 Phase 1~2 착수 지시(타입 alias, 데이터 훅, Provider, 전역 CTA).
+- 구현 내용:
+  - `frontend/src/types/api/lesson.ts`에 Shared/Personal Lesson 관련 operation/body alias를 추가하고, React Query 키/훅(`frontend/src/hooks/api/*`)으로 활성 반/학생 목록을 불러오는 API 모듈을 작성.
+  - `frontend/src/contexts/lesson-composer-context.tsx`에서 Composer 전역 상태/액션(open/reset/prefill)을 정의하고, `DashboardShell`을 Provider로 감싼 뒤 TEACHER 전용 CTA 버튼을 헤더 우측에 추가.
+- 테스트: `cd frontend && npm run build -- --webpack` (성공)
+- 수정한 파일:
+  - `frontend/src/types/api/lesson.ts`
+  - `frontend/src/hooks/api/lesson-composer-keys.ts`
+  - `frontend/src/hooks/api/useTeacherCourses.ts`
+  - `frontend/src/hooks/api/useCourseStudents.ts`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/components/dashboard/dashboard-shell.tsx`
+- 다음 단계: Phase 3 이후 순서에 따라 반 선택 UI와 SharedLesson 폼을 구현하면서 새 훅/컨텍스트를 실제 화면에 연결한다.
+
