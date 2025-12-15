@@ -539,3 +539,103 @@ STRUCTURAL
 - 영향받은 테스트: `GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.web.StudentCalendarControllerTest"` 실행 시 Gradle 9.2.1 다운로드 차단으로 실패.
 - 수정한 파일: `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
 - 다음 단계: Gradle 캐시 확보 후 테스트 실행
+
+## [2025-12-13 21:40] 학생별 캘린더 프론트 PLAN 작성
+
+### Type
+
+DESIGN
+
+### Summary
+
+- StudentCalendar 백엔드 조회 API를 기반으로 한 학생별 캘린더 UI 요구사항을 문서화하고, 화면 구조·상호작용·API 연계를 `docs/plan/frontend/student-calendar-ui_plan.md`에 정의했다.
+
+### Details
+
+- 작업 사유: Phase4 TODO 중 "학생별 캘린더(프론트)" 작업을 시작하기 위해 PLAN 문서를 마련하고 사용자 검토를 받을 필요가 있음.
+- 영향받은 테스트: 없음 (설계 단계).
+- 수정한 파일: `docs/plan/frontend/student-calendar-ui_plan.md` (신규 작성).
+- 다음 단계: 사용자 승인 후 React Query 훅, 캘린더 그리드, 상세 모달 등 UI 컴포넌트 구현 및 TODO 상태를 🔄로 갱신.
+
+## [2025-12-13 21:55] 학생별 캘린더 UI 상세 묘사 추가
+
+### Type
+
+DESIGN
+
+### Summary
+
+- PLAN 문서에 실제 UI 모습(네비게이션, 레이아웃, 날짜 셀 띠 구조, 모달, 모바일 대응 등)을 시각화한 섹션을 추가해 구현 시 참조할 수 있는 자세한 워크스루를 마련했다.
+
+### Details
+
+- 작업 사유: 사용자 요청으로 “UI가 어떤 모습인지” 구체적으로 공유하기 위해 레이아웃 다이어그램과 흐름 설명을 확장함.
+- 영향받은 테스트: 없음 (문서 수정).
+- 수정한 파일: `docs/plan/frontend/student-calendar-ui_plan.md`.
+- 다음 단계: 해당 설계를 기준으로 컴포넌트/훅 구현 전 사용자 승인 대기.
+
+## [2025-12-13 22:20] 학생 캘린더 API editable 플래그 제공
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- StudentCalendar API에서 SharedLesson/PersonalLesson 응답마다 `editable` 플래그를 추가해 Teacher만 수정/삭제 버튼이 노출되도록 했고, Assistant는 읽기 전용으로 처리한다.
+- DTO/서비스/테스트/컨트롤러 단을 모두 업데이트해 새 필드를 직렬화하고 역할별 동작을 검증했다.
+
+### Details
+
+- 작업 사유: 프론트 설계에서 상세 모달 버튼 노출을 백엔드가 결정하도록 요구(`editable`)했으나, 기존 DTO에 해당 필드가 없어 정보 부족.
+- 구현 내용:
+  - `CalendarSharedLessonDto`, `CalendarPersonalLessonDto`, `CalendarClinicRecordDto`에 `editable` 필드 추가.
+  - `StudentCalendarQueryService`에서 Teacher 요청 시에만 `editable=true`가 되도록 계산해 DTO에 주입하고, Assistant는 false로 반환.
+  - `StudentCalendarQueryServiceTest`/`StudentCalendarControllerTest`에 역할별 editable 기대값 검증 추가.
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle-home ./gradlew test --tests "com.classhub.domain.calendar.application.StudentCalendarQueryServiceTest"` 실행 시 sandbox 네트워크 제한으로 Gradle 배포본 다운로드가 막혀 실패(`java.net.UnknownHostException: services.gradle.org`). 향후 캐시가 준비된 환경에서 재실행 필요.
+  - MockMvc 테스트는 동일 원인으로 실행하지 못함.
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/calendar/application/StudentCalendarQueryService.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/response/CalendarSharedLessonDto.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/response/CalendarPersonalLessonDto.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/response/CalendarClinicRecordDto.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarQueryServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- 다음 단계: Gradle 캐시 확보 후 해당 테스트를 실행해 통과 여부 확인, 이후 프런트 구현에 새 필드를 활용.
+
+## [2025-12-13 22:33] ToastProvider Hydration 오류 수정
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- SSR 단계에서 `typeof window !== "undefined"` 조건으로 포털 DOM을 렌더링하던 `ToastProvider`가 클라이언트 초기화 전 구조가 달라져 Hydration mismatch가 발생했는데, `useEffect`로 클라이언트 마운트 여부를 추적해 마운트 이후에만 `createPortal`을 호출하도록 변경했다.
+
+### Details
+
+- 작업 사유: Next.js 16 환경에서 Recoverable Error가 발생해 화면 최초 로드 시 토스트 루트가 스크립트로 대체되며 경고가 출력됨.
+- 구현 내용: `isClient` state를 추가하고 `useEffect`로 첫 렌더 이후에 true로 설정, SSR 시에는 포털을 렌더링하지 않아 서버/클라이언트 DOM이 일치하도록 조정.
+- 영향받은 테스트: `frontend` 빌드/테스트는 실행하지 못했으며, 추후 `npm run build -- --webpack`으로 검증 예정.
+- 수정한 파일: `frontend/src/components/ui/toast.tsx`
+- 다음 단계: 프론트 빌드 및 주요 화면 수동 테스트 진행 시 토스트 표시 경로를 재확인.
+
+## [2025-12-13 22:40] 학생 캘린더 새로고침 Hook 순서 오류 수정
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- `StudentCalendarContent`에서 권한 가드(`useRoleGuard`)가 false일 때 일찍 반환하면서 `useMemo` 훅이 렌더 사이에 호출되기도, 생략되기도 해 “Rendered more hooks than during the previous render” 오류가 났던 문제를, `useMemo`를 가드 이전에 실행해 훅 순서를 고정함으로써 해결했다.
+
+### Details
+
+- 작업 사유: 새로고침 시 Role Guard가 fallback을 렌더링한 뒤 실제 콘텐츠를 그리면서 추가 훅이 들어가 React가 hook order 변경을 감지함.
+- 구현 내용: 캘린더 매트릭스를 계산하는 `useMemo` 호출을 가드 분기보다 위로 옮겨 어떤 렌더에서도 동일한 훅 개수를 유지하도록 조정.
+- 영향받은 테스트: 아직 `npm run build -- --webpack`을 돌리지 못했으며, 추후 프론트 빌드 및 수동 테스트에서 새로고침 시 오류가 재발하지 않는지 확인 필요.
+- 수정한 파일: `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
+- 다음 단계: 학생별 캘린더 페이지 새로고침/권한 가드 플로우를 수동 검증하고, 전체 빌드를 통해 타입/훅 경고가 없는지 확인.

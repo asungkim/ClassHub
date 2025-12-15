@@ -210,6 +210,8 @@ class StudentCalendarControllerTest {
                 .andExpect(jsonPath("$.data.studentId").value(studentProfile.getId().toString()))
                 .andExpect(jsonPath("$.data.sharedLessons[0].courseName").value("Algebra"))
                 .andExpect(jsonPath("$.data.personalLessons[0].content").value("개별 진도"))
+                .andExpect(jsonPath("$.data.sharedLessons[0].editable").value(true))
+                .andExpect(jsonPath("$.data.personalLessons[0].editable").value(true))
                 .andExpect(jsonPath("$.data.clinicRecords").isArray());
     }
 
@@ -220,7 +222,9 @@ class StudentCalendarControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.sharedLessons").isArray())
-                .andExpect(jsonPath("$.data.personalLessons").isArray());
+                .andExpect(jsonPath("$.data.personalLessons").isArray())
+                .andExpect(jsonPath("$.data.sharedLessons[0].editable").value(false))
+                .andExpect(jsonPath("$.data.personalLessons[0].editable").value(false));
     }
 
     @Test

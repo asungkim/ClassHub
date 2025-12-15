@@ -194,8 +194,10 @@ class StudentCalendarQueryServiceTest {
         assertThat(response.schemaVersion()).isEqualTo(1);
         assertThat(response.sharedLessons()).hasSize(2);
         assertThat(response.sharedLessons().getFirst().courseName()).isEqualTo("Algebra");
+        assertThat(response.sharedLessons().getFirst().editable()).isTrue();
         assertThat(response.personalLessons()).hasSize(1);
         assertThat(response.personalLessons().getFirst().content()).isEqualTo("개별 클리닉 메모");
+        assertThat(response.personalLessons().getFirst().editable()).isTrue();
         assertThat(response.clinicRecords()).isEmpty();
     }
 
@@ -278,6 +280,8 @@ class StudentCalendarQueryServiceTest {
 
         assertThat(response.sharedLessons()).hasSize(2);
         assertThat(response.personalLessons()).hasSize(1);
+        assertThat(response.sharedLessons().getFirst().editable()).isFalse();
+        assertThat(response.personalLessons().getFirst().editable()).isFalse();
     }
 
     @Test
