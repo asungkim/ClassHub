@@ -41,12 +41,18 @@ public class PersonalLesson extends BaseEntity {
     @Column(nullable = false)
     private LocalDate date;
 
+    @Column(nullable = false, length = 100)
+    private String title;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    public void update(LocalDate date, String content) {
+    public void update(LocalDate date, String title, String content) {
         if (date != null) {
             this.date = date;
+        }
+        if (title != null && !title.isBlank()) {
+            this.title = title;
         }
         if (content != null) {
             this.content = content;

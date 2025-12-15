@@ -842,3 +842,48 @@ BEHAVIORAL
   - `frontend/src/components/ui/checkbox.tsx`
 - 다음 단계: Phase 8 이후(제출 완료 후 검증) 범위에 따라 TODO/PLAN 업데이트 및 전체 통합 검증을 준비한다.
 
+## [2025-12-15 15:16] 조교 학생별 캘린더 접근 권한 수정
+
+### Type
+BUGFIX
+
+### Summary
+- 조교도 학생별 캘린더 페이지에 접근할 수 있도록 역할 가드를 Teacher+Assistant 범위로 확장했다.
+
+### Details
+- 작업 사유: 요구사항상 조교도 학생 캘린더 조회 권한이 있으나 `useRoleGuard("TEACHER")`로 제한되어 접근 불가.
+- 구현 내용: `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`에서 `useRoleGuard(["TEACHER", "ASSISTANT"])`로 수정.
+- 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
+- 다음 단계: 필요 시 조교 UX(학생 선택 등)에서 안내 문구를 추가하는지 확인.
+
+## [2025-12-15 16:05] PersonalLesson 제목 필드 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- PersonalLesson 엔티티 및 모든 연관 DTO/캘린더 응답/시드에 `title`을 추가하고 CRUD·캘린더 경로 테스트까지 갱신했다.
+
+### Details
+- 작업 사유: 개인 진도 작성 시 제목을 별도로 기록해 달라는 요구에 따라 API 스키마부터 데이터 시드, 캘린더 응답까지 일관되게 확장해야 했다.
+- 구현 내용:
+  - 엔티티/서비스/요청·응답 DTO에 `title` 필드를 추가하고 검증 길이(최대 100자)를 설정.
+  - 학생 캘린더 DTO, PersonalLesson InitData 시드 생성 로직을 제목 포함 형태로 재작성.
+  - Service/Controller/Calendar 테스트에서 새 필드를 생성·검증하도록 수정.
+- 영향받은 테스트: `cd backend && ./gradlew test`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/personallesson/model/PersonalLesson.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/application/PersonalLessonService.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/request/PersonalLessonCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/request/PersonalLessonUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/response/PersonalLessonResponse.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/response/PersonalLessonSummary.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/response/CalendarPersonalLessonDto.java`
+  - `backend/src/main/java/com/classhub/global/init/data/PersonalLessonInitData.java`
+  - `backend/src/test/java/com/classhub/domain/personallesson/application/PersonalLessonServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/personallesson/web/PersonalLessonControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarQueryServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- 다음 단계: 프런트엔드/문서(OpenAPI, 타입 등)도 PersonalLesson 제목 필드를 반영하도록 후속 작업을 진행한다.

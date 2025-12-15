@@ -34,6 +34,7 @@ public class PersonalLessonService {
                 .teacherId(teacherId)
                 .writerId(teacherId)
                 .date(request.date())
+                .title(request.title())
                 .content(request.content())
                 .build();
 
@@ -83,7 +84,7 @@ public class PersonalLessonService {
     ) {
         PersonalLesson lesson = personalLessonRepository.findByIdAndTeacherId(lessonId, teacherId)
                 .orElseThrow(() -> new BusinessException(RsCode.PERSONAL_LESSON_NOT_FOUND));
-        lesson.update(request.date(), request.content());
+        lesson.update(request.date(), request.title(), request.content());
         return PersonalLessonResponse.from(personalLessonRepository.save(lesson));
     }
 

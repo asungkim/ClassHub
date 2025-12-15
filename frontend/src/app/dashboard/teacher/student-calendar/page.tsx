@@ -198,7 +198,7 @@ function getBarsForDay(dayData: CalendarDayData): Array<{ color: string; count: 
 }
 
 function StudentCalendarContent() {
-  const { canRender, fallback } = useRoleGuard("TEACHER");
+  const { canRender, fallback } = useRoleGuard(["TEACHER", "ASSISTANT"]);
   const router = useRouter();
   const searchParams = useSearchParams();
 

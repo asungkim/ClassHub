@@ -130,6 +130,7 @@ class PersonalLessonServiceTest {
                 new PersonalLessonCreateRequest(
                         studentProfile.id(),
                         LocalDate.of(2025, 1, 1),
+                        "학습 제목",
                         "학습 내용"
                 )
         );
@@ -143,6 +144,7 @@ class PersonalLessonServiceTest {
         );
 
         assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent().getFirst().title()).isEqualTo("학습 제목");
         assertThat(page.getContent().getFirst().content()).isEqualTo("학습 내용");
     }
 
@@ -154,6 +156,7 @@ class PersonalLessonServiceTest {
                 new PersonalLessonCreateRequest(
                         studentProfile.id(),
                         LocalDate.now(),
+                        "원본 제목",
                         "원본 내용"
                 )
         );
@@ -161,9 +164,10 @@ class PersonalLessonServiceTest {
         PersonalLessonResponse updated = personalLessonService.updateLesson(
                 teacher.getId(),
                 lesson.id(),
-                new PersonalLessonUpdateRequest(LocalDate.now().plusDays(1), "수정된 내용")
+                new PersonalLessonUpdateRequest(LocalDate.now().plusDays(1), "수정된 제목", "수정된 내용")
         );
 
+        assertThat(updated.title()).isEqualTo("수정된 제목");
         assertThat(updated.content()).isEqualTo("수정된 내용");
     }
 
@@ -175,6 +179,7 @@ class PersonalLessonServiceTest {
                 new PersonalLessonCreateRequest(
                         studentProfile.id(),
                         LocalDate.now(),
+                        "원본 제목",
                         "원본 내용"
                 )
         );

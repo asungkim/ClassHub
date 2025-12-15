@@ -11,6 +11,7 @@ public record PersonalLessonResponse(
         UUID teacherId,
         UUID writerId,
         LocalDate date,
+        String title,
         String content,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -23,6 +24,7 @@ public record PersonalLessonResponse(
                 lesson.getTeacherId(),
                 lesson.getWriterId(),
                 lesson.getDate(),
+                lesson.getTitle(),
                 lesson.getContent(),
                 lesson.getCreatedAt(),
                 lesson.getUpdatedAt()

@@ -64,7 +64,7 @@ public class PersonalLessonInitData extends BaseInitData {
     }
 
     private PersonalLesson updateLesson(PersonalLesson lesson, LessonSeed seed) {
-        lesson.update(seed.date(), seed.content());
+        lesson.update(seed.date(), seed.title(), seed.content());
         return lesson;
     }
 
@@ -74,6 +74,7 @@ public class PersonalLessonInitData extends BaseInitData {
                 .teacherId(profile.getTeacherId())
                 .writerId(profile.getTeacherId())
                 .date(seed.date())
+                .title(seed.title())
                 .content(seed.content())
                 .build();
         return personalLessonRepository.save(lesson);
@@ -85,17 +86,22 @@ public class PersonalLessonInitData extends BaseInitData {
         for (int i = 0; i < PERSONAL_LESSON_BASE_DATES.length; i++) {
             LocalDate date = PERSONAL_LESSON_BASE_DATES[i].plusDays(offset);
             String template = PERSONAL_CONTENT_TEMPLATES[(i + offset) % PERSONAL_CONTENT_TEMPLATES.length];
+            String title = String.format(
+                    "%s - %s",
+                    date.format(LESSON_DATE_FORMAT),
+                    template
+            );
             String content = String.format(
-                    "%s %s 학습 코칭 - %s",
+                    "%s %s 학습 코칭: %s",
                     profile.getName(),
                     date.format(LESSON_DATE_FORMAT),
                     template
             );
-            seeds.add(new LessonSeed(date, content));
+            seeds.add(new LessonSeed(date, title, content));
         }
         return seeds;
     }
 
-    private record LessonSeed(LocalDate date, String content) {
+    private record LessonSeed(LocalDate date, String title, String content) {
     }
 }

@@ -8,6 +8,7 @@ public record PersonalLessonSummary(
         UUID id,
         UUID studentProfileId,
         LocalDate date,
+        String title,
         String content
 ) {
 
@@ -16,6 +17,7 @@ public record PersonalLessonSummary(
                 lesson.getId(),
                 lesson.getStudentProfile().getId(),
                 lesson.getDate(),
+                lesson.getTitle(),
                 lesson.getContent()
         );
     }
