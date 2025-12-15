@@ -65,7 +65,7 @@
   - `sharedLessons[]`: `CalendarSharedLessonDto`
     - `id`, `courseId`, `courseName`, `date`, `title`, `content`, `writerId`, `writerRole`, `editable`
   - `personalLessons[]`: `CalendarPersonalLessonDto`
-    - `id`, `date`, `content`, `writerId`, `writerRole`, `editable`
+    - `id`, `date`, `title`, `content`, `writerId`, `writerRole`, `editable`
   - `clinicRecords[]`: `CalendarClinicRecordDto`
     - `id`, `clinicSlotId`, `date`, `note`, `writerId`, `writerRole` (editable 필드 없음, 조회 전용)
 - **Frontend 매핑**: 응답을 `Map<date, { shared: CalendarSharedLessonDto[]; personal: ... }>`로 정규화해 날짜 셀 렌더링과 모달 데이터를 공유한다.
@@ -156,7 +156,7 @@
 ### 6.3 Student Search & Selection
 
 - `TextField` + Search icon 버튼 조합으로 학생 이름 입력을 받는다.
-- 입력 2글자 이상에서 React Query로 `student-profiles` API를 호출하고 결과를 dropdown list(예: `Command`/`Popover`)로 노출한다.
+- 입력 1글자 이상에서 React Query로 `student-profiles` API를 호출하고 결과를 dropdown list(예: `Command`/`Popover`)로 노출한다.
 - 학생을 선택하면 검색 영역 아래에 `StudentCard`와 유사한 요약 박스가 붙는다.
   - 내용: 이름, 담당 코스 뱃지, 연락처, 활성/비활성 상태.
   - 오른쪽에 “변경” 버튼으로 다른 학생을 선택할 수 있다.
@@ -199,7 +199,7 @@
 - 셀 클릭 시 `Modal`이 열리고 header에 `YYYY년 MM월 DD일`을 표시한다.
 - 본문은 세 섹션(Shared/Personal/Clinic)으로 나뉘며, 각 섹션의 항목 리스트는 카드 스타일:
   - SharedLesson: `수학 A반 / 미적분 1단원   [수정][삭제]` (editable: true일 때만 버튼 표시)
-  - PersonalLesson: `오답 노트 보완            [수정][삭제]` (editable: true일 때만 버튼 표시)
+  - PersonalLesson: `제목 (예: 오답 노트 보완)` + 본문 내용 + `[수정][삭제]` 버튼 (editable: true일 때만)
   - ClinicRecord: `18:00~19:00 문제 풀이 (작성자: 조교 A)` (버튼 없음, 조회 전용)
 - `editable: false`일 경우 버튼을 숨기고 항목만 표시한다.
 - 모바일에서는 bottom sheet 형태(전체 폭, 라운드 상단)에 동일 내용이 세로 스크롤로 배치된다.
@@ -275,7 +275,7 @@
    - `TextField` + 자동완성 드롭다운 구현
    - 참고: `frontend/src/components/ui/TextField.tsx`
    - 참고: Radix UI `Command` 또는 `Popover` 컴포넌트 활용
-   - 2글자 이상 입력 시 API 호출 확인 (섹션 3.2 참고)
+   - 1글자 이상 입력 시 API 호출 확인 (섹션 3.2 참고)
    - 로딩 인디케이터 표시
 
 6. **학생 카드 컴포넌트**

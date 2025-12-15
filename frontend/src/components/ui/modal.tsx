@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, ReactNode } from "react";
+import { useEffect, useRef, useState, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
 
@@ -11,11 +11,34 @@ export type ModalProps = {
   children: ReactNode;
   size?: "sm" | "md" | "lg";
   className?: string;
+  mobileLayout?: "center" | "bottom-sheet";
 };
 
-export function Modal({ open, onClose, title, children, size = "md", className }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  size = "md",
+  className,
+  mobileLayout = "center"
+}: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(max-width: 768px)");
+    const updateMatch = () => setIsMobile(media.matches);
+    updateMatch();
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", updateMatch);
+      return () => media.removeEventListener("change", updateMatch);
+    }
+    media.addListener(updateMatch);
+    return () => media.removeListener(updateMatch);
+  }, []);
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -85,6 +108,8 @@ export function Modal({ open, onClose, title, children, size = "md", className }
     md: "max-w-lg",
     lg: "max-w-2xl"
   };
+  const isBottomSheet = mobileLayout === "bottom-sheet" && isMobile;
+  const computedSizeClass = isBottomSheet ? "w-full md:max-w-3xl" : sizeClasses[size];
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === overlayRef.current) {
@@ -95,7 +120,10 @@ export function Modal({ open, onClose, title, children, size = "md", className }
   return createPortal(
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      className={clsx(
+        "fixed inset-0 z-50 flex bg-slate-900/50 p-4",
+        isBottomSheet ? "items-end justify-center" : "items-center justify-center"
+      )}
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -104,8 +132,9 @@ export function Modal({ open, onClose, title, children, size = "md", className }
       <div
         ref={contentRef}
         className={clsx(
-          "flex w-full max-h-[90vh] flex-col rounded-3xl border border-slate-200 bg-white shadow-xl",
-          sizeClasses[size],
+          "flex w-full flex-col border border-slate-200 bg-white shadow-xl",
+          isBottomSheet ? "max-h-[92vh] rounded-t-3xl md:rounded-3xl" : "max-h-[90vh] rounded-3xl",
+          computedSizeClass,
           className
         )}
       >

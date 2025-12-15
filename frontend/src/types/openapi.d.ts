@@ -727,6 +727,7 @@ export interface components {
             studentProfileId: string;
             /** Format: date */
             date: string;
+            title: string;
             content: string;
         };
         PersonalLessonResponse: {
@@ -740,6 +741,7 @@ export interface components {
             writerId?: string;
             /** Format: date */
             date?: string;
+            title?: string;
             content?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -932,6 +934,7 @@ export interface components {
         PersonalLessonUpdateRequest: {
             /** Format: date */
             date?: string;
+            title?: string;
             content?: string;
         };
         CourseUpdateRequest: {
@@ -964,6 +967,7 @@ export interface components {
             id?: string;
             /** Format: date */
             date?: string;
+            title?: string;
             content?: string;
             /** Format: uuid */
             writerId?: string;
@@ -1069,6 +1073,7 @@ export interface components {
             studentProfileId?: string;
             /** Format: date */
             date?: string;
+            title?: string;
             content?: string;
         };
         RsDataPageResponsePersonalLessonSummary: {

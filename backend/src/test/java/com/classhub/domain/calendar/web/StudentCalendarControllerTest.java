@@ -168,6 +168,7 @@ class StudentCalendarControllerTest {
                         .teacherId(teacher.getId())
                         .writerId(teacher.getId())
                         .date(LocalDate.of(2025, 2, 5))
+                        .title("개별 진도 제목")
                         .content("개별 진도")
                         .build()
         );
@@ -209,6 +210,7 @@ class StudentCalendarControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.studentId").value(studentProfile.getId().toString()))
                 .andExpect(jsonPath("$.data.sharedLessons[0].courseName").value("Algebra"))
+                .andExpect(jsonPath("$.data.personalLessons[0].title").value("개별 진도 제목"))
                 .andExpect(jsonPath("$.data.personalLessons[0].content").value("개별 진도"))
                 .andExpect(jsonPath("$.data.sharedLessons[0].editable").value(true))
                 .andExpect(jsonPath("$.data.personalLessons[0].editable").value(true))

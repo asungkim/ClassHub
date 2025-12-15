@@ -153,6 +153,7 @@ class PersonalLessonControllerTest {
         PersonalLessonCreateRequest request = new PersonalLessonCreateRequest(
                 studentProfile.id(),
                 LocalDate.of(2025, 1, 1),
+                "학습 제목",
                 "학습 내용"
         );
 
@@ -167,6 +168,7 @@ class PersonalLessonControllerTest {
                         .with(teacherPrincipal())
                         .param("studentProfileId", studentProfile.id().toString()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].title").value("학습 제목"))
                 .andExpect(jsonPath("$.data.content[0].content").value("학습 내용"));
     }
 
@@ -176,6 +178,7 @@ class PersonalLessonControllerTest {
         PersonalLessonCreateRequest createRequest = new PersonalLessonCreateRequest(
                 studentProfile.id(),
                 LocalDate.of(2025, 1, 1),
+                "학습 제목",
                 "학습 내용"
         );
 
@@ -193,6 +196,7 @@ class PersonalLessonControllerTest {
 
         PersonalLessonUpdateRequest updateRequest = new PersonalLessonUpdateRequest(
                 LocalDate.of(2025, 1, 2),
+                "수정된 제목",
                 "수정된 내용"
         );
 
@@ -201,6 +205,7 @@ class PersonalLessonControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(updateRequest)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("수정된 제목"))
                 .andExpect(jsonPath("$.data.content").value("수정된 내용"));
 
         mockMvc.perform(delete("/api/v1/personal-lessons/{lessonId}", lessonId)
@@ -212,6 +217,7 @@ class PersonalLessonControllerTest {
         return "{"
                 + "\"studentProfileId\":" + quote(request.studentProfileId())
                 + ",\"date\":" + quote(request.date())
+                + ",\"title\":" + quote(request.title())
                 + ",\"content\":" + quote(request.content())
                 + "}";
     }
@@ -219,6 +225,7 @@ class PersonalLessonControllerTest {
     private String toJson(PersonalLessonUpdateRequest request) {
         return "{"
                 + "\"date\":" + quote(request.date())
+                + ",\"title\":" + quote(request.title())
                 + ",\"content\":" + quote(request.content())
                 + "}";
     }

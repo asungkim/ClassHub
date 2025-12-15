@@ -1,8 +1,8 @@
-import { InputHTMLAttributes } from "react";
+import { InputHTMLAttributes, ReactNode } from "react";
 import { classhubTheme } from "@/theme/classhub-theme";
 
 type CheckboxProps = {
-  label?: string;
+  label?: ReactNode;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "type">;
 
 export function Checkbox({ label, ...props }: CheckboxProps) {

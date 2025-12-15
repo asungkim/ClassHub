@@ -8,6 +8,7 @@ import java.util.UUID;
 public record CalendarPersonalLessonDto(
         UUID id,
         LocalDate date,
+        String title,
         String content,
         UUID writerId,
         MemberRole writerRole,
@@ -22,6 +23,7 @@ public record CalendarPersonalLessonDto(
         return new CalendarPersonalLessonDto(
                 lesson.getId(),
                 lesson.getDate(),
+                lesson.getTitle(),
                 lesson.getContent(),
                 lesson.getWriterId(),
                 writerRole,

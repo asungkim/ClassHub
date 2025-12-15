@@ -68,19 +68,20 @@ export function useStudentCalendar(
 
 /**
  * 학생 검색을 위한 훅 (디바운스 300ms 적용)
- * @param searchName - 검색할 학생 이름 (최소 2자 이상)
+ * @param searchName - 검색할 학생 이름 (최소 1자 이상)
  */
 export function useStudentProfiles(searchName: string) {
   const debouncedName = useDebounce(searchName, 300);
-  const shouldFetch = debouncedName.length >= 2;
+  const normalizedName = debouncedName.trim();
+  const shouldFetch = normalizedName.length >= 1;
 
   return useQuery({
-    queryKey: ["student-profiles-search", debouncedName],
+    queryKey: ["student-profiles-search", normalizedName],
     queryFn: async () => {
       const response = await api.GET("/api/v1/student-profiles", {
         params: {
           query: {
-            name: debouncedName,
+            name: normalizedName,
             pageable: {
               page: 0,
               size: 10,

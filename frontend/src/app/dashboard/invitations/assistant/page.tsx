@@ -87,8 +87,11 @@ export default function AssistantInvitationsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="text-center py-12 text-gray-500">
-                  생성된 초대 링크가 없습니다.
+                <div className="space-y-3 text-center py-10 text-gray-600">
+                  <p className="text-base font-medium">아직 생성된 조교 초대 링크가 없습니다.</p>
+                  <p className="text-sm text-gray-500">
+                    버튼을 눌러 링크를 생성하면 조교에게 전달해 가입을 유도할 수 있습니다.
+                  </p>
                 </div>
                 <div className="flex justify-center">
                   <Button

@@ -8,6 +8,8 @@ import clsx from "clsx";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/components/session/session-provider";
 import { getDashboardRoute } from "@/lib/role-route";
+import { LessonComposerProvider, useLessonComposer } from "@/contexts/lesson-composer-context";
+import { LessonComposerModal } from "@/components/lesson/lesson-composer-modal";
 
 type SidebarItem = {
   label: string;
@@ -86,14 +88,15 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
   const roleLabel = member?.role ? roleToLabel(member.role) : "게스트";
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
-      <aside
-        className={clsx(
-          "fixed inset-y-0 left-0 z-30 w-72 bg-white shadow-xl transition-transform duration-200 md:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          "md:static md:block md:shadow-none md:ring-1 md:ring-slate-200/70"
-        )}
-      >
+    <LessonComposerProvider>
+      <div className="flex min-h-screen bg-slate-50 text-slate-900">
+        <aside
+          className={clsx(
+            "fixed inset-y-0 left-0 z-30 w-72 bg-white shadow-xl transition-transform duration-200 md:translate-x-0",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full",
+            "md:static md:block md:shadow-none md:ring-1 md:ring-slate-200/70"
+          )}
+        >
         <div className="flex h-full flex-col border-r border-slate-200/80">
           <div className="flex items-center gap-3 px-6 py-5">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-base font-semibold text-white shadow-md">
@@ -234,31 +237,36 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
         />
       )}
 
-      <div className="flex flex-1 flex-col md:pl-0 md:pt-0">
-        <header className="flex items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 py-4 backdrop-blur md:px-10">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-slate-700 shadow-sm md:hidden"
-              onClick={() => setSidebarOpen((prev) => !prev)}
-            >
-              Menu
-            </Button>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Dashboard</p>
-              <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-              {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+        <div className="flex flex-1 flex-col md:pl-0 md:pt-0">
+          <header className="flex items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 py-4 backdrop-blur md:px-10">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-slate-700 shadow-sm md:hidden"
+                onClick={() => setSidebarOpen((prev) => !prev)}
+              >
+                Menu
+              </Button>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Dashboard</p>
+                <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+                {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+              </div>
             </div>
-          </div>
-        </header>
+            <div className="flex items-center gap-3">
+              <LessonComposerHeaderActions isTeacher={isTeacher} />
+            </div>
+          </header>
 
-        <div className="flex-1 px-4 pb-16 pt-6 md:px-10 md:pt-8">{children}</div>
+          <div className="flex-1 px-4 pb-16 pt-6 md:px-10 md:pt-8">{children}</div>
 
-        <footer className="border-t border-slate-200 bg-white/80 px-6 py-4 text-center text-xs text-slate-500 md:px-10">
-          © {new Date().getFullYear()} ClassHub. 필요한 메뉴는 왼쪽 사이드바에서 선택하세요.
-        </footer>
+          <footer className="border-t border-slate-200 bg-white/80 px-6 py-4 text-center text-xs text-slate-500 md:px-10">
+            © {new Date().getFullYear()} ClassHub. 필요한 메뉴는 왼쪽 사이드바에서 선택하세요.
+          </footer>
+        </div>
+        <LessonComposerModal />
       </div>
-    </div>
+    </LessonComposerProvider>
   );
 }
 
@@ -275,4 +283,31 @@ function roleToLabel(role: string) {
     default:
       return "게스트";
   }
+}
+
+function LessonComposerHeaderActions({ isTeacher }: { isTeacher: boolean }) {
+  const { openComposer, resetComposer } = useLessonComposer();
+
+  if (!isTeacher) {
+    return null;
+  }
+
+  const handleClick = () => {
+    resetComposer();
+    openComposer();
+  };
+
+  return (
+    <Button
+      onClick={handleClick}
+      className="h-11 px-3 text-xs font-semibold shadow-md sm:px-5 sm:text-sm"
+      title="수업 내용 작성"
+      aria-label="수업 내용 작성"
+    >
+      <span className="text-base font-bold leading-none sm:hidden" aria-hidden>
+        +
+      </span>
+      <span className="hidden sm:inline">+ 수업 내용 작성</span>
+    </Button>
+  );
 }

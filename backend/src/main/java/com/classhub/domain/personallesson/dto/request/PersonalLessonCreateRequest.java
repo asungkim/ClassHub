@@ -9,6 +9,7 @@ import java.util.UUID;
 public record PersonalLessonCreateRequest(
         @NotNull UUID studentProfileId,
         @NotNull LocalDate date,
+        @NotBlank @Size(max = 100) String title,
         @NotBlank @Size(max = 2000) String content
 ) {
 }

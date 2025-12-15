@@ -1,14 +1,15 @@
 "use client";
 
-import { Suspense, useState, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useStudentProfiles, useStudentCalendar } from "@/hooks/use-student-calendar";
+import { useStudentProfileDetail } from "@/hooks/use-student-profiles";
 import {
-  useDeleteSharedLesson,
   useDeletePersonalLesson,
-  useUpdateSharedLesson,
-  useUpdatePersonalLesson
+  useDeleteSharedLesson,
+  useUpdatePersonalLesson,
+  useUpdateSharedLesson
 } from "@/hooks/use-lesson-mutations";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { TextField } from "@/components/ui/text-field";
@@ -179,25 +180,8 @@ function buildCalendarMatrix(year: number, month: number, calendarData?: Student
   return matrix;
 }
 
-// 날짜 셀의 색상 바 생성
-function getBarsForDay(dayData: CalendarDayData): Array<{ color: string; count: number }> {
-  const bars: Array<{ color: string; count: number }> = [];
-
-  if (dayData.sharedLessons.length > 0) {
-    bars.push({ color: "#0A63FF", count: dayData.sharedLessons.length });
-  }
-  if (dayData.personalLessons.length > 0) {
-    bars.push({ color: "#00A86B", count: dayData.personalLessons.length });
-  }
-  if (dayData.clinicRecords.length > 0) {
-    bars.push({ color: "#F2B705", count: dayData.clinicRecords.length });
-  }
-
-  return bars;
-}
-
 function StudentCalendarContent() {
-  const { canRender, fallback } = useRoleGuard("TEACHER");
+  const { canRender, fallback } = useRoleGuard(["TEACHER", "ASSISTANT"]);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -236,6 +220,8 @@ function StudentCalendarContent() {
 
   // 학생 검색 훅 (디바운스 적용)
   const { data: searchResults = [], isLoading: isSearching } = useStudentProfiles(searchName);
+  const selectedStudentId = selectedStudent?.id;
+  const { data: selectedStudentDetail } = useStudentProfileDetail(selectedStudentId ?? "");
 
   // 캘린더 데이터 조회 훅
   const {
@@ -253,6 +239,17 @@ function StudentCalendarContent() {
 
   // Toast 훅
   const { showToast } = useToast();
+  const detailedCourseNames = useMemo(() => {
+    if (!selectedStudentDetail?.enrolledCourses?.length) {
+      return undefined;
+    }
+    return selectedStudentDetail.enrolledCourses
+      .map((course) => course.courseName)
+      .filter((name): name is string => Boolean(name && name.trim()));
+  }, [selectedStudentDetail]);
+  const selectedCourseNames = detailedCourseNames?.length
+    ? detailedCourseNames
+    : selectedStudent?.courseNames;
 
   // 캘린더 매트릭스 생성 (가드 여부와 무관하게 훅 순서 유지)
   const calendarMatrix = useMemo(
@@ -397,7 +394,7 @@ function StudentCalendarContent() {
           <div className="relative">
             <TextField
               label="학생 검색"
-              placeholder="학생 이름을 입력하세요 (최소 2자)"
+              placeholder="학생 이름을 입력하세요 (최소 1자)"
               value={searchName}
               onChange={(e) => {
                 setSearchName(e.target.value);
@@ -423,7 +420,7 @@ function StudentCalendarContent() {
             />
 
             {/* 검색 결과 드롭다운 */}
-            {showSearchResults && searchName.length >= 2 && (
+            {showSearchResults && searchName.trim().length >= 1 && (
               <div className="absolute z-10 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
                 {isSearching ? (
                   <div className="p-4 text-center text-sm text-slate-500">검색 중...</div>
@@ -440,7 +437,7 @@ function StudentCalendarContent() {
                           <div>
                             <div className="font-medium text-slate-900">{student.name}</div>
                             <div className="text-xs text-slate-500">
-                              {student.courseNames?.join(", ") ?? "코스 없음"} • {student.grade ?? ""}
+                              {formatCourseNames(student.courseNames)} • {student.grade ?? ""}
                             </div>
                           </div>
                           {student.active !== false && (
@@ -466,8 +463,8 @@ function StudentCalendarContent() {
                 <h3 className="text-lg font-semibold text-slate-900">{selectedStudent.name}</h3>
                 <div className="space-y-1 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">코스:</span>
-                    <span>{selectedStudent.courseNames?.join(", ") ?? "코스 없음"}</span>
+                    <span className="font-medium">반:</span>
+                    <span>{formatCourseNames(selectedCourseNames)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">연락처:</span>
@@ -599,7 +596,7 @@ function StudentCalendarContent() {
                     {WEEKDAY_LABELS.map((label) => (
                       <div
                         key={label}
-                        className="text-center text-sm font-semibold text-slate-600 py-2"
+                        className="text-left text-sm font-semibold text-slate-600 pl-2 pb-1"
                       >
                         {label}
                       </div>
@@ -610,52 +607,106 @@ function StudentCalendarContent() {
                   {calendarMatrix.map((week, weekIndex) => (
                     <div key={weekIndex} className="grid grid-cols-7 gap-2">
                       {week.map((dayData) => {
-                        const bars = getBarsForDay(dayData);
-                        const totalEvents =
-                          dayData.sharedLessons.length +
-                          dayData.personalLessons.length +
-                          dayData.clinicRecords.length;
-                        const hasOverflow = totalEvents > 3;
-                        const displayBars = bars.slice(0, 3);
+                        const hasShared = dayData.sharedLessons.length > 0;
+                        const hasPersonal = dayData.personalLessons.length > 0;
+                        const hasClinic = dayData.clinicRecords.length > 0;
 
                         return (
                           <button
                             key={dayData.date}
                             onClick={() => handleDayClick(dayData)}
-                            className={`relative min-h-[100px] rounded-lg border p-2 text-left transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            className={`relative min-h-[150px] rounded-lg border p-2 text-left transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                               dayData.isCurrentMonth
                                 ? "border-slate-200 bg-white hover:bg-slate-50"
                                 : "border-slate-100 bg-slate-50 text-slate-400"
                             }`}
                             disabled={!dayData.isCurrentMonth}
                           >
-                            {/* 날짜 숫자 - 왼쪽 위 */}
+                            {/* 날짜 숫자 - 왼쪽 위 구석 */}
                             <div
-                              className={`absolute top-2 left-2 text-sm font-semibold ${
+                              className={`absolute top-1 left-1.5 text-sm font-semibold ${
                                 dayData.isCurrentMonth ? "text-slate-900" : "text-slate-400"
                               }`}
                             >
                               {dayData.dayOfMonth}
                             </div>
 
-                            {/* 이벤트 바 */}
-                            {dayData.isCurrentMonth && displayBars.length > 0 && (
-                              <div className="mt-7 space-y-1">
-                                {displayBars.map((bar, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="h-1.5 rounded-full"
-                                    style={{ backgroundColor: bar.color }}
-                                  />
-                                ))}
-                              </div>
-                            )}
+                            {/* 3개 레이어 구조 - Desktop */}
+                            {dayData.isCurrentMonth && (
+                              <>
+                                {/* Desktop 버전 */}
+                                <div className="hidden sm:block space-y-1 mt-6">
+                                  {/* 공통 진도 레이어 */}
+                                  {hasShared && (
+                                    <div className="flex items-center gap-1 text-xs border-l-3 border-blue-500 pl-1.5 py-0.5">
+                                      <span className="truncate flex-1 text-slate-700">
+                                        {dayData.sharedLessons[0].title}
+                                      </span>
+                                      {dayData.sharedLessons.length > 1 && (
+                                        <span className="text-slate-500 font-semibold flex-shrink-0">
+                                          +{dayData.sharedLessons.length - 1}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
 
-                            {/* 오버플로 인디케이터 */}
-                            {dayData.isCurrentMonth && hasOverflow && (
-                              <div className="absolute bottom-2 right-2 text-xs font-semibold text-slate-500">
-                                +{totalEvents - 3}
-                              </div>
+                                  {/* 개인 진도 레이어 */}
+                                  {hasPersonal && (
+                                    <div className="flex items-center gap-1 text-xs border-l-3 border-green-500 pl-1.5 py-0.5">
+                                      <span className="truncate flex-1 text-slate-700">
+                                        {dayData.personalLessons[0].title ?? "개인 진도"}
+                                      </span>
+                                      {dayData.personalLessons.length > 1 && (
+                                        <span className="text-slate-500 font-semibold flex-shrink-0">
+                                          +{dayData.personalLessons.length - 1}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* 클리닉 레이어 */}
+                                  {hasClinic && (
+                                    <div className="flex items-center gap-1 text-xs border-l-3 border-yellow-500 pl-1.5 py-0.5">
+                                      <span className="truncate flex-1 text-slate-700">
+                                        {dayData.clinicRecords[0].note?.slice(0, 20) ?? "클리닉"}
+                                      </span>
+                                      {dayData.clinicRecords.length > 1 && (
+                                        <span className="text-slate-500 font-semibold flex-shrink-0">
+                                          +{dayData.clinicRecords.length - 1}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Mobile 버전 - 아이콘 + 개수 */}
+                                <div className="sm:hidden flex items-center gap-2 flex-wrap mt-6">
+                                  {hasShared && (
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                      <span className="text-xs font-semibold text-slate-700">
+                                        {dayData.sharedLessons.length}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {hasPersonal && (
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                                      <span className="text-xs font-semibold text-slate-700">
+                                        {dayData.personalLessons.length}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {hasClinic && (
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                                      <span className="text-xs font-semibold text-slate-700">
+                                        {dayData.clinicRecords.length}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
                             )}
                           </button>
                         );
@@ -752,13 +803,17 @@ function StudentCalendarContent() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-sm text-slate-600">{lesson.content}</p>
+                          <h4 className="font-semibold text-slate-900 mb-1">
+                            {lesson.title ?? "제목 없음"}
+                          </h4>
+                          <p className="text-sm text-slate-600 whitespace-pre-line">{lesson.content}</p>
                         </div>
                         {lesson.editable && lesson.id && (
                           <div className="flex gap-2 ml-4">
                             <button
                               onClick={() =>
                                 handleEditClick("personal", lesson.id!, {
+                                  title: lesson.title,
                                   content: lesson.content
                                 })
                               }
@@ -846,6 +901,18 @@ function StudentCalendarContent() {
   );
 }
 
+
+function formatCourseNames(courseNames?: string[]) {
+  const filtered = courseNames?.filter((name) => Boolean(name && name.trim())) ?? [];
+  if (!filtered.length) {
+    return "반 없음";
+  }
+  if (filtered.length <= 2) {
+    return filtered.join(', ');
+  }
+  const [first, second] = filtered;
+  return `${first}, ${second} 외 ${filtered.length - 2}개`;
+}
 export default function StudentCalendarPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">로딩 중...</div>}>

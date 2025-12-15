@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
@@ -27,34 +27,33 @@ export function EditLessonModal({
 }: EditLessonModalProps) {
   const [title, setTitle] = useState(initialData.title ?? "");
   const [content, setContent] = useState(initialData.content ?? "");
+  const titleLabel = type === "shared" ? "공통 진도 제목" : "개인 진도 제목";
+  const titlePlaceholder = type === "shared" ? "공통 진도 제목을 입력하세요" : "개인 진도 제목을 입력하세요";
+
+  useEffect(() => {
+    setTitle(initialData.title ?? "");
+    setContent(initialData.content ?? "");
+  }, [initialData.title, initialData.content]);
 
   const handleSave = async () => {
-    const data: { title?: string; content?: string } = {};
-
-    if (type === "shared") {
-      data.title = title;
-      data.content = content;
-    } else {
-      data.content = content;
-    }
-
-    await onSave(data);
+    await onSave({
+      title,
+      content
+    });
   };
 
   return (
     <Modal open={open} onClose={onClose} title={type === "shared" ? "공통 진도 수정" : "개인 진도 수정"} size="md">
       <div className="space-y-4">
-        {type === "shared" && (
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">제목</label>
-            <TextField
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="제목을 입력하세요"
-              disabled={isLoading}
-            />
-          </div>
-        )}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">{titleLabel}</label>
+          <TextField
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={titlePlaceholder}
+            disabled={isLoading}
+          />
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">내용</label>

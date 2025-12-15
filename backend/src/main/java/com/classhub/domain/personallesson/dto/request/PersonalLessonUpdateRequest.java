@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 public record PersonalLessonUpdateRequest(
         LocalDate date,
+        @Size(max = 100) String title,
         @Size(max = 2000) String content
 ) {
 }

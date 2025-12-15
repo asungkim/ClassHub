@@ -682,3 +682,250 @@ STRUCTURAL
 - 영향받은 테스트: 시드 변경만 수행, 추가 테스트 미실행.
 - 수정한 파일: `backend/src/main/java/com/classhub/global/init/data/MemberInitData.java`
 - 다음 단계: 부트스트랩 실행 시 새로운 이름으로 계정이 생성되는지 확인.
+
+## [2025-12-13 23:30] 학생 캘린더 검색/목록 UI 개선
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- 학생별 캘린더 페이지의 검색/선택 UX를 보완해 한 글자 입력만으로도 검색이 가능하고 다중 반 정보를 정확히 표시하도록 수정했다.
+
+### Details
+
+- 작업 사유: 최소 2자 제약 때문에 검색 UX가 불편했고, 다중 코스를 수강 중인 학생 선택 시 코스명이 하나만 보이는 문제가 있었다.
+- 구현 내용:
+  - `useStudentProfiles` 훅의 최소 글자 수를 1자로 완화하고 PLAN 문서도 동일하게 업데이트.
+  - 검색 결과와 학생 카드에서 다중 코스 목록을 요약하는 `formatCourseNames` 헬퍼를 도입, 선택한 학생은 상세 API(`useStudentProfileDetail`)로 최신 코스 목록을 가져와 표시.
+  - 학생 검색 입력 placeholder/조건 텍스트를 수정하고, 빌드(`npm run build -- --webpack`)로 TypeScript 검증 완료.
+- 영향받은 테스트: 프론트 빌드 실행(`npm run build -- --webpack`)으로 타입/정적 검증 통과.
+- 수정한 파일:
+  - `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
+  - `frontend/src/hooks/use-student-calendar.ts`
+  - `docs/plan/frontend/student-calendar-ui_plan.md`
+- 다음 단계: 수동으로 학생 검색→선택→캘린더 로드를 확인해 다중 코스/검색 UX가 정상 동작하는지 검증.
+
+## [2025-12-13 23:38] 조교 초대 링크 빈 상태 UI 개선
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- `dashboard/invitations/assistant` 페이지에서 초대 링크가 한 번도 생성되지 않은 Teacher에게는 빈 URL 대신 “초대 링크 생성” 안내와 CTA만 노출되도록 UI를 다듬었다.
+
+### Details
+
+- 작업 사유: 링크가 없는데도 빈 문자열이 노출되어 UX가 혼란스러웠음.
+- 구현 내용: `frontend/src/app/dashboard/invitations/assistant/page.tsx`의 분기 로직을 정리해 `activeInvitation`이 없을 때 설명 문구 + CTA 버튼만 렌더링하고, 링크가 존재할 때에만 복사/만료 정보 카드가 나타나게 변경.
+- 영향받은 테스트: 해당 페이지는 정적 UI 변경으로 별도 테스트는 수행하지 않았으며, 필요 시 `npm run build -- --webpack`으로 재검증 가능.
+- 수정한 파일: `frontend/src/app/dashboard/invitations/assistant/page.tsx`
+- 다음 단계: 조교 초대 페이지에서 링크 미생성 → 생성 → 복사 플로우를 수동 확인해 안내 문구가 기대대로 보이는지 검증.
+
+## [2025-12-13 23:45] 학생 초대 후보 목록 연락처 표시
+
+### Type
+
+BUGFIX
+
+### Summary
+
+- 학생 초대 페이지(`/dashboard/invitations/student`)의 후보 목록에서 잘못된 코스명 대신 실제 연락처를 노출하고, Desktop/Mobile 카드 UI 모두 동일하게 반영했다.
+
+### Details
+
+- 작업 사유: 학생 후보 응답 모델에는 `courseName` 필드가 없으므로 화면에 “N/A”만 표시되어 의미가 없었음. 초대 목적상 연락처를 바로 확인할 수 있어야 함.
+- 구현 내용: 테이블 헤더를 “연락처”로 바꾸고, Desktop/Mobile 리스트 모두 `candidate.phoneNumber || "연락처 미등록"`을 표시하도록 수정. 빌드(`npm run build -- --webpack`)로 검증 완료.
+- 수정한 파일: `frontend/src/app/dashboard/invitations/student/page.tsx`
+- 다음 단계: 초대 후보 목록에서 다중 선택 후 초대 생성까지 수동으로 확인해 UI가 기대대로 보이는지 검증.
+## [2025-12-15 13:46] 수업 내용 작성 모달 Frontend 설계
+
+### Type
+DESIGN
+
+### Summary
+- Teacher 전용 `+ 수업 내용 작성` 전역 모달 UX와 SharedLesson/PersonalLesson 동시 작성 흐름을 정의했다.
+
+### Details
+- 작업 사유: TODO v1.8 Phase 4의 "수업 내용 작성" 기능에 대응하는 프런트 플로우가 없어 설계 문서가 필요했다.
+- 영향받은 테스트: 설계 단계로 아직 실행한 테스트 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/lesson-content-composer_plan.md`
+- 다음 단계: 사용자 승인 후 PLAN을 기준으로 전역 CTA + 모달 UI 구현을 진행한다.
+
+## [2025-12-15 14:48] 수업 내용 작성 모달 개발 순서 정의
+
+### Type
+DESIGN
+
+### Summary
+- Lesson Content Composer PLAN에 Phase별 개발 순서를 추가해 구현 흐름과 검증 절차를 명확히 했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 plan 하단에 student-calendar 문서와 동일한 형식의 개발 순서 지침이 필요했다.
+- 영향받은 테스트: 설계 변경으로 아직 실행한 테스트 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/lesson-content-composer_plan.md`
+- 다음 단계: PLAN 승인 후 Phase 1부터 순차적으로 구현하며 빌드/수동 테스트 결과를 추가로 기록한다.
+
+## [2025-12-15 14:56] Lesson Composer Phase 1-2 기본 구조 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Lesson Content Composer 1~2단계(타입/데이터 훅 + 컨텍스트 & 전역 CTA)를 구축해 이후 UI 작업의 기반을 마련하고 Teacher 대시보드 헤더에 `+ 수업 내용 작성` 버튼을 노출했다.
+
+### Details
+- 작업 사유: PLAN 8단계 중 Phase 1~2 착수 지시(타입 alias, 데이터 훅, Provider, 전역 CTA).
+- 구현 내용:
+  - `frontend/src/types/api/lesson.ts`에 Shared/Personal Lesson 관련 operation/body alias를 추가하고, React Query 키/훅(`frontend/src/hooks/api/*`)으로 활성 반/학생 목록을 불러오는 API 모듈을 작성.
+  - `frontend/src/contexts/lesson-composer-context.tsx`에서 Composer 전역 상태/액션(open/reset/prefill)을 정의하고, `DashboardShell`을 Provider로 감싼 뒤 TEACHER 전용 CTA 버튼을 헤더 우측에 추가.
+- 테스트: `cd frontend && npm run build -- --webpack` (성공)
+- 수정한 파일:
+  - `frontend/src/types/api/lesson.ts`
+  - `frontend/src/hooks/api/lesson-composer-keys.ts`
+  - `frontend/src/hooks/api/useTeacherCourses.ts`
+  - `frontend/src/hooks/api/useCourseStudents.ts`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/components/dashboard/dashboard-shell.tsx`
+- 다음 단계: Phase 3 이후 순서에 따라 반 선택 UI와 SharedLesson 폼을 구현하면서 새 훅/컨텍스트를 실제 화면에 연결한다.
+
+## [2025-12-15 15:04] Lesson Composer Phase 3-4 UI 구축
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Lesson Content Composer의 반 선택/공통 진도 폼(Phase 3)과 학생 선택/개별 진도 폼(Phase 4)을 포함한 전역 모달 UI를 구현했다.
+
+### Details
+- 작업 사유: PLAN 8단계의 Phase 3~4 진행 요청(반 선택 + SharedLesson 폼, 학생 선택 + PersonalLesson 폼).
+- 구현 내용:
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx` 신규 모달 컴포넌트를 추가하고, `LessonComposerProvider` 상태에 필드 업데이트/학생 선택/개별 폼 동기화 액션을 확장함.
+  - Teacher 대시보드 어디서나 `+ 수업 내용 작성` 버튼으로 모달을 열 수 있도록 DashboardShell에 모달을 마운트하고, Course/Student React Query 훅 데이터를 UI와 연결.
+  - 학생 체크 시 개인 진도 카드가 동적으로 생기는 UX, 검색/로딩/빈 상태 표시, 기본 입력 제약을 구성함.
+- 테스트: `cd frontend && npm run build -- --webpack` (성공)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/dashboard-shell.tsx`
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx`
+  - `frontend/src/components/ui/checkbox.tsx`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/types/api/lesson.ts`
+  - `frontend/src/hooks/api/lesson-composer-keys.ts`
+  - `frontend/src/hooks/api/useTeacherCourses.ts`
+  - `frontend/src/hooks/api/useCourseStudents.ts`
+- 다음 단계: Phase 5 이후 작업(제출 시퀀스/에러 처리)을 추가 구현하고, TODO 상태를 업데이트한다.
+
+## [2025-12-15 15:11] Lesson Composer Phase 5-7 제출/UX/검증 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Lesson Content Composer에 공통→개별 진도 제출 시퀀스, 오류 처리, 모바일 bottom sheet 레이아웃 및 검증용 CTA 바를 추가해 Phase 5~7 요구사항을 충족했다.
+
+### Details
+- 작업 사유: PLAN Phase 5~7(제출 로직, 반응형 UX, 검증/로그)을 구현하라는 지시.
+- 구현 내용:
+  - `lesson-composer-modal.tsx`에 Shared→Personal API 호출 흐름, Promise.allSettled 기반 실패 집계, 선택 학생 카드별 에러 표시, sticky 액션 바, 모바일 bottom sheet 레이아웃, 검증 로직을 추가하고 Toast/Query invalidate/Context 액션과 연동.
+  - `lesson-composer-context.tsx`에 submission 상태/실패 액션을 도입해 버튼 상태, 에러 표시, 리셋 로직을 통합.
+  - `ui/modal.tsx`에 `mobileLayout="bottom-sheet"` 옵션을 구현해 작은 화면에서는 bottom sheet 패턴으로 표시하도록 개선.
+- 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/components/ui/modal.tsx`
+  - `frontend/src/components/ui/checkbox.tsx`
+- 다음 단계: Phase 8 이후(제출 완료 후 검증) 범위에 따라 TODO/PLAN 업데이트 및 전체 통합 검증을 준비한다.
+
+## [2025-12-15 15:16] 조교 학생별 캘린더 접근 권한 수정
+
+### Type
+BUGFIX
+
+### Summary
+- 조교도 학생별 캘린더 페이지에 접근할 수 있도록 역할 가드를 Teacher+Assistant 범위로 확장했다.
+
+### Details
+- 작업 사유: 요구사항상 조교도 학생 캘린더 조회 권한이 있으나 `useRoleGuard("TEACHER")`로 제한되어 접근 불가.
+- 구현 내용: `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`에서 `useRoleGuard(["TEACHER", "ASSISTANT"])`로 수정.
+- 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
+- 다음 단계: 필요 시 조교 UX(학생 선택 등)에서 안내 문구를 추가하는지 확인.
+
+## [2025-12-15 16:05] PersonalLesson 제목 필드 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- PersonalLesson 엔티티 및 모든 연관 DTO/캘린더 응답/시드에 `title`을 추가하고 CRUD·캘린더 경로 테스트까지 갱신했다.
+
+### Details
+- 작업 사유: 개인 진도 작성 시 제목을 별도로 기록해 달라는 요구에 따라 API 스키마부터 데이터 시드, 캘린더 응답까지 일관되게 확장해야 했다.
+- 구현 내용:
+  - 엔티티/서비스/요청·응답 DTO에 `title` 필드를 추가하고 검증 길이(최대 100자)를 설정.
+  - 학생 캘린더 DTO, PersonalLesson InitData 시드 생성 로직을 제목 포함 형태로 재작성.
+  - Service/Controller/Calendar 테스트에서 새 필드를 생성·검증하도록 수정.
+- 영향받은 테스트: `cd backend && ./gradlew test`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/personallesson/model/PersonalLesson.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/application/PersonalLessonService.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/request/PersonalLessonCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/request/PersonalLessonUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/response/PersonalLessonResponse.java`
+  - `backend/src/main/java/com/classhub/domain/personallesson/dto/response/PersonalLessonSummary.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/response/CalendarPersonalLessonDto.java`
+  - `backend/src/main/java/com/classhub/global/init/data/PersonalLessonInitData.java`
+  - `backend/src/test/java/com/classhub/domain/personallesson/application/PersonalLessonServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/personallesson/web/PersonalLessonControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarQueryServiceTest.java`
+- `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- 다음 단계: 프런트엔드/문서(OpenAPI, 타입 등)도 PersonalLesson 제목 필드를 반영하도록 후속 작업을 진행한다.
+
+## [2025-12-15 16:40] PersonalLesson 제목 UI 스펙 갱신
+
+### Type
+DESIGN
+
+### Summary
+- PersonalLesson이 제목을 포함해 노출·작성된다는 요구를 PLAN 문서(Student Calendar/Composer)에 반영해 API 필드와 폼 구조를 최신화했다.
+
+### Details
+- 작업 사유: 백엔드 API에 `title`이 추가되었으므로 UI 스펙에서도 PersonalLesson 카드/폼이 제목+내용 형태임을 명시해야 했다.
+- 수정 내용:
+  - 학생별 캘린더 PLAN(`docs/plan/frontend/student-calendar-ui_plan.md`)에서 CalendarPersonalLessonDto 필드와 모달 표현을 `제목+내용` 구조로 업데이트.
+  - Lesson Content Composer PLAN(`docs/plan/frontend/lesson-content-composer_plan.md`)에서 PersonalLesson 요청 바디, personalEntries 모델, 입력 단계 요구사항을 모두 `날짜+제목+내용`으로 수정.
+- 영향받은 테스트: 문서 변경으로 테스트 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/student-calendar-ui_plan.md`
+  - `docs/plan/frontend/lesson-content-composer_plan.md`
+- 다음 단계: 갱신된 PLAN 기준으로 프런트엔드 구현을 정비한다.
+
+## [2025-12-15 16:55] 학생 캘린더/Composer PersonalLesson 제목 표시 및 입력 지원
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생별 캘린더 모달에서 PersonalLesson을 제목+내용 형태로 렌더링하고, Lesson Composer에서는 개인 진도 카드에 제목 입력/수정 필드를 추가해 새 API 스키마를 처리하도록 수정했다.
+
+### Details
+- 작업 사유: PersonalLesson API가 `title`을 요구·제공하므로 조회/수정 UI와 Lesson Composer 제출 흐름이 해당 필드를 다루도록 업데이트해야 했다.
+- 구현 내용:
+  - `student-calendar/page.tsx`의 PersonalLesson 카드에 제목 heading을 추가하고, 수정 모달/핸들러가 제목·내용을 모두 넘기도록 변경.
+  - `EditLessonModal`과 `useUpdatePersonalLesson` 훅을 PersonalLesson 제목 편집을 지원하도록 확장.
+  - Lesson Composer Context/Modal 전반에서 PersonalLessonFormValues에 `title`을 도입하고, 학생별 카드에 제목 TextField + 유효성 검증을 추가했으며, 제출 payload/검증/실패 처리 로직을 모두 업데이트.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
+  - `frontend/src/components/lesson/edit-lesson-modal.tsx`
+  - `frontend/src/hooks/use-lesson-mutations.ts`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx`
+- 다음 단계: 통합 수업 작성 모달에서 자동으로 채워지는 기본 제목 전략(예: 공통 진도 제목 복사)을 운영팀과 상의하고, 추가 UI 개선이 필요한지 검토한다.

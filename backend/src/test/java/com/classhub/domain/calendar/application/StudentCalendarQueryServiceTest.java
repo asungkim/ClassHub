@@ -176,6 +176,7 @@ class StudentCalendarQueryServiceTest {
                         .teacherId(teacher.getId())
                         .writerId(teacher.getId())
                         .date(LocalDate.of(2025, 2, 5))
+                        .title("개별 클리닉 제목")
                         .content("개별 클리닉 메모")
                         .build()
         );
@@ -196,6 +197,7 @@ class StudentCalendarQueryServiceTest {
         assertThat(response.sharedLessons().getFirst().courseName()).isEqualTo("Algebra");
         assertThat(response.sharedLessons().getFirst().editable()).isTrue();
         assertThat(response.personalLessons()).hasSize(1);
+        assertThat(response.personalLessons().getFirst().title()).isEqualTo("개별 클리닉 제목");
         assertThat(response.personalLessons().getFirst().content()).isEqualTo("개별 클리닉 메모");
         assertThat(response.personalLessons().getFirst().editable()).isTrue();
         assertThat(response.clinicRecords()).isEmpty();
