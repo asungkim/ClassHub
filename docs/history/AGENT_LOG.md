@@ -794,3 +794,51 @@ BEHAVIORAL
   - `frontend/src/components/dashboard/dashboard-shell.tsx`
 - 다음 단계: Phase 3 이후 순서에 따라 반 선택 UI와 SharedLesson 폼을 구현하면서 새 훅/컨텍스트를 실제 화면에 연결한다.
 
+## [2025-12-15 15:04] Lesson Composer Phase 3-4 UI 구축
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Lesson Content Composer의 반 선택/공통 진도 폼(Phase 3)과 학생 선택/개별 진도 폼(Phase 4)을 포함한 전역 모달 UI를 구현했다.
+
+### Details
+- 작업 사유: PLAN 8단계의 Phase 3~4 진행 요청(반 선택 + SharedLesson 폼, 학생 선택 + PersonalLesson 폼).
+- 구현 내용:
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx` 신규 모달 컴포넌트를 추가하고, `LessonComposerProvider` 상태에 필드 업데이트/학생 선택/개별 폼 동기화 액션을 확장함.
+  - Teacher 대시보드 어디서나 `+ 수업 내용 작성` 버튼으로 모달을 열 수 있도록 DashboardShell에 모달을 마운트하고, Course/Student React Query 훅 데이터를 UI와 연결.
+  - 학생 체크 시 개인 진도 카드가 동적으로 생기는 UX, 검색/로딩/빈 상태 표시, 기본 입력 제약을 구성함.
+- 테스트: `cd frontend && npm run build -- --webpack` (성공)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/dashboard-shell.tsx`
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx`
+  - `frontend/src/components/ui/checkbox.tsx`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/types/api/lesson.ts`
+  - `frontend/src/hooks/api/lesson-composer-keys.ts`
+  - `frontend/src/hooks/api/useTeacherCourses.ts`
+  - `frontend/src/hooks/api/useCourseStudents.ts`
+- 다음 단계: Phase 5 이후 작업(제출 시퀀스/에러 처리)을 추가 구현하고, TODO 상태를 업데이트한다.
+
+## [2025-12-15 15:11] Lesson Composer Phase 5-7 제출/UX/검증 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Lesson Content Composer에 공통→개별 진도 제출 시퀀스, 오류 처리, 모바일 bottom sheet 레이아웃 및 검증용 CTA 바를 추가해 Phase 5~7 요구사항을 충족했다.
+
+### Details
+- 작업 사유: PLAN Phase 5~7(제출 로직, 반응형 UX, 검증/로그)을 구현하라는 지시.
+- 구현 내용:
+  - `lesson-composer-modal.tsx`에 Shared→Personal API 호출 흐름, Promise.allSettled 기반 실패 집계, 선택 학생 카드별 에러 표시, sticky 액션 바, 모바일 bottom sheet 레이아웃, 검증 로직을 추가하고 Toast/Query invalidate/Context 액션과 연동.
+  - `lesson-composer-context.tsx`에 submission 상태/실패 액션을 도입해 버튼 상태, 에러 표시, 리셋 로직을 통합.
+  - `ui/modal.tsx`에 `mobileLayout="bottom-sheet"` 옵션을 구현해 작은 화면에서는 bottom sheet 패턴으로 표시하도록 개선.
+- 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/components/ui/modal.tsx`
+  - `frontend/src/components/ui/checkbox.tsx`
+- 다음 단계: Phase 8 이후(제출 완료 후 검증) 범위에 따라 TODO/PLAN 업데이트 및 전체 통합 검증을 준비한다.
+

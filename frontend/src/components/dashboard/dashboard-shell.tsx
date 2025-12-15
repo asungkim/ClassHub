@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/components/session/session-provider";
 import { getDashboardRoute } from "@/lib/role-route";
 import { LessonComposerProvider, useLessonComposer } from "@/contexts/lesson-composer-context";
+import { LessonComposerModal } from "@/components/lesson/lesson-composer-modal";
 
 type SidebarItem = {
   label: string;
@@ -263,6 +264,7 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
             © {new Date().getFullYear()} ClassHub. 필요한 메뉴는 왼쪽 사이드바에서 선택하세요.
           </footer>
         </div>
+        <LessonComposerModal />
       </div>
     </LessonComposerProvider>
   );
