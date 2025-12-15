@@ -17,7 +17,7 @@
    - 필수 필드: 날짜(default=오늘), 제목(max 100자), 내용(max 4000자).
    - 제출 시 SharedLesson은 반드시 생성되어야 하므로 유효성 검증이 통과하지 않으면 다음 단계로 진행할 수 없다.
 5. **학생 선택 & 개인 진도(PersonalLesson)**:
-   - 반 학생 목록을 체크박스 리스트로 렌더링한다. 선택된 학생마다 별도의 개인 진도 카드가 생성되며, 날짜(default=공통 진도 날짜)와 내용(max 2000자) 필드를 가진다.
+   - 반 학생 목록을 체크박스 리스트로 렌더링한다. 선택된 학생마다 별도의 개인 진도 카드가 생성되며, 날짜(default=공통 진도 날짜), 제목(max 100자), 내용(max 2000자) 필드를 가진다.
    - 학생을 선택 해제하면 해당 카드/데이터도 제거된다. 학생을 전혀 선택하지 않고 제출해도 된다.
 6. **제출 플로우**:
    - `POST /api/v1/shared-lessons`로 공통 진도를 먼저 생성한다(백엔드 구현 참고 시 SharedLessonController가 이 경로를 담당함. 사용자 요청에 적힌 엔드포인트 순서는 실제 구현과 반대이므로 코드 기준을 따른다).
@@ -63,6 +63,7 @@
   {
     "studentProfileId": "UUID",
     "date": "2025-01-05",
+    "title": "개별 첨삭",
     "content": "대수 집중 보완"
   }
   ```
@@ -95,7 +96,7 @@
   };
   ```
 - `SharedLessonFormValues`: `{ courseId: string; date: string; title: string; content: string; }`
-- `PersonalLessonFormValues`: `{ studentProfileId: string; date: string; content: string; }`
+- `PersonalLessonFormValues`: `{ studentProfileId: string; date: string; title: string; content: string; }`
 - `CourseOption`: `{ id: string; name: string; isActive: boolean; }`
 - `StudentOption`: `{ id: string; name: string; phoneNumber?: string; tags?: string[]; }`
 - React Context `LessonComposerContext`로 `openComposer`, `closeComposer`, `prefillSharedLesson(date, courseId)` 등을 제공해 헤더 버튼과 모달 본문이 느슨하게 결합된다.
@@ -132,7 +133,7 @@
 3. **반 선택 구역**: Searchable Combobox로 반을 선택. 선택 후 Info Badge(학생 수, 담당 과목)를 표시하고 아래 단계로 자동 스크롤.
 4. **공통 진도 폼**: 3열 레이아웃 (날짜 DatePicker, 제목 TextField, 내용 Textarea). 모든 필수, 미기입 시 Inline Error.
 5. **학생 목록**: 두 컬럼 카드 또는 리스트로 표시, 각 항목에 체크박스 + 이름 + 연락처. 선택 시 해당 학생 카드가 personal form 스택에 추가.
-6. **개별 진도 폼**: 선택 순서대로 accordion 형태로 추가. 각 학생 섹션에는 날짜/내용 입력, 삭제 아이콘, 에러표시 슬롯이 있다.
+6. **개별 진도 폼**: 선택 순서대로 accordion 형태로 추가. 각 학생 섹션에는 날짜/제목/내용 입력, 삭제 아이콘, 에러표시 슬롯이 있다.
 7. **하단 액션 바**: 왼쪽에는 선택 현황(예: `선택 학생 2명`), 오른쪽에는 Cancel + Primary Submit 버튼. 제출 중에는 Spinner + “작성 중…” 텍스트.
 8. **성공/실패 피드백**: 성공 시 “공통 진도 및 2건의 개인 진도가 등록되었습니다” 토스트. 실패 시 실패 학생 이름 리스트를 제공하고 Retry 버튼 노출.
 

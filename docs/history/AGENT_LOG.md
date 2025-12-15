@@ -885,5 +885,47 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/personallesson/application/PersonalLessonServiceTest.java`
   - `backend/src/test/java/com/classhub/domain/personallesson/web/PersonalLessonControllerTest.java`
   - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarQueryServiceTest.java`
-  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
 - 다음 단계: 프런트엔드/문서(OpenAPI, 타입 등)도 PersonalLesson 제목 필드를 반영하도록 후속 작업을 진행한다.
+
+## [2025-12-15 16:40] PersonalLesson 제목 UI 스펙 갱신
+
+### Type
+DESIGN
+
+### Summary
+- PersonalLesson이 제목을 포함해 노출·작성된다는 요구를 PLAN 문서(Student Calendar/Composer)에 반영해 API 필드와 폼 구조를 최신화했다.
+
+### Details
+- 작업 사유: 백엔드 API에 `title`이 추가되었으므로 UI 스펙에서도 PersonalLesson 카드/폼이 제목+내용 형태임을 명시해야 했다.
+- 수정 내용:
+  - 학생별 캘린더 PLAN(`docs/plan/frontend/student-calendar-ui_plan.md`)에서 CalendarPersonalLessonDto 필드와 모달 표현을 `제목+내용` 구조로 업데이트.
+  - Lesson Content Composer PLAN(`docs/plan/frontend/lesson-content-composer_plan.md`)에서 PersonalLesson 요청 바디, personalEntries 모델, 입력 단계 요구사항을 모두 `날짜+제목+내용`으로 수정.
+- 영향받은 테스트: 문서 변경으로 테스트 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/student-calendar-ui_plan.md`
+  - `docs/plan/frontend/lesson-content-composer_plan.md`
+- 다음 단계: 갱신된 PLAN 기준으로 프런트엔드 구현을 정비한다.
+
+## [2025-12-15 16:55] 학생 캘린더/Composer PersonalLesson 제목 표시 및 입력 지원
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생별 캘린더 모달에서 PersonalLesson을 제목+내용 형태로 렌더링하고, Lesson Composer에서는 개인 진도 카드에 제목 입력/수정 필드를 추가해 새 API 스키마를 처리하도록 수정했다.
+
+### Details
+- 작업 사유: PersonalLesson API가 `title`을 요구·제공하므로 조회/수정 UI와 Lesson Composer 제출 흐름이 해당 필드를 다루도록 업데이트해야 했다.
+- 구현 내용:
+  - `student-calendar/page.tsx`의 PersonalLesson 카드에 제목 heading을 추가하고, 수정 모달/핸들러가 제목·내용을 모두 넘기도록 변경.
+  - `EditLessonModal`과 `useUpdatePersonalLesson` 훅을 PersonalLesson 제목 편집을 지원하도록 확장.
+  - Lesson Composer Context/Modal 전반에서 PersonalLessonFormValues에 `title`을 도입하고, 학생별 카드에 제목 TextField + 유효성 검증을 추가했으며, 제출 payload/검증/실패 처리 로직을 모두 업데이트.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/dashboard/teacher/student-calendar/page.tsx`
+  - `frontend/src/components/lesson/edit-lesson-modal.tsx`
+  - `frontend/src/hooks/use-lesson-mutations.ts`
+  - `frontend/src/contexts/lesson-composer-context.tsx`
+  - `frontend/src/components/lesson/lesson-composer-modal.tsx`
+- 다음 단계: 통합 수업 작성 모달에서 자동으로 채워지는 기본 제목 전략(예: 공통 진도 제목 복사)을 운영팀과 상의하고, 추가 UI 개선이 필요한지 검토한다.

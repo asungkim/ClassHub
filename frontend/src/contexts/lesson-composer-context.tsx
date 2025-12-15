@@ -15,6 +15,7 @@ export type SharedLessonFormValues = {
 export type PersonalLessonFormValues = {
   studentProfileId: string;
   date: string;
+  title: string;
   content: string;
 };
 
@@ -178,6 +179,7 @@ function lessonComposerReducer(state: LessonComposerState, action: LessonCompose
           nextEntries[studentId] = {
             studentProfileId: studentId,
             date: defaultDate ?? state.sharedLessonForm.date,
+            title: state.sharedLessonForm.title,
             content: ""
           };
         }
@@ -194,6 +196,7 @@ function lessonComposerReducer(state: LessonComposerState, action: LessonCompose
       const existing = state.personalEntries[studentId] ?? {
         studentProfileId: studentId,
         date: state.sharedLessonForm.date,
+        title: state.sharedLessonForm.title,
         content: ""
       };
       return {

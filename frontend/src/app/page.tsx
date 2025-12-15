@@ -103,6 +103,7 @@ export default function HomePage() {
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="teacher@classhub.com"
                   className="w-full rounded-lg border border-gray-300 py-3 pl-12 pr-4 text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  suppressHydrationWarning
                 />
               </div>
             </div>
@@ -118,6 +119,7 @@ export default function HomePage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
+                  suppressHydrationWarning
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       void handleLogin();

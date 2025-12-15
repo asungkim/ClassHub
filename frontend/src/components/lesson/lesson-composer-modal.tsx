@@ -22,6 +22,8 @@ import type {
   SharedLessonCreateRequest
 } from "@/types/api/lesson";
 
+type PersonalEntryErrors = Record<string, { title?: string; content?: string }>;
+
 export function LessonComposerModal() {
   const {
     state,
@@ -39,7 +41,7 @@ export function LessonComposerModal() {
   const [courseSearch, setCourseSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [sharedErrors, setSharedErrors] = useState<{ date?: string; title?: string; content?: string }>({});
-  const [personalErrors, setPersonalErrors] = useState<Record<string, string>>({});
+  const [personalErrors, setPersonalErrors] = useState<PersonalEntryErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   const { data: courses = [], isLoading: coursesLoading } = useTeacherCourses(true);
@@ -136,16 +138,21 @@ export function LessonComposerModal() {
     }
   };
 
-  const handlePersonalEntryChange = (
-    studentId: string,
-    field: "date" | "content",
-    value: string
-  ) => {
+  const handlePersonalEntryChange = (studentId: string, field: "date" | "title" | "content", value: string) => {
     updatePersonalEntry(studentId, { studentProfileId: studentId, [field]: value });
     setPersonalErrors((prev) => {
-      if (!prev[studentId]) return prev;
+      const targetErrors = prev[studentId];
+      if (!targetErrors || field === "date") {
+        return prev;
+      }
       const next = { ...prev };
-      delete next[studentId];
+      const nextEntryErrors = { ...targetErrors };
+      delete nextEntryErrors[field];
+      if (!nextEntryErrors.title && !nextEntryErrors.content) {
+        delete next[studentId];
+      } else {
+        next[studentId] = nextEntryErrors;
+      }
       return next;
     });
   };
@@ -171,11 +178,21 @@ export function LessonComposerModal() {
     }
     setSharedErrors(shared);
 
-    const personal: Record<string, string> = {};
+    const personal: PersonalEntryErrors = {};
     state.selectedStudentIds.forEach((studentId) => {
       const entry = state.personalEntries[studentId];
-      if (entry && !entry.content.trim()) {
-        personal[studentId] = "개인 진도 내용을 입력하세요.";
+      if (!entry) {
+        return;
+      }
+      const errors: { title?: string; content?: string } = {};
+      if (!entry.title?.trim()) {
+        errors.title = "개인 진도 제목을 입력하세요.";
+      }
+      if (!entry.content.trim()) {
+        errors.content = "개인 진도 내용을 입력하세요.";
+      }
+      if (errors.title || errors.content) {
+        personal[studentId] = errors;
       }
     });
     setPersonalErrors(personal);
@@ -226,6 +243,7 @@ export function LessonComposerModal() {
             const personalBody: PersonalLessonCreateRequest = {
               studentProfileId: entry.studentProfileId,
               date: entry.date || fallbackDate,
+              title: entry.title?.trim() || sharedBody.title,
               content: entry.content.trim()
             };
             const personalResponse = await api.POST("/api/v1/personal-lessons", {
@@ -254,11 +272,6 @@ export function LessonComposerModal() {
 
         if (failures.length > 0) {
           updateSubmission({ status: "error", failures });
-          const failureErrors: Record<string, string> = {};
-          failures.forEach((failure) => {
-            failureErrors[failure.studentId] = failure.message;
-          });
-          setPersonalErrors((prev) => ({ ...prev, ...failureErrors }));
           showToast("error", `개인 진도 ${failures.length}건이 실패했습니다. 메시지를 확인하세요.`);
           return;
         }
@@ -668,8 +681,8 @@ type PersonalLessonFormsSectionProps = {
   selectedIds: string[];
   studentDictionary: Map<string, LessonComposerStudent & { id: string }>;
   personalEntries: Record<string, PersonalLessonFormValues>;
-  onChangeEntry: (studentId: string, field: "date" | "content", value: string) => void;
-  personalErrors: Record<string, string>;
+  onChangeEntry: (studentId: string, field: "date" | "title" | "content", value: string) => void;
+  personalErrors: PersonalEntryErrors;
   failureMessages: Map<string, string>;
   disabled: boolean;
 };
@@ -706,7 +719,9 @@ function PersonalLessonFormsSection({
               if (!student || !entry) {
                 return null;
               }
-              const entryError = personalErrors[studentId];
+              const entryErrors = personalErrors[studentId];
+              const titleError = entryErrors?.title;
+              const contentError = entryErrors?.content;
               const failureMessage = failureMessages.get(studentId);
               const studentName = student.name ?? "이름 미상";
               return (
@@ -714,7 +729,7 @@ function PersonalLessonFormsSection({
                   key={studentId}
                   className={clsx(
                     "rounded-2xl border bg-white p-4 shadow-inner",
-                    entryError || failureMessage ? "border-rose-200" : "border-slate-100"
+                    titleError || contentError || failureMessage ? "border-rose-200" : "border-slate-100"
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -733,6 +748,15 @@ function PersonalLessonFormsSection({
                       onChange={(e) => onChangeEntry(studentId, "date", e.target.value)}
                       disabled={disabled}
                     />
+                    <TextField
+                      label="개인 진도 제목"
+                      placeholder="예: 오답 클리닉"
+                      value={entry.title}
+                      onChange={(e) => onChangeEntry(studentId, "title", e.target.value)}
+                      disabled={disabled}
+                      required
+                      error={titleError}
+                    />
                   </div>
 
                   <label className="mt-3 flex flex-col gap-2">
@@ -743,15 +767,15 @@ function PersonalLessonFormsSection({
                       rows={4}
                       className={clsx(
                         "w-full rounded-2xl border px-4 py-3 text-sm text-slate-900 shadow-inner focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50",
-                        entryError && "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+                        contentError && "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
                       )}
                       placeholder="학생별 메모, 과제, 피드백 등을 입력하세요"
                       value={entry.content}
                       onChange={(e) => onChangeEntry(studentId, "content", e.target.value)}
                       disabled={disabled}
                     />
-                    {entryError ? (
-                      <span className="text-xs font-semibold text-rose-600">{entryError}</span>
+                    {contentError ? (
+                      <span className="text-xs font-semibold text-rose-600">{contentError}</span>
                     ) : failureMessage ? (
                       <span className="text-xs font-semibold text-amber-600">{failureMessage}</span>
                     ) : null}

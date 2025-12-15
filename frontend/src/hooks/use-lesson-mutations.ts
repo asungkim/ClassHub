@@ -96,7 +96,7 @@ export function useUpdatePersonalLesson() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { content?: string } }) => {
+    mutationFn: async ({ id, data }: { id: string; data: { title?: string; content?: string } }) => {
       const response = await api.PATCH("/api/v1/personal-lessons/{lessonId}", {
         params: {
           path: { lessonId: id }

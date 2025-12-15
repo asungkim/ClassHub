@@ -65,7 +65,7 @@
   - `sharedLessons[]`: `CalendarSharedLessonDto`
     - `id`, `courseId`, `courseName`, `date`, `title`, `content`, `writerId`, `writerRole`, `editable`
   - `personalLessons[]`: `CalendarPersonalLessonDto`
-    - `id`, `date`, `content`, `writerId`, `writerRole`, `editable`
+    - `id`, `date`, `title`, `content`, `writerId`, `writerRole`, `editable`
   - `clinicRecords[]`: `CalendarClinicRecordDto`
     - `id`, `clinicSlotId`, `date`, `note`, `writerId`, `writerRole` (editable 필드 없음, 조회 전용)
 - **Frontend 매핑**: 응답을 `Map<date, { shared: CalendarSharedLessonDto[]; personal: ... }>`로 정규화해 날짜 셀 렌더링과 모달 데이터를 공유한다.
@@ -199,7 +199,7 @@
 - 셀 클릭 시 `Modal`이 열리고 header에 `YYYY년 MM월 DD일`을 표시한다.
 - 본문은 세 섹션(Shared/Personal/Clinic)으로 나뉘며, 각 섹션의 항목 리스트는 카드 스타일:
   - SharedLesson: `수학 A반 / 미적분 1단원   [수정][삭제]` (editable: true일 때만 버튼 표시)
-  - PersonalLesson: `오답 노트 보완            [수정][삭제]` (editable: true일 때만 버튼 표시)
+  - PersonalLesson: `제목 (예: 오답 노트 보완)` + 본문 내용 + `[수정][삭제]` 버튼 (editable: true일 때만)
   - ClinicRecord: `18:00~19:00 문제 풀이 (작성자: 조교 A)` (버튼 없음, 조회 전용)
 - `editable: false`일 경우 버튼을 숨기고 항목만 표시한다.
 - 모바일에서는 bottom sheet 형태(전체 폭, 라운드 상단)에 동일 내용이 세로 스크롤로 배치된다.
