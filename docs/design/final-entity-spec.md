@@ -171,6 +171,9 @@ enum BranchRole {
 - `idx_course_branch` on (branchId)
 - `idx_course_teacher` on (teacherMemberId)
 
+**비고:**
+- 공개 Course 검색 조건: Course.isActive = true AND Branch.isActive = true (Company status와 무관)
+
 ---
 
 ## 5. 학생 등록 프로세스
@@ -180,12 +183,17 @@ enum BranchRole {
 - courseId (UUID, FK → Course, not null)
 - status (EnrollmentStatus, not null, default: PENDING) // PENDING, APPROVED, REJECTED
 - message (Text, nullable)
+- processedByMemberId (UUID, FK → Member, nullable)
 - processedAt (LocalDateTime, nullable)
 
 **인덱스:**
 - `idx_enroll_req_student` on (studentMemberId)
 - `idx_enroll_req_course` on (courseId)
 - `idx_enroll_req_status` on (status)
+
+**비고:**
+- Course 담당 TEACHER 또는 연결된 ASSISTANT가 승인/거절 가능
+- 승인 시 StudentCourseEnrollment & StudentCourseRecord 자동 생성, 해당 요청의 processedByMemberId/processedAt 기록
 
 ### STUDENT_COURSE_ENROLLMENT
 - studentMemberId (UUID, FK → Member, not null)
@@ -216,6 +224,7 @@ enum BranchRole {
 **비고:**
 - StudentRecord → StudentCourseRecord로 네이밍
 - "선생님이 관리하는 반별 학생 기록" 의미
+- defaultClinicSlotId가 설정되어 있으면 해당 Slot 기반 ClinicSession 생성 시 자동으로 ClinicAttendance가 만들어짐
 
 ---
 
@@ -295,6 +304,9 @@ private Course course;
 **인덱스:**
 - `idx_clinic_attendance_session` on (clinicSessionId)
 - `idx_clinic_attendance_student` on (studentCourseRecordId)
+
+**비고:**
+- 학생은 클리닉 시작 전까지 동일 주(월~일) 내에서 Attendance를 다른 Session으로 이동 가능 (횟수 제한 없음)
 
 ### CLINIC_RECORD
 - clinicAttendanceId (UUID, FK → ClinicAttendance, unique, not null)
@@ -402,14 +414,13 @@ enum FeedbackStatus {
 
 ### INVITATION
 - senderId (UUID, FK → Member, not null)
-- branchId (UUID, FK → Branch, nullable)
-- targetEmail (String, nullable)
+- targetEmail (String, not null)
 - inviteeRole (InvitationRole, not null) // ASSISTANT만 (학생은 자유 가입)
 - status (InvitationStatus, not null, default: PENDING) // PENDING, ACCEPTED, EXPIRED, REVOKED
 - code (String, unique, not null)
 - expiredAt (LocalDateTime, not null)
 - useCount (Integer, not null, default: 0)
-- maxUses (Integer, not null, default: -1) // -1: 무제한
+- maxUses (Integer, not null, default: 1) // 조교 초대는 단일 사용
 
 **인덱스:**
 - `uk_invitation_code` unique on (code)
@@ -419,6 +430,7 @@ enum FeedbackStatus {
 **비고:**
 - 조교만 초대 코드로 가입 (ASSISTANT)
 - 학생은 자유 가입 후 StudentEnrollmentRequest로 반 등록
+- 코드와 targetEmail은 1:1 매핑, 사용 시 바로 status=ACCEPTED 처리되고 TeacherAssistantAssignment가 자동 생성된다.
 
 ---
 

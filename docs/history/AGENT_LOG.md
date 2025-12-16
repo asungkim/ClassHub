@@ -954,3 +954,18 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
   - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotControllerTest.java`
 - 다음 단계: ClinicSlot API를 기반으로 ClinicSession 기능(TODO Phase 4) 설계 및 연동을 준비한다.
+
+## [2025-12-15 11:10] v1.3 스펙 및 엔티티 문서 정비
+
+### Type
+DESIGN
+
+### Summary
+- clarified requirement v1.3 내용을 반영한 `docs/spec/v1.3.md` 신규 작성
+- final entity spec에 StudentEnrollmentRequest/StudentCourseRecord/ClinicAttendance/Invitation/Course 규칙 업데이트
+
+### Details
+- 작업 사유: 최종 엔티티 스펙과 Requirement v1.3 간 불일치(승인 권한, 조교 초대 단일 사용, 클리닉 자동 배정 등)을 해소하고 차기 TODO/PLAN이 참조할 수 있는 Spec 버전을 제공
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: `docs/spec/v1.3.md`(신규), `docs/design/final-entity-spec.md`
+- 다음 단계: TODO/PLAN 문서들이 Spec v1.3을 참조하도록 업데이트 필요
