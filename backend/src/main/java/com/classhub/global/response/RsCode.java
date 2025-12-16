@@ -32,7 +32,9 @@ public enum RsCode {
     STUDENT_PROFILE_MEMBER_IN_USE(RsConstant.CONFLICT, "이미 다른 학생 프로필에 연결된 계정입니다."),
     INVALID_STUDENT_PROFILE(RsConstant.BAD_REQUEST, "초대할 수 없는 학생 프로필입니다."),
     PERSONAL_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "개별 진도 기록을 찾을 수 없습니다."),
-    SHARED_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "공통 진도 기록을 찾을 수 없습니다.");
+    SHARED_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "공통 진도 기록을 찾을 수 없습니다."),
+    CLINIC_SLOT_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 슬롯을 찾을 수 없습니다."),
+    CLINIC_SLOT_CONFLICT(RsConstant.CONFLICT, "다른 클리닉 슬롯과 시간이 겹칩니다.");
 
     private final Integer code;
     private final String message;

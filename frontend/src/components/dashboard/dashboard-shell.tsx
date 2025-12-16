@@ -30,6 +30,7 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [invitationMenuOpen, setInvitationMenuOpen] = useState(false);
+  const [clinicMenuOpen, setClinicMenuOpen] = useState(false);
   const role = member?.role ?? "";
   const isTeacher = role === "TEACHER";
   const isAssistant = role === "ASSISTANT";
@@ -67,9 +68,19 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
         items.push({ label: "초대 관리", children: invitationChildren });
       }
 
+      // 클리닉 관리 (접기/펼치기)
+      if (isTeacher) {
+        items.push({
+          label: "클리닉 관리",
+          children: [
+            { label: "시간표 관리", href: "/dashboard/clinic-slots" as Route },
+            { label: "클리닉 현황" }
+          ]
+        });
+      }
+
       items.push(
         { label: "수업 관리" },
-        { label: "클리닉 현황" },
         { label: "공지사항" },
         { label: "메시지", badge: "5" }
       );
@@ -126,17 +137,30 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
                 ? pathname === item.href || pathname?.startsWith(`${item.href}/`)
                 : false;
 
-              // 자식 메뉴가 있는 경우 (초대 관리)
+              // 자식 메뉴가 있는 경우 (초대 관리, 클리닉 관리)
               if (item.children) {
                 const hasActiveChild = item.children.some(
                   (child) => child.href && (pathname === child.href || pathname?.startsWith(`${child.href}/`))
                 );
-                const isOpen = invitationMenuOpen || hasActiveChild;
+
+                // 메뉴별로 다른 상태 사용
+                const isInvitationMenu = item.label === "초대 관리";
+                const isClinicMenu = item.label === "클리닉 관리";
+                const menuOpen = isInvitationMenu ? invitationMenuOpen : isClinicMenu ? clinicMenuOpen : false;
+                const isOpen = menuOpen || hasActiveChild;
+
+                const handleToggle = () => {
+                  if (isInvitationMenu) {
+                    setInvitationMenuOpen(!invitationMenuOpen);
+                  } else if (isClinicMenu) {
+                    setClinicMenuOpen(!clinicMenuOpen);
+                  }
+                };
 
                 return (
                   <div key={item.label}>
                     <button
-                      onClick={() => setInvitationMenuOpen(!invitationMenuOpen)}
+                      onClick={handleToggle}
                       className={clsx(
                         "flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition",
                         hasActiveChild
@@ -173,7 +197,14 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
                             >
                               {child.label}
                             </Link>
-                          ) : null;
+                          ) : (
+                            <div
+                              key={child.label}
+                              className="flex items-center rounded-xl px-4 py-2 text-sm font-medium text-slate-400"
+                            >
+                              {child.label}
+                            </div>
+                          );
                         })}
                       </div>
                     )}

@@ -168,6 +168,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/clinic-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * ClinicSlot 목록
+         * @description Teacher가 생성한 클리닉 슬롯 목록을 조회한다.
+         */
+        get: operations["getSlots"];
+        put?: never;
+        /**
+         * ClinicSlot 생성
+         * @description 요일/시간/정원을 지정해 클리닉 슬롯을 생성한다.
+         */
+        post: operations["createSlot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register/teacher": {
         parameters: {
             query?: never;
@@ -494,6 +518,74 @@ export interface paths {
          * @description 비활성화된 반을 다시 활성화한다.
          */
         patch: operations["activateCourse"];
+        trace?: never;
+    };
+    "/api/v1/clinic-slots/{slotId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * ClinicSlot 상세
+         * @description 클리닉 슬롯 상세 정보를 조회한다.
+         */
+        get: operations["getSlot"];
+        put?: never;
+        post?: never;
+        /**
+         * ClinicSlot 삭제
+         * @description 클리닉 슬롯을 삭제한다.
+         */
+        delete: operations["deleteSlot"];
+        options?: never;
+        head?: never;
+        /**
+         * ClinicSlot 수정
+         * @description 클리닉 슬롯의 요일/시간/정원을 수정한다.
+         */
+        patch: operations["updateSlot"];
+        trace?: never;
+    };
+    "/api/v1/clinic-slots/{slotId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * ClinicSlot 비활성화
+         * @description 슬롯을 비활성화한다.
+         */
+        patch: operations["deactivateSlot"];
+        trace?: never;
+    };
+    "/api/v1/clinic-slots/{slotId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * ClinicSlot 활성화
+         * @description 비활성화된 슬롯을 다시 활성화한다.
+         */
+        patch: operations["activateSlot"];
         trace?: never;
     };
     "/api/v1/students/{studentId}/calendar": {
@@ -823,6 +915,37 @@ export interface components {
             message?: string;
             data?: components["schemas"]["CourseResponse"];
         };
+        ClinicSlotCreateRequest: {
+            /** @enum {string} */
+            dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime: string;
+            endTime: string;
+            /** Format: int32 */
+            capacity?: number;
+        };
+        ClinicSlotResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            teacherId?: string;
+            /** @enum {string} */
+            dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime?: string;
+            endTime?: string;
+            /** Format: int32 */
+            capacity?: number;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        RsDataClinicSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicSlotResponse"];
+        };
         TeacherRegisterRequest: {
             /** Format: email */
             email: string;
@@ -947,6 +1070,14 @@ export interface components {
             code?: number;
             message?: string;
             data?: unknown;
+        };
+        ClinicSlotUpdateRequest: {
+            /** @enum {string} */
+            dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime?: string;
+            endTime?: string;
+            /** Format: int32 */
+            capacity?: number;
         };
         CalendarClinicRecordDto: {
             /** Format: uuid */
@@ -1161,6 +1292,12 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["StudentProfileSummary"][];
+        };
+        RsDataListClinicSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicSlotResponse"][];
         };
         MeResponse: {
             /** Format: uuid */
@@ -1486,6 +1623,53 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataCourseResponse"];
+                };
+            };
+        };
+    };
+    getSlots: {
+        parameters: {
+            query?: {
+                isActive?: boolean;
+                dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListClinicSlotResponse"];
+                };
+            };
+        };
+    };
+    createSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicSlotCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
                 };
             };
         };
@@ -1994,6 +2178,120 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataObject"];
+                };
+            };
+        };
+    };
+    getSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
+                };
+            };
+        };
+    };
+    deleteSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    updateSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicSlotUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
+                };
+            };
+        };
+    };
+    deactivateSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    activateSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
                 };
             };
         };
