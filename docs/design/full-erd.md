@@ -75,6 +75,17 @@ erDiagram
     MEMBER ||--o{ FEEDBACK : writes
 
     %% ========================================
+    %% 공지사항 시스템
+    %% ========================================
+    MEMBER ||--o{ NOTICE : writes
+    NOTICE ||--o{ NOTICE_READ : hasReads
+
+    %% ========================================
+    %% 근무 일지
+    %% ========================================
+    MEMBER ||--o{ WORK_LOG : writes
+
+    %% ========================================
     %% 초대 시스템
     %% ========================================
     MEMBER ||--o{ INVITATION : sends
@@ -286,6 +297,38 @@ erDiagram
         %% status = SUBMITTED,RESOLVED
     }
 
+    NOTICE {
+        uuid id PK
+        uuid teacherMemberId FK
+        string title
+        text content
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    NOTICE_READ {
+        uuid id PK
+        uuid noticeId FK
+        uuid assistantMemberId FK
+        datetime readAt
+        datetime createdAt
+        datetime updatedAt
+        %% UNIQUE(noticeId, assistantMemberId)
+    }
+
+    WORK_LOG {
+        uuid id PK
+        uuid assistantMemberId FK
+        date date
+        time startTime
+        time endTime
+        decimal hours
+        text memo
+        datetime createdAt
+        datetime updatedAt
+        %% UNIQUE(assistantMemberId, date)
+    }
+
     INVITATION {
         uuid id PK
         uuid senderId FK
@@ -396,6 +439,9 @@ erDiagram
 - StudentEnrollmentRequest
 - ClinicAttendance
 - Feedback
+- Notice
+- NoticeRead
+- WorkLog
 
 ### 취소 플래그
 

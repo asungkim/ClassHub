@@ -341,7 +341,64 @@ enum FeedbackStatus {
 
 ---
 
-## 9. 초대 시스템
+## 9. 공지사항 시스템
+
+### NOTICE
+- teacherMemberId (UUID, FK → Member, not null)
+- title (String, not null)
+- content (Text, not null)
+
+**인덱스:**
+- `idx_notice_teacher` on (teacherMemberId)
+- `idx_notice_created` on (createdAt)
+
+**비고:**
+- 선생님이 조교에게 전달하는 공지사항
+- 실제 DELETE 허용
+
+### NOTICE_READ
+- noticeId (UUID, FK → Notice, not null)
+- assistantMemberId (UUID, FK → Member, not null)
+- readAt (LocalDateTime, not null)
+
+**제약조건:**
+- `uk_notice_read` unique on (noticeId, assistantMemberId)
+
+**인덱스:**
+- `idx_notice_read_notice` on (noticeId)
+- `idx_notice_read_assistant` on (assistantMemberId)
+
+**비고:**
+- 조교가 공지사항을 읽었는지 체크
+- 실제 DELETE 허용
+
+---
+
+## 10. 근무 일지
+
+### WORK_LOG
+- assistantMemberId (UUID, FK → Member, not null)
+- date (LocalDate, not null)
+- startTime (LocalTime, not null)
+- endTime (LocalTime, not null)
+- hours (BigDecimal, not null) // 근무 시간 (계산된 값)
+- memo (Text, nullable)
+
+**제약조건:**
+- `uk_work_log_date` unique on (assistantMemberId, date)
+
+**인덱스:**
+- `idx_work_log_assistant` on (assistantMemberId)
+- `idx_work_log_date` on (date)
+
+**비고:**
+- 조교가 작성하는 근무 일지
+- hours는 endTime - startTime으로 자동 계산
+- 실제 DELETE 허용
+
+---
+
+## 11. 초대 시스템
 
 ### INVITATION
 - senderId (UUID, FK → Member, not null)
@@ -382,6 +439,9 @@ enum FeedbackStatus {
 - Branch → ClinicSlot
 - ClinicSlot → ClinicSession
 - ClinicSession → ClinicAttendance
+- Member(TEACHER) → Notice
+- Notice → NoticeRead
+- Member(ASSISTANT) → WorkLog
 
 ### M:N 관계 (중간 테이블)
 - Member(TEACHER) ↔ Branch via TeacherBranchAssignment
@@ -417,6 +477,9 @@ enum FeedbackStatus {
 - StudentEnrollmentRequest (삭제 시 실제 DELETE)
 - ClinicAttendance (삭제 시 실제 DELETE)
 - Feedback (삭제 시 실제 DELETE)
+- Notice (삭제 시 실제 DELETE)
+- NoticeRead (삭제 시 실제 DELETE)
+- WorkLog (삭제 시 실제 DELETE)
 
 ### 취소 플래그
 - ClinicSession (isCanceled) - 삭제보다 취소 표시
