@@ -969,3 +969,72 @@ DESIGN
 - 영향받은 테스트: 없음 (문서 작업)
 - 수정한 파일: `docs/spec/v1.3.md`(신규), `docs/design/final-entity-spec.md`
 - 다음 단계: TODO/PLAN 문서들이 Spec v1.3을 참조하도록 업데이트 필요
+
+## [2025-12-16 17:13] TODO v1.9 작성 (Spec v1.3 반영)
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Requirement v1.3 및 Spec v1.3, Entity Refactor Plan을 기준으로 `docs/todo/v1.9.md`를 신규 생성
+- Phase 4 이후를 Season2 엔티티 리팩터링/서비스 개발/프런트 정비/테스트/릴리스 흐름으로 재구성
+- Student 초대 작업 제거 및 Teacher/Assistant 승인 기반 학생 등록 플로우로 전환
+
+### Details
+- 작업 사유: 엔티티 개편 및 새로운 요구(Company/Branch, Enrollment Request, Clinic 자동 배정, single-use Invitation 등)에 맞는 TODO 버전이 필요했음
+- 영향 문서: `docs/todo/v1.9.md`, 참조 문서 `docs/plan/backend/season2/entity-refactor-plan.md`, `docs/spec/v1.3.md`, `docs/requirement/v1.3.md`
+- 수정 항목: Phase 4~8 재작성, PLAN 작성 작업 명시, Student 초대 관련 항목 삭제, 프런트/테스트/릴리스 단계 업데이트
+- 다음 단계: Phase 4 엔티티/레포지토리 작업 착수 전 각 Epic별 PLAN 문서 작성 및 승인
+
+## [2025-12-16 18:41] Entity Refactor Plan Notice/WorkLog 보강
+
+### Type
+DESIGN
+
+### Summary
+- Season2 Entity Refactor Plan에 Notice/NoticeRead/WorkLog 스펙과 관련 Repository/체크리스트를 추가해 누락된 도메인 리팩터링 범위를 명확히 했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 Notice/WorkLog 영역이 계획 문서에 없던 점을 보완해야 했음
+- 영향 문서: `docs/plan/backend/season2/entity-refactor-plan.md`
+- 주요 변경: Section 2에 Notice/NoticeRead/WorkLog 상세 스키마 추가, Repository/작업순서/체크리스트에 해당 항목 삽입
+- 다음 단계: 해당 도메인 역시 Phase 4~5 작업 시 PLAN→구현 절차를 따름
+
+## [2025-12-16 18:42] TODO v1.9 Phase7 세분화
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.9.md` Phase 7을 역할별 QA/E2E/배치/운영 체크리스트 Epic으로 재구성하고 각 Epic에 PLAN 문서 경로를 명시했다.
+
+### Details
+- 작업 사유: 향후 PLAN 문서를 작성하기 쉽도록 Phase 7 단위를 명확히 나눠달라는 요청 반영
+- 수정 내용: 선생님/조교/학생 시나리오 QA, E2E 파이프라인, 스케줄러 안정성, 운영 체크리스트 Epic 추가 및 작업 항목 세분화
+- 다음 단계: 각 Epic별 PLAN 문서 작성 후 테스트/자동화 구현 진행
+
+## [2025-12-16 18:44] TODO v1.9 Phase4 작업순서 재정렬
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.9.md`의 Season2 도메인 파운데이션(Phase 4)을 entity-refactor-plan의 Step 1~9 순서와 동일하게 정리하고 단계별 PLAN 문서를 연결했다.
+
+### Details
+- 작업 사유: 개발 순서를 plan 문서와 일치하도록 해달라는 요청 반영
+- 수정 내용: Phase 4를 Step 1~9(기반 엔티티 → Member → Assignment → Course/Enrollment → StudentCourseRecord → Clinic → Lesson → Invitation/Feedback/Notice/WorkLog → InitData) 구조로 재작성하고 필요한 PLAN 파일 명시
+- 다음 단계: 각 Step별 PLAN을 작성/승인 후 엔티티 및 레포지토리 작업 진행
+
+## [2025-12-16 18:48] Entity Refactor Plan Phase1 항목 보강
+
+### Type
+DESIGN
+
+### Summary
+- Phase1 엔티티 수정 목록에 Notice/NoticeRead/WorkLog를 추가해 Season2 리팩터링 범위 시작 단계부터 해당 도메인이 추적되도록 했다.
+
+### Details
+- 작업 사유: Phase1 표에 Notice/WorkLog 항목이 없어 누락되었다는 피드백 반영
+- 수정 내용: `docs/plan/backend/season2/entity-refactor-plan.md` 1.2 표에 세 도메인의 현황 및 필요 변경 사항 기술
+- 다음 단계: Phase2 상세 명세/Step 8 작업 시 이 변경 내용을 참고하여 PLAN 및 구현을 진행

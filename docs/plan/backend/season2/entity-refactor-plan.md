@@ -43,6 +43,9 @@
 | **PersonalLesson** | studentProfile (ManyToOne) | studentCourseRecordId (UUID FK) |
 | **SharedLesson** | 현재 OK | writerId 네이밍 확인 |
 | **Invitation** | 현재 구조 | branchId 추가, inviteeRole은 ASSISTANT만 |
+| **Notice** | teacherId FK만 존재, 권한 검증 미정 | teacherMemberId FK 정비, Assignment 기반 권한 고려, index/soft delete 정책 명확화 |
+| **NoticeRead** | noticeId/assistantId unique 미흡 | noticeId+assistantMemberId UniqueConstraint, TeacherAssistantAssignment 기반 검증 |
+| **WorkLog** | hours 수동 입력, FK 불명확 | assistantMemberId FK + unique(assistant, date), hours 자동 계산/검증 로직 반영 |
 
 ### 1.3 삭제할 엔티티
 
@@ -510,11 +513,105 @@ public class Feedback extends BaseEntity {
 **Enum 추가:**
 - `FeedbackStatus`: SUBMITTED, RESOLVED
 
+### 2.19 Notice (검토/보강)
+
+```java
+@Entity
+@Table(name = "notice", indexes = {
+    @Index(name = "idx_notice_teacher", columnList = "teacher_member_id"),
+    @Index(name = "idx_notice_created", columnList = "created_at")
+})
+public class Notice extends BaseEntity {
+    @Column(name = "teacher_member_id", nullable = false)
+    private UUID teacherMemberId;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
+}
+```
+
+**보강 포인트:**
+- TeacherBranchAssignment 기반 권한을 확인해야 하므로 Service 계층 작업 시 teacherMemberId와 Branch 관계를 검증할 것
+- 실제 삭제 허용 정책 유지
+
+### 2.20 NoticeRead (검토/보강)
+
+```java
+@Entity
+@Table(name = "notice_read",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_notice_read",
+        columnNames = {"notice_id", "assistant_member_id"}
+    ),
+    indexes = {
+        @Index(name = "idx_notice_read_notice", columnList = "notice_id"),
+        @Index(name = "idx_notice_read_assistant", columnList = "assistant_member_id")
+    }
+)
+public class NoticeRead extends BaseEntity {
+    @Column(name = "notice_id", nullable = false)
+    private UUID noticeId;
+
+    @Column(name = "assistant_member_id", nullable = false)
+    private UUID assistantMemberId;
+
+    @Column(nullable = false)
+    private LocalDateTime readAt;
+}
+```
+
+**보강 포인트:**
+- TeacherAssistantAssignment로 연결된 조교만 읽음 처리를 할 수 있도록 Service 계층에서 검증
+- 실제 삭제 허용 정책 유지
+
+### 2.21 WorkLog (검토/보강)
+
+```java
+@Entity
+@Table(name = "work_log",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_work_log_date",
+        columnNames = {"assistant_member_id", "date"}
+    ),
+    indexes = {
+        @Index(name = "idx_work_log_assistant", columnList = "assistant_member_id"),
+        @Index(name = "idx_work_log_date", columnList = "date")
+    }
+)
+public class WorkLog extends BaseEntity {
+    @Column(name = "assistant_member_id", nullable = false)
+    private UUID assistantMemberId;
+
+    @Column(nullable = false)
+    private LocalDate date;
+
+    @Column(nullable = false)
+    private LocalTime startTime;
+
+    @Column(nullable = false)
+    private LocalTime endTime;
+
+    @Column(nullable = false, precision = 6, scale = 2)
+    private BigDecimal hours;
+
+    @Column(columnDefinition = "TEXT")
+    private String memo;
+}
+```
+
+**보강 포인트:**
+- 조교 본인 CRUD + Teacher 조회 권한 기준을 Assignment 기반으로 재검증
+- hours는 `endTime - startTime` 자동 계산을 유지하되 Service에서 처리
+- 실제 삭제 허용
+
 ---
 
 ## Phase 3: Repository 생성/수정
 
-### 3.1 신규 Repository (12개)
+### 3.1 신규/보강 Repository (15개)
 
 | Repository | 메서드 (예상) |
 |------------|-------------|
@@ -530,6 +627,9 @@ public class Feedback extends BaseEntity {
 | ClinicAttendanceRepository | findByClinicSessionId, findByStudentCourseRecordId |
 | ClinicRecordRepository | findByClinicAttendanceId, findByWriterId |
 | FeedbackRepository | findByMemberId, findByStatus |
+| NoticeRepository | findByTeacherMemberId, findByTeacherMemberIdOrderByCreatedAtDesc |
+| NoticeReadRepository | findByNoticeId, findByAssistantMemberId |
+| WorkLogRepository | findByAssistantMemberId, findByAssistantMemberIdAndDate |
 
 ### 3.2 수정 Repository
 
@@ -712,9 +812,11 @@ domain/member/
 22. Invitation 수정 (branchId, ASSISTANT only)
 23. FeedbackStatus Enum 생성
 24. Feedback 엔티티 + Repository 생성
+25. Notice/NoticeRead 엔티티 스키마 점검 및 Repository 보강
+26. WorkLog 엔티티 스키마 점검 및 Repository 보강
 
 ### Step 9: Init Data
-25. 모든 InitData 수정/생성
+27. 모든 InitData 수정/생성
 
 ---
 
@@ -748,6 +850,9 @@ domain/member/
 - [ ] ClinicSlot (teacherMemberId, branchId)
 - [ ] PersonalLesson (studentCourseRecordId)
 - [ ] Invitation (branchId, ASSISTANT only)
+- [ ] Notice (teacherMemberId FK 정비)
+- [ ] NoticeRead (assistantMemberId FK 정비)
+- [ ] WorkLog (assistantMemberId/시간 계산 규칙)
 
 ### Repository 생성
 - [ ] CompanyRepository
@@ -762,6 +867,9 @@ domain/member/
 - [ ] ClinicAttendanceRepository
 - [ ] ClinicRecordRepository
 - [ ] FeedbackRepository
+- [ ] NoticeRepository
+- [ ] NoticeReadRepository
+- [ ] WorkLogRepository
 
 ### Init Data
 - [ ] CompanyInitData
