@@ -14,7 +14,16 @@
       "Bash(./gradlew build:*)",
       "Bash(npm install:*)",
       "Bash(cat:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(for dir in calendar clinic course personallesson sharedlesson studentprofile)",
+      "Bash(do mv \"$dir\" \"$dir.bak\")",
+      "Bash(done)",
+      "Bash(do find \"$dir\" -name \"*.java\" -exec mv {} {}.bak ;)",
+      "Bash(do find \"$dir\" -type f -name \"*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)",
+      "Bash(find /Users/asungkim/dev/OwnProject/classhub/backend/src/main/java/com/classhub/domain/invitation -type f -name \"*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)",
+      "Bash(find /Users/asungkim/dev/OwnProject/classhub/backend/src/test/java/com/classhub/domain/invitation -type f -name \"*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)",
+      "Bash(find /Users/asungkim/dev/OwnProject/classhub/backend/src/main/java/com/classhub/domain/auth -type f -name \"*Invitation*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)"
     ],
     "deny": [],
     "ask": []
