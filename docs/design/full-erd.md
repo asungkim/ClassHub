@@ -57,6 +57,7 @@ erDiagram
     %% ========================================
     %% 클리닉 구조
     %% ========================================
+    COURSE ||--o{ CLINIC_SLOT : has
     MEMBER ||--o{ CLINIC_SLOT : owns
     BRANCH ||--o{ CLINIC_SLOT : locates
 
@@ -233,6 +234,7 @@ erDiagram
 
     CLINIC_SLOT {
         uuid id PK
+        uuid courseId FK
         uuid teacherMemberId FK
         uuid branchId FK
         string dayOfWeek
@@ -347,6 +349,7 @@ erDiagram
 - Branch → Course
 - Member(TEACHER) → Course
 - Course → SharedLesson (CASCADE)
+- Course → ClinicSlot
 - StudentCourseRecord → PersonalLesson
 - Member(TEACHER) → ClinicSlot
 - Branch → ClinicSlot
@@ -405,6 +408,7 @@ erDiagram
 - `shared_lesson.date` on (date)
 - `personal_lesson.student_course_record_id` on (studentCourseRecordId)
 - `personal_lesson.date` on (date)
+- `clinic_slot.course_id` on (courseId)
 - `clinic_slot.teacher_member_id` on (teacherMemberId)
 - `clinic_slot.branch_id` on (branchId)
 - `clinic_session.slot_id` on (slotId)

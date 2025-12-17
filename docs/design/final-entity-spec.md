@@ -281,6 +281,7 @@ private Course course;
 
 ### CLINIC_SLOT
 
+- courseId (UUID, FK → Course, not null)
 - teacherMemberId (UUID, FK → Member, not null)
 - branchId (UUID, FK → Branch, not null)
 - dayOfWeek (DayOfWeek, not null) // MON, TUE, WED, THU, FRI, SAT, SUN
@@ -291,6 +292,7 @@ private Course course;
 
 **인덱스:**
 
+- `idx_clinic_slot_course` on (courseId)
 - `idx_clinic_slot_teacher` on (teacherMemberId)
 - `idx_clinic_slot_branch` on (branchId)
 
@@ -488,6 +490,7 @@ enum FeedbackStatus {
 - Branch → Course
 - Member(TEACHER) → Course
 - Course → SharedLesson (CASCADE)
+- Course → ClinicSlot
 - StudentCourseRecord → PersonalLesson
 - Member(TEACHER) → ClinicSlot
 - Branch → ClinicSlot
