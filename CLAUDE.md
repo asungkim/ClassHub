@@ -139,8 +139,8 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
 
 ## 주요 문서
 
-- **스펙**: `docs/spec/v1.2.md` - 기술 스펙, 도메인 엔티티, 관계
-- **TODO**: `docs/todo/v1.8.md` - 현재 작업 항목 (Phase별 구성)
+- **스펙**: `docs/spec/v1.3.md` - 기술 스펙, 도메인 엔티티, 관계
+- **TODO**: `docs/todo/v1.9.md` - 현재 작업 항목 (Phase별 구성)
 - **표준**:
   - `docs/standards/java-style.md` - Java 코딩 규칙
   - `docs/standards/commit-branch.md` - Git 워크플로
@@ -158,7 +158,7 @@ ClassHub는 학원 강사가 수업, 학생, 조교, 커뮤니케이션을 관�
   - 상태: PENDING, ACCEPTED, CANCELLED, EXPIRED
   - 유형: Assistant 초대 (Teacher가 생성), Student 초대 (Assistant가 생성)
 
-계획된 엔티티 (`docs/spec/v1.2.md` 참고):
+계획된 엔티티 (`docs/spec/v1.3.md` 참고):
 
 - Course, ClinicSlot, ClinicSession, SharedLesson, PersonalLesson
 - StudentProfile, Notice, WorkLog, ClinicRecord

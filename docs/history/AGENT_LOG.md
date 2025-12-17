@@ -1168,3 +1168,40 @@ DESIGN
 - 영향받은 테스트: 문서 변경만 수행
 - 수정한 파일: docs/spec/v1.3.md
 - 다음 단계: 구현 시 Company/Branch 생성·검증 및 Course 공개 검색이 문서화된 VerifiedStatus 로직을 따른다
+## [2025-12-17 23:29] Season2 Backend Roadmap PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- docs/plan/backend/season2/season2-backend-roadmap_plan.md를 작성해 VerifiedStatus 기반 구조를 어떤 순서로 재구축할지 정의했다.
+
+### Details
+- 작업 사유: final-entity-spec/full-erd 기준으로 Season2 개발 순서를 명확히 하라는 요청 반영
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/season2-backend-roadmap_plan.md
+- 다음 단계: PLAN 순서(Company/Branch → Member Info → Course/Enrollment → Lesson/Clinic → Collaboration)를 따라 TODO/구현 진행
+## [2025-12-17 23:43] TODO v1.9 Phase4~5 재구성
+
+### Type
+TODO_UPDATE
+
+### Summary
+- docs/todo/v1.9.md Phase 4/5 구성을 Season2 backend roadmap에 맞춰 Auth 재구현 → 엔티티/레포 → 프런트 기본 작업, 그리고 기능별 Epic 가이던스로 정리했다.
+
+### Details
+- 작업 사유: 신규 PLAN(Season2 backend roadmap)에 맞춰 TODO 흐름을 재정렬하기 위함
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: Phase 4 체크리스트부터 진행하면서 각 Epic별 PLAN/구현을 연계한다
+## [2025-12-17 23:44] TODO v1.9 MemberPrincipal 항목 보정
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 4의 첫 작업을 "MemberPrincipal에 role 저장 및 JWT 수정"으로 명확히 표현했다.
+
+### Details
+- 작업 사유: 실제 목표는 다중 role이 아니라 `MemberPrincipal` 객체에 role 값을 추가 보관하도록 하는 것이므로 TODO 표현 수정
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 해당 작업 진행 시 PLAN/TDD에서 role 저장 방식 구체화
