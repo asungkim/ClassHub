@@ -42,6 +42,7 @@ erDiagram
     %% 학생 기록 (반별 추가 정보)
     %% ========================================
     MEMBER ||--o{ STUDENT_COURSE_RECORD : student
+    MEMBER ||--o{ STUDENT_COURSE_RECORD : assistant
     COURSE ||--o{ STUDENT_COURSE_RECORD : course
     CLINIC_SLOT ||--o{ STUDENT_COURSE_RECORD : defaultSlot
 
@@ -100,22 +101,25 @@ erDiagram
         string name
         text description
         string type
-        string status
+        string verifiedStatus
         uuid creatorMemberId FK
         boolean isActive
         datetime createdAt
         datetime updatedAt
         %% type = INDIVIDUAL,ACADEMY
-        %% status = UNVERIFIED,VERIFIED
+        %% verifiedStatus = UNVERIFIED,VERIFIED
     }
 
     BRANCH {
         uuid id PK
         uuid companyId FK
         string name
+        uuid creatorMemberId FK
+        string verifiedStatus
         boolean isActive
         datetime createdAt
         datetime updatedAt
+        %% verifiedStatus = UNVERIFIED,VERIFIED
     }
 
     MEMBER {
@@ -202,12 +206,14 @@ erDiagram
         uuid id PK
         uuid studentMemberId FK
         uuid courseId FK
+        uuid assistantMemberId FK
         uuid defaultClinicSlotId FK
         text teacherNotes
         boolean isActive
         datetime createdAt
         datetime updatedAt
         %% UNIQUE(studentMemberId, courseId)
+        %% assistantMemberId nullable, references ASSISTANT
     }
 
     SHARED_LESSON {
@@ -348,6 +354,7 @@ erDiagram
 - Company → Branch
 - Branch → Course
 - Member(TEACHER) → Course
+- Member(ASSISTANT) → StudentCourseRecord
 - Course → SharedLesson (CASCADE)
 - Course → ClinicSlot
 - StudentCourseRecord → PersonalLesson

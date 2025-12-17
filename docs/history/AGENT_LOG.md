@@ -1038,3 +1038,133 @@ DESIGN
 - 작업 사유: Phase1 표에 Notice/WorkLog 항목이 없어 누락되었다는 피드백 반영
 - 수정 내용: `docs/plan/backend/season2/entity-refactor-plan.md` 1.2 표에 세 도메인의 현황 및 필요 변경 사항 기술
 - 다음 단계: Phase2 상세 명세/Step 8 작업 시 이 변경 내용을 참고하여 PLAN 및 구현을 진행
+## [2025-12-17 19:57] Spec v1.3 2.3.3~6 섹션 정비
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md의 2.3.3 이후 전체 섹션을 requirement/design 문서 기준으로 다시 작성해 StudentCalendar, Invitation, Company 검증, API/리소스 세부 명세를 최신화했다.
+
+### Details
+- 작업 사유: docs/requirement/v1.3.md와 docs/design/final-entity-spec.md/full-erd.md의 스펙 차이를 해소하고 이후 TODO/PLAN의 단일 참조점을 마련하기 위함
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 새 스펙을 참조해 PLAN/TODO 업데이트 및 구현을 진행
+## [2025-12-17 21:12] StudentCourseRecord 조교 배정 필드 추가
+
+### Type
+DESIGN
+
+### Summary
+- docs/design/final-entity-spec.md와 docs/design/full-erd.md에 StudentCourseRecord 전담 조교(assistantMemberId) 관계를 추가했다.
+
+### Details
+- 작업 사유: 학생별 기록을 조교에게 위임할 수 있도록 설계에 담당 조교 정보를 정의해달라는 요청 반영
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/design/final-entity-spec.md, docs/design/full-erd.md
+- 다음 단계: 필요 시 docs/spec 및 PLAN 문서에서 해당 필드를 활용하도록 후속 업데이트 진행
+## [2025-12-17 21:16] StudentCourseRecord 담당 조교 요구/스펙 반영
+
+### Type
+DESIGN
+
+### Summary
+- docs/requirement/v1.3.md와 docs/spec/v1.3.md에 StudentCourseRecord 담당 조교(`assistantMemberId`) 시나리오를 추가해 Teacher/Assistant 역할과 API 책임을 명확히 했다.
+
+### Details
+- 작업 사유: 학생별로 담당 조교를 지정하고 관리하고 싶다는 요청을 requirement~spec 전 단계에 반영하기 위함
+- 영향받은 테스트: 문서 변경으로 테스트 없음
+- 수정한 파일: docs/requirement/v1.3.md, docs/spec/v1.3.md
+- 다음 단계: 구현/PLAN 작업 시 StudentCourseRecord Patch API에서 assistantMemberId를 저장/검증하도록 설계
+## [2025-12-17 21:32] Spec v1.3 flow & API update (clinic, calendar, invitation, company)
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md 2.3.x 및 API/NFR 섹션을 피드백에 맞춰 교원 승인 플로우, 클리닉 보정, 학생 캘린더 접근, 조교 초대 링크, Company 등록 전략을 보완했다.
+
+### Details
+- 작업 사유: Teacher/Assistant 승인 UI 흐름, 당주 클리닉 자동 배정, 캘린더 접근 제한, 초대 링크 플로우, Company/Branch 생성 절차에 대한 추가 요구 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 StudentCalendar 캐시 없이 DB 조회, 클리닉 slot 선택 시 당주 Attendance 생성, 조교 초대 링크 발급/검증 흐름을 준수
+## [2025-12-17 21:59] Spec v1.3 SuperAdmin 접근 규칙 명시
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md 리소스 상세 섹션에 SuperAdmin이 모든 API에 감사/긴급 목적으로 접근할 수 있다는 기본 규칙을 추가했다.
+
+### Details
+- 작업 사유: SuperAdmin은 모든 API를 사용할 수 있어야 한다는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 권한 체크 로직에 SuperAdmin 우선권을 적용
+## [2025-12-17 22:01] Spec v1.3 출강 등록 예외 시나리오 추가
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md 2.3.5 섹션에 회사/지점 존재 여부별 Teacher 출강 등록 예외 처리 절차를 명시했다.
+
+### Details
+- 작업 사유: 회사·지점 존재 여부에 따른 입력/검증 흐름을 명확히 하려는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 Company/Branch 생성 시나리오별 UX와 SuperAdmin 검증 로직을 해당 규칙에 맞춘다
+## [2025-12-17 22:08] TeacherBranchAssignment 역할 규칙 명확화
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md의 Company/Branch 등록 흐름을 수정해 기존 학원 선택 시 FREELANCE, 신규 Company/Branch 생성 시 OWNER로 `TeacherBranchAssignment`가 생성되는 규칙을 명확히 했다.
+
+### Details
+- 작업 사유: TeacherBranchAssignment 역할 부여 조건을 분명히 하려는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 Branch/Course 생성 로직이 해당 규칙에 맞춰 Assignment 역할을 설정하도록 검증
+## [2025-12-17 22:25] INDIVIDUAL/ACADEMY 출강 플로우 명세화
+
+### Type
+DESIGN
+
+### Summary
+- docs/design/final-entity-spec.md의 Company/Branch 비고를 갱신해 개인 학원(INDIVIDUAL)과 회사 학원(ACADEMY)의 등록/검증/Assignment 생성 규칙을 명확히 했다.
+
+### Details
+- 작업 사유: 출강 등록 구조를 "개인=VERIFIED 즉시 사용, 회사=기존 목록 또는 UNVERIFIED 입력" 흐름으로 재정리하라는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/design/final-entity-spec.md
+- 다음 단계: Company/Branch 생성/검증 구현 시 해당 규칙을 준수하고 SuperAdmin 검증 로직과 Assignment 롤 부여를 맞춘다
+## [2025-12-17 22:47] VerifiedStatus & Branch creator 도입
+
+### Type
+DESIGN
+
+### Summary
+- docs/design/final-entity-spec.md, docs/design/full-erd.md, docs/requirement/v1.3.md에 VerifiedStatus(UNVERIFIED/VERIFIED)를 Company/Branch 공용으로 적용하고 Branch.creatorMemberId를 추가했으며, 개인/회사 학원 출강 플로우를 재정리했다.
+
+### Details
+- 작업 사유: CompanyStatus를 단일 VerifiedStatus로 통합해 Company/Branch 모두에 적용하고 출강 등록 단계별 역할(OWNER/FREELANCE) 규칙을 문서화하기 위함
+- 영향받은 테스트: 문서 변경만 수행 (테스트 없음)
+- 수정한 파일: docs/design/final-entity-spec.md, docs/design/full-erd.md, docs/requirement/v1.3.md
+- 다음 단계: 엔티티/서비스 구현 시 VerifiedStatus enum을 공유하고 Branch.creatorMemberId/Assignment 역할 부여 로직을 반영
+## [2025-12-17 22:51] Spec v1.3 VerifiedStatus/출강 플로우 반영
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md에 VerifiedStatus 도입(Company/Branch), 출강 등록 시나리오, Companies/Branches API 설명, 공개 Course 필터를 requirement/design 최신 내용과 맞췄다.
+
+### Details
+- 작업 사유: final-entity-spec & requirement에서 갱신된 VerifiedStatus/creatorMemberId/Assignment 규칙을 스펙에도 반영하기 위함
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 Company/Branch 생성·검증 및 Course 공개 검색이 문서화된 VerifiedStatus 로직을 따른다

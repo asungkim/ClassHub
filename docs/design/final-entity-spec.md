@@ -17,7 +17,7 @@
 - name (String, not null)
 - description (Text, nullable)
 - type (CompanyType, not null) // INDIVIDUAL, ACADEMY
-- status (CompanyStatus, not null, default: VERIFIED) // UNVERIFIED, VERIFIED
+- verifiedStatus (VerifiedStatus, not null, default: VERIFIED) // UNVERIFIED, VERIFIED
 - creatorMemberId (UUID, FK → Member, nullable) // 등록한 선생님
 - isActive (Boolean, not null, default: true)
 
@@ -29,31 +29,47 @@ enum CompanyType {
     ACADEMY      // 학원 체인
 }
 
-enum CompanyStatus {
+enum VerifiedStatus {
     UNVERIFIED,  // 미검증 (사용자 등록)
-    VERIFIED    // 검증 완료 (사전 등록, 관리자 승인)
+    VERIFIED     // 검증 완료 (사전 등록, 관리자 승인)
 }
 ```
 
 **인덱스:**
 
-- `idx_company_status` on (status)
+- `idx_company_verified_status` on (verifiedStatus)
 - `idx_company_creator` on (creatorMemberId)
 
-**비고:**
+**비고 (출강 등록 흐름):**
 
-- 선생님이 TeacherBranchAssignment 생성 시 미리 등록된 회사가 없으면 UNVERIFIED로 생성.
-- 관리자 승인 후 VERIFIED → 다른 선생님 검색 가능 및 학생
+1. **개인 학원(INDIVIDUAL)**  
+   - Teacher가 Company + Branch를 직접 입력해 생성한다.  
+   - Company.verifiedStatus는 생성 즉시 VERIFIED로 설정해 별도 검증 과정 없이 바로 사용할 수 있다.  
+   - Branch는 한 개만 허용하며, 생성한 Teacher는 `TeacherBranchAssignment`의 OWNER로 기록된다.
+2. **회사 학원(ACADEMY)**  
+   - 기본적으로 SuperAdmin이 사전에 VERIFIED 상태의 Company/Branch를 등록해 두고, Teacher는 목록에서 선택해 FREELANCE Assignment를 얻는다.  
+   - 목록에 없다면 Teacher가 직접 입력을 선택해 Company/Branch를 UNVERIFIED 상태로 생성할 수 있으며, 이 경우 생성한 Teacher만 사용할 수 있다.  
+   - SuperAdmin 검증이 완료되면 해당 Company/Branch의 verifiedStatus를 VERIFIED로 변경해 다른 Teacher도 검색 및 사용 가능하도록 한다.
 
 ### BRANCH
 
 - companyId (UUID, FK → Company, not null)
 - name (String, not null)
+- creatorMemberId (UUID, FK → Member, nullable)
+- verifiedStatus (VerifiedStatus, not null, default: VERIFIED)
 - isActive (Boolean, not null, default: true)
 
 **인덱스:**
 
 - `idx_branch_company` on (companyId)
+- `idx_branch_verified_status` on (verifiedStatus)
+- `idx_branch_creator` on (creatorMemberId)
+
+**비고:**
+
+- INDIVIDUAL Company는 하나의 Branch만 허용하며 생성 즉시 VERIFIED 상태로 사용된다.
+- ACADEMY Company와 연결된 Branch는 기존 VERIFIED 목록을 선택하거나, Teacher가 직접 추가 시 UNVERIFIED로 저장되어 SuperAdmin 검증 전까지 생성자만 사용할 수 있다.
+- Branch를 생성한 Teacher는 `TeacherBranchAssignment` OWNER로 설정되고, 기존 Branch를 선택해 Course를 만드는 Teacher는 FREELANCE Assignment가 자동 생성된다.
 
 ---
 
@@ -212,6 +228,7 @@ enum BranchRole {
 
 - studentMemberId (UUID, FK → Member, not null)
 - courseId (UUID, FK → Course, not null)
+- assistantMemberId (UUID, FK → Member, nullable) // 담당 조교 (선택)
 - defaultClinicSlotId (UUID, FK → ClinicSlot, nullable)
 - teacherNotes (Text, nullable)
 - isActive (Boolean, not null, default: true)
@@ -224,11 +241,13 @@ enum BranchRole {
 
 - `idx_scr_student` on (studentMemberId)
 - `idx_scr_course` on (courseId)
+- `idx_scr_assistant` on (assistantMemberId)
 
 **비고:**
 
 - "선생님이 관리하는 반별 학생 기록" 의미
 - defaultClinicSlotId가 설정되어 있으면 해당 Slot 기반 ClinicSession 생성 시 자동으로 ClinicAttendance가 만들어짐
+- assistantMemberId는 TeacherAssistantAssignment로 연결된 ASSISTANT만 지정할 수 있으며, Course 담당 Teacher가 관리 범위를 위임한 조교를 명시한다. Nullable이라 조교 미배정 상태도 허용한다.
 
 ---
 
@@ -489,6 +508,7 @@ enum FeedbackStatus {
 - Company → Branch
 - Branch → Course
 - Member(TEACHER) → Course
+- Member(ASSISTANT) → StudentCourseRecord (담당 조교 지정)
 - Course → SharedLesson (CASCADE)
 - Course → ClinicSlot
 - StudentCourseRecord → PersonalLesson
