@@ -12,7 +12,6 @@ erDiagram
     %% ========================================
     %% 회원 & 역할별 정보 (1:1)
     %% ========================================
-    MEMBER ||--o| TEACHER_INFO : has
     MEMBER ||--o| STUDENT_INFO : has
 
     %% ========================================
@@ -79,6 +78,7 @@ erDiagram
     %% ========================================
     MEMBER ||--o{ NOTICE : writes
     NOTICE ||--o{ NOTICE_READ : hasReads
+    MEMBER ||--o{ NOTICE_READ : reads
 
     %% ========================================
     %% 근무 일지
@@ -89,7 +89,6 @@ erDiagram
     %% 초대 시스템
     %% ========================================
     MEMBER ||--o{ INVITATION : sends
-    BRANCH ||--o{ INVITATION : targets
 
     %% ========================================
     %% 엔티티 정의
@@ -102,12 +101,11 @@ erDiagram
         string type
         string status
         uuid creatorMemberId FK
-        string rejectionReason
         boolean isActive
         datetime createdAt
         datetime updatedAt
         %% type = INDIVIDUAL,ACADEMY
-        %% status = UNVERIFIED,VERIFIED,REJECTED
+        %% status = UNVERIFIED,VERIFIED
     }
 
     BRANCH {
@@ -125,28 +123,19 @@ erDiagram
         string password
         string name
         string phoneNumber
-        string roles
+        string role
         boolean isActive
         datetime createdAt
         datetime updatedAt
-        %% roles = TEACHER,ASSISTANT,STUDENT,ADMIN,SUPER_ADMIN (List<MemberRole>)
-    }
-
-    TEACHER_INFO {
-        uuid id PK
-        uuid memberId FK
-        string subjects
-        datetime createdAt
-        datetime updatedAt
-        %% UNIQUE(memberId)
+        %% role = TEACHER,ASSISTANT,STUDENT,ADMIN,SUPER_ADMIN
     }
 
     STUDENT_INFO {
         uuid id PK
         uuid memberId FK
-        date birthDate
         string schoolName
         string grade
+        date birthDate
         string parentPhone
         datetime createdAt
         datetime updatedAt
@@ -161,7 +150,7 @@ erDiagram
         boolean isActive
         datetime createdAt
         datetime updatedAt
-        %% role = OWNER,MANAGER,EMPLOYEE,FREELANCE
+        %% role = OWNER,FREELANCE
     }
 
     TEACHER_ASSISTANT_ASSIGNMENT {
@@ -171,7 +160,6 @@ erDiagram
         boolean isActive
         datetime createdAt
         datetime updatedAt
-        %% UNIQUE(teacherMemberId, assistantMemberId) (필요시)
     }
 
     COURSE {
@@ -192,6 +180,7 @@ erDiagram
         uuid courseId FK
         string status
         text message
+        uuid processedByMemberId FK
         datetime processedAt
         datetime createdAt
         datetime updatedAt
@@ -332,14 +321,12 @@ erDiagram
     INVITATION {
         uuid id PK
         uuid senderId FK
-        uuid branchId FK
         string targetEmail
         string inviteeRole
         string status
         string code UK
         datetime expiredAt
-        int useCount
-        int maxUses
+        boolean isActive
         datetime createdAt
         datetime updatedAt
         %% inviteeRole = ASSISTANT
@@ -351,29 +338,23 @@ erDiagram
 
 ### 1:1 관계
 
-- Member ↔ TeacherInfo (memberId unique)
 - Member ↔ StudentInfo (memberId unique)
 - ClinicAttendance ↔ ClinicRecord (clinicAttendanceId unique)
-
-**변경사항:**
-
-- ❌ AssistantInfo 삭제 (추가 정보 불필요)
 
 ### 1:N 관계
 
 - Company → Branch
 - Branch → Course
 - Member(TEACHER) → Course
-- Course → SharedLesson (ON DELETE CASCADE)
+- Course → SharedLesson (CASCADE)
 - StudentCourseRecord → PersonalLesson
 - Member(TEACHER) → ClinicSlot
 - Branch → ClinicSlot
 - ClinicSlot → ClinicSession
 - ClinicSession → ClinicAttendance
-
-**변경사항:**
-
-- StudentProfile → StudentCourseRecord 네이밍 변경
+- Member(TEACHER) → Notice
+- Notice → NoticeRead
+- Member(ASSISTANT) → WorkLog
 
 ### M:N 관계 (중간 테이블)
 
@@ -392,7 +373,6 @@ erDiagram
 ### 주요 인덱스
 
 - `member.email` (UK)
-- `teacher_info.member_id` (UK)
 - `student_info.member_id` (UK)
 - `course.branch_id` (조회)
 - `course.teacher_member_id` (조회)
@@ -400,19 +380,47 @@ erDiagram
 - `student_course_enrollment.(student_member_id, course_id)` (UK)
 - `clinic_session.(slot_id, date)` (UK)
 - `clinic_attendance.(clinic_session_id, student_course_record_id)` (UK)
+- `clinic_record.clinic_attendance_id` (UK)
+- `notice_read.(notice_id, assistant_member_id)` (UK)
+- `work_log.(assistant_member_id, date)` (UK)
 - `invitation.code` (UK)
 
 ### 추가 인덱스
 
-- `teacher_branch_assignment.teacher_member_id`
-- `teacher_branch_assignment.branch_id`
-- `teacher_assistant_assignment.teacher_member_id`
-- `teacher_assistant_assignment.assistant_member_id`
-- `student_enrollment_request.status`
-- `shared_lesson.date`
-- `personal_lesson.date`
-- `clinic_slot.teacher_member_id`
-- `clinic_slot.branch_id`
+- `company.status` on (status)
+- `company.creator_member_id` on (creatorMemberId)
+- `branch.company_id` on (companyId)
+- `teacher_branch_assignment.teacher_member_id` on (teacherMemberId)
+- `teacher_branch_assignment.branch_id` on (branchId)
+- `teacher_assistant_assignment.teacher_member_id` on (teacherMemberId)
+- `teacher_assistant_assignment.assistant_member_id` on (assistantMemberId)
+- `student_enrollment_request.student_member_id` on (studentMemberId)
+- `student_enrollment_request.course_id` on (courseId)
+- `student_enrollment_request.status` on (status)
+- `student_course_enrollment.student_member_id` on (studentMemberId)
+- `student_course_enrollment.course_id` on (courseId)
+- `student_course_record.student_member_id` on (studentMemberId)
+- `student_course_record.course_id` on (courseId)
+- `shared_lesson.course_id` on (course_id)
+- `shared_lesson.date` on (date)
+- `personal_lesson.student_course_record_id` on (studentCourseRecordId)
+- `personal_lesson.date` on (date)
+- `clinic_slot.teacher_member_id` on (teacherMemberId)
+- `clinic_slot.branch_id` on (branchId)
+- `clinic_session.slot_id` on (slotId)
+- `clinic_session.date` on (date)
+- `clinic_attendance.clinic_session_id` on (clinicSessionId)
+- `clinic_attendance.student_course_record_id` on (studentCourseRecordId)
+- `clinic_record.writer_id` on (writerId)
+- `feedback.member_id` on (memberId)
+- `feedback.status` on (status)
+- `notice.teacher_member_id` on (teacherMemberId)
+- `notice.created_at` on (createdAt)
+- `notice_read.notice_id` on (noticeId)
+- `notice_read.assistant_member_id` on (assistantMemberId)
+- `work_log.assistant_member_id` on (assistantMemberId)
+- `work_log.date` on (date)
+- `invitation.sender_id` on (senderId)
 
 ## Cascade 전략
 
@@ -431,51 +439,24 @@ erDiagram
 - ClinicSlot (isActive)
 - TeacherBranchAssignment (isActive)
 - TeacherAssistantAssignment (isActive)
+- Invitation (isActive)
 
 ### 실제 DELETE 허용
 
-- PersonalLesson
-- ClinicRecord
-- StudentEnrollmentRequest
-- ClinicAttendance
-- Feedback
-- Notice
-- NoticeRead
-- WorkLog
+- PersonalLesson (삭제 시 실제 DELETE)
+- ClinicRecord (삭제 시 실제 DELETE)
+- StudentEnrollmentRequest (삭제 시 실제 DELETE)
+- ClinicAttendance (삭제 시 실제 DELETE)
+- Feedback (삭제 시 실제 DELETE)
+- Notice (삭제 시 실제 DELETE)
+- NoticeRead (삭제 시 실제 DELETE)
+- WorkLog (삭제 시 실제 DELETE)
 
 ### 취소 플래그
 
 - ClinicSession (isCanceled) - 삭제보다 취소 표시
 
-## 주요 변경사항 (final-entity-spec 기준)
-
-### 1. Member
-
-- ✅ `phoneNumber` unique 제거 (학부모 번호 중복 가능)
-- ✅ `role` → `roles` (List<MemberRole>) 확장성 고려
-
-### 2. AssistantInfo
-
-- ❌ 엔티티 삭제 (추가 정보 불필요)
-
-### 3. StudentProfile → StudentCourseRecord
-
-- ✅ 네이밍 변경 ("선생님이 관리하는 반별 학생 기록")
-- ✅ `studentProfileId` → `studentCourseRecordId`
-
-### 4. 일관성 (네이밍)
-
-- ✅ `teacherId` → `teacherMemberId`
-- ✅ `assistantId` → `assistantMemberId`
-- ✅ `studentId` → `studentMemberId`
-
-### 5. SharedLesson
-
-- ✅ `courseId` → `course` (ManyToOne, CASCADE)
-
-### 6. Invitation
-
-- ✅ `inviteeRole` ASSISTANT만 (학생은 자유 가입)
+---
 
 ## 네이밍 규칙
 
@@ -497,4 +478,3 @@ erDiagram
 - 엔티티명을 snake_case로 변환
   - StudentCourseRecord → student_course_record
   - TeacherBranchAssignment → teacher_branch_assignment
-  - StudentCourseEnrollment → student_course_enrollment
