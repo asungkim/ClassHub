@@ -1746,3 +1746,31 @@ STRUCTURAL
 - 영향받은 테스트: `./gradlew test`
 - 수정한 파일: backend/src/main/java/com/classhub/domain/feedback/model/Feedback.java, backend/src/main/java/com/classhub/domain/feedback/repository/FeedbackRepository.java, docs/history/AGENT_LOG.md
 - 다음 단계: Feedback API 설계/구현 및 TODO 업데이트
+
+## [2025-12-18 20:32] 설계 문서 템플릿 섹션 확장
+
+### Type
+STRUCTURAL
+
+### Summary
+- AGENTS.md 5.3 절에 백엔드/프런트엔드 설계 템플릿을 각각 5.3.1, 5.3.2로 분리하고, 프런트 설계 시 포함해야 할 페이지 구조/컴포넌트/상태/UX/테스트 항목을 명시했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 설계 문서 작성 시 템플릿과 기대 내용을 명확히 안내하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: AGENTS.md, docs/history/AGENT_LOG.md
+- 다음 단계: 향후 PLAN 작성 시 템플릿을 준수
+
+## [2025-12-18 20:35] PLAN README에 템플릿 사용 규칙 명시
+
+### Type
+STRUCTURAL
+
+### Summary
+- `docs/plan/README.md`의 사용 방법 섹션에 “모든 PLAN 문서는 AGENTS.md 5.3 템플릿(백엔드/프런트엔드)을 반드시 따른다”는 규칙을 추가해 설계 문서 작성 시 혼선을 줄였다.
+
+### Details
+- 작업 사유: PLAN 문서 작성 시 템플릿 준수를 확실히 하기 위해 문서화 필요
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/plan/README.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN 작성 시 해당 템플릿을 적용하고, 미적용 문서는 바로 수정
