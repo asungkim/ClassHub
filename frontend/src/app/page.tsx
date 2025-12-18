@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -166,15 +167,13 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Teacher registration will be reimplemented in next task */}
-            <button
-              type="button"
-              disabled
-              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-gray-300 bg-gray-100 py-3 font-semibold text-gray-400 cursor-not-allowed"
+            <Link
+              href="/auth/register/teacher"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-blue-300 bg-white py-3 font-semibold text-blue-600 transition hover:bg-blue-50"
             >
               <UsersIcon className="h-5 w-5" />
-              선생님 회원가입 (준비 중)
-            </button>
+              선생님 회원가입
+            </Link>
           </div>
 
           <p className="mt-8 text-center text-sm text-gray-500">© 2025 ClassHub. All rights reserved.</p>
