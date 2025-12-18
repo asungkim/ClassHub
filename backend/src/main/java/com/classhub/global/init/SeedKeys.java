@@ -5,7 +5,7 @@ public final class SeedKeys {
     private SeedKeys() {
     }
 
-    public static final String SUPERADMIN = "superadmin";
+    public static final String SUPER_ADMIN = "superadmin";
     public static final String TEACHER_ALPHA = "teacher-alpha";
     public static final String TEACHER_BETA = "teacher-beta";
 

@@ -1218,3 +1218,44 @@ DESIGN
 - 영향받은 테스트: 문서 변경만 수행
 - 수정한 파일: docs/design/final-entity-spec.md, docs/design/full-erd.md, docs/requirement/v1.3.md, docs/spec/v1.3.md
 - 다음 단계: 구현 시 StudentGrade enum/validation과 SchoolNameFormatter를 적용하고 프런트에서도 동일한 드롭다운/자동완성 UX를 제공
+## [2025-12-18 12:59] MemberPrincipal Role Claim PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 4의 첫 작업을 위한 `auth-member-principal_plan` 문서를 작성해 MemberPrincipal/JWT 역할 전달 방식과 테스트 전략을 정의했다.
+
+### Details
+- 작업 사유: Requirement/Spec v1.3에서 요구하는 역할 기반 접근 제어를 구현하기 전에 인증 레이어를 재설계하기 위함
+- 영향받은 테스트: 문서 작업으로 실제 테스트는 아직 없음
+- 수정한 파일: docs/plan/backend/season2/auth-member-principal_plan.md
+- 다음 단계: 사용자가 PLAN을 검토/승인하면 MemberPrincipal, JwtProvider, 테스트 코드를 리팩터링한다
+## [2025-12-18 13:09] MemberPrincipal PLAN 3단계 작업 추가
+
+### Type
+DESIGN
+
+### Summary
+- auth-member-principal PLAN에 구현을 3단계(Principal/Enum 정비 → JWT 리팩터링 → 컨트롤러 검증)로 나눠 구체화했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 실행 순서를 명확히 하고 Phase 4 진행 시 참조할 단계별 가이드를 제공하기 위함
+- 영향받은 테스트: 문서 작업, 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/auth-member-principal_plan.md
+- 다음 단계: PLAN 기준으로 코드 수정/테스트를 진행하고 완료 후 TODO 상태 업데이트
+## [2025-12-18 13:16] MemberPrincipal Role 전달 및 JWT 스펙 갱신
+
+### Type
+BEHAVIORAL
+
+### Summary
+- MemberPrincipal에 MemberRole을 포함하고 MemberRole Enum을 ADMIN/SUPER_ADMIN까지 확장, SecurityConfig 권한 문자열을 Enum 기반으로 전환했다.
+- JwtProvider의 Access Token 클레임을 `role`로 재구성하고 MemberPrincipal이 토큰에서 role을 복원하도록 수정했으며, JwtProviderTest/SecurityIntegrationTest에 role 주입 검증을 추가했다.
+- AuthService 및 컨트롤러 테스트(MemberControllerTest)를 새 계약에 맞게 업데이트했다.
+
+### Details
+- 작업 사유: Phase 4 첫 작업(PLAN `docs/plan/backend/season2/auth-member-principal_plan.md`)에 따라 JWT→SecurityContext→Controller로 역할 정보를 일관 전달하기 위함
+- 영향받은 테스트: `JwtProviderTest`, `SecurityIntegrationTest`, `MemberControllerTest`를 업데이트했으나 Gradle wrapper 파일 잠금(`gradle-9.2.1-bin.zip.lck`)으로 실행에 실패하여 재로그인 후 재시도가 필요
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/MemberPrincipal.java, backend/src/main/java/com/classhub/domain/member/model/MemberRole.java, backend/src/main/java/com/classhub/global/jwt/JwtProvider.java, backend/src/main/java/com/classhub/domain/auth/application/AuthService.java, backend/src/main/java/com/classhub/global/config/SecurityConfig.java, backend/src/main/java/com/classhub/global/init/SeedKeys.java, backend/src/test/java/com/classhub/global/jwt/JwtProviderTest.java, backend/src/test/java/com/classhub/global/config/SecurityIntegrationTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+- 다음 단계: Gradle wrapper 잠금 문제를 해결해 테스트를 다시 실행하고, 이후 TODO Phase 4의 다음 항목(회원가입/초대 로직 리팩터링)을 진행

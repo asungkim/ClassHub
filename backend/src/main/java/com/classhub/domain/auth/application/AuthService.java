@@ -104,7 +104,7 @@ public class AuthService {
     }
 
     private AuthTokens issueTokens(Member member) {
-        String accessToken = jwtProvider.generateAccessToken(member.getId(), member.getRole().name());
+        String accessToken = jwtProvider.generateAccessToken(member.getId(), member.getRole());
         String refreshToken = jwtProvider.generateRefreshToken(member.getId());
         LocalDateTime accessExpiresAt = jwtProvider.getExpiration(accessToken);
         LocalDateTime refreshExpiresAt = jwtProvider.getExpiration(refreshToken);

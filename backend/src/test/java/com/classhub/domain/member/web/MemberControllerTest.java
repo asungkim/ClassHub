@@ -165,7 +165,7 @@ class MemberControllerTest {
         return request -> {
             SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
             securityContext.setAuthentication(new TestingAuthenticationToken(
-                    new MemberPrincipal(memberId),
+                    new MemberPrincipal(memberId, MemberRole.TEACHER),
                     null,
                     List.of(new SimpleGrantedAuthority("TEACHER"))
             ));

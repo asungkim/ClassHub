@@ -1,6 +1,7 @@
 package com.classhub.global.jwt;
 
 import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.model.MemberRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.JwtBuilder;
@@ -30,13 +31,13 @@ public class JwtProvider {
     private final static String TOKEN_PREFIX = "Bearer "; // 토큰은 Bearer로 시작해야함
     private final JwtProperties jwtProperties;
 
-    public String generateAccessToken(UUID memberId, String role) {
+    public String generateAccessToken(UUID memberId, MemberRole role) {
         return generateToken(
                 memberId.toString(),
                 Duration.ofMillis(jwtProperties.getAccessTokenExpirationMillis()),
                 Map.of(
                         "id", memberId.toString(),
-                        "authority", role
+                        "role", role.name()
                 )
         );
     }
@@ -101,13 +102,19 @@ public class JwtProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
 
-        // enum Authority 하나를 가져온다
-        String authority = claims.get("authority", String.class);
-        GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(authority);
+        String roleClaim = claims.get("role", String.class);
+        if (roleClaim == null) {
+            roleClaim = claims.get("authority", String.class); // Backward compatibility
+        }
+        MemberRole role = roleClaim != null ? MemberRole.valueOf(roleClaim) : null;
+        if (role == null) {
+            throw new IllegalArgumentException("Missing role claim in access token");
+        }
+        GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(role.name());
 
         // Authentication 생성
         return new UsernamePasswordAuthenticationToken(
-            new MemberPrincipal(getUserId(token)), // principal (id)
+            new MemberPrincipal(getUserId(token), role), // principal (id, role)
             null, // JWT는 credentials가 필요 없음
             List.of(grantedAuthority) // 권한 리스트
         );

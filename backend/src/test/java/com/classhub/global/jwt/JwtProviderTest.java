@@ -2,9 +2,10 @@ package com.classhub.global.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.model.MemberRole;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.jupiter.api.Test;
 
 /**
@@ -14,16 +15,22 @@ import org.junit.jupiter.api.Test;
 class JwtProviderTest {
 
     @Test
-    void generateAccessToken_shouldContainMemberIdAndAuthorityAndBeValid() {
+    void generateAccessToken_shouldContainMemberIdRoleAndBeValid() {
         JwtProvider jwtProvider = new JwtProvider(defaultProperties());
         UUID memberId = UUID.randomUUID();
-        String token = jwtProvider.generateAccessToken(memberId, "TEACHER");
+        MemberRole role = MemberRole.TEACHER;
+        String token = jwtProvider.generateAccessToken(memberId, role);
 
         assertThat(jwtProvider.isValidToken(token)).isTrue();
         assertThat(jwtProvider.getUserId(token)).isEqualTo(memberId);
         assertThat(jwtProvider.getAuthentication(token).getAuthorities())
                 .extracting("authority")
-                .containsExactly("TEACHER");
+                .containsExactly(role.name());
+
+        MemberPrincipal principal = (MemberPrincipal) jwtProvider.getAuthentication(token).getPrincipal();
+        assertThat(principal.id()).isEqualTo(memberId);
+        assertThat(principal.role()).isEqualTo(role);
+        assertThat(jwtProvider.getClaims(token).get("role", String.class)).isEqualTo(role.name());
     }
 
     @Test
@@ -34,6 +41,7 @@ class JwtProviderTest {
 
         assertThat(jwtProvider.isValidToken(refreshToken)).isTrue();
         assertThat(jwtProvider.getUserId(refreshToken)).isEqualTo(memberId);
+        assertThat(jwtProvider.getClaims(refreshToken).get("role")).isNull();
         assertThat(jwtProvider.getClaims(refreshToken).get("authority")).isNull();
     }
 
@@ -42,7 +50,7 @@ class JwtProviderTest {
         JwtProperties jwtProperties = defaultProperties();
         jwtProperties.setAccessTokenExpirationMillis(1L);
         JwtProvider jwtProvider = new JwtProvider(jwtProperties);
-        String token = jwtProvider.generateAccessToken(UUID.randomUUID(), "TEACHER");
+        String token = jwtProvider.generateAccessToken(UUID.randomUUID(), MemberRole.TEACHER);
 
         TimeUnit.MILLISECONDS.sleep(10);
 
