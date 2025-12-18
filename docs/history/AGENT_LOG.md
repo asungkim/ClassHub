@@ -1467,3 +1467,45 @@ BEHAVIORAL
 - 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest"`
 - 수정한 파일: backend/src/main/java/com/classhub/domain/auth/web/AuthController.java, backend/src/main/java/com/classhub/domain/member/web/MemberController.java, backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java, docs/plan/backend/season2/auth-teacher-registration_plan.md, docs/history/AGENT_LOG.md
 - 다음 단계: 신규 엔드포인트를 기준으로 Assistant/Student 가입 확장 및 문서/클라이언트 반영
+## [2025-12-18 18:21] 학생 회원가입 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/backend/season2/member-registration_plan.md`에 Teacher/Student 공통 RegisterService 구조, StudentInfo/StudentGrade 요구, API/TDD/Implementation 절차를 정의했다.
+
+### Details
+- 작업 사유: Phase4 “학생 회원가입 개발”을 진행하기 전 요구사항/스펙(`docs/design/final-entity-spec.md`)을 반영한 설계 문서가 필요했기 때문
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/plan/backend/season2/member-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN에 따라 RegisterService/MemberController를 구현
+## [2025-12-18 18:21] RegisterService 확장 및 학생 회원가입 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- RegisterService를 공통 RegisterMemberRequest 기반으로 리팩터링하고 StudentInfo/StudentGrade/StudentInfoRepository를 추가해 학생 가입 시 Member+StudentInfo를 생성하도록 했으며, `/api/v1/members/register/student` 엔드포인트와 시큐리티 화이트리스트를 완비했다.
+
+### Details
+- 작업 사유: Phase4 TODO “학생 회원가입 개발”을 완료해 학생이 자유 가입 후 토큰을 발급받고 StudentInfo를 저장하도록 만들기 위함
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.repository.StudentInfoRepositoryTest"`
+  - `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest"`
+  - `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.auth.web.AuthControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/request/RegisterMemberRequest.java, backend/src/main/java/com/classhub/domain/member/dto/request/RegisterStudentRequest.java, backend/src/main/java/com/classhub/domain/member/model/StudentGrade.java, backend/src/main/java/com/classhub/domain/member/model/StudentInfo.java, backend/src/main/java/com/classhub/domain/member/repository/StudentInfoRepository.java, backend/src/main/java/com/classhub/domain/member/support/SchoolNameFormatter.java, backend/src/main/java/com/classhub/domain/member/application/RegisterService.java, backend/src/main/java/com/classhub/domain/member/web/MemberController.java, backend/src/main/java/com/classhub/global/config/SecurityConfig.java, backend/src/main/java/com/classhub/global/jwt/JwtAuthenticationFilter.java, backend/src/test/java/com/classhub/domain/member/repository/StudentInfoRepositoryTest.java, backend/src/test/java/com/classhub/domain/member/application/RegisterServiceTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java, docs/plan/backend/season2/member-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Assistant/Student 추가 요구사항에 맞춰 RegisterService/MemberController 확장 및 프런트 연동
+## [2025-12-18 18:21] TODO v1.9 학생 회원가입 완료 처리
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 “학생 회원가입 개발” 항목을 ✅로 전환해 구현 완료 상태를 반영했다.
+
+### Details
+- 작업 사유: 학생 회원가입 API 및 관련 도메인이 구현/테스트 완료됨에 따라 TODO 현황을 최신화
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/todo/v1.9.md, docs/history/AGENT_LOG.md
+- 다음 단계: 다음 TODO 항목을 선택해 PLAN/구현 진행

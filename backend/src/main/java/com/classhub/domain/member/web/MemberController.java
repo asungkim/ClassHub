@@ -4,7 +4,8 @@ import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.LoginResponse;
 import com.classhub.domain.auth.support.RefreshTokenCookieProvider;
 import com.classhub.domain.member.application.RegisterService;
-import com.classhub.domain.member.dto.request.RegisterTeacherRequest;
+import com.classhub.domain.member.dto.request.RegisterMemberRequest;
+import com.classhub.domain.member.dto.request.RegisterStudentRequest;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,10 +30,21 @@ public class MemberController {
     @PostMapping("/register/teacher")
     @Operation(summary = "선생님 회원가입", description = "Teacher 역할 계정을 생성하고 Access/Refresh 토큰을 발급한다.")
     public RsData<LoginResponse> registerTeacher(
-            @Valid @RequestBody RegisterTeacherRequest request,
+            @Valid @RequestBody RegisterMemberRequest request,
             HttpServletResponse response
     ) {
         AuthTokens tokens = registerService.registerTeacher(request);
+        refreshTokenCookieProvider.setRefreshToken(response, tokens.refreshToken(), tokens.refreshTokenExpiresAt());
+        return RsData.from(RsCode.SUCCESS, LoginResponse.from(tokens));
+    }
+
+    @PostMapping("/register/student")
+    @Operation(summary = "학생 회원가입", description = "Student 역할 계정을 생성하고 StudentInfo까지 함께 저장한다.")
+    public RsData<LoginResponse> registerStudent(
+            @Valid @RequestBody RegisterStudentRequest request,
+            HttpServletResponse response
+    ) {
+        AuthTokens tokens = registerService.registerStudent(request);
         refreshTokenCookieProvider.setRefreshToken(response, tokens.refreshToken(), tokens.refreshTokenExpiresAt());
         return RsData.from(RsCode.SUCCESS, LoginResponse.from(tokens));
     }

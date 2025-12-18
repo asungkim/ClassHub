@@ -31,7 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final static String HEADER_AUTHORIZATION = "Authorization";
     private final static List<String> AUTH_WHITELIST = List.of(
-            "/api/v1/auth/register/teacher",
+            "/api/v1/members/register/teacher",
+            "/api/v1/members/register/student",
             "/api/v1/auth/register/invited",
             "/api/v1/auth/invitations/verify",
             "/api/v1/auth/login",

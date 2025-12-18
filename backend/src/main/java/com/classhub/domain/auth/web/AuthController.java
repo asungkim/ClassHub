@@ -6,8 +6,6 @@ import com.classhub.domain.auth.dto.request.LogoutRequest;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.LoginResponse;
 import com.classhub.domain.auth.dto.response.MeResponse;
-import com.classhub.domain.member.application.RegisterService;
-import com.classhub.domain.member.dto.request.RegisterTeacherRequest;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
