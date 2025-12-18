@@ -7,6 +7,19 @@
 - id (UUID, PK)
 - createdAt (LocalDateTime)
 - updatedAt (LocalDateTime)
+- deletedAt (LocalDateTime, nullable)
+
+**Soft Delete 헬퍼 메서드:**
+
+- `isDeleted()`: deletedAt이 null이 아니면 true 반환
+- `delete()`: deletedAt을 현재 시각으로 설정
+- `restore()`: deletedAt을 null로 설정하여 복구
+
+**조회 조건:**
+
+- 활성 데이터 조회: `WHERE deletedAt IS NULL`
+- 삭제된 데이터 조회: `WHERE deletedAt IS NOT NULL`
+- 특정 기간 삭제 데이터: `WHERE deletedAt BETWEEN :start AND :end`
 
 ---
 
@@ -19,7 +32,6 @@
 - type (CompanyType, not null) // INDIVIDUAL, ACADEMY
 - verifiedStatus (VerifiedStatus, not null, default: VERIFIED) // UNVERIFIED, VERIFIED
 - creatorMemberId (UUID, FK → Member, nullable) // 등록한 선생님
-- isActive (Boolean, not null, default: true)
 
 **ENUM:**
 
@@ -57,7 +69,6 @@ enum VerifiedStatus {
 - name (String, not null)
 - creatorMemberId (UUID, FK → Member, nullable)
 - verifiedStatus (VerifiedStatus, not null, default: VERIFIED)
-- isActive (Boolean, not null, default: true)
 
 **인덱스:**
 
@@ -82,7 +93,6 @@ enum VerifiedStatus {
 - name (String, not null)
 - phoneNumber (String, not null) // unique 제거
 - role (MemberRole, not null) // 단일 역할
-- isActive (Boolean, not null, default: true)
 
 **ENUM:**
 
@@ -140,7 +150,6 @@ public enum StudentGrade {
 - teacherMemberId (UUID, FK → Member, not null)
 - branchId (UUID, FK → Branch, not null)
 - role (BranchRole, not null) // 선생님의 역할
-- isActive (Boolean, not null, default: true)
 
 **ENUM:**
 
@@ -166,7 +175,6 @@ enum BranchRole {
 
 - teacherMemberId (UUID, FK → Member, not null)
 - assistantMemberId (UUID, FK → Member, not null)
-- isActive (Boolean, not null, default: true)
 
 **인덱스:**
 
@@ -183,7 +191,6 @@ enum BranchRole {
 - teacherMemberId (UUID, FK → Member, not null)
 - name (String, not null)
 - schedules (Set<CourseSchedule>, not null) // ElementCollection
-- isActive (Boolean, not null, default: true)
 
 **CourseSchedule (Embeddable):**
 
@@ -198,7 +205,7 @@ enum BranchRole {
 
 **비고:**
 
-- 공개 Course 검색 조건: Course.isActive = true AND Branch.isActive = true (Company status와 무관)
+- 공개 Course 검색 조건: Course.deletedAt IS NULL AND Branch.deletedAt IS NULL (Company status와 무관)
 
 ---
 
@@ -246,7 +253,6 @@ enum BranchRole {
 - assistantMemberId (UUID, FK → Member, nullable) // 담당 조교 (선택)
 - defaultClinicSlotId (UUID, FK → ClinicSlot, nullable)
 - teacherNotes (Text, nullable)
-- isActive (Boolean, not null, default: true)
 
 **제약조건:**
 
@@ -317,33 +323,73 @@ private Course course;
 
 - courseId (UUID, FK → Course, not null)
 - teacherMemberId (UUID, FK → Member, not null)
+- creatorMemberId (UUID, FK → Member, not null)
 - branchId (UUID, FK → Branch, not null)
 - dayOfWeek (DayOfWeek, not null) // MON, TUE, WED, THU, FRI, SAT, SUN
 - startTime (LocalTime, not null)
 - endTime (LocalTime, not null)
-- capacity (Integer, not null)
-- isActive (Boolean, not null, default: true)
+- defaultCapacity (Integer, not null)
 
 **인덱스:**
 
 - `idx_clinic_slot_course` on (courseId)
 - `idx_clinic_slot_teacher` on (teacherMemberId)
+- `idx_clinic_slot_creator` on (creatorMemberId)
 - `idx_clinic_slot_branch` on (branchId)
+
+**비고:**
+
+- teacherMemberId: 해당 클리닉을 담당하는 선생님 (조회/통계 기준)
+- creatorMemberId: 실제로 이 Slot을 생성한 사람 (Teacher 또는 Assistant 가능)
+- defaultCapacity: Session 생성 시 기본 정원으로 사용됨 (Session별 개별 조정 가능)
 
 ### CLINIC_SESSION
 
-- slotId (UUID, FK → ClinicSlot, not null)
+- slotId (UUID, FK → ClinicSlot, nullable)
+- sessionType (SessionType, not null)
+- creatorMemberId (UUID, FK → Member, nullable)
 - date (LocalDate, not null)
+- capacity (Integer, not null)
 - isCanceled (Boolean, not null, default: false)
+
+**ENUM:**
+
+```java
+enum SessionType {
+    REGULAR,     // Slot 기반 자동 생성
+    EMERGENCY    // 선생님/조교 긴급 생성
+}
+```
 
 **제약조건:**
 
-- `uk_clinic_session_slot_date` unique on (slotId, date)
+- CHECK: `(sessionType = 'REGULAR' AND slotId IS NOT NULL AND creatorMemberId IS NULL) OR (sessionType = 'EMERGENCY' AND slotId IS NULL AND creatorMemberId IS NOT NULL)`
 
 **인덱스:**
 
 - `idx_clinic_session_slot` on (slotId)
 - `idx_clinic_session_date` on (date)
+- `idx_clinic_session_type` on (sessionType)
+- `idx_clinic_session_creator` on (creatorMemberId)
+
+**비고:**
+
+**세션 타입별 필드 규칙:**
+
+1. **REGULAR (정규 세션 - 스케줄러 자동 생성)**
+   - slotId: NOT NULL (어떤 Slot에서 생성되었는지)
+   - creatorMemberId: NULL (시스템 자동 생성)
+   - capacity: Slot.defaultCapacity 상속 (생성 후 Teacher가 개별 조정 가능)
+
+2. **EMERGENCY (긴급 세션 - Teacher/Assistant 수동 생성)**
+   - slotId: NULL (Slot 없이 독립적으로 생성)
+   - creatorMemberId: NOT NULL (생성한 Teacher 또는 Assistant)
+   - capacity: 생성 시 직접 설정
+
+**유즈케이스:**
+- 정규 세션: 매주 화요일 18:00 클리닉 → ClinicSlot 기반 자동 생성
+- 긴급 세션: 시험 전 특별 보강, 대체 클리닉 → Teacher가 직접 생성
+- 정원 조정: 정규 세션이지만 이번 주만 10명 → 15명으로 증가
 
 ### CLINIC_ATTENDANCE
 
@@ -494,7 +540,6 @@ enum FeedbackStatus {
 - status (InvitationStatus, not null, default: PENDING) // PENDING, ACCEPTED, EXPIRED, REVOKED
 - code (String, unique, not null)
 - expiredAt (LocalDateTime, not null)
-- isActive (Boolean, not null, default: true)
 
 **인덱스:**
 
@@ -506,8 +551,8 @@ enum FeedbackStatus {
 - 조교만 초대 코드로 가입 (ASSISTANT)
 - 학생은 자유 가입 후 StudentEnrollmentRequest로 반 등록
 - 코드와 targetEmail은 1:1 매핑
-- 사용 시 isActive = false 처리되고 TeacherAssistantAssignment 자동 생성
-- 만료되거나 취소되면 isActive = false
+- 사용 시 deletedAt 설정되고 TeacherAssistantAssignment 자동 생성
+- 만료되거나 취소되면 deletedAt 설정
 
 ---
 
@@ -527,9 +572,11 @@ enum FeedbackStatus {
 - Course → SharedLesson (CASCADE)
 - Course → ClinicSlot
 - StudentCourseRecord → PersonalLesson
-- Member(TEACHER) → ClinicSlot
+- Member(TEACHER) → ClinicSlot (teacherMemberId)
+- Member → ClinicSlot (creatorMemberId)
 - Branch → ClinicSlot
-- ClinicSlot → ClinicSession
+- ClinicSlot → ClinicSession (REGULAR 타입)
+- Member → ClinicSession (EMERGENCY 타입, creatorMemberId)
 - ClinicSession → ClinicAttendance
 - Member(TEACHER) → Notice
 - Notice → NoticeRead
@@ -556,17 +603,28 @@ enum FeedbackStatus {
 - SharedLesson → Course
   - 반 삭제 시 공통 진도도 함께 삭제
 
-### Soft Delete (isActive flag)
+### Soft Delete (deletedAt timestamp)
 
-- Company (isActive)
-- Branch (isActive)
-- Member (isActive)
-- Course (isActive)
-- StudentCourseRecord (isActive)
-- ClinicSlot (isActive)
-- TeacherBranchAssignment (isActive)
-- TeacherAssistantAssignment (isActive)
-- Invitation (isActive)
+- Company (deletedAt)
+- Branch (deletedAt)
+- Member (deletedAt)
+- Course (deletedAt)
+- StudentCourseRecord (deletedAt)
+- ClinicSlot (deletedAt)
+- TeacherBranchAssignment (deletedAt)
+- TeacherAssistantAssignment (deletedAt)
+- Invitation (deletedAt)
+
+**장점:**
+- 삭제 시점 추적 가능 (언제 삭제되었는지)
+- 복구 가능 (deletedAt = NULL)
+- 삭제 패턴 분석 가능 (월별, 주별 삭제 통계)
+- 감사 로그 및 규정 준수
+
+**조회:**
+- 활성 데이터: `WHERE deletedAt IS NULL`
+- 삭제된 데이터: `WHERE deletedAt IS NOT NULL`
+- 특정 기간 삭제: `WHERE deletedAt BETWEEN :start AND :end`
 
 ### 실제 DELETE 허용
 

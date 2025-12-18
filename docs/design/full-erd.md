@@ -60,9 +60,11 @@ erDiagram
     %% ========================================
     COURSE ||--o{ CLINIC_SLOT : has
     MEMBER ||--o{ CLINIC_SLOT : owns
+    MEMBER ||--o{ CLINIC_SLOT : creates
     BRANCH ||--o{ CLINIC_SLOT : locates
 
     CLINIC_SLOT ||--o{ CLINIC_SESSION : generates
+    MEMBER ||--o{ CLINIC_SESSION : creates
 
     CLINIC_SESSION ||--o{ CLINIC_ATTENDANCE : has
     STUDENT_COURSE_RECORD ||--o{ CLINIC_ATTENDANCE : attends
@@ -103,9 +105,9 @@ erDiagram
         string type
         string verifiedStatus
         uuid creatorMemberId FK
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% type = INDIVIDUAL,ACADEMY
         %% verifiedStatus = UNVERIFIED,VERIFIED
     }
@@ -116,9 +118,9 @@ erDiagram
         string name
         uuid creatorMemberId FK
         string verifiedStatus
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% verifiedStatus = UNVERIFIED,VERIFIED
     }
 
@@ -129,9 +131,9 @@ erDiagram
         string name
         string phoneNumber
         string role
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% role = TEACHER,ASSISTANT,STUDENT,ADMIN,SUPER_ADMIN
     }
 
@@ -152,9 +154,9 @@ erDiagram
         uuid teacherMemberId FK
         uuid branchId FK
         string role
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% role = OWNER,FREELANCE
     }
 
@@ -162,9 +164,9 @@ erDiagram
         uuid id PK
         uuid teacherMemberId FK
         uuid assistantMemberId FK
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
     }
 
     COURSE {
@@ -173,9 +175,9 @@ erDiagram
         uuid teacherMemberId FK
         string name
         string schedules
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% schedules = ElementCollection(CourseSchedule)
     }
 
@@ -209,9 +211,9 @@ erDiagram
         uuid assistantMemberId FK
         uuid defaultClinicSlotId FK
         text teacherNotes
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% UNIQUE(studentMemberId, courseId)
         %% assistantMemberId nullable, references ASSISTANT
     }
@@ -242,25 +244,30 @@ erDiagram
         uuid id PK
         uuid courseId FK
         uuid teacherMemberId FK
+        uuid creatorMemberId FK
         uuid branchId FK
         string dayOfWeek
         time startTime
         time endTime
-        int capacity
-        boolean isActive
+        int defaultCapacity
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% dayOfWeek = MON,TUE,WED,THU,FRI,SAT,SUN
     }
 
     CLINIC_SESSION {
         uuid id PK
-        uuid slotId FK
+        uuid slotId FK %% nullable
+        string sessionType
+        uuid creatorMemberId FK %% nullable
         date date
+        int capacity
         boolean isCanceled
         datetime createdAt
         datetime updatedAt
-        %% UNIQUE(slotId, date)
+        %% sessionType = REGULAR,EMERGENCY
+        %% CHECK constraint for session type validation
     }
 
     CLINIC_ATTENDANCE {
@@ -334,9 +341,9 @@ erDiagram
         string status
         string code UK
         datetime expiredAt
-        boolean isActive
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% inviteeRole = ASSISTANT
         %% status = PENDING,ACCEPTED,EXPIRED,REVOKED
     }
@@ -358,9 +365,11 @@ erDiagram
 - Course → SharedLesson (CASCADE)
 - Course → ClinicSlot
 - StudentCourseRecord → PersonalLesson
-- Member(TEACHER) → ClinicSlot
+- Member(TEACHER) → ClinicSlot (teacherMemberId)
+- Member → ClinicSlot (creatorMemberId)
 - Branch → ClinicSlot
-- ClinicSlot → ClinicSession
+- ClinicSlot → ClinicSession (REGULAR 타입)
+- Member → ClinicSession (EMERGENCY 타입, creatorMemberId)
 - ClinicSession → ClinicAttendance
 - Member(TEACHER) → Notice
 - Notice → NoticeRead
@@ -388,7 +397,9 @@ erDiagram
 - `course.teacher_member_id` (조회)
 - `student_course_record.(student_member_id, course_id)` (UK)
 - `student_course_enrollment.(student_member_id, course_id)` (UK)
-- `clinic_session.(slot_id, date)` (UK)
+- `clinic_slot.creator_member_id` (조회)
+- `clinic_session.session_type` (조회)
+- `clinic_session.creator_member_id` (조회)
 - `clinic_attendance.(clinic_session_id, student_course_record_id)` (UK)
 - `clinic_record.clinic_attendance_id` (UK)
 - `notice_read.(notice_id, assistant_member_id)` (UK)
@@ -417,9 +428,12 @@ erDiagram
 - `personal_lesson.date` on (date)
 - `clinic_slot.course_id` on (courseId)
 - `clinic_slot.teacher_member_id` on (teacherMemberId)
+- `clinic_slot.creator_member_id` on (creatorMemberId)
 - `clinic_slot.branch_id` on (branchId)
 - `clinic_session.slot_id` on (slotId)
 - `clinic_session.date` on (date)
+- `clinic_session.session_type` on (sessionType)
+- `clinic_session.creator_member_id` on (creatorMemberId)
 - `clinic_attendance.clinic_session_id` on (clinicSessionId)
 - `clinic_attendance.student_course_record_id` on (studentCourseRecordId)
 - `clinic_record.writer_id` on (writerId)
@@ -440,17 +454,28 @@ erDiagram
 - SharedLesson → Course
   - 반 삭제 시 공통 진도도 함께 삭제
 
-### Soft Delete (isActive flag)
+### Soft Delete (deletedAt timestamp)
 
-- Company (isActive)
-- Branch (isActive)
-- Member (isActive)
-- Course (isActive)
-- StudentCourseRecord (isActive)
-- ClinicSlot (isActive)
-- TeacherBranchAssignment (isActive)
-- TeacherAssistantAssignment (isActive)
-- Invitation (isActive)
+- Company (deletedAt)
+- Branch (deletedAt)
+- Member (deletedAt)
+- Course (deletedAt)
+- StudentCourseRecord (deletedAt)
+- ClinicSlot (deletedAt)
+- TeacherBranchAssignment (deletedAt)
+- TeacherAssistantAssignment (deletedAt)
+- Invitation (deletedAt)
+
+**장점:**
+- 삭제 시점 추적 가능 (언제 삭제되었는지)
+- 복구 가능 (deletedAt = NULL)
+- 삭제 패턴 분석 가능 (월별, 주별 삭제 통계)
+- 감사 로그 및 규정 준수
+
+**조회:**
+- 활성 데이터: `WHERE deletedAt IS NULL`
+- 삭제된 데이터: `WHERE deletedAt IS NOT NULL`
+- 특정 기간 삭제: `WHERE deletedAt BETWEEN :start AND :end`
 
 ### 실제 DELETE 허용
 
