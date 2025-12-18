@@ -1509,3 +1509,32 @@ TODO_UPDATE
 - 영향받은 테스트: 없음
 - 수정한 파일: docs/todo/v1.9.md, docs/history/AGENT_LOG.md
 - 다음 단계: 다음 TODO 항목을 선택해 PLAN/구현 진행
+
+## [2025-12-18 18:52] Invitation 도메인/레포지토리 TDD 기반 구축
+
+### Type
+STRUCTURAL
+
+### Summary
+- Invitation 엔티티/enum/DTO를 `docs/design/final-entity-spec.md`와 PLAN Step1 요구에 맞춰 정의하고 이메일/코드 정규화 및 상태 전이 헬퍼를 추가했다.
+- `InvitationRepositoryTest`로 findByCode/existsByTargetEmailAndStatus/soft-delete + 상태 전환/`canUse` 조건을 검증했다.
+
+### Details
+- 작업 사유: `docs/plan/backend/season2/invitation-assistant_plan.md` Step 1(도메인/Repository 구성)을 완료해 이후 Service/Controller 구현을 위한 토대를 마련하기 위함
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.invitation.repository.InvitationRepositoryTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/invitation/model/Invitation.java, backend/src/main/java/com/classhub/domain/invitation/model/InvitationRole.java, backend/src/main/java/com/classhub/domain/invitation/repository/InvitationRepository.java, backend/src/main/java/com/classhub/domain/invitation/dto/request/AssistantInvitationCreateRequest.java, backend/src/main/java/com/classhub/domain/invitation/dto/request/InvitationVerifyRequest.java, backend/src/main/java/com/classhub/domain/invitation/dto/response/InvitationResponse.java, backend/src/main/java/com/classhub/domain/invitation/dto/response/InvitationVerifyResponse.java, backend/src/main/java/com/classhub/domain/member/dto/request/RegisterAssistantByInvitationRequest.java, backend/src/test/java/com/classhub/domain/invitation/repository/InvitationRepositoryTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN Step 2에 따라 InvitationService create/verify/accept 로직 및 Mockito 단위 테스트를 작성
+
+## [2025-12-18 19:02] 조교 초대 가입 DTO를 RegisterMemberRequest 기반으로 통합
+
+### Type
+STRUCTURAL
+
+### Summary
+- `RegisterAssistantByInvitationRequest`가 `RegisterMemberRequest`를 `@JsonUnwrapped` 형태로 포함하도록 변경해 Teacher/Student와 동일한 검증/정규화 로직을 재사용하게 했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 조교 초대 가입 플로우에서도 공용 회원가입 요청 스키마를 활용해 중복 검증 로직을 제거
+- 영향받은 테스트: 없음 (단순 DTO 구조 변경)
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/request/RegisterAssistantByInvitationRequest.java, docs/history/AGENT_LOG.md
+- 다음 단계: Invitation 기반 조교 가입 구현 시 해당 DTO를 사용해 RegisterService를 연계
