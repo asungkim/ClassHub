@@ -85,4 +85,20 @@ class MemberRepositoryTest {
                 .extracting(Member::getDeletedAt)
                 .isNotNull();
     }
+
+    @Test
+    void existsByEmail_shouldReflectCurrentState() {
+        memberRepository.save(
+                Member.builder()
+                        .email("duplicate@classhub.com")
+                        .password("encoded")
+                        .name("Duplicate")
+                        .phoneNumber("01000000000")
+                        .role(MemberRole.TEACHER)
+                        .build()
+        );
+
+        assertThat(memberRepository.existsByEmail("duplicate@classhub.com")).isTrue();
+        assertThat(memberRepository.existsByEmail("new@classhub.com")).isFalse();
+    }
 }

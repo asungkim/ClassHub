@@ -6,6 +6,8 @@ import com.classhub.domain.auth.dto.request.LogoutRequest;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.LoginResponse;
 import com.classhub.domain.auth.dto.response.MeResponse;
+import com.classhub.domain.member.application.RegisterService;
+import com.classhub.domain.member.dto.request.RegisterTeacherRequest;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
@@ -31,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    // private final InvitationAuthService invitationAuthService;
     private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
     @GetMapping("/me")
@@ -80,7 +81,6 @@ public class AuthController {
         refreshTokenCookieProvider.clearRefreshToken(httpServletResponse);
         return RsData.from(RsCode.SUCCESS, null);
     }
-
     // @PostMapping("/invitations/verify")
     // @Operation(summary = "초대 코드 검증", description = "초대 코드 유효성을 확인한다.")
     // public RsData<InvitationVerifyResponse> verifyInvitation(

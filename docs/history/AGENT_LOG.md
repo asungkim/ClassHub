@@ -1441,3 +1441,29 @@ STRUCTURAL
 - 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest.me_shouldReturnCurrentMemberData"`
 - 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, docs/history/AGENT_LOG.md
 - 다음 단계: 없음
+## [2025-12-18 17:51] RegisterService 기반 선생님 회원가입 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- RegisterService/DTO/전화번호 Normalizer를 추가하고 `/api/v1/auth/register/teacher`를 RegisterService에 연결해 가입 직후 토큰 발급 및 Refresh 쿠키 세팅이 작동하도록 했다.
+
+### Details
+- 작업 사유: Phase4 TODO “선생님 회원가입 개발”을 수행하기 위해 공통 RegisterService 토대를 마련하고 Teacher 플로우를 복구해야 했음
+- 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.repository.MemberRepositoryTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest.registerTeacher_shouldReturnTokensAndSetCookie"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/application/RegisterService.java, backend/src/main/java/com/classhub/domain/member/dto/request/RegisterTeacherRequest.java, backend/src/main/java/com/classhub/domain/member/support/PhoneNumberNormalizer.java, backend/src/main/java/com/classhub/domain/auth/web/AuthController.java, backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java, backend/src/test/java/com/classhub/domain/member/application/RegisterServiceTest.java, backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java, docs/plan/backend/season2/auth-teacher-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: RegisterService를 Assistant/Student 가입으로 확장하고 Company/Branch 온보딩 연계 로직을 추가 준비
+## [2025-12-18 17:57] MemberController로 선생님 회원가입 엔드포인트 이관
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/api/v1/members/register/teacher`를 새 MemberController에 추가하고 AuthController에서 회원가입 책임을 제거해 API 책임을 역할별로 분리했다.
+
+### Details
+- 작업 사유: 회원가입 API를 AuthController에서 분리하자는 요청에 따라 Member 전용 컨트롤러에서 RegisterService를 노출하도록 경로를 변경
+- 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/auth/web/AuthController.java, backend/src/main/java/com/classhub/domain/member/web/MemberController.java, backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java, docs/plan/backend/season2/auth-teacher-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 신규 엔드포인트를 기준으로 Assistant/Student 가입 확장 및 문서/클라이언트 반영
