@@ -139,7 +139,7 @@ erDiagram
         uuid id PK
         uuid memberId FK
         string schoolName
-        string grade
+        string grade  %% StudentGrade enum (E1~E6,M1~M3,H1~H3,GAP_YEAR)
         date birthDate
         string parentPhone
         datetime createdAt

@@ -1205,3 +1205,16 @@ TODO_UPDATE
 - 작업 사유: 실제 목표는 다중 role이 아니라 `MemberPrincipal` 객체에 role 값을 추가 보관하도록 하는 것이므로 TODO 표현 수정
 - 수정한 파일: docs/todo/v1.9.md
 - 다음 단계: 해당 작업 진행 시 PLAN/TDD에서 role 저장 방식 구체화
+## [2025-12-18 10:51] StudentInfo Grade Enum & schoolName 규칙 반영
+
+### Type
+DESIGN
+
+### Summary
+- final-entity-spec, full-erd, requirement, spec 문서에서 StudentInfo.grade를 StudentGrade Enum(E1~H3 + GAP_YEAR)으로 제한하고 schoolName 입력 정규화 방식을 명시했다.
+
+### Details
+- 작업 사유: 학생 학년을 정해진 구간(초1~고3,N수)으로만 받도록 하고 schoolName 입력을 정리해달라는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/design/final-entity-spec.md, docs/design/full-erd.md, docs/requirement/v1.3.md, docs/spec/v1.3.md
+- 다음 단계: 구현 시 StudentGrade enum/validation과 SchoolNameFormatter를 적용하고 프런트에서도 동일한 드롭다운/자동완성 UX를 제공

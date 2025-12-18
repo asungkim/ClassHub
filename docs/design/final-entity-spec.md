@@ -107,10 +107,25 @@ enum MemberRole {
 ### STUDENT_INFO
 
 - memberId (UUID, FK → Member, unique, not null)
-- schoolName (String, not null)
-- grade (String, not null)
+- schoolName (String, not null) // 입력값을 Trim + 중복 공백 제거 후 저장
+- grade (StudentGrade, not null)
 - birthDate (LocalDate, not null)
 - parentPhone (String, not null)
+
+**ENUM: StudentGrade**
+
+```java
+public enum StudentGrade {
+    ELEMENTARY_1, ELEMENTARY_2, ELEMENTARY_3, ELEMENTARY_4, ELEMENTARY_5, ELEMENTARY_6,
+    MIDDLE_1, MIDDLE_2, MIDDLE_3,
+    HIGH_1, HIGH_2, HIGH_3,
+    GAP_YEAR   // 재수/삼수 등 N수 상태
+}
+```
+
+**비고:**
+- grade는 위 열거형 중 하나만 허용하며, 프런트엔드는 드롭다운으로 선택하도록 강제한다.
+- schoolName은 기본적으로 자유 입력 String이지만, 저장 시 `SchoolNameFormatter`로 양쪽 공백/중복 공백을 제거하고, 프런트에서는 학교 검색/자동완성(예: "오마중", "경문고")을 제공해 표기를 유도한다.
 
 **인덱스:**
 
