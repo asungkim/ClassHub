@@ -1682,3 +1682,67 @@ STRUCTURAL
   - backend/src/main/java/com/classhub/domain/feedback/model/FeedbackStatus.java
   - docs/history/AGENT_LOG.md
 - 다음 단계: 나머지 Enum(필요 시 ClinicReason 등) 정리 후 엔티티/레포 구현
+
+## [2025-12-18 20:22] 핵심 엔티티/Repository 1차 구현
+
+### Type
+STRUCTURAL
+
+### Summary
+- Company/Branch/TeacherBranchAssignment부터 Course, StudentCourseEnrollment/Record, Lesson(Shared/Personal), Clinic( Slot/Session/Attendance/Record), Notice/NoticeRead, WorkLog 엔티티와 각각의 Repository를 Season2 패키지 규칙에 맞춰 추가했다.
+- Course에는 spec에 맞는 `CourseSchedule` ElementCollection을 정의했고, 모든 엔티티는 FK UUID 필드 중심으로 구성해 이후 서비스/쿼리에서 조립하도록 설계했다.
+
+### Details
+- 작업 사유: `docs/plan/backend/season2/core-entities_plan.md` Step 2 수행으로 Phase4 TODO “핵심 엔티티 생성”을 진행
+- 영향받은 테스트: `./gradlew test`
+- 주요 수정 파일: (다수)
+  - backend/src/main/java/com/classhub/domain/company/company/model/Company.java
+  - backend/src/main/java/com/classhub/domain/company/company/repository/CompanyRepository.java
+  - backend/src/main/java/com/classhub/domain/company/branch/model/Branch.java
+  - backend/src/main/java/com/classhub/domain/company/branch/repository/BranchRepository.java
+  - backend/src/main/java/com/classhub/domain/assignment/model/TeacherBranchAssignment.java
+  - backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java
+  - backend/src/main/java/com/classhub/domain/course/model/Course.java
+  - backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseEnrollment.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseRecord.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/repository/*.java
+  - backend/src/main/java/com/classhub/domain/lesson/shared/model/SharedLesson.java
+  - backend/src/main/java/com/classhub/domain/lesson/personal/model/PersonalLesson.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicattendance/model/ClinicAttendance.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicrecord/model/ClinicRecord.java
+  - backend/src/main/java/com/classhub/domain/notice/model/{Notice,NoticeRead}.java
+  - backend/src/main/java/com/classhub/domain/worklog/model/WorkLog.java
+  - 각 엔티티에 대응하는 Repository 파일
+- 다음 단계: 엔티티 기반 Repository TDD 및 도메인 서비스 구현, TODO 상태 업데이트
+
+## [2025-12-18 20:29] StudentEnrollmentRequest 엔티티 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `StudentEnrollmentRequest` 엔티티와 Repository를 추가해 학생의 수강 신청 정보를 저장할 수 있도록 했고, 승인/거절 메서드에서 status와 처리자 정보를 업데이트할 수 있게 구성했다.
+
+### Details
+- 작업 사유: `final-entity-spec.md`에 명시된 핵심 엔티티 중 누락된 StudentEnrollmentRequest를 보완
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/enrollment/model/StudentEnrollmentRequest.java, backend/src/main/java/com/classhub/domain/enrollment/repository/StudentEnrollmentRequestRepository.java, docs/history/AGENT_LOG.md
+- 다음 단계: Repository TDD 및 Enrollment 흐름 서비스 구현
+- 다음 단계: Repository TDD 및 Enrollment 흐름 서비스 구현
+
+## [2025-12-18 20:30] Feedback 엔티티 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- 피드백 시스템을 위한 `Feedback` 엔티티와 Repository를 추가하고, `FeedbackStatus`를 활용해 제출/처리 상태를 추적하도록 했다.
+
+### Details
+- 작업 사유: final-entity-spec에 정의된 Feedback 엔티티가 누락되어 있어 핵심 도메인이 완성되지 않았기 때문
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/feedback/model/Feedback.java, backend/src/main/java/com/classhub/domain/feedback/repository/FeedbackRepository.java, docs/history/AGENT_LOG.md
+- 다음 단계: Feedback API 설계/구현 및 TODO 업데이트
