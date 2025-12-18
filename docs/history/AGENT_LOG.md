@@ -4,6 +4,81 @@
 
 ---
 
+## [2025-12-18 22:45] 프론트엔드 코드 정리 및 인증 검증
+
+### Type
+
+STRUCTURAL | BEHAVIORAL
+
+### Summary
+
+- Season2 백엔드 구조에 맞춰 사용되지 않는 프론트엔드 코드 제거
+- SessionProvider 타입 시스템 강화 (MemberRole 명시적 정의)
+- 빌드 통과 및 구조 정리 완료
+
+### Details
+
+**삭제된 파일**:
+- `app/auth/*` - 인증 페이지 전체 (다음 Task에서 재구현 예정)
+- `app/dashboard/*` - 대시보드 페이지 전체 (다음 Task에서 재구현 예정)
+- `components/{clinic,course,lesson,dashboard}` - 도메인 컴포넌트 (Season2 미구현 기능)
+- `hooks/{api,clinic,queries}` - 구 API Hooks 디렉토리
+- `hooks/use-{assistants,courses,lesson-mutations,student-profiles,student-calendar}.ts` - 개별 Hooks
+- `contexts/` - Lesson Composer Context (미구현)
+- `types/api/` - 구 타입 정의
+
+**보존된 인프라**:
+- `components/ui/*` - Button, Card, TextField, Modal, Table, Badge 등 UI 컴포넌트 전체
+- `components/shared/*` - EmptyState, LoadingSkeleton, InvitationStatusBadge
+- `components/session/session-provider.tsx` - 세션 관리 (타입 수정)
+- `lib/*` - API 클라이언트, 에러 처리, 환경 변수, 역할 관리
+- `hooks/use-debounce.ts`, `hooks/use-role-guard.tsx` - 공통 Hooks
+
+**SessionProvider 타입 개선** (OpenAPI 스키마 활용):
+```typescript
+// Before
+type MemberSummary = {
+  role: string;  // ❌ any string
+}
+
+// After
+type MeResponse = components["schemas"]["MeResponse"];
+type MemberSummary = Required<MeResponse>;  // ✅ OpenAPI 스키마에서 자동 추론
+```
+
+**lib/role.ts 타입 개선**:
+```typescript
+// Before
+export const Role = {
+  TEACHER: "TEACHER",
+  ...
+} as const;
+export type Role = (typeof Role)[keyof typeof Role];
+
+// After
+type MeResponse = components["schemas"]["MeResponse"];
+export type MemberRole = NonNullable<MeResponse["role"]>;  // ✅ OpenAPI 스키마 기반
+export const ROLES = { ... } satisfies Record<string, MemberRole>;
+```
+
+**임시 비활성화**:
+- `lib/role-route.ts` - Dashboard 라우팅 로직 (다음 Task에서 재구현)
+- `app/page.tsx` - 회원가입 버튼 비활성화 처리
+- `hooks/use-role-guard.tsx` - Dashboard 라우팅 제거
+
+**빌드 검증**:
+- `npm run build -- --webpack` 통과 (컴파일 에러 0개)
+- 최종 라우트: `/`, `/components`
+
+### 다음 단계
+
+- v1.9 TODO Phase 4: 선생님 회원가입 페이지 재구현 (Company/Branch 입력 추가)
+- 조교 초대 검증 페이지 재구현
+- Assistant/Student 회원가입 페이지 신규 구현
+- 역할별 대시보드 페이지 신규 구현
+
+---
+
 ## [2025-12-09 16:20] Course 엔티티 및 CRUD API 구현
 
 ### Type
@@ -1901,3 +1976,31 @@ STRUCTURAL
 - 영향받은 테스트: `./gradlew test`
 - 수정한 파일: backend/src/main/java/com/classhub/global/init/** (runner/seed/*), backend/src/test/java/com/classhub/global/init/InitDataSmokeTest.java, docs/history/AGENT_LOG.md
 - 다음 단계: 새로운 도메인 Seed를 추가할 때 동일한 패턴(dataset + seed 패키지)을 따라 구조 유지
+
+## [2025-12-18 23:25] 프런트 문서에 OpenAPI 타입 alias 지침 명시
+
+### Type
+DESIGN
+
+### Summary
+- CLAUDE/프런트 도우미 문서에 OpenAPI 타입 정의를 직접 alias(`type LoginRequestBody = components["schemas"]["LoginRequest"]`)로 선언해 사용하도록 명확히 지침을 추가했다.
+
+### Details
+- 작업 사유: 프런트 코드에서 중복 타입 선언을 방지하고, `openapi.d.ts` 스키마를 강제하기 위해 문서 가이드 강화 필요
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: frontend/AGENTS.md, docs/history/AGENT_LOG.md
+- 다음 단계: 프런트 구현 시 해당 alias 패턴을 준수하고, Plan/TODO 검토 시 위반 사례가 있으면 즉시 수정
+
+## [2025-12-18 23:25] CLAUDE 가이드에 OpenAPI alias 지침 반영
+
+### Type
+DESIGN
+
+### Summary
+- CLAUDE.md에도 프런트 코드가 `openapi.d.ts` 타입을 alias(`type LoginRequestBody = components["schemas"]["LoginRequest"]`)로 선언해 사용해야 한다는 규칙을 추가해 모든 도우미 문서가 일관되게 안내하도록 했다.
+
+### Details
+- 작업 사유: Frontend Agent뿐 아니라 CLAUDE Code 가이드에도 동일한 요구사항을 명시해, 어느 AI가 작업하든 OpenAPI 타입 재사용을 강제하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: CLAUDE.md, docs/history/AGENT_LOG.md
+- 다음 단계: 프런트 작업 시 CLAUDE/AGENT 지침 둘 다 검토해 OpenAPI 기반 타입 사용을 확인

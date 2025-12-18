@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { api } from "@/lib/api";
@@ -8,7 +8,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/components/session/session-provider";
 import { InlineError } from "@/components/ui/inline-error";
 import type { components } from "@/types/openapi";
-import { getDashboardRoute } from "@/lib/role-route";
+// Dashboard routes will be reimplemented in next task
 
 type LoginRequestBody = components["schemas"]["LoginRequest"];
 type LoginResponseData = components["schemas"]["LoginResponse"];
@@ -61,14 +61,8 @@ export default function HomePage() {
         ? "세션 상태를 확인하는 중입니다..."
         : "ClassHub에 로그인하고 대시보드를 살펴보세요.";
 
-  useEffect(() => {
-    if (status === "authenticated" && member?.role) {
-      const target = getDashboardRoute(member.role);
-      if (target) {
-        router.replace(target);
-      }
-    }
-  }, [status, member?.role, router]);
+  // Dashboard routing will be reimplemented in next task
+  // For now, authenticated users stay on home page
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4 py-16 text-gray-900">
@@ -172,13 +166,14 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* Teacher registration will be reimplemented in next task */}
             <button
               type="button"
-              onClick={() => router.push("/auth/register/teacher")}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-blue-600 py-3 font-semibold text-blue-600 transition hover:bg-blue-50"
+              disabled
+              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-gray-300 bg-gray-100 py-3 font-semibold text-gray-400 cursor-not-allowed"
             >
               <UsersIcon className="h-5 w-5" />
-              선생님 회원가입
+              선생님 회원가입 (준비 중)
             </button>
           </div>
 

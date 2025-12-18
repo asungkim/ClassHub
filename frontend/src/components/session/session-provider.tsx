@@ -8,13 +8,8 @@ import { env } from "@/lib/env";
 import type { components } from "@/types/openapi";
 
 type SessionStatus = "loading" | "authenticated" | "unauthenticated";
-
-type MemberSummary = {
-  memberId: string;
-  email: string;
-  name: string;
-  role: string;
-};
+type MeResponse = components["schemas"]["MeResponse"];
+type MemberSummary = Required<MeResponse>;
 
 type SessionContextValue = {
   status: SessionStatus;
@@ -41,7 +36,7 @@ async function fetchSession(): Promise<MemberSummary | null> {
   }
 
   const payload = response.data?.data;
-  if (!payload) {
+  if (!payload || !payload.role) {
     return null;
   }
 
@@ -49,7 +44,7 @@ async function fetchSession(): Promise<MemberSummary | null> {
     memberId: payload.memberId ?? "",
     email: payload.email ?? "",
     name: payload.name ?? "",
-    role: payload.role ?? ""
+    role: payload.role
   };
 }
 
