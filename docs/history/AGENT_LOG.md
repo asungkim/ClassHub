@@ -1538,3 +1538,83 @@ STRUCTURAL
 - 영향받은 테스트: 없음 (단순 DTO 구조 변경)
 - 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/request/RegisterAssistantByInvitationRequest.java, docs/history/AGENT_LOG.md
 - 다음 단계: Invitation 기반 조교 가입 구현 시 해당 DTO를 사용해 RegisterService를 연계
+
+## [2025-12-18 19:12] Invitation Service/Controller 설계 보강
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/backend/season2/invitation-assistant_plan.md`에 Service/Controller 세부 설계를 추가해 InvitationService 책임, 메서드별 로직, Security/Controller 경로 요구사항을 명확화했다.
+- TDD/Implementation Steps에서 Service/Controller 단계 테스트 범위를 구체화했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 향후 Service/Controller 구현 시 참조할 구체적 설계/테스트 항목이 필요했기 때문
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/invitation-assistant_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 갱신된 PLAN Step 2, 3에 따라 서비스/컨트롤러 구현
+
+## [2025-12-18 19:18] 조교 초대 가입 API 경로 업데이트
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 피드백에 따라 조교 초대 가입 API 경로를 `/api/v1/members/register/assistant`로 통일하도록 PLAN 문서(Requirements/API Design/Controller 디자인/TDD 항목)를 갱신했다.
+
+### Details
+- 작업 사유: 엔드포인트 네이밍을 간결하게 유지하고 기존 register 네이밍 일관성을 맞추기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/invitation-assistant_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 업데이트된 경로를 기준으로 Controller/Security 구현
+
+## [2025-12-18 19:35] Invitation 기반 조교 초대/가입 서비스 및 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `TeacherAssistantAssignment` 도메인/Repository와 `InvitationService`를 도입해 초대 생성/검증/취소/조교 등록 로직을 완성하고 기본 만료 7일 + 랜덤 코드 제너레이터를 적용했다.
+- Auth/Member/Invitation Controller를 확장해 초대 검증(`POST /api/v1/auth/invitations/verify`), 조교 초대 생성/취소(`POST /api/v1/invitations`, `PATCH /api/v1/invitations/{code}/revoke`), 초대 기반 조교 가입(`POST /api/v1/members/register/assistant`)을 노출하고 Security/JWT 화이트리스트를 최신화했다.
+
+### Details
+- 작업 사유: `docs/plan/backend/season2/invitation-assistant_plan.md` Step2/3에 따라 조교 초대 + verify + 초대 기반 가입 플로우를 실제 서비스/컨트롤러로 구현
+- 주요 변경
+  - InvitationService + RandomInvitationCodeGenerator + Clock Bean + TeacherAssistantAssignment 도메인 추가
+  - RegisterService에 Assistant 등록 메서드 추가
+  - Auth/Member/Invitation Controller 및 DTO/Repository/TDD(서비스/컨트롤러 테스트) 보강
+  - JwtAuthenticationFilter 화이트리스트에 `/api/v1/members/register/assistant`, `/api/v1/auth/invitations/**` 추가
+- 영향받은 테스트:
+  - `./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest" --tests "com.classhub.domain.invitation.application.InvitationServiceTest"`
+  - `./gradlew test --tests "com.classhub.domain.invitation.web.InvitationControllerTest" --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.auth.web.AuthControllerTest"`
+  - `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/assignment/model/TeacherAssistantAssignment.java, backend/src/main/java/com/classhub/domain/assignment/repository/TeacherAssistantAssignmentRepository.java, backend/src/main/java/com/classhub/domain/invitation/application/InvitationService.java, backend/src/main/java/com/classhub/domain/invitation/support/*.java, backend/src/main/java/com/classhub/domain/invitation/web/InvitationController.java, backend/src/main/java/com/classhub/domain/member/application/RegisterService.java, backend/src/main/java/com/classhub/domain/auth/web/AuthController.java, backend/src/main/java/com/classhub/domain/member/web/MemberController.java, backend/src/main/java/com/classhub/global/jwt/JwtAuthenticationFilter.java, backend/src/main/java/com/classhub/global/config/TimeConfig.java, backend/src/test/java/com/classhub/domain/member/application/RegisterServiceTest.java, backend/src/test/java/com/classhub/domain/invitation/application/InvitationServiceTest.java, backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java, backend/src/test/java/com/classhub/domain/invitation/web/InvitationControllerTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: Teacher가 생성한 초대/Assignment를 조회/관리하는 API 확장 및 TODO 업데이트
+
+## [2025-12-18 19:45] InvitationController Teacher 전용 보안 강화
+
+### Type
+STRUCTURAL
+
+### Summary
+- InvitationController의 초대 생성/취소 엔드포인트에 `@PreAuthorize("hasAuthority('TEACHER')")`를 추가해 Spring Security 단에서 Teacher만 접근할 수 있도록 강제하고, 기존 MockMvc 테스트가 통과하는지 확인했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 보안 규칙을 명시적으로 적용해 잘못된 권한 접근을 Controller 레벨에서 차단
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.invitation.web.InvitationControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/invitation/web/InvitationController.java, docs/history/AGENT_LOG.md
+- 다음 단계: 없음
+
+## [2025-12-18 19:47] RsCode 구분 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- `RsCode` 상수를 Common/Auth/Invitation/Course/Student/Lesson 영역별로 재배치하고 섹션 주석을 추가해 응답 코드를 기능 단위로 쉽게 찾을 수 있도록 정리했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 공통/엔티티별 오류 코드를 명확하게 그룹화
+- 영향받은 테스트: 없음 (열거형 재정렬)
+- 수정한 파일: backend/src/main/java/com/classhub/global/response/RsCode.java, docs/history/AGENT_LOG.md
+- 다음 단계: 없음

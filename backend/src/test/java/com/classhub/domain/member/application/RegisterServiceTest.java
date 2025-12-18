@@ -158,6 +158,35 @@ class RegisterServiceTest {
     }
 
     @Test
+    void registerAssistant_shouldCreateAssistantMemberAndIssueTokens() {
+        RegisterMemberRequest assistantRequest = new RegisterMemberRequest(
+                "Assistant@classhub.com",
+                "Classhub!1",
+                "Assistant Lee",
+                "010-4444-5555"
+        );
+        given(memberRepository.findByEmail("assistant@classhub.com")).willReturn(Optional.empty());
+        given(passwordEncoder.encode("Classhub!1")).willReturn("encoded-password");
+        AuthTokens tokens = new AuthTokens(
+                UUID.randomUUID(),
+                "assistant-access",
+                LocalDateTime.now().plusMinutes(30),
+                "assistant-refresh",
+                LocalDateTime.now().plusDays(7)
+        );
+        given(authService.login(any(LoginRequest.class))).willReturn(tokens);
+
+        AuthTokens result = registerService.registerAssistant(assistantRequest);
+
+        assertThat(result).isEqualTo(tokens);
+        ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
+        verify(memberRepository).save(memberCaptor.capture());
+        Member savedMember = memberCaptor.getValue();
+        assertThat(savedMember.getRole()).isEqualTo(MemberRole.ASSISTANT);
+        assertThat(savedMember.getEmail()).isEqualTo("assistant@classhub.com");
+    }
+
+    @Test
     void registerStudent_shouldCreateMemberAndStudentInfo() {
         given(memberRepository.findByEmail("student@classhub.com")).willReturn(Optional.empty());
         given(passwordEncoder.encode("Classhub!1")).willReturn("encoded-password");

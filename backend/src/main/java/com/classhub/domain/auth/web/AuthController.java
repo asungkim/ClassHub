@@ -7,6 +7,9 @@ import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.LoginResponse;
 import com.classhub.domain.auth.dto.response.MeResponse;
 import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.invitation.application.InvitationService;
+import com.classhub.domain.invitation.dto.request.InvitationVerifyRequest;
+import com.classhub.domain.invitation.dto.response.InvitationVerifyResponse;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
@@ -31,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final InvitationService invitationService;
     private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
     @GetMapping("/me")
@@ -79,25 +83,13 @@ public class AuthController {
         refreshTokenCookieProvider.clearRefreshToken(httpServletResponse);
         return RsData.from(RsCode.SUCCESS, null);
     }
-    // @PostMapping("/invitations/verify")
-    // @Operation(summary = "초대 코드 검증", description = "초대 코드 유효성을 확인한다.")
-    // public RsData<InvitationVerifyResponse> verifyInvitation(
-    // @Valid @RequestBody InvitationVerifyRequest request
-    // ) {
-    // InvitationVerifyResponse response = invitationAuthService.verify(request);
-    // return RsData.from(RsCode.SUCCESS, response);
-    // }
-    //
-    // @PostMapping("/register/invited")
-    // @Operation(summary = "초대 기반 회원가입", description = "초대 코드를 통한 회원가입을 처리한다.")
-    // public RsData<LoginResponse> registerInvited(
-    // @Valid @RequestBody InvitationRegisterRequest request,
-    // HttpServletResponse response
-    // ) {
-    // AuthTokens tokens = invitationAuthService.registerInvited(request);
-    // refreshTokenCookieProvider.setRefreshToken(response, tokens.refreshToken(),
-    // tokens.refreshTokenExpiresAt());
-    // return RsData.from(RsCode.SUCCESS, LoginResponse.from(tokens));
-    // }
+    @PostMapping("/invitations/verify")
+    @Operation(summary = "초대 코드 검증", description = "초대 코드 유효성을 확인한다.")
+    public RsData<InvitationVerifyResponse> verifyInvitation(
+            @Valid @RequestBody InvitationVerifyRequest request
+    ) {
+        InvitationVerifyResponse response = invitationService.verifyCode(request);
+        return RsData.from(RsCode.SUCCESS, response);
+    }
 
 }

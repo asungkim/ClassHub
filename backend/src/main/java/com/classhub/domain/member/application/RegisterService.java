@@ -28,12 +28,12 @@ public class RegisterService {
 
     @Transactional
     public AuthTokens registerTeacher(RegisterMemberRequest request) {
-        String normalizedEmail = request.normalizedEmail();
-        ensureEmailAvailable(normalizedEmail);
+        return registerMember(request, MemberRole.TEACHER);
+    }
 
-        Member member = createMember(request, MemberRole.TEACHER);
-
-        return authService.login(new LoginRequest(normalizedEmail, request.password()));
+    @Transactional
+    public AuthTokens registerAssistant(RegisterMemberRequest request) {
+        return registerMember(request, MemberRole.ASSISTANT);
     }
 
     @Transactional
@@ -74,5 +74,13 @@ public class RegisterService {
                 .role(role)
                 .build();
         return memberRepository.save(member);
+    }
+
+    private AuthTokens registerMember(RegisterMemberRequest request, MemberRole role) {
+        String normalizedEmail = request.normalizedEmail();
+        ensureEmailAvailable(normalizedEmail);
+
+        createMember(request, role);
+        return authService.login(new LoginRequest(normalizedEmail, request.password()));
     }
 }
