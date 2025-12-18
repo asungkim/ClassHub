@@ -81,4 +81,21 @@
 8. 구조 변경과 행동 변경을 분리해 커밋한다.
 9. 다음 기능 단위에 대한 테스트를 추가하고 반복한다.
 
+## 2. 테스트 코드 작성 지침
+
+### 2.1 Repository 테스트
+- 반드시 `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest`(Spring Boot 4 구문)로 import해 JPA 슬라이스 환경에서 실행한다. (*AutoConfigure* 패키지가 아님)
+- 엔티티 저장/조회/Soft Delete 등의 DB 동작을 실제로 검증한다.
+- 모든 Repository 테스트는 `backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java`의 구성(@ActiveProfiles, `@Import(JpaConfig.class)`, AssertJ 사용법 등)을 그대로 참고해 import와 애너테이션을 맞춘다.
+
+### 2.2 Service 테스트
+- `@ExtendWith(MockitoExtension.class)`를 사용해 레포지토리 등 의존성을 Mock 처리한다.
+- Mockito로 상호작용을 검증하고, 반환 값/예외 동작을 명확히 정의한다.
+- import, 필드 선언, `@BeforeEach` 구성 등은 `backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java`를 표준으로 삼고 동일한 패턴을 따른다.
+
+### 2.3 Controller 테스트
+- `@SpringBootTest` + `@ActiveProfiles("test")` 조합만 사용하고, `MockMvc`는 `WebApplicationContext`를 주입받아 `MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())` 로 직접 구성한다.
+- Service/쿠키 프로바이더 등은 `@MockitoBean`으로 주입해 컨트롤러 계층만 검증한다.
+- `backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java`의 import/MockMvc 초기화/MockitoBean 선언 방식을 준수한다.
+
 이 과정을 엄격히 준수하며, 빠른 구현보다 깨끗하고 잘 테스트된 코드를 우선한다. 가능하면 모든 테스트(장시간 테스트 제외)를 매번 실행한다. 한 번에 하나의 테스트를 작성하고, 통과시키고, 구조를 개선하는 리듬을 유지한다.

@@ -2,13 +2,10 @@ package com.classhub.domain.auth.application;
 
 import com.classhub.domain.auth.dto.request.LoginRequest;
 import com.classhub.domain.auth.dto.request.LogoutRequest;
-import com.classhub.domain.auth.dto.request.TeacherRegisterRequest;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.MeResponse;
-import com.classhub.domain.auth.dto.response.TeacherRegisterResponse;
 import com.classhub.domain.auth.token.RefreshTokenStore;
 import com.classhub.domain.member.model.Member;
-import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.jwt.JwtProvider;
@@ -29,30 +26,12 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenStore refreshTokenStore;
 
-    @Transactional
-    public TeacherRegisterResponse registerTeacher(TeacherRegisterRequest request) {
-        String email = request.normalizedEmail();
-        if (memberRepository.existsByEmail(email)) {
-            throw new BusinessException(RsCode.DUPLICATE_EMAIL);
-        }
-
-        Member teacher = Member.builder()
-                .email(email)
-                .password(passwordEncoder.encode(request.password()))
-                .name(request.sanitizedName())
-                .role(MemberRole.TEACHER)
-                .build();
-
-        Member saved = memberRepository.save(teacher);
-        return TeacherRegisterResponse.from(saved);
-    }
-
     @Transactional(readOnly = true)
     public AuthTokens login(LoginRequest request) {
         Member member = memberRepository.findByEmail(request.normalizedEmail())
                 .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));
 
-        if (!member.isActive()) {
+        if (member.isDeleted()) {
             throw new BusinessException(RsCode.MEMBER_INACTIVE);
         }
 
@@ -68,15 +47,14 @@ public class AuthService {
         if (refreshToken == null) {
             throw new BusinessException(RsCode.UNAUTHENTICATED);
         }
-        String token = refreshToken;
-        if (refreshTokenStore.isBlacklisted(token)) {
+        if (refreshTokenStore.isBlacklisted(refreshToken)) {
             throw new BusinessException(RsCode.UNAUTHENTICATED);
         }
-        if (!jwtProvider.isValidToken(token)) {
+        if (!jwtProvider.isValidToken(refreshToken)) {
             throw new BusinessException(RsCode.UNAUTHENTICATED);
         }
 
-        Member member = memberRepository.findById(jwtProvider.getUserId(token))
+        Member member = memberRepository.findById(jwtProvider.getUserId(refreshToken))
                 .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));
 
         return issueTokens(member);

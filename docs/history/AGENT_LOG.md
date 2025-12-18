@@ -1259,3 +1259,185 @@ BEHAVIORAL
 - 영향받은 테스트: `JwtProviderTest`, `SecurityIntegrationTest`, `MemberControllerTest`를 업데이트했으나 Gradle wrapper 파일 잠금(`gradle-9.2.1-bin.zip.lck`)으로 실행에 실패하여 재로그인 후 재시도가 필요
 - 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/MemberPrincipal.java, backend/src/main/java/com/classhub/domain/member/model/MemberRole.java, backend/src/main/java/com/classhub/global/jwt/JwtProvider.java, backend/src/main/java/com/classhub/domain/auth/application/AuthService.java, backend/src/main/java/com/classhub/global/config/SecurityConfig.java, backend/src/main/java/com/classhub/global/init/SeedKeys.java, backend/src/test/java/com/classhub/global/jwt/JwtProviderTest.java, backend/src/test/java/com/classhub/global/config/SecurityIntegrationTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
 - 다음 단계: Gradle wrapper 잠금 문제를 해결해 테스트를 다시 실행하고, 이후 TODO Phase 4의 다음 항목(회원가입/초대 로직 리팩터링)을 진행
+## [2025-12-18 15:37] Teacher Register PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Member 스펙 반영 및 Teacher 회원가입 리팩터링 범위를 정의한 `auth-teacher-register_plan.md`를 작성했다.
+
+### Details
+- 작업 사유: Phase 4 두 번째 작업(Teacher 회원가입 검증/리팩터링)을 진행하기 전에 Member 엔티티와 AuthService 변경 지침을 확정하기 위함
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/auth-teacher-register_plan.md
+- 다음 단계: 사용자가 PLAN을 검토/승인하면 Member 엔티티 및 AuthService/AuthController를 리팩터링하고 테스트를 추가한다
+## [2025-12-18 15:41] BaseEntity Soft Delete 필드 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- BaseEntity에 `deletedAt` 컬럼과 `isDeleted/delete/restore` 헬퍼를 추가해 final-entity-spec의 Soft Delete 규칙을 반영했다.
+
+### Details
+- 작업 사유: Season2 엔티티 표준에 따라 모든 엔티티가 공통 Soft Delete 필드를 갖추도록 하기 위함
+- 영향받은 테스트: 코드 변경만 수행(아직 테스트 추가 없음)
+- 수정한 파일: backend/src/main/java/com/classhub/global/entity/BaseEntity.java
+- 다음 단계: 엔티티별 soft delete 플래그를 활용하도록 리포지터리/서비스 단에서 조회 조건을 보강하고, BaseEntity 변경에 따른 마이그레이션(TODO) 준비
+## [2025-12-18 15:42] BaseTimeEntity Soft Delete 이동
+
+### Type
+STRUCTURAL
+
+### Summary
+- Soft Delete 필드를 BaseEntity에서 BaseTimeEntity로 이동시켜 BaseEntity가 id만 관리하고, BaseTimeEntity가 created/updated/deletedAt과 helper 메서드를 일괄 제공하도록 정비했다.
+
+### Details
+- 작업 사유: final-entity-spec에서 정의한 BaseEntity(id + createdAt/updatedAt/deletedAt) 구조를 실제 코드 계층(BaseTimeEntity → BaseEntity)와 맞추기 위함
+- 영향받은 테스트: 코드 변경만 수행, 테스트 없음
+- 수정한 파일: backend/src/main/java/com/classhub/global/entity/BaseTimeEntity.java
+- 다음 단계: 후속 엔티티 리팩터링에서 삭제 플래그를 활용하고, BaseEntity 관련 이전 로그와 함께 문서에 반영
+## [2025-12-18 16:09] AuthService 로그인/로그아웃 단위 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- Mockito 기반 `AuthServiceTest`를 추가해 로그인 성공/실패 시나리오와 로그아웃 토큰 블랙리스트 동작을 검증했다.
+
+### Details
+- 작업 사유: Phase 4 '로그인/로그아웃 검증' 항목에 따라 핵심 Auth 기능의 회귀 테스트를 우선 확보하기 위함
+- 영향받은 테스트: 신설된 `AuthServiceTest` 대상 `./gradlew test --tests com.classhub.domain.auth.application.AuthServiceTest` 실행을 시도했으나 Gradle wrapper가 `~/.gradle/.../gradle-9.2.1-bin.zip.lck` 파일에 접근하지 못해 실패(권한 문제). 환경 정리 후 재시도 필요
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java
+- 다음 단계: Gradle wrapper 권한 문제를 해결한 뒤 테스트를 재실행하고, 이후 토큰 재발급/회원가입 재구현 작업을 진행
+## [2025-12-18 16:12] AuthController SpringBootTest 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- SpringBootTest+MockMvc 기반 `AuthControllerTest`를 작성해 로그인시 쿠키 설정 및 로그아웃시 쿠키 추출/삭제 흐름을 검증했다.
+
+### Details
+- 작업 사유: 로그인/로그아웃 플로우를 컨트롤러 레벨에서도 회귀 테스트로 보강
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.auth.web.AuthControllerTest` 실행을 시도했으나 동일한 Gradle wrapper 락 파일(`~/.gradle/.../gradle-9.2.1-bin.zip.lck`) 접근 문제로 실패
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+- 다음 단계: Gradle wrapper 권한 이슈를 해결 후 테스트를 재실행하고, 이후 토큰 재발급/회원가입 작업으로 진행
+## [2025-12-18 16:12] AuthControllerTest 프로파일 보정
+
+### Type
+STRUCTURAL
+
+### Summary
+- AuthControllerTest에 `@ActiveProfiles("test")`를 추가해 테스트 전용 설정이 적용되도록 했다.
+
+### Details
+- 작업 사유: SpringBootTest 기반 컨트롤러 테스트가 test 프로파일 환경을 사용하도록 맞춤
+- 영향받은 테스트: 실행은 기존과 동일하게 Gradle wrapper 권한 문제로 보류 중
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+- 다음 단계: Gradle wrapper 권한을 정리한 후 테스트 재실행
+## [2025-12-18 16:14] AuthControllerTest MockMvc 시나리오 확장
+
+### Type
+STRUCTURAL
+
+### Summary
+- AuthControllerTest를 @SpringBootTest+@AutoConfigureMockMvc로 구성하고 AuthService/RefreshTokenCookieProvider를 MockBean 처리해 로그인·재발급·로그아웃 요청을 실제 HTTP 호출로 검증하도록 수정했다.
+
+### Details
+- 작업 사유: 컨트롤러 레벨에서 서비스 호출/쿠키 처리 흐름을 명확히 테스트하기 위함
+- 영향받은 테스트: Gradle wrapper 권한 문제로 실행은 아직 불가
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+- 다음 단계: Gradle wrapper 권한을 정리한 뒤 테스트 실행, 이어서 나머지 Auth 작업 진행
+## [2025-12-18 16:39] MemberRepository DataJpaTest 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `@DataJpaTest` 기반 MemberRepositoryTest를 작성해 이메일 조회/중복 검사를 검증했다.
+
+### Details
+- 작업 사유: MemberRepository의 기본 계약(findByEmail/existsByEmail)을 회귀 테스트로 확보
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.member.repository.MemberRepositoryTest`는 여전히 Gradle wrapper 락 파일 문제로 실행 불가
+- 수정한 파일: backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java
+- 다음 단계: Gradle wrapper 권한 정리 후 전체 테스트를 재실행하고, Auth/TODO 항목을 계속 진행
+## [2025-12-18 16:54] 백엔드 테스트 작성 지침 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `backend/AGENTS.md`에 Repository/Service/Controller 테스트 작성 방식(DataJpaTest, MockitoExtension, SpringBootTest+MockMvc) 지침을 명시했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 테스트 코드 패턴을 AGENTS에 정식 규칙으로 추가
+- 영향받은 테스트: 없음
+- 수정한 파일: backend/AGENTS.md
+- 다음 단계: 지침에 맞춰 추가 테스트 작성 시 참고
+## [2025-12-18 16:56] 백엔드 테스트 지침 세부 조건 보강
+
+### Type
+STRUCTURAL
+
+### Summary
+- backend/AGENTS.md에 Repository/Service/Controller 테스트 시 import·구성 방식(특히 DataJpaTest와 MockitoBean/SpringBootTest 세팅)을 더 명확히 명시했다.
+
+### Details
+- 작업 사유: 사용자 지시에 맞춰 테스트 코드 스타일을 문서로 강제하기 위함
+- 영향받은 테스트: 없음
+- 수정한 파일: backend/AGENTS.md
+- 다음 단계: 지침에 따라 기존/향후 테스트 코드를 점검
+## [2025-12-18 16:58] MemberRepository 기본 시나리오 DataJpaTest 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `MemberRepositoryTest`에 이메일 조회/중복/Soft Delete 검증 테스트를 AGENT 지침 방식으로 추가했다.
+
+### Details
+- 작업 사유: Repository 계층 테스트 예시를 AGENTS.md 규칙에 맞춰 확보
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.member.repository.MemberRepositoryTest` 실행은 Gradle wrapper 락 문제로 여전히 불가
+- 수정한 파일: backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java
+- 다음 단계: Gradle wrapper 권한 문제 해결 후 테스트 재실행, 이후 Auth TODO 진행
+## [2025-12-18 17:11] MemberRepositoryTest 감사 필드 활성화 및 존재 검증 수정
+
+### Type
+BUGFIX
+
+### Summary
+- DataJpaTest에서 JPA Auditing 구성을 가져오고 존재 여부 검증을 `findByEmail` 기반으로 조정해 전체 테스트가 다시 통과하게 했다.
+
+### Details
+- 작업 사유: backend에서 `./gradlew test` 실행 시 created_at 제약 위반과 존재하지 않는 `existsByEmail` 호출로 MemberRepositoryTest가 실패했기 때문
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: 추가 요청 또는 TODO 지시에 따라 후속 작업 진행
+## [2025-12-18 17:18] 백엔드 테스트 지침에 참조 파일 명시
+
+### Type
+STRUCTURAL
+
+### Summary
+- backend/AGENTS.md의 Repository/Service/Controller 테스트 규칙에 각각 참고해야 할 표준 테스트 파일(MemberRepositoryTest/AuthServiceTest/AuthControllerTest)을 명시했다.
+
+### Details
+- 작업 사유: 사용자가 테스트 코드 작성 시 따라야 할 구체 예시와 import 구성을 분명히 해달라고 요청함
+- 영향받은 테스트: 없음
+- 수정한 파일: backend/AGENTS.md, docs/history/AGENT_LOG.md
+- 다음 단계: 해당 예시 파일을 기준으로 테스트 작성/리뷰 진행
+## [2025-12-18 17:18] AuthController /me API 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `/api/v1/auth/me` 엔드포인트를 포함해 AuthController의 모든 공개 API를 MockMvc 테스트로 검증하도록 `AuthControllerTest`를 보강했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 AuthController에 선언된 API 함수 전부를 테스트로 검증해야 했기 때문
+- 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest.me_shouldReturnCurrentMemberData"`
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: 없음

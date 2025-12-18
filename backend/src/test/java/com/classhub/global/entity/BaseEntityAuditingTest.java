@@ -24,6 +24,7 @@ class BaseEntityAuditingTest {
                         .email("audit@classhub.com")
                         .password("encoded")
                         .name("Audit User")
+                        .phoneNumber("01011112222")
                         .role(MemberRole.TEACHER)
                         .build()
         );
