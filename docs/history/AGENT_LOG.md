@@ -1618,3 +1618,67 @@ STRUCTURAL
 - 영향받은 테스트: 없음 (열거형 재정렬)
 - 수정한 파일: backend/src/main/java/com/classhub/global/response/RsCode.java, docs/history/AGENT_LOG.md
 - 다음 단계: 없음
+
+## [2025-12-18 19:55] 도메인 Enum 작성 PLAN 수립
+
+### Type
+DESIGN
+
+### Summary
+- Phase4 TODO “도메인 ENUM 작성”을 위한 상세 PLAN(`docs/plan/backend/season2/domain-enum_plan.md`)을 작성해 필요한 Enum 목록, 패키지 구조, TDD/Implementation 단계를 정의했다.
+
+### Details
+- 작업 사유: Season2 스펙에 맞춰 Enum을 일괄 정리하기 위한 설계 문서가 필요했기 때문
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/domain-enum_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN Step 1에 따라 Enum 인벤토리를 정리하고 코드 구현을 준비
+
+## [2025-12-18 19:58] Enum PLAN 패키지/범위 조정
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 피드백을 반영해 PLAN Non-functional 섹션에 company/branch, clinic 하위 패키지 구조를 명시하고, 스펙에 존재하지 않는 NoticeType/WorkLogType/ClinicAttendanceStatus 등을 Enum 대상에서 제외하도록 수정했다.
+
+### Details
+- 작업 사유: 도메인별 폴더 구조와 작성 대상 Enum을 명확히 하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/domain-enum_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 패키지 규칙에 맞춰 Enum 구현 착수
+
+## [2025-12-18 20:00] Enum PLAN 테스트 범위 조정
+
+### Type
+DESIGN
+
+### Summary
+- Enum 작성은 단순 값 정의 작업이므로 별도 단위 테스트 섹션을 삭제하고 Implementation Steps에 통합했습니다.
+
+### Details
+- 작업 사유: 사용자 의견에 따라 굳이 테스트를 작성하지 않아도 되는 영역을 문서에서 정리
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/plan/backend/season2/domain-enum_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN Step 1 수행
+
+## [2025-12-18 20:10] 도메인 Enum 1차 구현 (Company/Assignment/Enrollment/Clinic/Feedback)
+
+### Type
+STRUCTURAL
+
+### Summary
+- PLAN Appendix에서 미구현으로 표시된 Enum 6종을 Season2 패키지 규칙에 맞춰 추가했다: `CompanyType`, `VerifiedStatus`, `BranchRole`, `EnrollmentStatus`, `ClinicSessionType`, `FeedbackStatus`.
+- 신규 도메인 패키지(`domain/company/company`, `domain/clinic/clinicsession`, `domain/enrollment`, `domain/feedback`)를 준비해 앞으로의 엔티티 구현 시 재사용할 수 있도록 정리했다.
+
+### Details
+- 작업 사유: Phase4 TODO “도메인 ENUM 작성” Step 2 실행
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/company/company/model/CompanyType.java
+  - backend/src/main/java/com/classhub/domain/company/company/model/VerifiedStatus.java
+  - backend/src/main/java/com/classhub/domain/assignment/model/BranchRole.java
+  - backend/src/main/java/com/classhub/domain/enrollment/model/EnrollmentStatus.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSessionType.java
+  - backend/src/main/java/com/classhub/domain/feedback/model/FeedbackStatus.java
+  - docs/history/AGENT_LOG.md
+- 다음 단계: 나머지 Enum(필요 시 ClinicReason 등) 정리 후 엔티티/레포 구현
