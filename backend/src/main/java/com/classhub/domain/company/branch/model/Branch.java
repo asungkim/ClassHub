@@ -71,4 +71,14 @@ public class Branch extends BaseEntity {
     public void markUnverified() {
         this.verifiedStatus = VerifiedStatus.UNVERIFIED;
     }
+
+    public void applySeed(UUID companyId,
+                          String name,
+                          UUID creatorMemberId,
+                          VerifiedStatus verifiedStatus) {
+        this.companyId = Objects.requireNonNull(companyId, "companyId must not be null");
+        this.name = Objects.requireNonNull(name, "name must not be null").trim();
+        this.creatorMemberId = creatorMemberId;
+        this.verifiedStatus = verifiedStatus == null ? VerifiedStatus.VERIFIED : verifiedStatus;
+    }
 }

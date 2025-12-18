@@ -4,127 +4,7 @@
  */
 
 export interface paths {
-    "/api/v1/student-profiles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 학생 프로필 목록
-         * @description Teacher가 소유한 학생 프로필 목록을 페이징 조회한다.
-         */
-        get: operations["getStudentProfiles"];
-        put?: never;
-        /**
-         * 학생 프로필 생성
-         * @description Teacher 소유 Course에 학생 프로필을 등록한다.
-         */
-        post: operations["createStudentProfile"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/shared-lessons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * SharedLesson 목록
-         * @description Course ID로 공통 진도 목록을 조회한다.
-         */
-        get: operations["getSharedLessons"];
-        put?: never;
-        /**
-         * SharedLesson 생성
-         * @description Course에 공통 진도를 작성한다.
-         */
-        post: operations["createSharedLesson"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/personal-lessons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * PersonalLesson 목록
-         * @description 학생 프로필 ID로 개별 진도 목록을 조회한다.
-         */
-        get: operations["getPersonalLessons"];
-        put?: never;
-        /**
-         * PersonalLesson 생성
-         * @description 학생 프로필에 개별 진도를 작성한다.
-         */
-        post: operations["createPersonalLesson"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/invitations/student": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 학생 초대 목록
-         * @description Teacher/Assistant가 생성한 Student 초대 목록을 조회한다.
-         */
-        get: operations["listStudentInvitations"];
-        put?: never;
-        /**
-         * 학생 일괄 초대 생성
-         * @description Teacher/Assistant가 여러 StudentProfile에 대해 일괄로 Student 초대를 생성한다.
-         */
-        post: operations["createStudentInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/invitations/assistant": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 조교 초대 목록
-         * @description Teacher가 생성한 Assistant 초대 목록을 조회한다.
-         */
-        get: operations["listAssistantInvitations"];
-        put?: never;
-        /**
-         * 조교 초대 생성
-         * @description Teacher가 Assistant 초대를 생성한다.
-         */
-        post: operations["createAssistantInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/invitations/assistant/link": {
+    "/api/v1/members/register/teacher": {
         parameters: {
             query?: never;
             header?: never;
@@ -134,76 +14,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 조교 초대 링크 생성/회전
-         * @description Teacher가 공용 조교 초대 링크를 생성한다. 기존 PENDING 조교 초대는 자동으로 REVOKED된다.
-         */
-        post: operations["createAssistantLink"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/courses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 반 목록 조회
-         * @description 로그인한 Teacher의 반 목록을 조회한다. isActive 파라미터로 필터링 가능.
-         */
-        get: operations["getCourses"];
-        put?: never;
-        /**
-         * 반 생성
-         * @description 새로운 반을 생성한다.
-         */
-        post: operations["createCourse"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/clinic-slots": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * ClinicSlot 목록
-         * @description Teacher가 생성한 클리닉 슬롯 목록을 조회한다.
-         */
-        get: operations["getSlots"];
-        put?: never;
-        /**
-         * ClinicSlot 생성
-         * @description 요일/시간/정원을 지정해 클리닉 슬롯을 생성한다.
-         */
-        post: operations["createSlot"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/register/teacher": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Teacher 회원가입
-         * @description Teacher 계정을 등록한다.
+         * 선생님 회원가입
+         * @description Teacher 역할 계정을 생성하고 Access/Refresh 토큰을 발급한다.
          */
         post: operations["registerTeacher"];
         delete?: never;
@@ -212,7 +24,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/register/invited": {
+    "/api/v1/members/register/student": {
         parameters: {
             query?: never;
             header?: never;
@@ -222,10 +34,50 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 초대 기반 회원가입
-         * @description 초대 코드를 통한 회원가입을 처리한다.
+         * 학생 회원가입
+         * @description Student 역할 계정을 생성하고 StudentInfo까지 함께 저장한다.
          */
-        post: operations["registerInvited"];
+        post: operations["registerStudent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/members/register/assistant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 조교 초대 기반 회원가입
+         * @description 초대 코드로 Assistant 계정을 생성한다.
+         */
+        post: operations["registerAssistantByInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 조교 초대 생성
+         * @description Teacher가 조교를 초대할 수 있는 초대 코드를 발급한다.
+         */
+        post: operations["createAssistantInvitation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -312,35 +164,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/student-profiles/{profileId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 학생 프로필 상세 조회
-         * @description 프로필 ID로 학생 정보를 조회한다.
-         */
-        get: operations["getStudentProfile"];
-        put?: never;
-        post?: never;
-        /**
-         * 학생 프로필 비활성화
-         * @description 학생 프로필을 비활성 상태로 변경한다.
-         */
-        delete: operations["deleteStudentProfile"];
-        options?: never;
-        head?: never;
-        /**
-         * 학생 프로필 수정
-         * @description 학생 정보 및 담당 조교, 연락처 등을 수정한다.
-         */
-        patch: operations["updateStudentProfile"];
-        trace?: never;
-    };
-    "/api/v1/student-profiles/{profileId}/activate": {
+    "/api/v1/invitations/{code}/revoke": {
         parameters: {
             query?: never;
             header?: never;
@@ -354,338 +178,10 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * 학생 프로필 활성화
-         * @description 비활성 학생 프로필을 활성 상태로 변경한다.
+         * 조교 초대 취소
+         * @description Teacher가 아직 사용되지 않은 초대를 취소한다.
          */
-        patch: operations["activateStudentProfile"];
-        trace?: never;
-    };
-    "/api/v1/shared-lessons/{lessonId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * SharedLesson 상세
-         * @description 공통 진도 상세를 조회한다.
-         */
-        get: operations["getSharedLesson"];
-        put?: never;
-        post?: never;
-        /**
-         * SharedLesson 삭제
-         * @description 공통 진도를 삭제한다.
-         */
-        delete: operations["deleteSharedLesson"];
-        options?: never;
-        head?: never;
-        /**
-         * SharedLesson 수정
-         * @description 공통 진도의 날짜/제목/내용을 수정한다.
-         */
-        patch: operations["updateSharedLesson"];
-        trace?: never;
-    };
-    "/api/v1/personal-lessons/{lessonId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * PersonalLesson 상세
-         * @description 개별 진도 상세 내용을 조회한다.
-         */
-        get: operations["getPersonalLesson"];
-        put?: never;
-        post?: never;
-        /**
-         * PersonalLesson 삭제
-         * @description 개별 진도를 삭제한다.
-         */
-        delete: operations["deletePersonalLesson"];
-        options?: never;
-        head?: never;
-        /**
-         * PersonalLesson 수정
-         * @description 개별 진도의 날짜 및 내용을 수정한다.
-         */
-        patch: operations["updatePersonalLesson"];
-        trace?: never;
-    };
-    "/api/v1/members/{memberId}/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 조교 비활성화
-         * @description Teacher가 소속 조교를 비활성화한다.
-         */
-        patch: operations["deactivateAssistant"];
-        trace?: never;
-    };
-    "/api/v1/members/{memberId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 조교 활성화
-         * @description Teacher가 소속 조교를 활성 상태로 변경한다.
-         */
-        patch: operations["activateAssistant"];
-        trace?: never;
-    };
-    "/api/v1/courses/{courseId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 반 상세 조회
-         * @description 특정 반의 상세 정보를 조회한다.
-         */
-        get: operations["getCourse"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 반 수정
-         * @description 반 정보를 수정한다.
-         */
-        patch: operations["updateCourse"];
-        trace?: never;
-    };
-    "/api/v1/courses/{courseId}/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 반 비활성화
-         * @description 반을 비활성화한다.
-         */
-        patch: operations["deactivateCourse"];
-        trace?: never;
-    };
-    "/api/v1/courses/{courseId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 반 활성화
-         * @description 비활성화된 반을 다시 활성화한다.
-         */
-        patch: operations["activateCourse"];
-        trace?: never;
-    };
-    "/api/v1/clinic-slots/{slotId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * ClinicSlot 상세
-         * @description 클리닉 슬롯 상세 정보를 조회한다.
-         */
-        get: operations["getSlot"];
-        put?: never;
-        post?: never;
-        /**
-         * ClinicSlot 삭제
-         * @description 클리닉 슬롯을 삭제한다.
-         */
-        delete: operations["deleteSlot"];
-        options?: never;
-        head?: never;
-        /**
-         * ClinicSlot 수정
-         * @description 클리닉 슬롯의 요일/시간/정원을 수정한다.
-         */
-        patch: operations["updateSlot"];
-        trace?: never;
-    };
-    "/api/v1/clinic-slots/{slotId}/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * ClinicSlot 비활성화
-         * @description 슬롯을 비활성화한다.
-         */
-        patch: operations["deactivateSlot"];
-        trace?: never;
-    };
-    "/api/v1/clinic-slots/{slotId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * ClinicSlot 활성화
-         * @description 비활성화된 슬롯을 다시 활성화한다.
-         */
-        patch: operations["activateSlot"];
-        trace?: never;
-    };
-    "/api/v1/students/{studentId}/calendar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 학생 캘린더 조회
-         * @description SharedLesson과 PersonalLesson을 통합한 학생 월간 캘린더를 조회한다.
-         */
-        get: operations["getStudentCalendar"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/student-profiles/{profileId}/personal-lessons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 학생별 PersonalLesson 목록
-         * @description 특정 학생 프로필에 대한 개별 진도를 조회한다.
-         */
-        get: operations["getLessonsByProfile"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 멤버 목록 조회 (조교 전용)
-         * @description Teacher가 소속 조교 목록을 조회한다.
-         */
-        get: operations["getAssistants"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/invitations/student/candidates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 학생 초대 후보 조회
-         * @description 초대되지 않은 StudentProfile 목록을 조회한다 (memberId=null, active=true, PENDING 초대 없음)
-         */
-        get: operations["findStudentCandidates"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/courses/{courseId}/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Course 학생 목록
-         * @description Course ID 기준으로 학생 프로필 요약을 조회한다.
-         */
-        get: operations["getStudentsByCourse"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
+        patch: operations["revokeInvitation"];
         trace?: never;
     };
     "/api/v1/auth/me": {
@@ -708,272 +204,16 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/invitations/{code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * 초대 취소
-         * @description 초대 코드 기준으로 초대를 취소한다.
-         */
-        delete: operations["revokeInvitation"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        StudentProfileCreateRequest: {
-            courseIds: string[];
+        RegisterMemberRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
             name: string;
             phoneNumber: string;
-            /** Format: uuid */
-            assistantId?: string;
-            parentPhone: string;
-            schoolName: string;
-            grade: string;
-            /** Format: int32 */
-            age: number;
-            /** Format: uuid */
-            defaultClinicSlotId?: string;
-        };
-        EnrolledCourseInfo: {
-            /** Format: uuid */
-            courseId?: string;
-            courseName?: string;
-            /** Format: date-time */
-            enrolledAt?: string;
-        };
-        RsDataStudentProfileResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["StudentProfileResponse"];
-        };
-        StudentProfileResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            teacherId?: string;
-            /** Format: uuid */
-            assistantId?: string;
-            /** Format: uuid */
-            memberId?: string;
-            name?: string;
-            phoneNumber?: string;
-            parentPhone?: string;
-            schoolName?: string;
-            grade?: string;
-            /** Format: uuid */
-            defaultClinicSlotId?: string;
-            /** Format: int32 */
-            age?: number;
-            active?: boolean;
-            enrolledCourses?: components["schemas"]["EnrolledCourseInfo"][];
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        SharedLessonCreateRequest: {
-            /** Format: uuid */
-            courseId: string;
-            /** Format: date */
-            date?: string;
-            title: string;
-            content: string;
-        };
-        RsDataSharedLessonResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["SharedLessonResponse"];
-        };
-        SharedLessonResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        PersonalLessonCreateRequest: {
-            /** Format: uuid */
-            studentProfileId: string;
-            /** Format: date */
-            date: string;
-            title: string;
-            content: string;
-        };
-        PersonalLessonResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            studentProfileId?: string;
-            /** Format: uuid */
-            teacherId?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        RsDataPersonalLessonResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PersonalLessonResponse"];
-        };
-        StudentInvitationCreateRequest: {
-            studentProfileIds: string[];
-        };
-        InvitationResponse: {
-            code?: string;
-            targetEmail?: string;
-            /** @enum {string} */
-            inviteeRole?: "ASSISTANT" | "STUDENT";
-            /** @enum {string} */
-            status?: "PENDING" | "ACCEPTED" | "REVOKED" | "EXPIRED";
-            /** Format: date-time */
-            expiredAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            studentProfileId?: string;
-            studentName?: string;
-        };
-        RsDataListInvitationResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["InvitationResponse"][];
-        };
-        AssistantInvitationCreateRequest: {
-            /** Format: email */
-            targetEmail: string;
-        };
-        RsDataInvitationResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["InvitationResponse"];
-        };
-        CourseCreateRequest: {
-            name: string;
-            company: string;
-            schedules: components["schemas"]["CourseScheduleRequest"][];
-        };
-        CourseScheduleRequest: {
-            /** @enum {string} */
-            dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
-            startTime: string;
-            endTime: string;
-        };
-        CourseResponse: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            company?: string;
-            /** Format: uuid */
-            teacherId?: string;
-            schedules?: components["schemas"]["CourseScheduleResponse"][];
-            isActive?: boolean;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        CourseScheduleResponse: {
-            dayOfWeek?: string;
-            startTime?: string;
-            endTime?: string;
-        };
-        RsDataCourseResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["CourseResponse"];
-        };
-        ClinicSlotCreateRequest: {
-            /** @enum {string} */
-            dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
-            startTime: string;
-            endTime: string;
-            /** Format: int32 */
-            capacity?: number;
-        };
-        ClinicSlotResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            teacherId?: string;
-            /** @enum {string} */
-            dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
-            startTime?: string;
-            endTime?: string;
-            /** Format: int32 */
-            capacity?: number;
-            isActive?: boolean;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        RsDataClinicSlotResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["ClinicSlotResponse"];
-        };
-        TeacherRegisterRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-            name: string;
-        };
-        RsDataTeacherRegisterResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["TeacherRegisterResponse"];
-        };
-        TeacherRegisterResponse: {
-            /** Format: uuid */
-            memberId?: string;
-            email?: string;
-            authority?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        InvitationRegisterRequest: {
-            code: string;
-            /** Format: email */
-            email: string;
-            password: string;
-            name: string;
         };
         LoginResponse: {
             /** Format: uuid */
@@ -987,6 +227,45 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["LoginResponse"];
+        };
+        RegisterStudentRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+            name: string;
+            phoneNumber: string;
+            schoolName: string;
+            /** @enum {string} */
+            grade: "ELEMENTARY_1" | "ELEMENTARY_2" | "ELEMENTARY_3" | "ELEMENTARY_4" | "ELEMENTARY_5" | "ELEMENTARY_6" | "MIDDLE_1" | "MIDDLE_2" | "MIDDLE_3" | "HIGH_1" | "HIGH_2" | "HIGH_3" | "GAP_YEAR";
+            /** Format: date */
+            birthDate: string;
+            parentPhone: string;
+        };
+        RegisterAssistantByInvitationRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+            name: string;
+            phoneNumber: string;
+            code: string;
+        };
+        AssistantInvitationCreateRequest: {
+            /** Format: email */
+            targetEmail: string;
+            /** Format: date-time */
+            expiredAt?: string;
+        };
+        InvitationResponse: {
+            code?: string;
+            targetEmail?: string;
+            /** Format: date-time */
+            expiredAt?: string;
+        };
+        RsDataInvitationResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["InvitationResponse"];
         };
         LogoutRequest: {
             refreshToken?: string;
@@ -1008,12 +287,11 @@ export interface components {
         };
         InvitationVerifyResponse: {
             /** Format: uuid */
-            inviterId?: string;
-            inviterName?: string;
-            inviteeRole?: string;
+            senderId?: string;
+            senderName?: string;
+            targetEmail?: string;
             /** Format: date-time */
-            expiresAt?: string;
-            studentProfile?: components["schemas"]["StudentCandidateResponse"];
+            expiredAt?: string;
         };
         RsDataInvitationVerifyResponse: {
             /** Format: int32 */
@@ -1021,291 +299,13 @@ export interface components {
             message?: string;
             data?: components["schemas"]["InvitationVerifyResponse"];
         };
-        StudentCandidateResponse: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            phoneNumber?: string;
-            parentPhone?: string;
-            schoolName?: string;
-            grade?: string;
-            /** Format: int32 */
-            age?: number;
-        };
-        StudentProfileUpdateRequest: {
-            name?: string;
-            parentPhone?: string;
-            schoolName?: string;
-            grade?: string;
-            courseIds?: string[];
-            /** Format: uuid */
-            assistantId?: string;
-            phoneNumber?: string;
-            /** Format: uuid */
-            memberId?: string;
-            /** Format: uuid */
-            defaultClinicSlotId?: string;
-            /** Format: int32 */
-            age?: number;
-        };
-        SharedLessonUpdateRequest: {
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-        };
-        PersonalLessonUpdateRequest: {
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-        };
-        CourseUpdateRequest: {
-            name?: string;
-            company?: string;
-            schedules?: components["schemas"]["CourseScheduleRequest"][];
-        };
-        RsDataObject: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: unknown;
-        };
-        ClinicSlotUpdateRequest: {
-            /** @enum {string} */
-            dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
-            startTime?: string;
-            endTime?: string;
-            /** Format: int32 */
-            capacity?: number;
-        };
-        CalendarClinicRecordDto: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            clinicSlotId?: string;
-            /** Format: date */
-            date?: string;
-            note?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
-            editable?: boolean;
-        };
-        CalendarPersonalLessonDto: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
-            editable?: boolean;
-        };
-        CalendarSharedLessonDto: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            courseId?: string;
-            courseName?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
-            editable?: boolean;
-        };
-        RsDataStudentCalendarResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["StudentCalendarResponse"];
-        };
-        StudentCalendarResponse: {
-            /** Format: int32 */
-            schemaVersion?: number;
-            /** Format: uuid */
-            studentId?: string;
-            /** Format: int32 */
-            year?: number;
-            /** Format: int32 */
-            month?: number;
-            sharedLessons?: components["schemas"]["CalendarSharedLessonDto"][];
-            personalLessons?: components["schemas"]["CalendarPersonalLessonDto"][];
-            clinicRecords?: components["schemas"]["CalendarClinicRecordDto"][];
-        };
-        Pageable: {
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            size?: number;
-            sort?: string[];
-        };
-        PageResponseStudentProfileSummary: {
-            content?: components["schemas"]["StudentProfileSummary"][];
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            size?: number;
-            /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            totalPages?: number;
-            first?: boolean;
-            last?: boolean;
-        };
-        RsDataPageResponseStudentProfileSummary: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResponseStudentProfileSummary"];
-        };
-        StudentProfileSummary: {
-            /** Format: uuid */
-            id?: string;
-            courseNames?: string[];
-            name?: string;
-            grade?: string;
-            phoneNumber?: string;
-            /** Format: uuid */
-            assistantId?: string;
-            assistantName?: string;
-            /** Format: uuid */
-            memberId?: string;
-            parentPhone?: string;
-            /** Format: int32 */
-            age?: number;
-            active?: boolean;
-        };
-        PageResponsePersonalLessonSummary: {
-            content?: components["schemas"]["PersonalLessonSummary"][];
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            size?: number;
-            /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            totalPages?: number;
-            first?: boolean;
-            last?: boolean;
-        };
-        PersonalLessonSummary: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            studentProfileId?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-        };
-        RsDataPageResponsePersonalLessonSummary: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResponsePersonalLessonSummary"];
-        };
-        PageResponseSharedLessonSummary: {
-            content?: components["schemas"]["SharedLessonSummary"][];
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            size?: number;
-            /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            totalPages?: number;
-            first?: boolean;
-            last?: boolean;
-        };
-        RsDataPageResponseSharedLessonSummary: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResponseSharedLessonSummary"];
-        };
-        SharedLessonSummary: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        MemberSummary: {
-            /** Format: uuid */
-            memberId?: string;
-            email?: string;
-            name?: string;
-            /** @enum {string} */
-            role?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
-            active?: boolean;
-            /** Format: uuid */
-            teacherId?: string;
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        PageResponseMemberSummary: {
-            content?: components["schemas"]["MemberSummary"][];
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            size?: number;
-            /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            totalPages?: number;
-            first?: boolean;
-            last?: boolean;
-        };
-        RsDataPageResponseMemberSummary: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResponseMemberSummary"];
-        };
-        RsDataListStudentCandidateResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["StudentCandidateResponse"][];
-        };
-        RsDataListCourseResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["CourseResponse"][];
-        };
-        RsDataListStudentProfileSummary: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["StudentProfileSummary"][];
-        };
-        RsDataListClinicSlotResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["ClinicSlotResponse"][];
-        };
         MeResponse: {
             /** Format: uuid */
             memberId?: string;
             email?: string;
             name?: string;
             /** @enum {string} */
-            role?: "TEACHER" | "ASSISTANT" | "STUDENT" | "SUPERADMIN";
+            role?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
         };
         RsDataMeResponse: {
             /** Format: int32 */
@@ -1322,32 +322,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getStudentProfiles: {
-        parameters: {
-            query: {
-                courseId?: string;
-                name?: string;
-                active?: boolean;
-                pageable: components["schemas"]["Pageable"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPageResponseStudentProfileSummary"];
-                };
-            };
-        };
-    };
-    createStudentProfile: {
+    registerTeacher: {
         parameters: {
             query?: never;
             header?: never;
@@ -1356,7 +331,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StudentProfileCreateRequest"];
+                "application/json": components["schemas"]["RegisterMemberRequest"];
             };
         };
         responses: {
@@ -1366,37 +341,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["RsDataStudentProfileResponse"];
+                    "*/*": components["schemas"]["RsDataLoginResponse"];
                 };
             };
         };
     };
-    getSharedLessons: {
-        parameters: {
-            query: {
-                courseId: string;
-                from?: string;
-                to?: string;
-                pageable: components["schemas"]["Pageable"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPageResponseSharedLessonSummary"];
-                };
-            };
-        };
-    };
-    createSharedLesson: {
+    registerStudent: {
         parameters: {
             query?: never;
             header?: never;
@@ -1405,7 +355,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SharedLessonCreateRequest"];
+                "application/json": components["schemas"]["RegisterStudentRequest"];
             };
         };
         responses: {
@@ -1415,37 +365,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["RsDataSharedLessonResponse"];
+                    "*/*": components["schemas"]["RsDataLoginResponse"];
                 };
             };
         };
     };
-    getPersonalLessons: {
-        parameters: {
-            query: {
-                studentProfileId: string;
-                from?: string;
-                to?: string;
-                pageable: components["schemas"]["Pageable"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPageResponsePersonalLessonSummary"];
-                };
-            };
-        };
-    };
-    createPersonalLesson: {
+    registerAssistantByInvitation: {
         parameters: {
             query?: never;
             header?: never;
@@ -1454,7 +379,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PersonalLessonCreateRequest"];
+                "application/json": components["schemas"]["RegisterAssistantByInvitationRequest"];
             };
         };
         responses: {
@@ -1464,75 +389,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["RsDataPersonalLessonResponse"];
-                };
-            };
-        };
-    };
-    listStudentInvitations: {
-        parameters: {
-            query?: {
-                status?: "PENDING" | "ACCEPTED" | "REVOKED" | "EXPIRED";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataListInvitationResponse"];
-                };
-            };
-        };
-    };
-    createStudentInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StudentInvitationCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataListInvitationResponse"];
-                };
-            };
-        };
-    };
-    listAssistantInvitations: {
-        parameters: {
-            query?: {
-                status?: "PENDING" | "ACCEPTED" | "REVOKED" | "EXPIRED";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataListInvitationResponse"];
+                    "*/*": components["schemas"]["RsDataLoginResponse"];
                 };
             };
         };
@@ -1557,167 +414,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataInvitationResponse"];
-                };
-            };
-        };
-    };
-    createAssistantLink: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataInvitationResponse"];
-                };
-            };
-        };
-    };
-    getCourses: {
-        parameters: {
-            query?: {
-                isActive?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataListCourseResponse"];
-                };
-            };
-        };
-    };
-    createCourse: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CourseCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataCourseResponse"];
-                };
-            };
-        };
-    };
-    getSlots: {
-        parameters: {
-            query?: {
-                isActive?: boolean;
-                dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataListClinicSlotResponse"];
-                };
-            };
-        };
-    };
-    createSlot: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClinicSlotCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
-                };
-            };
-        };
-    };
-    registerTeacher: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TeacherRegisterRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataTeacherRegisterResponse"];
-                };
-            };
-        };
-    };
-    registerInvited: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InvitationRegisterRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataLoginResponse"];
                 };
             };
         };
@@ -1814,34 +510,12 @@ export interface operations {
             };
         };
     };
-    getStudentProfile: {
+    revokeInvitation: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                profileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataStudentProfileResponse"];
-                };
-            };
-        };
-    };
-    deleteStudentProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profileId: string;
+                code: string;
             };
             cookie?: never;
         };
@@ -1854,564 +528,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    updateStudentProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StudentProfileUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataStudentProfileResponse"];
-                };
-            };
-        };
-    };
-    activateStudentProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    getSharedLesson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataSharedLessonResponse"];
-                };
-            };
-        };
-    };
-    deleteSharedLesson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    updateSharedLesson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SharedLessonUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataSharedLessonResponse"];
-                };
-            };
-        };
-    };
-    getPersonalLesson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPersonalLessonResponse"];
-                };
-            };
-        };
-    };
-    deletePersonalLesson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    updatePersonalLesson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonalLessonUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPersonalLessonResponse"];
-                };
-            };
-        };
-    };
-    deactivateAssistant: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                memberId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    activateAssistant: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                memberId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    getCourse: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataCourseResponse"];
-                };
-            };
-        };
-    };
-    updateCourse: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CourseUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataCourseResponse"];
-                };
-            };
-        };
-    };
-    deactivateCourse: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataObject"];
-                };
-            };
-        };
-    };
-    activateCourse: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataObject"];
-                };
-            };
-        };
-    };
-    getSlot: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slotId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
-                };
-            };
-        };
-    };
-    deleteSlot: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slotId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    updateSlot: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slotId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClinicSlotUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
-                };
-            };
-        };
-    };
-    deactivateSlot: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slotId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    activateSlot: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slotId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    getStudentCalendar: {
-        parameters: {
-            query: {
-                year: number;
-                month: number;
-            };
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataStudentCalendarResponse"];
-                };
-            };
-        };
-    };
-    getLessonsByProfile: {
-        parameters: {
-            query: {
-                from?: string;
-                to?: string;
-                pageable: components["schemas"]["Pageable"];
-            };
-            header?: never;
-            path: {
-                profileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPageResponsePersonalLessonSummary"];
-                };
-            };
-        };
-    };
-    getAssistants: {
-        parameters: {
-            query: {
-                role: string;
-                name?: string;
-                active?: boolean;
-                pageable: components["schemas"]["Pageable"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPageResponseMemberSummary"];
-                };
-            };
-        };
-    };
-    findStudentCandidates: {
-        parameters: {
-            query?: {
-                name?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataListStudentCandidateResponse"];
-                };
-            };
-        };
-    };
-    getStudentsByCourse: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataListStudentProfileSummary"];
                 };
             };
         };
@@ -2432,28 +548,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataMeResponse"];
-                };
-            };
-        };
-    };
-    revokeInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
                 };
             };
         };

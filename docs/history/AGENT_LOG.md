@@ -1774,3 +1774,130 @@ STRUCTURAL
 - 영향받은 테스트: 없음
 - 수정한 파일: docs/plan/README.md, docs/history/AGENT_LOG.md
 - 다음 단계: PLAN 작성 시 해당 템플릿을 적용하고, 미적용 문서는 바로 수정
+
+## [2025-12-18 21:00] InitData PLAN 시드 데이터 세부 정리
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/backend/season2/initdata_plan.md`에 Member/Company/Clinic 등 각 도메인별 시드 상수, 실행 순서, 연관 관계 표를 추가해 InitData 구현 시 참고할 수 있는 구체적 스펙을 마련했다.
+
+### Details
+- 작업 사유: Phase4 TODO “InitData 구성하기” 진행 전에 어떤 데이터를 생성할지 명확히 정의해 재작업을 방지하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN 4단계에 따라 InitData CommandLineRunner를 구현하고 TODO를 갱신
+
+## [2025-12-18 21:40] InitData PLAN Stage 1 범위 축소
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 요청에 맞춰 InitData PLAN을 Member/Company/Branch 중심(Stage 1)으로 재정리하고, 나머지 도메인은 향후 Stage 2 백로그 섹션으로 이동시켜 우선순위를 명확히 했다.
+
+### Details
+- 작업 사유: 당장 프론트엔드 연동 테스트에 필요한 최소 시드(회원/학원 구조)만 우선 구현하고, 나머지는 기능별 시점에 맞춰 확장하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Stage 1 Seed Runner 구현 후 Course/Enrollment 등 도메인별 InitData를 순차적으로 추가
+
+## [2025-12-18 21:58] InitData PLAN에 전국 학원/지점 목록 반영
+
+### Type
+DESIGN
+
+### Summary
+- Stage 1 Seed Dataset에 러셀·두각·시대인재·미래탐구 ACADEMY와 전 지점 목록을 추가하고, Branch 상수 네이밍 규칙을 정의해 실제 데이터 연동 시 확장이 가능하도록 했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 대형 학원/지점 정보를 사전에 Seed 계획에 포함해 향후 전국 데이터 오픈API 연동 시 구조를 재사용하려는 목적
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 해당 상수 정의에 맞춰 InitData Runner를 구현하고 이후 Course/Clinic Seed 시 이 Branch 정보를 기반으로 확장
+
+## [2025-12-18 22:03] InitData PLAN에 prod 프로필/구조 지침 반영
+
+### Type
+DESIGN
+
+### Summary
+- Company/Branch Seed는 prod 프로필에서도 실행되도록 PLAN에 명시하고, 모든 InitData Runner가 `global.init` 기존 구조(BootstrapDataRunner/SeedKeys/data/*)를 재사용해야 한다는 지침을 추가했다.
+
+### Details
+- 작업 사유: 운영 환경에도 동일한 Branch 데이터를 사전 배포해야 하고, Seed 구현 방식이 분산되지 않도록 명확한 구조 가이드가 필요했기 때문
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Member Runner는 local/test 한정, Company/Branch Runner는 prod 포함 프로필로 구현하고, 기존 global init 패턴을 따라 실제 클래스를 작성
+
+## [2025-12-18 22:08] InitData PLAN에 BootstrapDataRunner 프로필 제약 반영
+
+### Type
+DESIGN
+
+### Summary
+- 실제 `BootstrapDataRunner`가 `@Profile({"local","dev"})`만 활성화되어 있다는 점을 PLAN에 명시하고, prod에서 Company/Branch Seed를 주입하려면 Runner 확장 또는 별도 prod Runner가 필요함을 문서화했다.
+
+### Details
+- 작업 사유: 운영 환경 Seed 계획과 현 코드 구조가 어긋나지 않도록 실제 Runner 프로필 제약 사항을 PLAN에서 안내하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: prod에서도 실행 가능한 Runner 전략(프로필 확장 또는 전용 Runner)을 선택해 구현
+
+## [2025-12-18 22:09] InitData PLAN Stage 2 내용 제거
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 요청에 따라 InitData PLAN에서 Stage 2(Assignment, Course, Clinic 등)에 대한 모든 언급과 표, 백로그를 삭제해 Stage 1 범위(Member/StudentInfo/Company/Branch)만 남겼다.
+
+### Details
+- 작업 사유: 해당 PLAN은 현 시점에 필요한 Seed 정의만 포함해야 하므로, 추후 범위를 따로 관리하기 위해 Stage 2 내용을 제거
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Stage 1 Runner 구현 후, 새로운 필요가 생길 때 별도 PLAN으로 확장
+
+## [2025-12-18 22:15] Season2 Stage1 InitData 구현
+
+### Type
+STRUCTURAL
+
+### Summary
+- Member/StudentInfo/Company/Branch 시드 데이터를 정의하는 `InitMembers/InitStudentInfos/InitCompanies/InitBranches` 클래스를 추가하고, BaseInitData 기반 Runner 4종을 구현해 local/test/prod 프로필에 맞춰 자동 시드되도록 했다.
+- Member/StudentInfo/Company/Branch 엔티티와 Repository에 업데이트 메서드/조회 메서드를 보강하고, `BootstrapDataRunner`가 prod/test 프로필에서도 동작하도록 확장했다.
+
+### Details
+- 작업 사유: Stage 1 InitData PLAN 실행을 통해 프런트 연동 테스트 및 향후 기능 개발에 필요한 기본 데이터 세트를 확보하기 위함
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/global/init/data/**/*.java, backend/src/main/java/com/classhub/domain/**/{Company,Branch,Member,StudentInfo}.java, backend/src/main/java/com/classhub/domain/**/repository/*.java, backend/src/main/java/com/classhub/global/init/BootstrapDataRunner.java, docs/history/AGENT_LOG.md
+- 다음 단계: 필요 시 `bootstrap.data.enabled` 설정을 통해 환경별 시드 실행을 제어하고, 이후 Course/Enrollment 등 도메인별 InitData는 별도 PLAN으로 진행
+
+## [2025-12-18 22:51] InitData 통합 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `Season2InitDataTest`를 추가해 test 프로필에서 Seed Runner가 실행된 후 SuperAdmin/Teacher/Student/StudentInfo와 Company/Branch 데이터가 모두 생성되는지 검증하고, Branch 개수 및 특정 지점의 verified 상태까지 확인하도록 했다.
+
+### Details
+- 작업 사유: Seed 데이터가 반복 실행 시에도 기대 상태를 유지하는지 CI에서 자동 검증하기 위함
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/test/java/com/classhub/global/init/Season2InitDataTest.java, backend/src/main/java/com/classhub/domain/company/branch/repository/BranchRepository.java, docs/history/AGENT_LOG.md
+- 다음 단계: Seed 데이터가 늘어나면 해당 테스트를 확장하거나 도메인별 전용 검증 클래스를 추가
+
+## [2025-12-18 22:57] InitData 패키지 정리 및 Season2 명칭 제거
+
+### Type
+STRUCTURAL
+
+### Summary
+- `global.init` 하위 패키지를 `runner/`, `seed/`, `seed.dataset/`로 재구성하고 Season2라는 명칭을 제거해 재사용 가능한 Seed 구조로 정리했다. 필요한 클래스·테스트의 패키지/임포트도 일관되게 변경했다.
+
+### Details
+- 작업 사유: Seed 구성 요소가 Season2 전용으로 보이지 않도록 하고, 향후 다른 단계에서도 재사용할 수 있게 패키지를 정비하기 위함
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/global/init/** (runner/seed/*), backend/src/test/java/com/classhub/global/init/InitDataSmokeTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: 새로운 도메인 Seed를 추가할 때 동일한 패턴(dataset + seed 패키지)을 따라 구조 유지

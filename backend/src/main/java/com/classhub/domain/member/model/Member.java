@@ -58,6 +58,12 @@ public class Member extends BaseEntity {
         }
     }
 
+    public void changePhoneNumber(String phoneNumber) {
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
+    }
+
     public void activate() {
         restore();
     }

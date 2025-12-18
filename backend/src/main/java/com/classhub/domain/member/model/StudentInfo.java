@@ -53,4 +53,28 @@ public class StudentInfo extends BaseEntity {
                 .parentPhone(parentPhone)
                 .build();
     }
+
+    public void updateSchoolName(String schoolName) {
+        if (schoolName != null) {
+            this.schoolName = schoolName;
+        }
+    }
+
+    public void updateGrade(StudentGrade grade) {
+        if (grade != null) {
+            this.grade = grade;
+        }
+    }
+
+    public void updateBirthDate(LocalDate birthDate) {
+        if (birthDate != null) {
+            this.birthDate = birthDate;
+        }
+    }
+
+    public void updateParentPhone(String parentPhone) {
+        if (parentPhone != null) {
+            this.parentPhone = parentPhone;
+        }
+    }
 }

@@ -1,4 +1,4 @@
-package com.classhub.global.init;
+package com.classhub.global.init.runner;
 
 import java.util.Comparator;
 import java.util.List;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile({"local", "dev"})
+@Profile({"local", "dev", "test", "prod"})
 public class BootstrapDataRunner implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(BootstrapDataRunner.class);

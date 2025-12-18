@@ -77,4 +77,16 @@ public class Company extends BaseEntity {
     public void markUnverified() {
         this.verifiedStatus = VerifiedStatus.UNVERIFIED;
     }
+
+    public void applySeed(String name,
+                          String description,
+                          CompanyType type,
+                          VerifiedStatus verifiedStatus,
+                          UUID creatorMemberId) {
+        this.name = Objects.requireNonNull(name, "name must not be null").trim();
+        this.description = description;
+        this.type = Objects.requireNonNull(type, "type must not be null");
+        this.verifiedStatus = verifiedStatus == null ? VerifiedStatus.VERIFIED : verifiedStatus;
+        this.creatorMemberId = creatorMemberId;
+    }
 }
