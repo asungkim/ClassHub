@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import type { Route } from "next";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { useSession } from "@/components/session/session-provider";
 import { InlineError } from "@/components/ui/inline-error";
+import { getDashboardRoute } from "@/lib/routes";
 import type { components } from "@/types/openapi";
-// Dashboard routes will be reimplemented in next task
 
 type LoginRequestBody = components["schemas"]["LoginRequest"];
 type LoginResponseData = components["schemas"]["LoginResponse"];
@@ -55,15 +56,20 @@ export default function HomePage() {
     }
   };
 
+  // 이미 로그인된 사용자는 역할별 대시보드로 리다이렉트
+  useEffect(() => {
+    if (status === "authenticated" && member?.role) {
+      const dashboardRoute = getDashboardRoute(member.role) as Route;
+      router.replace(dashboardRoute);
+    }
+  }, [status, member, router]);
+
   const sessionMessage =
     status === "authenticated"
       ? `${member?.name ?? "사용자"}님, 다시 만나서 반가워요!`
       : status === "loading"
         ? "세션 상태를 확인하는 중입니다..."
         : "ClassHub에 로그인하고 대시보드를 살펴보세요.";
-
-  // Dashboard routing will be reimplemented in next task
-  // For now, authenticated users stay on home page
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4 py-16 text-gray-900">

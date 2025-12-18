@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -10,6 +11,7 @@ import { TextField } from "@/components/ui/text-field";
 import { Button } from "@/components/ui/button";
 import { PasswordRequirementList } from "@/components/ui/password-requirement-list";
 import { formatPhoneNumber, validatePhoneNumber } from "@/lib/format-phone";
+import { getDashboardRoute } from "@/lib/routes";
 import type { components } from "@/types/openapi";
 
 type RegisterTeacherRequest = components["schemas"]["RegisterMemberRequest"];
@@ -17,7 +19,7 @@ type RegisterTeacherResponse = components["schemas"]["RsDataLoginResponse"];
 
 export default function TeacherRegisterPage() {
   const router = useRouter();
-  const { status, setToken } = useSession();
+  const { status, member, setToken } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,10 +33,11 @@ export default function TeacherRegisterPage() {
 
   // 이미 로그인된 사용자는 즉시 메인 페이지로 리다이렉트
   useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/");
+    if (status === "authenticated" && member?.role) {
+      const dashboardRoute = getDashboardRoute(member.role) as Route;
+      router.replace(dashboardRoute);
     }
-  }, [status, router]);
+  }, [status, member, router]);
 
   // 비밀번호 검증 (백엔드 스펙과 동일)
   const isPasswordValid = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={}:;"'`~<>,.?/\\|\[\]]).{8,64}$/.test(password);
@@ -98,11 +101,8 @@ export default function TeacherRegisterPage() {
 
       const accessToken = response.data.data.accessToken;
 
-      // 세션 복원
+      // 세션 복원 → SessionProvider가 role 확인 후 useEffect에서 대시보드 리다이렉트
       await setToken(accessToken);
-
-      // 메인 페이지로 이동
-      router.push("/");
     } catch (error) {
       const message = error instanceof Error ? error.message : "회원가입 중 오류가 발생했습니다.";
       setFormError(message);

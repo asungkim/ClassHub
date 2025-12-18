@@ -2004,3 +2004,110 @@ DESIGN
 - 영향받은 테스트: 없음 (문서 작업)
 - 수정한 파일: CLAUDE.md, docs/history/AGENT_LOG.md
 - 다음 단계: 프런트 작업 시 CLAUDE/AGENT 지침 둘 다 검토해 OpenAPI 기반 타입 사용을 확인
+## [2025-12-19 00:35] 홈/회원가입 리다이렉트 정비
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 로그인 페이지와 선생님 회원가입 페이지에서 역할별 대시보드로 자동 리다이렉트
+- 대시보드 네비게이션 컴포넌트의 Link 타입 경고 해결
+
+### Details
+- 작업 사유: 로그인/회원가입 UX 일관성과 타입 안전성 확보
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/page.tsx, frontend/src/app/(public)/auth/register/teacher/page.tsx, frontend/src/components/dashboard/mobile-header.tsx, frontend/src/components/dashboard/sidebar.tsx
+- 다음 단계: 학생/조교 회원가입 페이지 설계 및 구현
+## [2025-12-19 00:39] 대시보드 레이아웃/네비게이션 리디자인
+
+### Type
+STRUCTURAL
+
+### Summary
+- 구 레거시 dashboard-shell을 참고해 사이드바/헤더/푸터 레이아웃을 재정비하고 모바일 토글 흐름을 추가
+- MobileHeader 컴포넌트를 제거하고 DashboardSidebar를 사용자 카드 + 역할별 네비게이션 카드 스타일로 개선
+
+### Details
+- 작업 사유: Header 활용도가 낮고 Footer가 과도하게 커서 전반적인 대시보드 UI 일관성이 깨져 있었음
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/layout.tsx, frontend/src/components/dashboard/sidebar.tsx, frontend/src/components/dashboard/mobile-header.tsx(삭제)
+- 다음 단계: 새로운 레이아웃을 기준으로 역할별 페이지 UI를 순차적으로 리팩터링
+## [2025-12-19 00:45] 대시보드 셸 및 Teacher 페이지 리디자인
+
+### Type
+STRUCTURAL
+
+### Summary
+- 좌측 사이드바/상단 바/메인 영역을 참조 시안 형태로 재구성하고 Teacher 대시보드 화면을 카드/캘린더 UI로 구현
+
+### Details
+- 작업 사유: Season2 대시보드가 비어 있던 상태라 시안과 같은 화면 전체 구성과 예시 콘텐츠가 필요했음
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/layout.tsx, frontend/src/components/dashboard/sidebar.tsx, frontend/src/app/(dashboard)/teacher/page.tsx (신규 UI)
+- 다음 단계: 다른 역할(Student/Assistant 등) 페이지도 동일한 카드/캘린더 패턴으로 확장
+## [2025-12-19 00:47] 대시보드 헤더 제거 및 사이드바 로그아웃 이동
+
+### Type
+STRUCTURAL
+
+### Summary
+- 레이아웃 상단 헤더를 제거하고 모바일 메뉴 버튼을 메인 영역으로 이동
+- 로그아웃 버튼을 사이드바 하단 카드로 옮겨 UX를 단순화
+
+### Details
+- 작업 사유: 헤더를 없애고 사이드바 중심 레이아웃을 유지해 시안과 유사한 전체 화면 UI 구현
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/layout.tsx, frontend/src/components/dashboard/sidebar.tsx
+- 다음 단계: 나머지 대시보드 페이지들도 새 레이아웃에 맞춰 카드 구성 정비
+## [2025-12-19 00:50] Dashboard 경로 판별 보정
+
+### Type
+STRUCTURAL
+
+### Summary
+- AppChrome에서 /teacher·/assistant·/student·/admin 경로를 대시보드 레이아웃으로 인식하도록 수정
+
+### Details
+- 작업 사유: 대시보드 그룹이 /dashboard 대신 /teacher 등으로 노출돼 홈 크롬이 잘못 렌더링되고 있었음
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/components/ui/app-chrome.tsx
+- 다음 단계: 대시보드 페이지 리팩터링 지속
+## [2025-12-19 00:52] Teacher 대시보드 역할 가드 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- useRoleGuard("TEACHER")를 적용해 다른 역할 사용자가 선생님 대시보드에 접근하지 못하도록 차단
+
+### Details
+- 작업 사유: 역할별 페이지 접근 제어 필요
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/page.tsx
+- 다음 단계: 다른 역할 페이지에도 동일 가드 적용
+## [2025-12-19 00:54] 역할별 대시보드 접근 제어 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/Assistant/Student/Admin 대시보드에 `useRoleGuard`를 적용해 다른 역할에서 접근 시 즉시 차단
+
+### Details
+- 작업 사유: 역할별 전용 페이지 간 무단 접근 방지
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/page.tsx, frontend/src/app/(dashboard)/assistant/page.tsx, frontend/src/app/(dashboard)/student/page.tsx, frontend/src/app/(dashboard)/admin/page.tsx
+- 다음 단계: 각 역할 페이지 콘텐츠를 실제 카드/데이터로 확장
+## [2025-12-19 00:58] 역할별 대시보드 콘텐츠 리디자인
+
+### Type
+STRUCTURAL
+
+### Summary
+- Teacher/Assistant/Student/Admin 대시보드에 역할별 맞춤 카드/요약/빠른 작업 UI를 배치하고 캘린더/검색 데모를 제거
+
+### Details
+- 작업 사유: 공통 샘플 UI가 모든 역할에 노출돼 혼란을 주어, 역할별 핵심 정보 위주로 간결하게 표현
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/page.tsx, frontend/src/app/(dashboard)/assistant/page.tsx, frontend/src/app/(dashboard)/student/page.tsx, frontend/src/app/(dashboard)/admin/page.tsx
+- 다음 단계: 실제 데이터 연동 전 API/상태 설계를 진행
