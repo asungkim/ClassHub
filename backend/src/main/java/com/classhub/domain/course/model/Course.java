@@ -113,6 +113,12 @@ public class Course extends BaseEntity {
         }
     }
 
+    public void updateDescription(String description) {
+        if (description != null) {
+            this.description = description;
+        }
+    }
+
     public void replaceSchedules(Set<CourseSchedule> newSchedules) {
         this.schedules.clear();
         if (newSchedules != null) {

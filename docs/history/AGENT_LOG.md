@@ -2530,3 +2530,26 @@ STRUCTURAL
   - backend/src/test/java/com/classhub/domain/course/validator/CourseScheduleValidatorTest.java
   - docs/todo/v1.9.md
 - 다음 단계: PLAN 6번 3단계(서비스 로직) 설계/구현 전 사용자 피드백 수령 후 진행
+
+## [2025-12-20 01:11] Teacher Course Service & Controller 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/backend/season2/course-teacher-management_plan.md` 6번 중 3~4단계를 따라 CourseService와 Teacher 전용 Controller를 구현했다.
+- Course CRUD/목록/캘린더/상태 토글 API를 완성하고 DTO/Request/Response, MockMvc 테스트, Mockito 기반 Service 단위 테스트를 모두 추가했다.
+
+### Details
+- 작업 사유: Teacher 대시보드 반 관리 API가 없어 프런트 연동이 불가능해 PLAN 단계에서 정의한 서비스/컨트롤러 계층을 작성
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.course.*"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/course/model/Course.java
+  - backend/src/main/java/com/classhub/domain/course/application/CourseService.java
+  - backend/src/main/java/com/classhub/domain/course/dto/request/\*.java
+  - backend/src/main/java/com/classhub/domain/course/dto/response/\*.java
+  - backend/src/main/java/com/classhub/domain/course/web/CourseController.java
+  - backend/src/test/java/com/classhub/domain/course/application/CourseServiceTest.java
+  - backend/src/test/java/com/classhub/domain/course/web/CourseControllerTest.java
+- 다음 단계: 사용자 피드백을 반영해 Course Service 리팩터 또는 Student/프런트 연동을 진행하고 TODO Phase5 상태 업데이트 검토
