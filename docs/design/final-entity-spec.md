@@ -54,13 +54,13 @@ enum VerifiedStatus {
 
 **비고 (출강 등록 흐름):**
 
-1. **개인 학원(INDIVIDUAL)**  
-   - Teacher가 Company + Branch를 직접 입력해 생성한다.  
-   - Company.verifiedStatus는 생성 즉시 VERIFIED로 설정해 별도 검증 과정 없이 바로 사용할 수 있다.  
+1. **개인 학원(INDIVIDUAL)**
+   - Teacher가 Company + Branch를 직접 입력해 생성한다.
+   - Company.verifiedStatus는 생성 즉시 VERIFIED로 설정해 별도 검증 과정 없이 바로 사용할 수 있다.
    - Branch는 한 개만 허용하며, 생성한 Teacher는 `TeacherBranchAssignment`의 OWNER로 기록된다.
-2. **회사 학원(ACADEMY)**  
-   - 기본적으로 SuperAdmin이 사전에 VERIFIED 상태의 Company/Branch를 등록해 두고, Teacher는 목록에서 선택해 FREELANCE Assignment를 얻는다.  
-   - 목록에 없다면 Teacher가 직접 입력을 선택해 Company/Branch를 UNVERIFIED 상태로 생성할 수 있으며, 이 경우 생성한 Teacher만 사용할 수 있다.  
+2. **회사 학원(ACADEMY)**
+   - 기본적으로 SuperAdmin이 사전에 VERIFIED 상태의 Company/Branch를 등록해 두고, Teacher는 목록에서 선택해 FREELANCE Assignment를 얻는다.
+   - 목록에 없다면 Teacher가 직접 입력을 선택해 Company/Branch를 UNVERIFIED 상태로 생성할 수 있으며, 이 경우 생성한 Teacher만 사용할 수 있다.
    - SuperAdmin 검증이 완료되면 해당 Company/Branch의 verifiedStatus를 VERIFIED로 변경해 다른 Teacher도 검색 및 사용 가능하도록 한다.
 
 ### BRANCH
@@ -134,6 +134,7 @@ public enum StudentGrade {
 ```
 
 **비고:**
+
 - grade는 위 열거형 중 하나만 허용하며, 프런트엔드는 드롭다운으로 선택하도록 강제한다.
 - schoolName은 기본적으로 자유 입력 String이지만, 저장 시 `SchoolNameFormatter`로 양쪽 공백/중복 공백을 제거하고, 프런트에서는 학교 검색/자동완성(예: "오마중", "경문고")을 제공해 표기를 유도한다.
 
@@ -176,10 +177,21 @@ enum BranchRole {
 - teacherMemberId (UUID, FK → Member, not null)
 - assistantMemberId (UUID, FK → Member, not null)
 
+**제약조건:**
+
+- `uk_teacher_assistant_assignment` unique on (teacherMemberId, assistantMemberId)
+
 **인덱스:**
 
 - `idx_taa_teacher` on (teacherMemberId)
 - `idx_taa_assistant` on (assistantMemberId)
+
+**비고:**
+
+- Teacher가 이미 가입한 Assistant를 이메일로 검색 후 직접 배정
+- Soft delete(deletedAt)로 활성/비활성 관리: `isActive = (deletedAt IS NULL)`
+- 비활성 시 조교의 접근 권한 즉시 차단
+- M:N 관계: 한 Assistant는 여러 Teacher와 연결 가능, 한 Teacher도 여러 Assistant 배정 가능
 
 ---
 
@@ -377,6 +389,7 @@ enum SessionType {
 **세션 타입별 필드 규칙:**
 
 1. **REGULAR (정규 세션 - 스케줄러 자동 생성)**
+
    - slotId: NOT NULL (어떤 Slot에서 생성되었는지)
    - creatorMemberId: NULL (시스템 자동 생성)
    - capacity: Slot.defaultCapacity 상속 (생성 후 Teacher가 개별 조정 가능)
@@ -387,6 +400,7 @@ enum SessionType {
    - capacity: 생성 시 직접 설정
 
 **유즈케이스:**
+
 - 정규 세션: 매주 화요일 18:00 클리닉 → ClinicSlot 기반 자동 생성
 - 긴급 세션: 시험 전 특별 보강, 대체 클리닉 → Teacher가 직접 생성
 - 정원 조정: 정규 세션이지만 이번 주만 10명 → 15명으로 증가
@@ -530,32 +544,6 @@ enum FeedbackStatus {
 
 ---
 
-## 11. 초대 시스템
-
-### INVITATION
-
-- senderId (UUID, FK → Member, not null)
-- targetEmail (String, not null)
-- inviteeRole (InvitationRole, not null) // ASSISTANT만 (학생은 자유 가입)
-- status (InvitationStatus, not null, default: PENDING) // PENDING, ACCEPTED, EXPIRED, REVOKED
-- code (String, unique, not null)
-- expiredAt (LocalDateTime, not null)
-
-**인덱스:**
-
-- `uk_invitation_code` unique on (code)
-- `idx_invitation_sender` on (senderId)
-
-**비고:**
-
-- 조교만 초대 코드로 가입 (ASSISTANT)
-- 학생은 자유 가입 후 StudentEnrollmentRequest로 반 등록
-- 코드와 targetEmail은 1:1 매핑
-- 사용 시 deletedAt 설정되고 TeacherAssistantAssignment 자동 생성
-- 만료되거나 취소되면 deletedAt 설정
-
----
-
 ## 엔티티 관계 요약
 
 ### 1:1 관계
@@ -613,15 +601,16 @@ enum FeedbackStatus {
 - ClinicSlot (deletedAt)
 - TeacherBranchAssignment (deletedAt)
 - TeacherAssistantAssignment (deletedAt)
-- Invitation (deletedAt)
 
 **장점:**
+
 - 삭제 시점 추적 가능 (언제 삭제되었는지)
 - 복구 가능 (deletedAt = NULL)
 - 삭제 패턴 분석 가능 (월별, 주별 삭제 통계)
 - 감사 로그 및 규정 준수
 
 **조회:**
+
 - 활성 데이터: `WHERE deletedAt IS NULL`
 - 삭제된 데이터: `WHERE deletedAt IS NOT NULL`
 - 특정 기간 삭제: `WHERE deletedAt BETWEEN :start AND :end`

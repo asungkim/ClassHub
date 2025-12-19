@@ -90,11 +90,6 @@ erDiagram
     MEMBER ||--o{ WORK_LOG : writes
 
     %% ========================================
-    %% 초대 시스템
-    %% ========================================
-    MEMBER ||--o{ INVITATION : sends
-
-    %% ========================================
     %% 엔티티 정의
     %% ========================================
 
@@ -332,21 +327,6 @@ erDiagram
         datetime updatedAt
         %% UNIQUE(assistantMemberId, date)
     }
-
-    INVITATION {
-        uuid id PK
-        uuid senderId FK
-        string targetEmail
-        string inviteeRole
-        string status
-        string code UK
-        datetime expiredAt
-        datetime createdAt
-        datetime updatedAt
-        datetime deletedAt
-        %% inviteeRole = ASSISTANT
-        %% status = PENDING,ACCEPTED,EXPIRED,REVOKED
-    }
 ```
 
 ## 주요 관계 요약
@@ -404,7 +384,7 @@ erDiagram
 - `clinic_record.clinic_attendance_id` (UK)
 - `notice_read.(notice_id, assistant_member_id)` (UK)
 - `work_log.(assistant_member_id, date)` (UK)
-- `invitation.code` (UK)
+- `teacher_assistant_assignment.(teacher_member_id, assistant_member_id)` (UK)
 
 ### 추가 인덱스
 
@@ -445,7 +425,6 @@ erDiagram
 - `notice_read.assistant_member_id` on (assistantMemberId)
 - `work_log.assistant_member_id` on (assistantMemberId)
 - `work_log.date` on (date)
-- `invitation.sender_id` on (senderId)
 
 ## Cascade 전략
 
@@ -464,15 +443,16 @@ erDiagram
 - ClinicSlot (deletedAt)
 - TeacherBranchAssignment (deletedAt)
 - TeacherAssistantAssignment (deletedAt)
-- Invitation (deletedAt)
 
 **장점:**
+
 - 삭제 시점 추적 가능 (언제 삭제되었는지)
 - 복구 가능 (deletedAt = NULL)
 - 삭제 패턴 분석 가능 (월별, 주별 삭제 통계)
 - 감사 로그 및 규정 준수
 
 **조회:**
+
 - 활성 데이터: `WHERE deletedAt IS NULL`
 - 삭제된 데이터: `WHERE deletedAt IS NOT NULL`
 - 특정 기간 삭제: `WHERE deletedAt BETWEEN :start AND :end`
