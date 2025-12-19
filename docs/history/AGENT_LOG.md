@@ -2337,3 +2337,17 @@ TODO_UPDATE
 - 영향받은 테스트: 해당 없음 (문서 업데이트)
 - 수정한 파일: docs/todo/v1.9.md
 - 다음 단계: 동일 Phase의 프론트엔드 작업 진행
+## [2025-12-19 20:15] 선생님 조교 검색/등록 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 선생님 대시보드에 "조교 검색 및 등록" 버튼과 모달을 추가해 이메일 기반 검색/연결 플로우를 UI로 완성
+- 검색 결과/선택 상태/등록 요청을 API(`/assistants/search`, `POST /assistants`)와 연동하고, 기존 목록 토글과 연결해 즉시 반영되도록 구현
+
+### Details
+- 작업 사유: 프론트엔드에서 조교 검색/등록 플로우가 비어 있어 Season2 요구사항 미충족
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack` (Next.js root 경고 있음; 기존 다중 lockfile 구조로 인한 것이며 추후 outputFileTracingRoot 설정 필요)
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/assistants/page.tsx, frontend/src/types/openapi.{d.ts,json}, docs/plan/frontend/season2/teacher-assistant-management_ui_plan.md
+- 다음 단계: 모달 UX QA 및 토스트/에러메시지 copy 검토, 필요 시 다중 lockfile 구조 정리

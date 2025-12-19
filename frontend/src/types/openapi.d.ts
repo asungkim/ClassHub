@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/api/v1/teachers/me/assistants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 조교 목록 조회
+         * @description 교사가 배정된 조교 목록을 상태별로 확인한다.
+         */
+        get: operations["getAssistants"];
+        put?: never;
+        /**
+         * 조교 연결
+         * @description 검색된 조교를 교사와 연결한다.
+         */
+        post: operations["assignAssistant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/members/register/teacher": {
         parameters: {
             query?: never;
@@ -54,30 +78,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 조교 초대 기반 회원가입
-         * @description 초대 코드로 Assistant 계정을 생성한다.
+         * 조교 회원가입
+         * @description 조교 역할 계정을 생성하고 Access/Refresh 토큰을 발급한다.
          */
-        post: operations["registerAssistantByInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 조교 초대 생성
-         * @description Teacher가 조교를 초대할 수 있는 초대 코드를 발급한다.
-         */
-        post: operations["createAssistantInvitation"];
+        post: operations["registerAssistant"];
         delete?: never;
         options?: never;
         head?: never;
@@ -144,26 +148,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/invitations/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 초대 코드 검증
-         * @description 초대 코드 유효성을 확인한다.
-         */
-        post: operations["verifyInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/teachers/me/assistants/{assignmentId}": {
         parameters: {
             query?: never;
@@ -184,27 +168,7 @@ export interface paths {
         patch: operations["updateAssistantStatus"];
         trace?: never;
     };
-    "/api/v1/invitations/{code}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * 조교 초대 취소
-         * @description Teacher가 아직 사용되지 않은 초대를 취소한다.
-         */
-        patch: operations["revokeInvitation"];
-        trace?: never;
-    };
-    "/api/v1/teachers/me/invitations": {
+    "/api/v1/teachers/me/assistants/search": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,30 +176,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 조교 초대 목록 조회
-         * @description 초대 상태별로 교사가 발행한 조교 초대를 확인한다.
+         * 조교 이메일 검색
+         * @description 이미 가입한 조교를 이메일로 검색한다.
          */
-        get: operations["getAssistantInvitations"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/teachers/me/assistants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 조교 목록 조회
-         * @description 교사가 배정된 조교 목록을 상태별로 확인한다.
-         */
-        get: operations["getAssistants"];
+        get: operations["searchAssistants"];
         put?: never;
         post?: never;
         delete?: never;
@@ -268,6 +212,33 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AssistantAssignmentCreateRequest: {
+            /** Format: uuid */
+            assistantMemberId: string;
+        };
+        AssistantAssignmentResponse: {
+            /** Format: uuid */
+            assignmentId?: string;
+            assistant?: components["schemas"]["AssistantProfile"];
+            isActive?: boolean;
+            /** Format: date-time */
+            assignedAt?: string;
+            /** Format: date-time */
+            disabledAt?: string;
+        };
+        AssistantProfile: {
+            /** Format: uuid */
+            memberId?: string;
+            name?: string;
+            email?: string;
+            phoneNumber?: string;
+        };
+        RsDataAssistantAssignmentResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["AssistantAssignmentResponse"];
+        };
         RegisterMemberRequest: {
             /** Format: email */
             email: string;
@@ -301,32 +272,6 @@ export interface components {
             birthDate: string;
             parentPhone: string;
         };
-        RegisterAssistantByInvitationRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-            name: string;
-            phoneNumber: string;
-            code: string;
-        };
-        AssistantInvitationCreateRequest: {
-            /** Format: email */
-            targetEmail: string;
-            /** Format: date-time */
-            expiredAt?: string;
-        };
-        InvitationResponse: {
-            code?: string;
-            targetEmail?: string;
-            /** Format: date-time */
-            expiredAt?: string;
-        };
-        RsDataInvitationResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["InvitationResponse"];
-        };
         LogoutRequest: {
             refreshToken?: string;
             logoutAll?: boolean;
@@ -342,79 +287,8 @@ export interface components {
             email: string;
             password: string;
         };
-        InvitationVerifyRequest: {
-            code: string;
-        };
-        InvitationVerifyResponse: {
-            /** Format: uuid */
-            senderId?: string;
-            senderName?: string;
-            targetEmail?: string;
-            /** Format: date-time */
-            expiredAt?: string;
-        };
-        RsDataInvitationVerifyResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["InvitationVerifyResponse"];
-        };
         AssistantAssignmentStatusUpdateRequest: {
             enabled: boolean;
-        };
-        AssistantAssignmentResponse: {
-            /** Format: uuid */
-            assignmentId?: string;
-            assistant?: components["schemas"]["AssistantProfile"];
-            isActive?: boolean;
-            /** Format: date-time */
-            assignedAt?: string;
-            /** Format: date-time */
-            disabledAt?: string;
-        };
-        AssistantProfile: {
-            /** Format: uuid */
-            memberId?: string;
-            name?: string;
-            email?: string;
-            phoneNumber?: string;
-        };
-        RsDataAssistantAssignmentResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["AssistantAssignmentResponse"];
-        };
-        InvitationSummaryResponse: {
-            code?: string;
-            targetEmail?: string;
-            /** @enum {string} */
-            status?: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
-            /** Format: date-time */
-            expiredAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        PageResponseInvitationSummaryResponse: {
-            content?: components["schemas"]["InvitationSummaryResponse"][];
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            size?: number;
-            /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            totalPages?: number;
-            first?: boolean;
-            last?: boolean;
-        };
-        RsDataPageResponseInvitationSummaryResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResponseInvitationSummaryResponse"];
         };
         PageResponseAssistantAssignmentResponse: {
             content?: components["schemas"]["AssistantAssignmentResponse"][];
@@ -434,6 +308,27 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["PageResponseAssistantAssignmentResponse"];
+        };
+        AssistantSearchResponse: {
+            /** Format: uuid */
+            assistantMemberId?: string;
+            name?: string;
+            email?: string;
+            phoneNumber?: string;
+            /** @enum {string} */
+            assignmentStatus?: "NOT_ASSIGNED" | "ACTIVE" | "INACTIVE";
+            /** Format: uuid */
+            assignmentId?: string;
+            /** Format: date-time */
+            connectedAt?: string;
+            /** Format: date-time */
+            disabledAt?: string;
+        };
+        RsDataListAssistantSearchResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["AssistantSearchResponse"][];
         };
         MeResponse: {
             /** Format: uuid */
@@ -458,6 +353,54 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getAssistants: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseAssistantAssignmentResponse"];
+                };
+            };
+        };
+    };
+    assignAssistant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantAssignmentCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataAssistantAssignmentResponse"];
+                };
+            };
+        };
+    };
     registerTeacher: {
         parameters: {
             query?: never;
@@ -506,7 +449,7 @@ export interface operations {
             };
         };
     };
-    registerAssistantByInvitation: {
+    registerAssistant: {
         parameters: {
             query?: never;
             header?: never;
@@ -515,7 +458,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RegisterAssistantByInvitationRequest"];
+                "application/json": components["schemas"]["RegisterMemberRequest"];
             };
         };
         responses: {
@@ -526,30 +469,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataLoginResponse"];
-                };
-            };
-        };
-    };
-    createAssistantInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssistantInvitationCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataInvitationResponse"];
                 };
             };
         };
@@ -622,30 +541,6 @@ export interface operations {
             };
         };
     };
-    verifyInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InvitationVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataInvitationVerifyResponse"];
-                };
-            };
-        };
-    };
     updateAssistantStatus: {
         parameters: {
             query?: never;
@@ -672,34 +567,10 @@ export interface operations {
             };
         };
     };
-    revokeInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    getAssistantInvitations: {
+    searchAssistants: {
         parameters: {
             query?: {
-                status?: string;
-                page?: number;
-                size?: number;
+                email?: string;
             };
             header?: never;
             path?: never;
@@ -713,31 +584,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["RsDataPageResponseInvitationSummaryResponse"];
-                };
-            };
-        };
-    };
-    getAssistants: {
-        parameters: {
-            query?: {
-                status?: string;
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPageResponseAssistantAssignmentResponse"];
+                    "*/*": components["schemas"]["RsDataListAssistantSearchResponse"];
                 };
             };
         };
