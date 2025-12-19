@@ -13,9 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.support.RefreshTokenCookieProvider;
-import com.classhub.domain.invitation.application.InvitationService;
 import com.classhub.domain.member.application.RegisterService;
-import com.classhub.domain.member.dto.request.RegisterAssistantByInvitationRequest;
 import com.classhub.domain.member.dto.request.RegisterMemberRequest;
 import com.classhub.domain.member.dto.request.RegisterStudentRequest;
 import com.classhub.domain.member.model.StudentGrade;
@@ -47,9 +45,6 @@ class MemberControllerTest {
 
     @MockitoBean
     private RegisterService registerService;
-
-    @MockitoBean
-    private InvitationService invitationService;
 
     @MockitoBean
     private RefreshTokenCookieProvider refreshTokenCookieProvider;
@@ -135,7 +130,7 @@ class MemberControllerTest {
     }
 
     @Test
-    void registerAssistant_shouldDelegateToInvitationService() throws Exception {
+    void registerAssistant_shouldUseRegisterService() throws Exception {
         UUID memberId = UUID.randomUUID();
         LocalDateTime accessExpiresAt = LocalDateTime.now().plusMinutes(45);
         LocalDateTime refreshExpiresAt = LocalDateTime.now().plusDays(7);
@@ -147,17 +142,13 @@ class MemberControllerTest {
                 refreshExpiresAt
         );
 
-        given(invitationService.registerAssistantViaInvitation(any(RegisterAssistantByInvitationRequest.class)))
-                .willReturn(tokens);
+        given(registerService.registerAssistant(any(RegisterMemberRequest.class))).willReturn(tokens);
 
-        RegisterAssistantByInvitationRequest request = new RegisterAssistantByInvitationRequest(
-                new RegisterMemberRequest(
-                        "ignored@classhub.com",
-                        "Classhub!1",
-                        "Assistant Kim",
-                        "010-4444-5555"
-                ),
-                "INV-CODE"
+        RegisterMemberRequest request = new RegisterMemberRequest(
+                "assistant@classhub.com",
+                "Classhub!1",
+                "Assistant Kim",
+                "010-4444-5555"
         );
 
         mockMvc.perform(post("/api/v1/members/register/assistant")
@@ -168,7 +159,7 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data.memberId").value(memberId.toString()));
 
-        verify(invitationService).registerAssistantViaInvitation(any(RegisterAssistantByInvitationRequest.class));
+        verify(registerService).registerAssistant(any(RegisterMemberRequest.class));
         verify(refreshTokenCookieProvider).setRefreshToken(any(), eq("assistant-refresh-token"), eq(refreshExpiresAt));
     }
 }

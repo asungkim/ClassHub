@@ -15,8 +15,6 @@ import com.classhub.domain.assignment.application.AssistantManagementService;
 import com.classhub.domain.assignment.dto.AssistantAssignmentStatusFilter;
 import com.classhub.domain.assignment.dto.response.AssistantAssignmentResponse;
 import com.classhub.domain.assignment.dto.response.AssistantAssignmentResponse.AssistantProfile;
-import com.classhub.domain.invitation.dto.response.InvitationSummaryResponse;
-import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.response.PageResponse;
@@ -139,55 +137,6 @@ class AssistantManagementControllerTest {
                 .andExpect(jsonPath("$.data.assignmentId").value(assignmentId.toString()));
 
         verify(assistantManagementService).updateAssistantStatus(teacherId, assignmentId, false);
-    }
-
-    @Test
-    void getAssistantInvitations_shouldAllowAllStatus() throws Exception {
-        UUID teacherId = UUID.randomUUID();
-        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                principal,
-                null,
-                List.of(new SimpleGrantedAuthority("TEACHER"))
-        );
-        PageResponse<InvitationSummaryResponse> pageResponse = new PageResponse<>(
-                List.of(new InvitationSummaryResponse(
-                        "INV-1",
-                        "assistant@classhub.com",
-                        InvitationStatus.PENDING,
-                        LocalDateTime.now().plusDays(2),
-                        LocalDateTime.now().minusDays(1),
-                        LocalDateTime.now().minusDays(1)
-                )),
-                0,
-                10,
-                1,
-                1,
-                true,
-                true
-        );
-        org.mockito.BDDMockito.given(assistantManagementService.getAssistantInvitations(
-                eq(teacherId),
-                eq(null),
-                eq(0),
-                eq(20)
-        )).willReturn(pageResponse);
-
-        mockMvc.perform(get("/api/v1/teachers/me/invitations")
-                        .param("status", "ALL")
-                        .with(SecurityMockMvcRequestPostProcessors.authentication(authenticationToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
-                .andExpect(jsonPath("$.data.content[0].code").value("INV-1"));
-
-        ArgumentCaptor<InvitationStatus> captor = ArgumentCaptor.forClass(InvitationStatus.class);
-        verify(assistantManagementService).getAssistantInvitations(
-                eq(teacherId),
-                captor.capture(),
-                eq(0),
-                eq(20)
-        );
-        assertThat(captor.getValue()).isNull();
     }
 
     private record ToggleRequest(boolean enabled) {

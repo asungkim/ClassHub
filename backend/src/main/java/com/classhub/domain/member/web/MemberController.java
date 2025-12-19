@@ -3,9 +3,7 @@ package com.classhub.domain.member.web;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.LoginResponse;
 import com.classhub.domain.auth.support.RefreshTokenCookieProvider;
-import com.classhub.domain.invitation.application.InvitationService;
 import com.classhub.domain.member.application.RegisterService;
-import com.classhub.domain.member.dto.request.RegisterAssistantByInvitationRequest;
 import com.classhub.domain.member.dto.request.RegisterMemberRequest;
 import com.classhub.domain.member.dto.request.RegisterStudentRequest;
 import com.classhub.global.response.RsCode;
@@ -27,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final RegisterService registerService;
-    private final InvitationService invitationService;
     private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
     @PostMapping("/register/teacher")
@@ -53,12 +50,12 @@ public class MemberController {
     }
 
     @PostMapping("/register/assistant")
-    @Operation(summary = "조교 초대 기반 회원가입", description = "초대 코드로 Assistant 계정을 생성한다.")
-    public RsData<LoginResponse> registerAssistantByInvitation(
-            @Valid @RequestBody RegisterAssistantByInvitationRequest request,
+    @Operation(summary = "조교 회원가입", description = "조교 역할 계정을 생성하고 Access/Refresh 토큰을 발급한다.")
+    public RsData<LoginResponse> registerAssistant(
+            @Valid @RequestBody RegisterMemberRequest request,
             HttpServletResponse response
     ) {
-        AuthTokens tokens = invitationService.registerAssistantViaInvitation(request);
+        AuthTokens tokens = registerService.registerAssistant(request);
         refreshTokenCookieProvider.setRefreshToken(response, tokens.refreshToken(), tokens.refreshTokenExpiresAt());
         return RsData.from(RsCode.SUCCESS, LoginResponse.from(tokens));
     }

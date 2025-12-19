@@ -12,20 +12,17 @@ import com.classhub.domain.assignment.dto.AssistantAssignmentStatusFilter;
 import com.classhub.domain.assignment.dto.response.AssistantAssignmentResponse;
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
-import com.classhub.domain.invitation.model.Invitation;
-import com.classhub.domain.invitation.model.InvitationRole;
-import com.classhub.domain.invitation.model.InvitationStatus;
-import com.classhub.domain.invitation.repository.InvitationRepository;
-import com.classhub.domain.invitation.dto.response.InvitationSummaryResponse;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,8 +42,6 @@ class AssistantManagementServiceTest {
     @Mock
     private TeacherAssistantAssignmentRepository assignmentRepository;
 
-    @Mock
-    private InvitationRepository invitationRepository;
 
     @Mock
     private MemberRepository memberRepository;
@@ -198,57 +193,6 @@ class AssistantManagementServiceTest {
         verify(assignmentRepository, never()).save(any());
     }
 
-    @Test
-    void getAssistantInvitations_shouldFilterByStatus() {
-        Invitation invitation = buildInvitation(teacherId, "CODE-700", InvitationStatus.PENDING);
-        Page<Invitation> page = new PageImpl<>(List.of(invitation), PageRequest.of(0, 10), 1);
-        when(invitationRepository.findBySenderIdAndInviteeRoleAndStatus(
-                eq(teacherId),
-                eq(InvitationRole.ASSISTANT),
-                eq(InvitationStatus.PENDING),
-                any()
-        )).thenReturn(page);
-
-        PageResponse<InvitationSummaryResponse> result = assistantManagementService.getAssistantInvitations(
-                teacherId,
-                InvitationStatus.PENDING,
-                0,
-                10
-        );
-
-        assertThat(result.content()).hasSize(1);
-        assertThat(result.content().get(0).code()).isEqualTo("CODE-700");
-        verify(invitationRepository).findBySenderIdAndInviteeRoleAndStatus(
-                eq(teacherId),
-                eq(InvitationRole.ASSISTANT),
-                eq(InvitationStatus.PENDING),
-                any()
-        );
-    }
-
-    @Test
-    void getAssistantInvitations_shouldFallbackToAll_whenStatusNull() {
-        Invitation invitation = buildInvitation(teacherId, "CODE-701", InvitationStatus.PENDING);
-        Page<Invitation> page = new PageImpl<>(List.of(invitation), PageRequest.of(0, 10), 1);
-        when(invitationRepository.findBySenderIdAndInviteeRole(
-                eq(teacherId),
-                eq(InvitationRole.ASSISTANT),
-                any()
-        )).thenReturn(page);
-
-        assistantManagementService.getAssistantInvitations(
-                teacherId,
-                null,
-                0,
-                10
-        );
-
-        verify(invitationRepository).findBySenderIdAndInviteeRole(
-                eq(teacherId),
-                eq(InvitationRole.ASSISTANT),
-                any()
-        );
-    }
 
     private Member buildAssistantMember(UUID memberId, String name) {
         Member member = Member.builder()
@@ -262,18 +206,5 @@ class AssistantManagementServiceTest {
         return member;
     }
 
-    private Invitation buildInvitation(UUID senderId, String code, InvitationStatus status) {
-        Invitation invitation = Invitation.builder()
-                .senderId(senderId)
-                .targetEmail("assistant@classhub.com")
-                .inviteeRole(InvitationRole.ASSISTANT)
-                .status(status)
-                .code(code)
-                .expiredAt(LocalDateTime.now().plusDays(7))
-                .build();
-        ReflectionTestUtils.setField(invitation, "id", UUID.randomUUID());
-        ReflectionTestUtils.setField(invitation, "createdAt", LocalDateTime.now());
-        ReflectionTestUtils.setField(invitation, "updatedAt", LocalDateTime.now());
-        return invitation;
-    }
+
 }

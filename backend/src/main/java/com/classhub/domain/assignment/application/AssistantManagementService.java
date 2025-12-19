@@ -4,11 +4,6 @@ import com.classhub.domain.assignment.dto.AssistantAssignmentStatusFilter;
 import com.classhub.domain.assignment.dto.response.AssistantAssignmentResponse;
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
-import com.classhub.domain.invitation.dto.response.InvitationSummaryResponse;
-import com.classhub.domain.invitation.model.Invitation;
-import com.classhub.domain.invitation.model.InvitationRole;
-import com.classhub.domain.invitation.model.InvitationStatus;
-import com.classhub.domain.invitation.repository.InvitationRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.global.exception.BusinessException;
@@ -37,7 +32,6 @@ public class AssistantManagementService {
 
     private final TeacherAssistantAssignmentRepository assignmentRepository;
     private final MemberRepository memberRepository;
-    private final InvitationRepository invitationRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<AssistantAssignmentResponse> getAssistantAssignments(
@@ -82,35 +76,6 @@ public class AssistantManagementService {
                 .orElseThrow(RsCode.MEMBER_NOT_FOUND::toException);
 
         return AssistantAssignmentResponse.from(saved, assistant);
-    }
-
-    @Transactional(readOnly = true)
-    public PageResponse<InvitationSummaryResponse> getAssistantInvitations(
-            UUID teacherId,
-            InvitationStatus status,
-            int page,
-            int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size, DEFAULT_SORT);
-        Page<Invitation> invitations;
-
-        if (status == null) {
-            invitations = invitationRepository.findBySenderIdAndInviteeRole(
-                    teacherId,
-                    InvitationRole.ASSISTANT,
-                    pageable
-            );
-        } else {
-            invitations = invitationRepository.findBySenderIdAndInviteeRoleAndStatus(
-                    teacherId,
-                    InvitationRole.ASSISTANT,
-                    status,
-                    pageable
-            );
-        }
-
-        Page<InvitationSummaryResponse> responsePage = invitations.map(InvitationSummaryResponse::from);
-        return PageResponse.from(responsePage);
     }
 
     private Map<UUID, Member> loadAssistantMap(List<TeacherAssistantAssignment> assignments) {

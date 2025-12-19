@@ -4,8 +4,6 @@ import com.classhub.domain.assignment.application.AssistantManagementService;
 import com.classhub.domain.assignment.dto.AssistantAssignmentStatusFilter;
 import com.classhub.domain.assignment.dto.request.AssistantAssignmentStatusUpdateRequest;
 import com.classhub.domain.assignment.dto.response.AssistantAssignmentResponse;
-import com.classhub.domain.invitation.dto.response.InvitationSummaryResponse;
-import com.classhub.domain.invitation.model.InvitationStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.exception.BusinessException;
@@ -74,26 +72,6 @@ public class AssistantManagementController {
         return RsData.from(RsCode.SUCCESS, response);
     }
 
-    @GetMapping("/invitations")
-    @PreAuthorize("hasAuthority('TEACHER')")
-    @Operation(summary = "조교 초대 목록 조회", description = "초대 상태별로 교사가 발행한 조교 초대를 확인한다.")
-    public RsData<PageResponse<InvitationSummaryResponse>> getAssistantInvitations(
-            @AuthenticationPrincipal MemberPrincipal principal,
-            @RequestParam(required = false) String status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        UUID teacherId = validateTeacher(principal);
-        InvitationStatus invitationStatus = parseInvitationStatus(status);
-        PageResponse<InvitationSummaryResponse> response = assistantManagementService.getAssistantInvitations(
-                teacherId,
-                invitationStatus,
-                page,
-                size
-        );
-        return RsData.from(RsCode.SUCCESS, response);
-    }
-
     private UUID validateTeacher(MemberPrincipal principal) {
         if (principal == null || principal.role() != MemberRole.TEACHER) {
             throw new BusinessException(RsCode.FORBIDDEN);
@@ -107,17 +85,6 @@ public class AssistantManagementController {
         }
         try {
             return AssistantAssignmentStatusFilter.valueOf(rawStatus.toUpperCase(Locale.US));
-        } catch (IllegalArgumentException ex) {
-            throw new BusinessException(RsCode.BAD_REQUEST);
-        }
-    }
-
-    private InvitationStatus parseInvitationStatus(String rawStatus) {
-        if (rawStatus == null || rawStatus.isBlank() || rawStatus.equalsIgnoreCase("ALL")) {
-            return null;
-        }
-        try {
-            return InvitationStatus.valueOf(rawStatus.toUpperCase(Locale.US));
         } catch (IllegalArgumentException ex) {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }

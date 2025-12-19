@@ -18,9 +18,6 @@ import com.classhub.domain.auth.dto.request.LogoutRequest;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.MeResponse;
 import com.classhub.domain.auth.support.RefreshTokenCookieProvider;
-import com.classhub.domain.invitation.application.InvitationService;
-import com.classhub.domain.invitation.dto.request.InvitationVerifyRequest;
-import com.classhub.domain.invitation.dto.response.InvitationVerifyResponse;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.response.RsCode;
@@ -60,8 +57,6 @@ class AuthControllerTest {
         @MockitoBean
         private AuthService authService;
 
-        @MockitoBean
-        private InvitationService invitationService;
 
         @MockitoBean
         private RefreshTokenCookieProvider refreshTokenCookieProvider;
@@ -163,26 +158,5 @@ class AuthControllerTest {
                 assertThat(captor.getValue().refreshToken()).isEqualTo("cookie-refresh-token");
                 assertThat(captor.getValue().logoutAll()).isFalse();
                 verify(refreshTokenCookieProvider).clearRefreshToken(any());
-        }
-
-        @Test
-        void verifyInvitation_shouldReturnSenderInfo() throws Exception {
-                InvitationVerifyResponse response = new InvitationVerifyResponse(
-                                UUID.randomUUID(),
-                                "Teacher Kim",
-                                "assistant@classhub.com",
-                                LocalDateTime.now().plusDays(1)
-                );
-                given(invitationService.verifyCode(any(InvitationVerifyRequest.class))).willReturn(response);
-
-                mockMvc.perform(post("/api/v1/auth/invitations/verify")
-                                .contentType(APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(new InvitationVerifyRequest("INV-12345"))))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
-                                .andExpect(jsonPath("$.data.senderName").value("Teacher Kim"))
-                                .andExpect(jsonPath("$.data.targetEmail").value("assistant@classhub.com"));
-
-                verify(invitationService).verifyCode(any(InvitationVerifyRequest.class));
         }
 }
