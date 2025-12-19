@@ -2111,3 +2111,107 @@ STRUCTURAL
 - 영향받은 테스트: `cd frontend && npm run build -- --webpack`
 - 수정한 파일: frontend/src/app/(dashboard)/teacher/page.tsx, frontend/src/app/(dashboard)/assistant/page.tsx, frontend/src/app/(dashboard)/student/page.tsx, frontend/src/app/(dashboard)/admin/page.tsx
 - 다음 단계: 실제 데이터 연동 전 API/상태 설계를 진행
+## [2025-12-19 01:13] 학생 회원가입 페이지 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Season2 PLAN에 따라 `/auth/register/student` 폼과 UX를 구현하고 가입 성공 시 자동 로그인/대시보드 이동을 추가
+
+### Details
+- 작업 사유: Phase4 TODO "학생 회원가입 페이지" 진행
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx (신규)
+- 다음 단계: 수동 QA로 다양한 입력 케이스 확인 후 TODO 상태 업데이트
+## [2025-12-19 01:15] 학생 회원가입 CTA 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- 홈 로그인 카드 하단에 학생 회원가입 버튼을 추가해 접근 경로를 명시
+
+### Details
+- 작업 사유: 학생 가입 페이지를 노출해 사용자가 빠르게 진입하도록 안내
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/page.tsx
+- 다음 단계: 학생 가입 페이지 QA 및 TODO 상태 업데이트
+## [2025-12-19 01:18] 학생 회원가입 UX 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- 생년월일을 년→월→일 선택형으로 바꾸고 학교명 suffix 자동 보정, 학년/비밀번호 UI를 개선
+
+### Details
+- 작업 사유: 학생 가입 UX 피드백 반영
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 후 TODO 상태 업데이트
+## [2025-12-19 01:23] 학생 회원가입 UX 피드백 반영
+
+### Type
+STRUCTURAL
+
+### Summary
+- 생년월일 안내 문구 제거, 비밀번호 요구사항/확인 UI 위치 조정, 학교명 suffix 자동 정리 로직 개선
+
+### Details
+- 작업 사유: UI 피드백(입력 순서, 가독성, 자동 보정) 반영
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 후 TODO 상태 업데이트
+## [2025-12-19 01:25] 학교명 suffix 로직 보완
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 회원가입에서 '대치초/중/고' 등을 그대로 입력해도 잘리거나 재입력되지 않도록 suffix 처리 로직을 수정
+
+### Details
+- 작업 사유: 학교명 자동 포맷이 과도하게 문자열을 잘라 사용성이 떨어지는 문제 발생
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 후 TODO 상태 업데이트
+## [2025-12-19 01:27] 학교명 자동 보정 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 회원가입에서 '대치고등학교'처럼 입력하면 '대치고'까지만 유지하도록 suffix 절삭 로직을 추가
+
+### Details
+- 작업 사유: 학교명을 입력할 때 '대치'로만 잘려 불편했던 문제 해결
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: 수동 QA 후 TODO 상태 업데이트
+## [2025-12-19 09:55] 생년월일 Day 선택 UX 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 회원가입에서 월/년 선택 전에는 일 옵션을 비활성화하고 안내 메시지를 표시하도록 수정
+
+### Details
+- 작업 사유: 월/년 미선택 상태에서도 1~31이 노출돼 혼란을 주던 문제 해결
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 및 TODO 상태 업데이트
+## [2025-12-19 10:51] 등록 페이지 AppChrome 예외 처리
+
+### Type
+STRUCTURAL
+
+### Summary
+- `/auth/register/*` 경로에서 헤더/푸터를 제거해 로그인 카드와 동일한 풀스크린 UI만 렌더되도록 AppChrome 조건을 수정
+
+### Details
+- 작업 사유: 회원가입 페이지에서 공용 헤더·푸터가 겹치며 디자인이 깨지는 문제
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/components/ui/app-chrome.tsx
+- 다음 단계: 학생/선생님 회원가입 QA 진행

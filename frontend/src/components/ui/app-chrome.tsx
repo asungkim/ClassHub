@@ -44,9 +44,10 @@ export function AppChrome({ children }: { children: ReactNode }) {
   const isHome = pathname === "/";
   const dashboardPrefixes = ["/dashboard", "/teacher", "/assistant", "/student", "/admin"];
   const isDashboard = dashboardPrefixes.some((prefix) => pathname?.startsWith(prefix));
+  const isAuthRegister = pathname?.startsWith("/auth/register");
   const toaster = <Toaster position="top-center" richColors closeButton />;
 
-  if (isHome) {
+  if (isHome || isAuthRegister) {
     return (
       <>
         {children}

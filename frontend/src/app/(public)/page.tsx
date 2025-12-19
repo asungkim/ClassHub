@@ -180,6 +180,14 @@ export default function HomePage() {
               <UsersIcon className="h-5 w-5" />
               선생님 회원가입
             </Link>
+
+            <Link
+              href="/auth/register/student"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-purple-300 bg-white py-3 font-semibold text-purple-600 transition hover:bg-purple-50"
+            >
+              <BookIcon className="h-5 w-5" />
+              학생 회원가입
+            </Link>
           </div>
 
           <p className="mt-8 text-center text-sm text-gray-500">© 2025 ClassHub. All rights reserved.</p>
@@ -284,6 +292,16 @@ function SpinnerIcon(props: React.SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 24 24" fill="none" {...props}>
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.37 0 0 5.37 0 12h4Z" />
+    </svg>
+  );
+}
+
+function BookIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M4 4.5A2.5 2.5 0 0 1 6.5 7H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 0 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
     </svg>
   );
 }
