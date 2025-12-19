@@ -102,4 +102,37 @@ class TeacherAssistantAssignmentRepositoryTest {
         assertThat(repository.findByIdAndTeacherMemberId(assignment.getId(), UUID.randomUUID()))
                 .isEmpty();
     }
+
+    @Test
+    void findByTeacherMemberIdAndAssistantMemberIdIn_shouldReturnAssignmentsMatchingIds() {
+        TeacherAssistantAssignment a1 = repository.save(
+                TeacherAssistantAssignment.create(teacherId, assistantId1)
+        );
+        TeacherAssistantAssignment a2 = repository.save(
+                TeacherAssistantAssignment.create(teacherId, assistantId2)
+        );
+        UUID outsiderAssistant = UUID.randomUUID();
+
+        var result = repository.findByTeacherMemberIdAndAssistantMemberIdIn(
+                teacherId,
+                java.util.List.of(assistantId1, assistantId2, outsiderAssistant)
+        );
+
+        assertThat(result)
+                .extracting(TeacherAssistantAssignment::getId)
+                .containsExactlyInAnyOrder(a1.getId(), a2.getId());
+    }
+
+    @Test
+    void findByTeacherMemberIdAndAssistantMemberId_shouldReturnAssignment_whenExists() {
+        TeacherAssistantAssignment assignment = repository.save(
+                TeacherAssistantAssignment.create(teacherId, assistantId1)
+        );
+
+        assertThat(repository.findByTeacherMemberIdAndAssistantMemberId(teacherId, assistantId1))
+                .contains(assignment);
+
+        assertThat(repository.findByTeacherMemberIdAndAssistantMemberId(teacherId, UUID.randomUUID()))
+                .isEmpty();
+    }
 }

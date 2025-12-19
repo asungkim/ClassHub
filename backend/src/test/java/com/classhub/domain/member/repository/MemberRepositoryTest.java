@@ -101,4 +101,63 @@ class MemberRepositoryTest {
         assertThat(memberRepository.existsByEmail("duplicate@classhub.com")).isTrue();
         assertThat(memberRepository.existsByEmail("new@classhub.com")).isFalse();
     }
+
+    @Test
+    void findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc_shouldReturnSortedLimitedResults() {
+        for (int i = 0; i < 7; i++) {
+            memberRepository.save(
+                    Member.builder()
+                            .email("assistant" + i + "@classhub.com")
+                            .password("encoded")
+                            .name("Assistant " + i)
+                            .phoneNumber("0101000" + i)
+                            .role(MemberRole.ASSISTANT)
+                            .build()
+            );
+        }
+
+        var results = memberRepository
+                .findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(
+                        MemberRole.ASSISTANT,
+                        "assistant"
+                );
+
+        assertThat(results).hasSize(5);
+        assertThat(results)
+                .isSortedAccordingTo((a, b) -> a.getEmail().compareToIgnoreCase(b.getEmail()));
+    }
+
+    @Test
+    void findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc_shouldExcludeDeletedMembers() {
+        Member active = memberRepository.save(
+                Member.builder()
+                        .email("active@classhub.com")
+                        .password("encoded")
+                        .name("Active Assistant")
+                        .phoneNumber("01099998888")
+                        .role(MemberRole.ASSISTANT)
+                        .build()
+        );
+        Member deleted = memberRepository.save(
+                Member.builder()
+                        .email("deleted@classhub.com")
+                        .password("encoded")
+                        .name("Deleted Assistant")
+                        .phoneNumber("01077776666")
+                        .role(MemberRole.ASSISTANT)
+                        .build()
+        );
+        deleted.deactivate();
+        memberRepository.save(deleted);
+
+        var results = memberRepository
+                .findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(
+                        MemberRole.ASSISTANT,
+                        "classhub"
+                );
+
+        assertThat(results)
+                .extracting(Member::getEmail)
+                .containsExactly(active.getEmail());
+    }
 }

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.classhub.domain.assignment.dto.AssistantAssignmentStatusFilter;
 import com.classhub.domain.assignment.dto.response.AssistantAssignmentResponse;
+import com.classhub.domain.assignment.dto.response.AssistantSearchResponse;
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.member.model.Member;
@@ -191,6 +192,109 @@ class AssistantManagementServiceTest {
                 .isInstanceOf(BusinessException.class);
 
         verify(assignmentRepository, never()).save(any());
+    }
+
+    @Test
+    void searchAssistants_shouldReturnEmpty_whenEmailBlank() {
+        List<AssistantSearchResponse> result = assistantManagementService.searchAssistants(teacherId, "   ");
+
+        assertThat(result).isEmpty();
+        verify(memberRepository, never())
+                .findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(any(), any());
+    }
+
+    @Test
+    void searchAssistants_shouldMapAssignmentsToStatuses() {
+        Member assistantEnabled = buildAssistantMember(UUID.randomUUID(), "Assistant Enabled");
+        Member assistantDisabled = buildAssistantMember(UUID.randomUUID(), "Assistant Disabled");
+        when(memberRepository.findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(
+                eq(MemberRole.ASSISTANT),
+                eq("assistant")
+        )).thenReturn(List.of(assistantEnabled, assistantDisabled));
+
+        TeacherAssistantAssignment active = TeacherAssistantAssignment.create(teacherId, assistantEnabled.getId());
+        ReflectionTestUtils.setField(active, "id", UUID.randomUUID());
+        TeacherAssistantAssignment inactive = TeacherAssistantAssignment.create(teacherId, assistantDisabled.getId());
+        inactive.disable();
+        ReflectionTestUtils.setField(inactive, "id", UUID.randomUUID());
+        when(assignmentRepository.findByTeacherMemberIdAndAssistantMemberIdIn(eq(teacherId), any()))
+                .thenReturn(List.of(active, inactive));
+
+        List<AssistantSearchResponse> result = assistantManagementService.searchAssistants(teacherId, "assistant");
+
+        assertThat(result).hasSize(2);
+        assertThat(result)
+                .extracting(AssistantSearchResponse::assignmentStatus)
+                .containsExactlyInAnyOrder(
+                        AssistantSearchResponse.AssignmentStatus.ACTIVE,
+                        AssistantSearchResponse.AssignmentStatus.INACTIVE
+                );
+    }
+
+    @Test
+    void assignAssistant_shouldCreateNewAssignment_whenNotExisting() {
+        Member assistant = buildAssistantMember(assistantId, "Assistant Kim");
+        when(memberRepository.findById(assistantId)).thenReturn(Optional.of(assistant));
+        when(assignmentRepository.findByTeacherMemberIdAndAssistantMemberId(teacherId, assistantId))
+                .thenReturn(Optional.empty());
+        when(assignmentRepository.save(any())).thenAnswer(invocation -> {
+            TeacherAssistantAssignment saved = invocation.getArgument(0);
+            ReflectionTestUtils.setField(saved, "id", UUID.randomUUID());
+            return saved;
+        });
+
+        AssistantAssignmentResponse response = assistantManagementService.assignAssistant(teacherId, assistantId);
+
+        assertThat(response.assistant().memberId()).isEqualTo(assistantId);
+        verify(assignmentRepository).save(any());
+    }
+
+    @Test
+    void assignAssistant_shouldEnableExistingAssignment_whenPreviouslyDisabled() {
+        Member assistant = buildAssistantMember(assistantId, "Assistant Kim");
+        when(memberRepository.findById(assistantId)).thenReturn(Optional.of(assistant));
+        TeacherAssistantAssignment assignment = TeacherAssistantAssignment.create(teacherId, assistantId);
+        assignment.disable();
+        ReflectionTestUtils.setField(assignment, "id", UUID.randomUUID());
+        when(assignmentRepository.findByTeacherMemberIdAndAssistantMemberId(teacherId, assistantId))
+                .thenReturn(Optional.of(assignment));
+        when(assignmentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AssistantAssignmentResponse response = assistantManagementService.assignAssistant(teacherId, assistantId);
+
+        assertThat(response.isActive()).isTrue();
+        verify(assignmentRepository).save(assignmentCaptor.capture());
+        assertThat(assignmentCaptor.getValue().isActive()).isTrue();
+    }
+
+    @Test
+    void assignAssistant_shouldThrow_whenAssistantAlreadyActive() {
+        Member assistant = buildAssistantMember(assistantId, "Assistant Kim");
+        when(memberRepository.findById(assistantId)).thenReturn(Optional.of(assistant));
+        TeacherAssistantAssignment assignment = TeacherAssistantAssignment.create(teacherId, assistantId);
+        when(assignmentRepository.findByTeacherMemberIdAndAssistantMemberId(teacherId, assistantId))
+                .thenReturn(Optional.of(assignment));
+
+        assertThatThrownBy(() -> assistantManagementService.assignAssistant(teacherId, assistantId))
+                .isInstanceOf(BusinessException.class);
+
+        verify(assignmentRepository, never()).save(any());
+    }
+
+    @Test
+    void assignAssistant_shouldThrow_whenMemberIsNotAssistant() {
+        Member member = Member.builder()
+                .email("teacher@classhub.com")
+                .password("encoded")
+                .name("Teacher")
+                .phoneNumber("01011112222")
+                .role(MemberRole.TEACHER)
+                .build();
+        ReflectionTestUtils.setField(member, "id", assistantId);
+        when(memberRepository.findById(assistantId)).thenReturn(Optional.of(member));
+
+        assertThatThrownBy(() -> assistantManagementService.assignAssistant(teacherId, assistantId))
+                .isInstanceOf(BusinessException.class);
     }
 
 

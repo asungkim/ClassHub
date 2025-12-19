@@ -2267,3 +2267,73 @@ TODO_UPDATE
 - 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepositoryTest"` 등 동 작업 테스트 묶음
 - 수정한 파일: docs/todo/v1.9.md
 - 다음 단계: 동일 Epic 내 프론트엔드 작업 진행
+## [2025-12-19 19:06] Assistant email search TODO 착수 표시
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 "선생님-조교 연결" Epic의 백엔드 작업(이메일 기반 목록 API)을 🔄 상태로 갱신해 진행 시작을 명시
+
+### Details
+- 작업 사유: 교사의 조교 연결 흐름 구현을 위해 검색 API 개발에 착수
+- 영향받은 테스트: 해당 없음 (문서 상태 업데이트)
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 설계 문서 작성 후 사용자 승인 요청
+## [2025-12-19 19:06] 조교 이메일 검색 API 설계
+
+### Type
+DESIGN
+
+### Summary
+- 초대 시스템 제거 후 교사가 조교를 직접 연결할 수 있도록 `assistant-search-assignment` 백엔드 설계 문서를 작성하고 검색 요구사항/응답 스키마/TDD 계획을 정의
+
+### Details
+- 작업 사유: Phase4 선생님-조교 연결 Epic에서 이메일 검색 API가 필요함 (`/api/v1/teachers/me/assistants/search`)
+- 영향받은 테스트: 설계 단계이므로 실행된 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/assistant-search-assignment_plan.md
+- 다음 단계: 사용자 승인 후 Repository/Service/Controller를 TDD로 구현
+## [2025-12-19 19:10] 조교 Assignment 생성 요구 반영
+
+### Type
+DESIGN
+
+### Summary
+- 기존 이메일 검색 설계에 `POST /api/v1/teachers/me/assistants` 조교 연결 API를 추가하고 요청/검증/응답/TDD 범위를 확장
+
+### Details
+- 작업 사유: 교사가 검색한 조교를 실제 Assignment로 연결하는 API가 부재하여 플로우를 완성할 수 없음
+- 영향받은 테스트: 설계 단계, 없음
+- 수정한 파일: docs/plan/backend/season2/assistant-search-assignment_plan.md
+- 다음 단계: 사용자 승인 후 Assignment 생성/검색 API를 TDD로 구현
+## [2025-12-19 19:22] 조교 검색 및 직접 연결 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사용 조교 검색 API(`/assistants/search`)와 연결 생성 API(`POST /assistants`)를 추가하고 응답 DTO/서비스 로직/컨트롤러를 확장
+- Member/Assignment Repository에 검색 메서드를 추가하고 Service/Controller 단위 테스트를 보강
+
+### Details
+- 작업 사유: 초대 플로우 제거 후 조교를 이메일로 찾아 바로 연결하는 단계가 비어 있어 사용자 시나리오 진행 불가
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.member.repository.MemberRepositoryTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepositoryTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.application.AssistantManagementServiceTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.web.AssistantManagementControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/assignment/**, backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java, backend/src/main/java/com/classhub/global/response/RsCode.java, backend/src/test/java/com/classhub/domain/**, docs/plan/backend/season2/assistant-search-assignment_plan.md
+- 다음 단계: 프론트엔드 조교 연결 UI 연동 및 QA 진행
+## [2025-12-19 19:22] TODO v1.9 조교 이메일 검색 과제 완료 표시
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 "선생님-조교 연결" Epic의 백엔드 작업(이메일 기반 목록/연결 API)을 ✅ 로 반영
+
+### Details
+- 작업 사유: 조교 검색/연결 API 구현 완료
+- 영향받은 테스트: 해당 없음 (문서 업데이트)
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 동일 Phase의 프론트엔드 작업 진행

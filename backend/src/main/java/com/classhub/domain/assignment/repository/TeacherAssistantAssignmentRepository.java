@@ -1,7 +1,9 @@
 package com.classhub.domain.assignment.repository;
 
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,4 +25,14 @@ public interface TeacherAssistantAssignmentRepository
     );
 
     Optional<TeacherAssistantAssignment> findByIdAndTeacherMemberId(UUID id, UUID teacherMemberId);
+
+    List<TeacherAssistantAssignment> findByTeacherMemberIdAndAssistantMemberIdIn(
+            UUID teacherMemberId,
+            Collection<UUID> assistantMemberIds
+    );
+
+    Optional<TeacherAssistantAssignment> findByTeacherMemberIdAndAssistantMemberId(
+            UUID teacherMemberId,
+            UUID assistantMemberId
+    );
 }
