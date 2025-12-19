@@ -2410,3 +2410,23 @@ BEHAVIORAL
 - 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.branch.*"`
 - 수정한 파일: backend/src/main/java/com/classhub/domain/company/branch/**, backend/src/test/java/com/classhub/domain/company/branch/**, backend/src/main/java/com/classhub/global/response/RsCode.java, docs/history/AGENT_LOG.md
 - 다음 단계: TODO Phase5 Branch 작업 상태 갱신 및 다음 PLAN 항목(예: Course API) 착수 준비
+
+## [2025-12-19 22:25] TeacherBranchAssignment Repository & DTO 뼈대 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- TeacherBranchAssignment 엔티티에 enable/disable 헬퍼를 추가하고 Repository에 Teacher별/상태별 조회 메서드를 정의한 뒤 DataJpaTest로 soft delete 필터와 소유권 검증을 보장했다.
+- 향후 Service/Controller에서 사용할 생성/상태변경 요청 DTO, 응답 DTO, 상태 필터 enum을 작성해 API 계약을 명확히 했다.
+
+### Details
+- 작업 사유: Teacher-Branch Assignment Plan 6단계 중 Repo/DTO 준비(단계 1~2)를 선행해 Service/Controller 구현 기반 마련
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepositoryTest"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/assignment/model/TeacherBranchAssignment.java
+  - backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java
+  - backend/src/test/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepositoryTest.java
+  - backend/src/main/java/com/classhub/domain/assignment/dto/** (신규 DTO 4종)
+  - docs/history/AGENT_LOG.md
+- 다음 단계: Service 계층에서 Branch/Company 검증 및 Assignment 생성/활성화 로직을 TDD로 구현한 뒤 Controller/MockMvc 테스트 작성
