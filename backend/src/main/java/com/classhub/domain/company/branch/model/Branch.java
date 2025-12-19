@@ -72,6 +72,14 @@ public class Branch extends BaseEntity {
         this.verifiedStatus = VerifiedStatus.UNVERIFIED;
     }
 
+    public void rename(String newName) {
+        this.name = Objects.requireNonNull(newName, "name must not be null").trim();
+    }
+
+    public boolean isOwnedBy(UUID memberId) {
+        return memberId != null && memberId.equals(this.creatorMemberId);
+    }
+
     public void applySeed(UUID companyId,
                           String name,
                           UUID creatorMemberId,

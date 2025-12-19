@@ -2351,3 +2351,157 @@ BEHAVIORAL
 - 영향받은 테스트: `cd frontend && npm run build -- --webpack` (Next.js root 경고 있음; 기존 다중 lockfile 구조로 인한 것이며 추후 outputFileTracingRoot 설정 필요)
 - 수정한 파일: frontend/src/app/(dashboard)/teacher/assistants/page.tsx, frontend/src/types/openapi.{d.ts,json}, docs/plan/frontend/season2/teacher-assistant-management_ui_plan.md
 - 다음 단계: 모달 UX QA 및 토스트/에러메시지 copy 검토, 필요 시 다중 lockfile 구조 정리
+
+## [2025-12-19 20:30] Company/Branch Repository 스펙 확장 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- Company/Branch 엔티티의 verifiedStatus/creatorMemberId가 이미 정의되어 있음을 확인하고, 향후 필터 기반 조회를 위한 Repository 메서드 요구사항을 정리
+- DataJpaTest 기반 리포지토리 테스트 초안(verifiedStatus/soft delete 필터링, creator 접근 제한)이 필요함을 문서화
+
+### Details
+- 작업 사유: Phase5 Company/Branch API 개발 1단계(TDD) 착수 전 기존 모델/레포 구조 점검
+- 영향받은 테스트: 없음 (reading/reconnaissance)
+- 수정한 파일: 없음
+- 다음 단계: CompanyRepository/BranchRepository에 verifiedStatus 필터링 메서드 추가 후 DataJpaTest 작성
+
+## [2025-12-19 21:16] Company/Branch Repository 쿼리 & 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- Company/Branch Repository에 verifiedStatus/type/keyword 필터와 creatorMemberId 조건을 포함한 검색 메서드를 추가하고 DataJpaTest로 soft delete 제외·필터 동작을 검증
+
+### Details
+- 작업 사유: Company/Branch API 1단계에서 필요한 조회 스펙을 데이터 계층에 반영하기 위함
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.*"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/company/**/repository/*.java, backend/src/test/java/com/classhub/domain/company/**/repository/*.java
+- 다음 단계: Service/DTO 구현 및 비즈니스 로직 TDD 진행
+
+## [2025-12-19 21:38] Company Controller + Admin API TDD 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/SuperAdmin 전용 Company API 컨트롤러를 구현해 생성/조회/검증 토글 엔드포인트를 완성하고, 응답 파라미터/인가/enum 파싱을 MockMvc 테스트로 보장
+- 생성 API는 `RsCode.CREATED` 코드에 맞춰 HTTP 201을 기대하도록 테스트를 정정하고, 나머지 목록/상세/검증 테스트도 모두 녹색 상태로 유지
+
+### Details
+- 작업 사유: Phase5 Company 관리 3단계(Controller & 통합 검증) 완료를 위해 HTTP API 계층을 작성
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.company.web.CompanyControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/company/company/web/CompanyController.java, backend/src/test/java/com/classhub/domain/company/company/web/CompanyControllerTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: Branch Controller/테스트 구현 후 TODO Phase5 진척도 업데이트
+
+## [2025-12-19 21:50] Branch Service & Controller TDD
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Branch용 DTO/Service를 추가해 Teacher 지점 생성/수정, SuperAdmin 검증 토글을 구현하고 creator 기반 접근 제어와 상태 토글 로직을 단위 테스트로 검증
+- `GET/POST/PATCH /api/v1/branches` 컨트롤러를 작성해 Teacher/SuperAdmin 역할별 목록 경로와 검증 API(verified-status)를 MockMvc로 보장
+
+### Details
+- 작업 사유: company-branch-management_plan 2~3단계에 따라 Branch API를 완성해 조교/수업 관리의 기반을 마련
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.branch.*"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/company/branch/**, backend/src/test/java/com/classhub/domain/company/branch/**, backend/src/main/java/com/classhub/global/response/RsCode.java, docs/history/AGENT_LOG.md
+- 다음 단계: TODO Phase5 Branch 작업 상태 갱신 및 다음 PLAN 항목(예: Course API) 착수 준비
+
+## [2025-12-19 22:25] TeacherBranchAssignment Repository & DTO 뼈대 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- TeacherBranchAssignment 엔티티에 enable/disable 헬퍼를 추가하고 Repository에 Teacher별/상태별 조회 메서드를 정의한 뒤 DataJpaTest로 soft delete 필터와 소유권 검증을 보장했다.
+- 향후 Service/Controller에서 사용할 생성/상태변경 요청 DTO, 응답 DTO, 상태 필터 enum을 작성해 API 계약을 명확히 했다.
+
+### Details
+- 작업 사유: Teacher-Branch Assignment Plan 6단계 중 Repo/DTO 준비(단계 1~2)를 선행해 Service/Controller 구현 기반 마련
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepositoryTest"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/assignment/model/TeacherBranchAssignment.java
+  - backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java
+  - backend/src/test/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepositoryTest.java
+  - backend/src/main/java/com/classhub/domain/assignment/dto/** (신규 DTO 4종)
+  - docs/history/AGENT_LOG.md
+- 다음 단계: Service 계층에서 Branch/Company 검증 및 Assignment 생성/활성화 로직을 TDD로 구현한 뒤 Controller/MockMvc 테스트 작성
+
+## [2025-12-19 22:29] TeacherBranchAssignment Service/Controller TDD
+
+### Type
+BEHAVIORAL
+
+### Summary
+- TeacherBranchAssignmentService를 추가해 Branch/Company 접근 검증, 개인/회사 학원 분기(기존 지점·신규 학원·신규 지점 생성)까지 지원하고, soft delete 기반 활성/비활성 토글·목록 페이징 응답을 TDD로 구현했다.
+- `/api/v1/teachers/me/branches` GET/POST/PATCH 컨트롤러를 작성하고 MockMvc 테스트로 ROLE 검증, 상태 파싱, 응답 구조를 보장했다.
+
+### Details
+- 작업 사유: 학원 관리 페이지에서 기존 지점 선택뿐 아니라 개인 학원/회사 학원/지점 직접 등록 흐름까지 단일 Assignment API로 처리하기 위함
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.application.TeacherBranchAssignmentServiceTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.web.TeacherBranchAssignmentControllerTest"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/assignment/application/TeacherBranchAssignmentService.java
+  - backend/src/main/java/com/classhub/domain/assignment/web/TeacherBranchAssignmentController.java
+  - backend/src/main/java/com/classhub/domain/assignment/model/TeacherBranchAssignment.java (헬퍼)
+  - backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java
+  - backend/src/main/java/com/classhub/domain/assignment/dto/** (요청/응답/필터)
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/test/java/com/classhub/domain/assignment/application/TeacherBranchAssignmentServiceTest.java
+  - backend/src/test/java/com/classhub/domain/assignment/web/TeacherBranchAssignmentControllerTest.java
+  - docs/history/AGENT_LOG.md
+- 다음 단계: 프런트 학원 관리 UI 설계/구현 및 TODO Phase5 프런트 작업 진행
+
+## [2025-12-19 23:14] Teacher 학원 관리 UI & 검증 페이지 보완
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/frontend/season2/teacher-branch-management_ui_plan.md`에 따른 Teacher 학원 관리 페이지를 구현해 상태 탭/페이지네이션/활성 토글/등록 모달을 연결했다.
+- SuperAdmin 회사/지점 검증 페이지에서 Tabs 기본값과 버튼 변형을 보완해 신규 Tabs 요구사항 및 버튼 컴포넌트 규칙을 충족시켰다.
+- 공통 대시보드 사이드바/대시보드 API 헬퍼를 확장해 Teacher가 회사·지점을 검색하고 Assignment를 생성할 수 있게 했다.
+
+### Details
+- 작업 사유: Phase5 TODO 중 "학원 관리 페이지" 프런트 작업 진행 및 Season2 UI 플로우 반영 (삼단 분기 등록 & 활성/비활성 토글) + 기존 Admin 페이지의 Tabs prop 요구사항 대응
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/components/dashboard/sidebar.tsx
+  - frontend/src/app/(dashboard)/teacher/companies/page.tsx
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/app/(dashboard)/admin/companies/page.tsx
+  - frontend/src/app/(dashboard)/admin/branches/page.tsx
+  - docs/history/AGENT_LOG.md
+- 다음 단계: 학원 관리 모달 흐름 수동 QA(Teacher 계정) 및 Sidebar UX 확인 후 TODO Phase5 상태를 업데이트
+
+## [2025-12-19 23:37] 학원 관리 UI 재구성 및 BranchResponse 확장
+
+### Type
+BEHAVIORAL
+
+### Summary
+- BranchResponse에 companyName을 추가하고 Query/Command 서비스/테스트를 보강해 어드민 지점 검증 화면에서 학원 이름을 직접 표시하도록 백엔드를 확장했다.
+- Teacher 학원 관리 모달을 개인/회사 공통 플로우로 재구성해 검색→직접 입력 전환 UX, 회사·지점 검색 목록, 안내 메시지를 새 요구사항에 맞게 반영했다.
+- 조교/학원 목록 카드의 새로고침 버튼을 제거하고 어드민 지점 검증 UI에서 companyId 대신 companyName을 노출하도록 프론트를 정리했다.
+
+### Details
+- 작업 사유: Phase5 프론트 TODO 중 학원 관리 UI 세부 요구 반영 및 Branch 검증 화면 가독성 개선
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.branch.*"`
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/company/branch/dto/response/BranchResponse.java
+  - backend/src/main/java/com/classhub/domain/company/branch/application/**
+  - backend/src/test/java/com/classhub/domain/company/branch/**
+  - frontend/src/app/(dashboard)/teacher/companies/page.tsx
+  - frontend/src/app/(dashboard)/admin/branches/page.tsx
+  - frontend/src/components/dashboard/sidebar.tsx
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/types/openapi.{json,d.ts}
+  - docs/history/AGENT_LOG.md
+- 다음 단계: Teacher 학원 관리 페이지 수동 QA(회사/지점 검색 및 직접 입력) 후 TODO/PLAN 상태 갱신 검토

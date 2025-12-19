@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/api/v1/teachers/me/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 지점 Assignment 목록
+         * @description 선생님이 연결한 지점 목록을 상태별로 조회한다.
+         */
+        get: operations["getAssignments"];
+        put?: never;
+        /**
+         * 지점 Assignment 생성
+         * @description 선생님이 특정 지점과의 연결을 생성한다.
+         */
+        post: operations["createAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teachers/me/assistants": {
         parameters: {
             query?: never;
@@ -88,6 +112,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Teacher 학원 목록 조회
+         * @description 교사가 접근 가능한 학원 목록을 상태/타입/키워드로 필터링해 조회한다.
+         */
+        get: operations["getCompaniesForTeacher"];
+        put?: never;
+        /**
+         * 학원 생성
+         * @description Teacher가 INDIVIDUAL 또는 ACADEMY 학원을 등록한다.
+         */
+        post: operations["createCompany"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 지점 목록 조회
+         * @description Teacher 또는 SuperAdmin이 상태/키워드/회사 기준으로 지점을 조회한다.
+         */
+        get: operations["getBranches"];
+        put?: never;
+        /**
+         * 지점 생성
+         * @description Teacher가 기존 학원에 새로운 지점을 추가한다.
+         */
+        post: operations["createBranch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/refresh": {
         parameters: {
             query?: never;
@@ -148,6 +220,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teachers/me/branches/{assignmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 지점 Assignment 활성/비활성화
+         * @description 선생님이 출강 중단 시 Assignment를 비활성화하고, 필요 시 다시 활성화한다.
+         */
+        patch: operations["updateAssignmentStatus"];
+        trace?: never;
+    };
     "/api/v1/teachers/me/assistants/{assignmentId}": {
         parameters: {
             query?: never;
@@ -166,6 +258,66 @@ export interface paths {
          * @description 교사가 특정 조교의 접근 권한을 켜거나 끈다.
          */
         patch: operations["updateAssistantStatus"];
+        trace?: never;
+    };
+    "/api/v1/branches/{branchId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 지점 정보 수정
+         * @description 교사(OWNER) 또는 SuperAdmin이 지점 이름/활성 여부를 수정한다.
+         */
+        patch: operations["updateBranch"];
+        trace?: never;
+    };
+    "/api/v1/branches/{branchId}/verified-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 지점 검증 상태 변경
+         * @description SuperAdmin이 지점의 verified 상태 및 활성화를 토글한다.
+         */
+        patch: operations["updateBranchVerifiedStatus"];
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{companyId}/verified-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 학원 검증 상태 변경
+         * @description SuperAdmin이 학원의 검증/활성 상태를 변경한다.
+         */
+        patch: operations["updateCompanyVerifiedStatus"];
         trace?: never;
     };
     "/api/v1/teachers/me/assistants/search": {
@@ -208,10 +360,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SuperAdmin 학원 목록 조회
+         * @description SuperAdmin이 전체 학원 목록을 검증 상태로 필터링해 조회한다.
+         */
+        get: operations["getCompaniesForAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{companyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 학원 상세 조회
+         * @description SuperAdmin이 특정 학원 상세 정보를 조회한다.
+         */
+        get: operations["getCompanyDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BranchInput: {
+            /** Format: uuid */
+            companyId: string;
+            branchName: string;
+        };
+        CompanyInput: {
+            companyName: string;
+            branchName: string;
+        };
+        IndividualInput: {
+            companyName: string;
+            branchName: string;
+        };
+        TeacherBranchAssignmentCreateRequest: {
+            /** @enum {string} */
+            mode: "EXISTING_BRANCH" | "NEW_INDIVIDUAL" | "NEW_COMPANY" | "NEW_BRANCH";
+            /** Format: uuid */
+            branchId?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "FREELANCE";
+            individual?: components["schemas"]["IndividualInput"];
+            company?: components["schemas"]["CompanyInput"];
+            branch?: components["schemas"]["BranchInput"];
+        };
+        RsDataTeacherBranchAssignmentResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["TeacherBranchAssignmentResponse"];
+        };
+        TeacherBranchAssignmentResponse: {
+            /** Format: uuid */
+            assignmentId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            /** @enum {string} */
+            companyType?: "INDIVIDUAL" | "ACADEMY";
+            /** @enum {string} */
+            verifiedStatus?: "UNVERIFIED" | "VERIFIED";
+            /** @enum {string} */
+            role?: "OWNER" | "FREELANCE";
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+        };
         AssistantAssignmentCreateRequest: {
             /** Format: uuid */
             assistantMemberId: string;
@@ -272,6 +514,62 @@ export interface components {
             birthDate: string;
             parentPhone: string;
         };
+        CompanyCreateRequest: {
+            name: string;
+            description?: string;
+            /** @enum {string} */
+            type: "INDIVIDUAL" | "ACADEMY";
+            branchName?: string;
+        };
+        CompanyResponse: {
+            /** Format: uuid */
+            companyId?: string;
+            name?: string;
+            description?: string;
+            /** @enum {string} */
+            type?: "INDIVIDUAL" | "ACADEMY";
+            /** @enum {string} */
+            verifiedStatus?: "UNVERIFIED" | "VERIFIED";
+            /** Format: uuid */
+            creatorMemberId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+        };
+        RsDataCompanyResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["CompanyResponse"];
+        };
+        BranchCreateRequest: {
+            /** Format: uuid */
+            companyId: string;
+            name: string;
+        };
+        BranchResponse: {
+            /** Format: uuid */
+            branchId?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            name?: string;
+            /** @enum {string} */
+            verifiedStatus?: "UNVERIFIED" | "VERIFIED";
+            /** Format: uuid */
+            creatorMemberId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+        };
+        RsDataBranchResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["BranchResponse"];
+        };
         LogoutRequest: {
             refreshToken?: string;
             logoutAll?: boolean;
@@ -287,8 +585,42 @@ export interface components {
             email: string;
             password: string;
         };
+        TeacherBranchAssignmentStatusUpdateRequest: {
+            enabled: boolean;
+        };
         AssistantAssignmentStatusUpdateRequest: {
             enabled: boolean;
+        };
+        BranchUpdateRequest: {
+            name?: string;
+            enabled?: boolean;
+        };
+        BranchVerifiedStatusRequest: {
+            verified: boolean;
+            enabled?: boolean;
+        };
+        CompanyVerifiedStatusRequest: {
+            verified: boolean;
+            enabled?: boolean;
+        };
+        PageResponseTeacherBranchAssignmentResponse: {
+            content?: components["schemas"]["TeacherBranchAssignmentResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseTeacherBranchAssignmentResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseTeacherBranchAssignmentResponse"];
         };
         PageResponseAssistantAssignmentResponse: {
             content?: components["schemas"]["AssistantAssignmentResponse"][];
@@ -330,6 +662,44 @@ export interface components {
             message?: string;
             data?: components["schemas"]["AssistantSearchResponse"][];
         };
+        PageResponseCompanyResponse: {
+            content?: components["schemas"]["CompanyResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseCompanyResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseCompanyResponse"];
+        };
+        PageResponseBranchResponse: {
+            content?: components["schemas"]["BranchResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseBranchResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseBranchResponse"];
+        };
         MeResponse: {
             /** Format: uuid */
             memberId?: string;
@@ -353,6 +723,54 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getAssignments: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseTeacherBranchAssignmentResponse"];
+                };
+            };
+        };
+    };
+    createAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeacherBranchAssignmentCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataTeacherBranchAssignmentResponse"];
+                };
+            };
+        };
+    };
     getAssistants: {
         parameters: {
             query?: {
@@ -473,6 +891,106 @@ export interface operations {
             };
         };
     };
+    getCompaniesForTeacher: {
+        parameters: {
+            query?: {
+                status?: string;
+                type?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCompanyResponse"];
+                };
+            };
+        };
+    };
+    createCompany: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCompanyResponse"];
+                };
+            };
+        };
+    };
+    getBranches: {
+        parameters: {
+            query?: {
+                companyId?: string;
+                status?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseBranchResponse"];
+                };
+            };
+        };
+    };
+    createBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataBranchResponse"];
+                };
+            };
+        };
+    };
     refresh: {
         parameters: {
             query?: never;
@@ -541,6 +1059,32 @@ export interface operations {
             };
         };
     };
+    updateAssignmentStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeacherBranchAssignmentStatusUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataTeacherBranchAssignmentResponse"];
+                };
+            };
+        };
+    };
     updateAssistantStatus: {
         parameters: {
             query?: never;
@@ -563,6 +1107,84 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataAssistantAssignmentResponse"];
+                };
+            };
+        };
+    };
+    updateBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataBranchResponse"];
+                };
+            };
+        };
+    };
+    updateBranchVerifiedStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchVerifiedStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataBranchResponse"];
+                };
+            };
+        };
+    };
+    updateCompanyVerifiedStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyVerifiedStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCompanyResponse"];
                 };
             };
         };
@@ -605,6 +1227,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataMeResponse"];
+                };
+            };
+        };
+    };
+    getCompaniesForAdmin: {
+        parameters: {
+            query?: {
+                status?: string;
+                type?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCompanyResponse"];
+                };
+            };
+        };
+    };
+    getCompanyDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCompanyResponse"];
                 };
             };
         };

@@ -54,4 +54,16 @@ public class TeacherBranchAssignment extends BaseEntity {
                 .role(role)
                 .build();
     }
+
+    public void disable() {
+        delete();
+    }
+
+    public void enable() {
+        restore();
+    }
+
+    public boolean isActive() {
+        return !isDeleted();
+    }
 }
