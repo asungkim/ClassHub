@@ -164,6 +164,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teachers/me/assistants/{assignmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 조교 활성/비활성화
+         * @description 교사가 특정 조교의 접근 권한을 켜거나 끈다.
+         */
+        patch: operations["updateAssistantStatus"];
+        trace?: never;
+    };
     "/api/v1/invitations/{code}/revoke": {
         parameters: {
             query?: never;
@@ -182,6 +202,46 @@ export interface paths {
          * @description Teacher가 아직 사용되지 않은 초대를 취소한다.
          */
         patch: operations["revokeInvitation"];
+        trace?: never;
+    };
+    "/api/v1/teachers/me/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 조교 초대 목록 조회
+         * @description 초대 상태별로 교사가 발행한 조교 초대를 확인한다.
+         */
+        get: operations["getAssistantInvitations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teachers/me/assistants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 조교 목록 조회
+         * @description 교사가 배정된 조교 목록을 상태별로 확인한다.
+         */
+        get: operations["getAssistants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/auth/me": {
@@ -298,6 +358,82 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["InvitationVerifyResponse"];
+        };
+        AssistantAssignmentStatusUpdateRequest: {
+            enabled: boolean;
+        };
+        AssistantAssignmentResponse: {
+            /** Format: uuid */
+            assignmentId?: string;
+            assistant?: components["schemas"]["AssistantProfile"];
+            isActive?: boolean;
+            /** Format: date-time */
+            assignedAt?: string;
+            /** Format: date-time */
+            disabledAt?: string;
+        };
+        AssistantProfile: {
+            /** Format: uuid */
+            memberId?: string;
+            name?: string;
+            email?: string;
+            phoneNumber?: string;
+        };
+        RsDataAssistantAssignmentResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["AssistantAssignmentResponse"];
+        };
+        InvitationSummaryResponse: {
+            code?: string;
+            targetEmail?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
+            /** Format: date-time */
+            expiredAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        PageResponseInvitationSummaryResponse: {
+            content?: components["schemas"]["InvitationSummaryResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseInvitationSummaryResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseInvitationSummaryResponse"];
+        };
+        PageResponseAssistantAssignmentResponse: {
+            content?: components["schemas"]["AssistantAssignmentResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseAssistantAssignmentResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseAssistantAssignmentResponse"];
         };
         MeResponse: {
             /** Format: uuid */
@@ -510,6 +646,32 @@ export interface operations {
             };
         };
     };
+    updateAssistantStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantAssignmentStatusUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataAssistantAssignmentResponse"];
+                };
+            };
+        };
+    };
     revokeInvitation: {
         parameters: {
             query?: never;
@@ -528,6 +690,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    getAssistantInvitations: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseInvitationSummaryResponse"];
+                };
+            };
+        };
+    };
+    getAssistants: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseAssistantAssignmentResponse"];
                 };
             };
         };

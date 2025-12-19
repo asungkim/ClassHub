@@ -77,6 +77,27 @@ export const ROLES = { ... } satisfies Record<string, MemberRole>;
 - Assistant/Student 회원가입 페이지 신규 구현
 - 역할별 대시보드 페이지 신규 구현
 
+## [2025-02-14 15:00] 교사용 조교 관리 페이지 구현
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- `docs/plan/frontend/season2/assistant-invitation-suite_plan.md`를 근거로 Teacher 조교 관리 페이지를 구축했다.
+- 조교 목록/초대 목록 API 연동과 상태 토글, 초대 발급·복사·취소 UX를 구현했다.
+- `cd frontend && npm run build -- --webpack`을 실행해 타입 검증을 통과했다.
+
+### Details
+
+- 작업 사유: Season2 초대 플로우를 완성하기 위해 Teacher 조교 관리 화면이 필요했다.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/invitations/page.tsx`
+  - `frontend/src/components/ui/tabs.tsx`
+- 다음 단계: 초대 검증 페이지 구현, 조교 회원가입 페이지 구현
+
 ---
 
 ## [2025-12-09 16:20] Course 엔티티 및 CRUD API 구현

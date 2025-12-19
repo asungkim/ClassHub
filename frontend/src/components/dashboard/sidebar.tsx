@@ -24,6 +24,7 @@ const menuByRole: Record<Role, MenuItem[]> = {
     { href: "/teacher/courses", label: "수업 관리", icon: "📚" },
     { href: "/teacher/students", label: "학생 관리", icon: "👨‍🎓" },
     { href: "/teacher/assistants", label: "조교 관리", icon: "👥" },
+    { href: "/teacher/invitations", label: "초대 관리", icon: "✉️" },
     { href: "/teacher/clinics", label: "클리닉 관리", icon: "🩺" },
   ],
   ASSISTANT: [

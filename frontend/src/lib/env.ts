@@ -5,7 +5,8 @@ const mockToken = process.env.NEXT_PUBLIC_MOCK_TOKEN ?? "";
 
 export const env = {
   apiBaseUrl: apiBase,
-  mockToken
+  mockToken,
+  appBaseUrl: process.env.NEXT_PUBLIC_APP_BASE_URL
 };
 
 export function describeEnv() {
