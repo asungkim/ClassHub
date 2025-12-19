@@ -2395,3 +2395,18 @@ BEHAVIORAL
 - 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.company.web.CompanyControllerTest"`
 - 수정한 파일: backend/src/main/java/com/classhub/domain/company/company/web/CompanyController.java, backend/src/test/java/com/classhub/domain/company/company/web/CompanyControllerTest.java, docs/history/AGENT_LOG.md
 - 다음 단계: Branch Controller/테스트 구현 후 TODO Phase5 진척도 업데이트
+
+## [2025-12-19 21:50] Branch Service & Controller TDD
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Branch용 DTO/Service를 추가해 Teacher 지점 생성/수정, SuperAdmin 검증 토글을 구현하고 creator 기반 접근 제어와 상태 토글 로직을 단위 테스트로 검증
+- `GET/POST/PATCH /api/v1/branches` 컨트롤러를 작성해 Teacher/SuperAdmin 역할별 목록 경로와 검증 API(verified-status)를 MockMvc로 보장
+
+### Details
+- 작업 사유: company-branch-management_plan 2~3단계에 따라 Branch API를 완성해 조교/수업 관리의 기반을 마련
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.branch.*"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/company/branch/**, backend/src/test/java/com/classhub/domain/company/branch/**, backend/src/main/java/com/classhub/global/response/RsCode.java, docs/history/AGENT_LOG.md
+- 다음 단계: TODO Phase5 Branch 작업 상태 갱신 및 다음 PLAN 항목(예: Course API) 착수 준비

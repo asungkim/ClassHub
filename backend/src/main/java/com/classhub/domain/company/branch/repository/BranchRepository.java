@@ -24,11 +24,13 @@ public interface BranchRepository extends JpaRepository<Branch, UUID> {
               AND (:companyId IS NULL OR b.companyId = :companyId)
               AND (:status IS NULL OR b.verifiedStatus = :status)
               AND (:keyword IS NULL OR LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:creatorId IS NULL OR b.creatorMemberId = :creatorId)
             """)
     Page<Branch> searchBranches(
             @Param("companyId") UUID companyId,
             @Param("status") VerifiedStatus status,
             @Param("keyword") String keyword,
+            @Param("creatorId") UUID creatorMemberId,
             Pageable pageable
     );
 

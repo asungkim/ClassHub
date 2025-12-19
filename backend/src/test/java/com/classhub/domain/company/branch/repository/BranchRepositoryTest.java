@@ -47,6 +47,7 @@ class BranchRepositoryTest {
                 companyId,
                 VerifiedStatus.VERIFIED,
                 "강남",
+                null,
                 PageRequest.of(0, 10)
         );
 
@@ -92,8 +93,31 @@ class BranchRepositoryTest {
                 Branch.create(UUID.randomUUID(), "분당", UUID.randomUUID(), VerifiedStatus.UNVERIFIED)
         );
 
-        Page<Branch> page = branchRepository.searchBranches(null, null, null, PageRequest.of(0, 10));
+        Page<Branch> page = branchRepository.searchBranches(null, null, null, null, PageRequest.of(0, 10));
 
         assertThat(page.getTotalElements()).isEqualTo(2);
+    }
+
+    @Test
+    void searchBranches_shouldFilterByCreatorWhenProvided() {
+        UUID companyId = UUID.randomUUID();
+        UUID creatorId = UUID.randomUUID();
+        branchRepository.save(Branch.create(companyId, "강남", creatorId, VerifiedStatus.UNVERIFIED));
+        branchRepository.save(Branch.create(companyId, "잠실", UUID.randomUUID(), VerifiedStatus.UNVERIFIED));
+
+        Page<Branch> page = branchRepository.searchBranches(
+                companyId,
+                VerifiedStatus.UNVERIFIED,
+                null,
+                creatorId,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent())
+                .hasSize(1)
+                .first()
+                .extracting(Branch::getCreatorMemberId)
+                .isEqualTo(creatorId);
     }
 }
