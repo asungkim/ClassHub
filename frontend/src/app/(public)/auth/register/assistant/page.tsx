@@ -14,10 +14,9 @@ import { formatPhoneNumber, validatePhoneNumber } from "@/lib/format-phone";
 import { getDashboardRoute } from "@/lib/routes";
 import type { components } from "@/types/openapi";
 
-type RegisterTeacherRequest = components["schemas"]["RegisterMemberRequest"];
-type RegisterTeacherResponse = components["schemas"]["RsDataLoginResponse"];
+type RegisterAssistantRequest = components["schemas"]["RegisterMemberRequest"];
 
-export default function TeacherRegisterPage() {
+export default function AssistantRegisterPage() {
   const router = useRouter();
   const { status, member, setToken } = useSession();
 
@@ -31,7 +30,6 @@ export default function TeacherRegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // 이미 로그인된 사용자는 즉시 메인 페이지로 리다이렉트
   useEffect(() => {
     if (status === "authenticated" && member?.role) {
       const dashboardRoute = getDashboardRoute(member.role) as Route;
@@ -39,7 +37,6 @@ export default function TeacherRegisterPage() {
     }
   }, [status, member, router]);
 
-  // 비밀번호 검증 (백엔드 스펙과 동일)
   const isPasswordValid = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={}:;"'`~<>,.?/\\|\[\]]).{8,64}$/.test(password);
   const isPhoneValid = validatePhoneNumber(phone);
   const passwordsMatch = password === confirmPassword;
@@ -49,12 +46,11 @@ export default function TeacherRegisterPage() {
     setPhone(formatPhoneNumber(value));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setFormError(null);
     setFieldErrors({});
 
-    // Validation
     const errors: Record<string, string> = {};
     if (!email) errors.email = "이메일을 입력해주세요.";
     if (!password) errors.password = "비밀번호를 입력해주세요.";
@@ -67,7 +63,6 @@ export default function TeacherRegisterPage() {
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      // 첫 번째 에러 필드로 포커스 이동
       const firstErrorField = Object.keys(errors)[0];
       document.querySelector<HTMLInputElement>(`input[name="${firstErrorField}"]`)?.focus();
       return;
@@ -76,23 +71,23 @@ export default function TeacherRegisterPage() {
     try {
       setIsSubmitting(true);
 
-      const requestBody: RegisterTeacherRequest = {
+      const requestBody: RegisterAssistantRequest = {
         email,
         password,
         name,
         phoneNumber: phone
       };
 
-      const response = await api.POST("/api/v1/members/register/teacher", {
+      const response = await api.POST("/api/v1/members/register/assistant", {
         body: requestBody
       });
 
       if (response.error || !response.data?.data?.accessToken) {
         const message = getApiErrorMessage(response.error, "회원가입에 실패했습니다. 다시 시도해주세요.");
-
-        // 중복 이메일 에러 처리
         if (message.includes("이메일") || message.includes("DUPLICATE")) {
           setFieldErrors({ email: "이미 가입된 이메일입니다." });
+        } else if (message.includes("비활성화")) {
+          setFormError("비활성화된 계정입니다. 선생님에게 문의하세요.");
         } else {
           setFormError(message);
         }
@@ -100,8 +95,6 @@ export default function TeacherRegisterPage() {
       }
 
       const accessToken = response.data.data.accessToken;
-
-      // 세션 복원 → SessionProvider가 role 확인 후 useEffect에서 대시보드 리다이렉트
       await setToken(accessToken);
     } catch (error) {
       const message = error instanceof Error ? error.message : "회원가입 중 오류가 발생했습니다.";
@@ -111,7 +104,6 @@ export default function TeacherRegisterPage() {
     }
   };
 
-  // 로딩 중이거나 이미 로그인된 경우 스켈레톤 표시
   if (status === "loading" || status === "authenticated") {
     return (
       <div className="relative isolate min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4 py-16">
@@ -124,7 +116,6 @@ export default function TeacherRegisterPage() {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4 py-16 text-gray-900">
-      {/* 배경 애니메이션 */}
       <div className="pointer-events-none absolute inset-0">
         <div className="animate-blob animation-delay-0 absolute top-16 left-8 h-72 w-72 rounded-full bg-blue-200 opacity-20 blur-3xl md:opacity-30" />
         <div className="animate-blob animation-delay-2000 absolute top-40 right-4 h-72 w-72 rounded-full bg-purple-200 opacity-20 blur-3xl md:opacity-30" />
@@ -132,7 +123,6 @@ export default function TeacherRegisterPage() {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 lg:flex-row lg:items-center">
-        {/* 좌측 Hero 영역 (Desktop만) */}
         <div className="hidden lg:block lg:flex-1">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
@@ -141,30 +131,28 @@ export default function TeacherRegisterPage() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-gray-900">ClassHub</h1>
-                <p className="text-sm text-gray-600">수업 관리의 새로운 기준</p>
+                <p className="text-sm text-gray-600">강사와 함께 성장하는 조교 플랫폼</p>
               </div>
             </div>
             <div className="space-y-3 text-gray-700">
               <div className="flex items-center gap-3">
                 <CheckCircleIcon className="h-6 w-6 text-emerald-600" />
-                <span>수업/학생/조교를 한곳에서 관리</span>
+                <span>배정된 학생/클리닉 일정을 한눈에 확인</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircleIcon className="h-6 w-6 text-emerald-600" />
-                <span>클리닉 일정 자동화</span>
+                <span>근무일지와 공지사항을 실시간 공유</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircleIcon className="h-6 w-6 text-emerald-600" />
-                <span>학생 진도 실시간 추적</span>
+                <span>선생님과 함께 학생 진도 관리</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 우측 회원가입 카드 */}
         <div className="w-full lg:flex-1">
-          <div className="relative w-full max-w-md mx-auto rounded-3xl bg-white/80 p-8 shadow-2xl ring-1 ring-white/60 backdrop-blur">
-            {/* 모바일용 헤더 */}
+          <div className="relative mx-auto w-full max-w-md rounded-3xl bg-white/80 p-8 shadow-2xl ring-1 ring-white/60 backdrop-blur">
             <div className="mb-6 text-center lg:hidden">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg">
                 <ClassHubIcon />
@@ -173,8 +161,8 @@ export default function TeacherRegisterPage() {
             </div>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">선생님 회원가입</h2>
-              <p className="mt-1 text-sm text-gray-600">ClassHub에서 수업을 시작하세요</p>
+              <h2 className="text-2xl font-bold text-gray-900">조교 회원가입</h2>
+              <p className="mt-1 text-sm text-gray-600">선생님과 연결되어 수업을 지원하세요</p>
             </div>
 
             {formError && (
@@ -189,8 +177,8 @@ export default function TeacherRegisterPage() {
                 type="email"
                 name="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="teacher@classhub.com"
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="assistant@classhub.com"
                 error={fieldErrors.email}
                 required
                 aria-describedby={fieldErrors.email ? "email-error" : undefined}
@@ -201,7 +189,7 @@ export default function TeacherRegisterPage() {
                 type="password"
                 name="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
                 error={fieldErrors.password}
                 required
@@ -216,25 +204,25 @@ export default function TeacherRegisterPage() {
               )}
 
               <div>
-                <TextField
-                  label="비밀번호 확인"
-                  type="password"
-                  name="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  error={fieldErrors.confirmPassword}
-                  required
-                  aria-describedby={fieldErrors.confirmPassword ? "confirm-password-error" : undefined}
-                />
-                {confirmPassword && password && !passwordsMatch && (
-                  <p className="mt-2 text-xs font-semibold text-rose-600">비밀번호가 일치하지 않습니다.</p>
-                )}
-                {confirmPassword && password && passwordsMatch && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-emerald-600">
-                    <CheckCircleIcon className="h-4 w-4" />
-                    <span className="font-medium">비밀번호가 일치합니다</span>
-                  </div>
+              <TextField
+                label="비밀번호 확인"
+                type="password"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                placeholder="••••••••"
+                error={fieldErrors.confirmPassword}
+                required
+                aria-describedby={fieldErrors.confirmPassword ? "confirm-password-error" : undefined}
+              />
+              {confirmPassword && password && !passwordsMatch && (
+                <p className="mt-2 text-xs font-semibold text-rose-600">비밀번호가 일치하지 않습니다.</p>
+              )}
+              {confirmPassword && password && passwordsMatch && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-emerald-600">
+                  <CheckCircleIcon className="h-4 w-4" />
+                  <span className="font-medium">비밀번호가 일치합니다</span>
+                </div>
                 )}
               </div>
 
@@ -243,7 +231,7 @@ export default function TeacherRegisterPage() {
                 type="text"
                 name="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(event) => setName(event.target.value)}
                 placeholder="홍길동"
                 error={fieldErrors.name}
                 required
@@ -255,7 +243,7 @@ export default function TeacherRegisterPage() {
                 type="tel"
                 name="phone"
                 value={phone}
-                onChange={(e) => handlePhoneInput(e.target.value)}
+                onChange={(event) => handlePhoneInput(event.target.value)}
                 placeholder="01012345678"
                 helperText="숫자만 입력하세요"
                 error={fieldErrors.phone}

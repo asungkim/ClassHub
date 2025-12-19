@@ -288,28 +288,31 @@ export default function StudentRegisterPage() {
                   error={fieldErrors.password}
                   required
                 />
-              <TextField
-                label="비밀번호 확인"
-                type="password"
-                name="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                error={fieldErrors.confirmPassword}
-                required
-              />
-              {password && (
-                <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="mb-2 text-xs font-semibold text-slate-700">비밀번호 요구사항</p>
-                  <PasswordRequirementList password={password} />
-                </div>
-              )}
-              {confirmPassword && password && passwordsMatch && (
-                <div className="md:col-span-2 flex items-center gap-2 text-xs font-medium text-emerald-600">
-                  <CheckCircleIcon className="h-4 w-4" />
-                  비밀번호가 일치합니다.
-                </div>
-              )}
+                <TextField
+                  label="비밀번호 확인"
+                  type="password"
+                  name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  error={fieldErrors.confirmPassword}
+                  required
+                />
+                {confirmPassword && password && !passwordsMatch && (
+                  <p className="md:col-span-2 text-xs font-semibold text-rose-600">비밀번호가 일치하지 않습니다.</p>
+                )}
+                {password && (
+                  <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="mb-2 text-xs font-semibold text-slate-700">비밀번호 요구사항</p>
+                    <PasswordRequirementList password={password} />
+                  </div>
+                )}
+                {confirmPassword && password && passwordsMatch && (
+                  <div className="md:col-span-2 flex items-center gap-2 text-xs font-medium text-emerald-600">
+                    <CheckCircleIcon className="h-4 w-4" />
+                    비밀번호가 일치합니다.
+                  </div>
+                )}
                 <TextField
                   label="학생 전화번호"
                   type="tel"

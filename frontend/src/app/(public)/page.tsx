@@ -182,6 +182,14 @@ export default function HomePage() {
             </Link>
 
             <Link
+              href="/auth/register/assistant"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-300 bg-white py-3 font-semibold text-emerald-600 transition hover:bg-emerald-50"
+            >
+              <UsersIcon className="h-5 w-5" />
+              조교 회원가입
+            </Link>
+
+            <Link
               href="/auth/register/student"
               className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-purple-300 bg-white py-3 font-semibold text-purple-600 transition hover:bg-purple-50"
             >
