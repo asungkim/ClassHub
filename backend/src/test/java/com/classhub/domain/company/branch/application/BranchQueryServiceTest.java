@@ -9,7 +9,10 @@ import static org.mockito.Mockito.when;
 import com.classhub.domain.company.branch.dto.response.BranchResponse;
 import com.classhub.domain.company.branch.model.Branch;
 import com.classhub.domain.company.branch.repository.BranchRepository;
+import com.classhub.domain.company.company.model.Company;
+import com.classhub.domain.company.company.model.CompanyType;
 import com.classhub.domain.company.company.model.VerifiedStatus;
+import com.classhub.domain.company.company.repository.CompanyRepository;
 import com.classhub.global.response.PageResponse;
 import java.util.List;
 import java.util.UUID;
@@ -22,12 +25,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class BranchQueryServiceTest {
 
     @Mock
     private BranchRepository branchRepository;
+
+    @Mock
+    private CompanyRepository companyRepository;
 
     @InjectMocks
     private BranchQueryService branchQueryService;
@@ -40,6 +47,9 @@ class BranchQueryServiceTest {
         Page<Branch> page = new PageImpl<>(List.of(branch), PageRequest.of(0, 10), 1);
         when(branchRepository.searchBranches(eq(companyId), eq(VerifiedStatus.VERIFIED), eq("강남"), eq(null), any(Pageable.class)))
                 .thenReturn(page);
+        Company company = Company.create("러셀", null, CompanyType.ACADEMY, VerifiedStatus.VERIFIED, teacherId);
+        ReflectionTestUtils.setField(company, "id", companyId);
+        when(companyRepository.findAllById(any())).thenReturn(List.of(company));
 
         PageResponse<BranchResponse> response = branchQueryService.getBranchesForTeacher(
                 teacherId,
@@ -50,6 +60,7 @@ class BranchQueryServiceTest {
         );
 
         assertThat(response.content()).hasSize(1);
+        assertThat(response.content().getFirst().companyName()).isEqualTo("러셀");
         verify(branchRepository).searchBranches(eq(companyId), eq(VerifiedStatus.VERIFIED), eq("강남"), eq(null), any(Pageable.class));
     }
 
@@ -61,6 +72,9 @@ class BranchQueryServiceTest {
         Page<Branch> page = new PageImpl<>(List.of(branch), PageRequest.of(0, 10), 1);
         when(branchRepository.searchBranches(eq(companyId), eq(VerifiedStatus.UNVERIFIED), eq(null), eq(teacherId), any(Pageable.class)))
                 .thenReturn(page);
+        Company company = Company.create("러셀", null, CompanyType.ACADEMY, VerifiedStatus.VERIFIED, teacherId);
+        ReflectionTestUtils.setField(company, "id", companyId);
+        when(companyRepository.findAllById(any())).thenReturn(List.of(company));
 
         PageResponse<BranchResponse> response = branchQueryService.getBranchesForTeacher(
                 teacherId,
@@ -71,6 +85,7 @@ class BranchQueryServiceTest {
         );
 
         assertThat(response.content()).hasSize(1);
+        assertThat(response.content().getFirst().companyName()).isEqualTo("러셀");
         verify(branchRepository).searchBranches(eq(companyId), eq(VerifiedStatus.UNVERIFIED), eq(null), eq(teacherId), any(Pageable.class));
     }
 
@@ -81,6 +96,9 @@ class BranchQueryServiceTest {
         Page<Branch> page = new PageImpl<>(List.of(branch), PageRequest.of(0, 20), 1);
         when(branchRepository.searchBranches(eq(companyId), eq(VerifiedStatus.UNVERIFIED), eq(null), eq(null), any(Pageable.class)))
                 .thenReturn(page);
+        Company company = Company.create("러셀", null, CompanyType.ACADEMY, VerifiedStatus.VERIFIED, UUID.randomUUID());
+        ReflectionTestUtils.setField(company, "id", companyId);
+        when(companyRepository.findAllById(any())).thenReturn(List.of(company));
 
         PageResponse<BranchResponse> response = branchQueryService.getBranchesForAdmin(
                 companyId,
@@ -90,6 +108,7 @@ class BranchQueryServiceTest {
         );
 
         assertThat(response.content()).hasSize(1);
+        assertThat(response.content().getFirst().companyName()).isEqualTo("러셀");
         verify(branchRepository).searchBranches(eq(companyId), eq(VerifiedStatus.UNVERIFIED), eq(null), eq(null), any(Pageable.class));
     }
 }

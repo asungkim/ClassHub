@@ -74,6 +74,7 @@ class BranchControllerTest {
         BranchResponse response = new BranchResponse(
                 branchId,
                 UUID.randomUUID(),
+                "클래스허브 어학원",
                 "강남",
                 VerifiedStatus.UNVERIFIED,
                 teacherId,
@@ -155,6 +156,7 @@ class BranchControllerTest {
         BranchResponse response = new BranchResponse(
                 branchId,
                 UUID.randomUUID(),
+                "클래스허브 어학원",
                 "강남",
                 VerifiedStatus.UNVERIFIED,
                 teacherId,
@@ -190,6 +192,7 @@ class BranchControllerTest {
         BranchResponse response = new BranchResponse(
                 branchId,
                 UUID.randomUUID(),
+                "클래스허브 어학원",
                 "강남",
                 VerifiedStatus.VERIFIED,
                 principal.id(),

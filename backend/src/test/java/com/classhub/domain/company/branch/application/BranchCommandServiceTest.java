@@ -66,6 +66,7 @@ class BranchCommandServiceTest {
         BranchResponse response = branchCommandService.createBranch(teacherId, request);
 
         assertThat(response.companyId()).isEqualTo(companyId);
+        assertThat(response.companyName()).isEqualTo("러셀");
         assertThat(response.verifiedStatus()).isEqualTo(VerifiedStatus.UNVERIFIED);
         verify(branchRepository).save(branchCaptor.capture());
         assertThat(branchCaptor.getValue().getCreatorMemberId()).isEqualTo(teacherId);
@@ -99,12 +100,16 @@ class BranchCommandServiceTest {
         Branch branch = Branch.create(companyId, "강남", teacherId, VerifiedStatus.UNVERIFIED);
         ReflectionTestUtils.setField(branch, "id", branchId);
         when(branchRepository.findById(branchId)).thenReturn(Optional.of(branch));
+        Company company = Company.create("러셀", null, CompanyType.ACADEMY, VerifiedStatus.VERIFIED, UUID.randomUUID());
+        ReflectionTestUtils.setField(company, "id", companyId);
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(branchRepository.save(any(Branch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         BranchUpdateRequest request = new BranchUpdateRequest("잠실", false);
         BranchResponse response = branchCommandService.updateBranch(teacherId, MemberRole.TEACHER, branchId, request);
 
         assertThat(response.name()).isEqualTo("잠실");
+        assertThat(response.companyName()).isEqualTo("러셀");
         assertThat(response.deletedAt()).isNotNull();
     }
 
@@ -128,12 +133,16 @@ class BranchCommandServiceTest {
         Branch branch = Branch.create(companyId, "강남", UUID.randomUUID(), VerifiedStatus.UNVERIFIED);
         ReflectionTestUtils.setField(branch, "id", branchId);
         when(branchRepository.findById(branchId)).thenReturn(Optional.of(branch));
+        Company company = Company.create("러셀", null, CompanyType.ACADEMY, VerifiedStatus.VERIFIED, UUID.randomUUID());
+        ReflectionTestUtils.setField(company, "id", companyId);
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(branchRepository.save(any(Branch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         BranchVerifiedStatusRequest request = new BranchVerifiedStatusRequest(true, true);
         BranchResponse response = branchCommandService.updateBranchVerifiedStatus(branchId, request);
 
         assertThat(response.verifiedStatus()).isEqualTo(VerifiedStatus.VERIFIED);
+        assertThat(response.companyName()).isEqualTo("러셀");
         assertThat(response.deletedAt()).isNull();
     }
 

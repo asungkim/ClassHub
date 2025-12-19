@@ -50,7 +50,7 @@ public class BranchCommandService {
                 VerifiedStatus.UNVERIFIED
         );
         Branch saved = branchRepository.save(branch);
-        return BranchResponse.from(saved);
+        return BranchResponse.from(saved, company.getName());
     }
 
     public BranchResponse updateBranch(UUID memberId,
@@ -78,8 +78,9 @@ public class BranchCommandService {
             }
         }
 
+        Company company = loadCompany(branch.getCompanyId());
         Branch saved = branchRepository.save(branch);
-        return BranchResponse.from(saved);
+        return BranchResponse.from(saved, company.getName());
     }
 
     public BranchResponse updateBranchVerifiedStatus(UUID branchId, BranchVerifiedStatusRequest request) {
@@ -98,7 +99,13 @@ public class BranchCommandService {
             branch.restore();
         }
 
+        Company company = loadCompany(branch.getCompanyId());
         Branch saved = branchRepository.save(branch);
-        return BranchResponse.from(saved);
+        return BranchResponse.from(saved, company.getName());
+    }
+
+    private Company loadCompany(UUID companyId) {
+        return companyRepository.findById(companyId)
+                .orElseThrow(RsCode.COMPANY_NOT_FOUND::toException);
     }
 }

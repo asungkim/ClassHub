@@ -2456,3 +2456,52 @@ BEHAVIORAL
   - backend/src/test/java/com/classhub/domain/assignment/web/TeacherBranchAssignmentControllerTest.java
   - docs/history/AGENT_LOG.md
 - 다음 단계: 프런트 학원 관리 UI 설계/구현 및 TODO Phase5 프런트 작업 진행
+
+## [2025-12-19 23:14] Teacher 학원 관리 UI & 검증 페이지 보완
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/frontend/season2/teacher-branch-management_ui_plan.md`에 따른 Teacher 학원 관리 페이지를 구현해 상태 탭/페이지네이션/활성 토글/등록 모달을 연결했다.
+- SuperAdmin 회사/지점 검증 페이지에서 Tabs 기본값과 버튼 변형을 보완해 신규 Tabs 요구사항 및 버튼 컴포넌트 규칙을 충족시켰다.
+- 공통 대시보드 사이드바/대시보드 API 헬퍼를 확장해 Teacher가 회사·지점을 검색하고 Assignment를 생성할 수 있게 했다.
+
+### Details
+- 작업 사유: Phase5 TODO 중 "학원 관리 페이지" 프런트 작업 진행 및 Season2 UI 플로우 반영 (삼단 분기 등록 & 활성/비활성 토글) + 기존 Admin 페이지의 Tabs prop 요구사항 대응
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/components/dashboard/sidebar.tsx
+  - frontend/src/app/(dashboard)/teacher/companies/page.tsx
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/app/(dashboard)/admin/companies/page.tsx
+  - frontend/src/app/(dashboard)/admin/branches/page.tsx
+  - docs/history/AGENT_LOG.md
+- 다음 단계: 학원 관리 모달 흐름 수동 QA(Teacher 계정) 및 Sidebar UX 확인 후 TODO Phase5 상태를 업데이트
+
+## [2025-12-19 23:37] 학원 관리 UI 재구성 및 BranchResponse 확장
+
+### Type
+BEHAVIORAL
+
+### Summary
+- BranchResponse에 companyName을 추가하고 Query/Command 서비스/테스트를 보강해 어드민 지점 검증 화면에서 학원 이름을 직접 표시하도록 백엔드를 확장했다.
+- Teacher 학원 관리 모달을 개인/회사 공통 플로우로 재구성해 검색→직접 입력 전환 UX, 회사·지점 검색 목록, 안내 메시지를 새 요구사항에 맞게 반영했다.
+- 조교/학원 목록 카드의 새로고침 버튼을 제거하고 어드민 지점 검증 UI에서 companyId 대신 companyName을 노출하도록 프론트를 정리했다.
+
+### Details
+- 작업 사유: Phase5 프론트 TODO 중 학원 관리 UI 세부 요구 반영 및 Branch 검증 화면 가독성 개선
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.branch.*"`
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/company/branch/dto/response/BranchResponse.java
+  - backend/src/main/java/com/classhub/domain/company/branch/application/**
+  - backend/src/test/java/com/classhub/domain/company/branch/**
+  - frontend/src/app/(dashboard)/teacher/companies/page.tsx
+  - frontend/src/app/(dashboard)/admin/branches/page.tsx
+  - frontend/src/components/dashboard/sidebar.tsx
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/types/openapi.{json,d.ts}
+  - docs/history/AGENT_LOG.md
+- 다음 단계: Teacher 학원 관리 페이지 수동 QA(회사/지점 검색 및 직접 입력) 후 TODO/PLAN 상태 갱신 검토

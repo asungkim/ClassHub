@@ -264,6 +264,7 @@ class TeacherBranchAssignmentServiceTest {
         BranchResponse branchResponse = new BranchResponse(
                 branch.getId(),
                 branch.getCompanyId(),
+                company.getName(),
                 branch.getName(),
                 branch.getVerifiedStatus(),
                 branch.getCreatorMemberId(),

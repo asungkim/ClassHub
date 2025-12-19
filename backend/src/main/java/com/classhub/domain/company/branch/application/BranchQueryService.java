@@ -3,9 +3,18 @@ package com.classhub.domain.company.branch.application;
 import com.classhub.domain.company.branch.dto.response.BranchResponse;
 import com.classhub.domain.company.branch.model.Branch;
 import com.classhub.domain.company.branch.repository.BranchRepository;
+import com.classhub.domain.company.company.model.Company;
 import com.classhub.domain.company.company.model.VerifiedStatus;
+import com.classhub.domain.company.company.repository.CompanyRepository;
 import com.classhub.global.response.PageResponse;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BranchQueryService {
 
     private final BranchRepository branchRepository;
+    private final CompanyRepository companyRepository;
 
     public PageResponse<BranchResponse> getBranchesForTeacher(
             UUID teacherId,
@@ -35,7 +45,8 @@ public class BranchQueryService {
                 creatorFilter,
                 pageable
         );
-        return PageResponse.from(page.map(BranchResponse::from));
+        Map<UUID, String> companyNames = resolveCompanyNames(page.getContent());
+        return PageResponse.from(page.map(branch -> BranchResponse.from(branch, companyNames.get(branch.getCompanyId()))));
     }
 
     public PageResponse<BranchResponse> getBranchesForAdmin(
@@ -51,6 +62,23 @@ public class BranchQueryService {
                 null,
                 pageable
         );
-        return PageResponse.from(page.map(BranchResponse::from));
+        Map<UUID, String> companyNames = resolveCompanyNames(page.getContent());
+        return PageResponse.from(page.map(branch -> BranchResponse.from(branch, companyNames.get(branch.getCompanyId()))));
+    }
+
+    private Map<UUID, String> resolveCompanyNames(Collection<Branch> branches) {
+        if (branches.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<UUID> companyIds = branches.stream()
+                .map(Branch::getCompanyId)
+                .distinct()
+                .toList();
+        List<Company> companies = StreamSupport.stream(
+                companyRepository.findAllById(companyIds).spliterator(),
+                false
+        ).toList();
+        return companies.stream()
+                .collect(Collectors.toMap(Company::getId, Company::getName, (left, right) -> left));
     }
 }
