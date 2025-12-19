@@ -35,6 +35,8 @@ public enum RsCode {
     ASSISTANT_NOT_FOUND(RsConstant.NOT_FOUND, "담당 조교 정보를 찾을 수 없습니다."),
     ASSISTANT_ALREADY_ASSIGNED(RsConstant.CONFLICT, "이미 연결된 조교입니다."),
     COMPANY_NOT_FOUND(RsConstant.NOT_FOUND, "학원 정보를 찾을 수 없습니다."),
+    BRANCH_ALREADY_ASSIGNED(RsConstant.CONFLICT, "이미 연결된 지점입니다."),
+    TEACHER_BRANCH_ASSIGNMENT_NOT_FOUND(RsConstant.NOT_FOUND, "지점 연결 정보를 찾을 수 없습니다."),
     BRANCH_NOT_FOUND(RsConstant.NOT_FOUND, "지점 정보를 찾을 수 없습니다."),
 
     // ===== Student Profile =====

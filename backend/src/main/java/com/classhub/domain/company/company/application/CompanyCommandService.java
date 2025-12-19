@@ -41,8 +41,11 @@ public class CompanyCommandService {
         Company saved = companyRepository.save(company);
 
         if (request.type() == CompanyType.INDIVIDUAL) {
+            String individualBranchName = (request.branchName() != null && !request.branchName().isBlank())
+                    ? request.branchName().trim()
+                    : saved.getName();
             branchRepository.save(
-                    Branch.create(saved.getId(), saved.getName(), teacherId, VerifiedStatus.VERIFIED)
+                    Branch.create(saved.getId(), individualBranchName, teacherId, VerifiedStatus.VERIFIED)
             );
         } else if (request.branchName() != null && !request.branchName().isBlank()) {
             branchRepository.save(

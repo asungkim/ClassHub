@@ -2430,3 +2430,29 @@ STRUCTURAL
   - backend/src/main/java/com/classhub/domain/assignment/dto/** (신규 DTO 4종)
   - docs/history/AGENT_LOG.md
 - 다음 단계: Service 계층에서 Branch/Company 검증 및 Assignment 생성/활성화 로직을 TDD로 구현한 뒤 Controller/MockMvc 테스트 작성
+
+## [2025-12-19 22:29] TeacherBranchAssignment Service/Controller TDD
+
+### Type
+BEHAVIORAL
+
+### Summary
+- TeacherBranchAssignmentService를 추가해 Branch/Company 접근 검증, 개인/회사 학원 분기(기존 지점·신규 학원·신규 지점 생성)까지 지원하고, soft delete 기반 활성/비활성 토글·목록 페이징 응답을 TDD로 구현했다.
+- `/api/v1/teachers/me/branches` GET/POST/PATCH 컨트롤러를 작성하고 MockMvc 테스트로 ROLE 검증, 상태 파싱, 응답 구조를 보장했다.
+
+### Details
+- 작업 사유: 학원 관리 페이지에서 기존 지점 선택뿐 아니라 개인 학원/회사 학원/지점 직접 등록 흐름까지 단일 Assignment API로 처리하기 위함
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.application.TeacherBranchAssignmentServiceTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.web.TeacherBranchAssignmentControllerTest"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/assignment/application/TeacherBranchAssignmentService.java
+  - backend/src/main/java/com/classhub/domain/assignment/web/TeacherBranchAssignmentController.java
+  - backend/src/main/java/com/classhub/domain/assignment/model/TeacherBranchAssignment.java (헬퍼)
+  - backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java
+  - backend/src/main/java/com/classhub/domain/assignment/dto/** (요청/응답/필터)
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/test/java/com/classhub/domain/assignment/application/TeacherBranchAssignmentServiceTest.java
+  - backend/src/test/java/com/classhub/domain/assignment/web/TeacherBranchAssignmentControllerTest.java
+  - docs/history/AGENT_LOG.md
+- 다음 단계: 프런트 학원 관리 UI 설계/구현 및 TODO Phase5 프런트 작업 진행
