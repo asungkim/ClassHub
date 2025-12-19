@@ -2505,3 +2505,28 @@ BEHAVIORAL
   - frontend/src/types/openapi.{json,d.ts}
   - docs/history/AGENT_LOG.md
 - 다음 단계: Teacher 학원 관리 페이지 수동 QA(회사/지점 검색 및 직접 입력) 후 TODO/PLAN 상태 갱신 검토
+
+## [2025-12-20 00:57] Course Repository/Validator TDD 1단계
+
+### Type
+STRUCTURAL
+
+### Summary
+- `docs/plan/backend/season2/course-teacher-management_plan.md` 6번 계획 중 1~2단계에 맞춰 Course Repository/Validator 기반을 보완하고 단위 테스트를 추가했다.
+- 상태 필터 쿼리를 boolean 파라미터 기반으로 재작성하고 null/겹침 검증을 BusinessException으로 통일해 이후 Service 계층에서 재사용할 수 있도록 했다.
+
+### Details
+- 작업 사유: Teacher Course API TDD 1~2단계(Repository + Validator 선 구현)를 마무리해야 이후 Service/Controller 구현을 이어갈 수 있음
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.course.*"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/course/model/Course.java
+  - backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java
+  - backend/src/main/java/com/classhub/domain/course/validator/CoursePeriodValidator.java
+  - backend/src/main/java/com/classhub/domain/course/validator/CourseScheduleValidator.java
+  - backend/src/main/java/com/classhub/domain/member/model/Member.java
+  - backend/src/test/java/com/classhub/domain/course/repository/CourseRepositoryTest.java
+  - backend/src/test/java/com/classhub/domain/course/validator/CoursePeriodValidatorTest.java
+  - backend/src/test/java/com/classhub/domain/course/validator/CourseScheduleValidatorTest.java
+  - docs/todo/v1.9.md
+- 다음 단계: PLAN 6번 3단계(서비스 로직) 설계/구현 전 사용자 피드백 수령 후 진행
