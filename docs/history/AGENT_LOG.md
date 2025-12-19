@@ -2215,3 +2215,34 @@ STRUCTURAL
 - 영향받은 테스트: `cd frontend && npm run build -- --webpack`
 - 수정한 파일: frontend/src/components/ui/app-chrome.tsx
 - 다음 단계: 학생/선생님 회원가입 QA 진행
+## [2025-12-19 13:55] 조교 관리/초대 백엔드 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 목록/토글/초대 목록 API를 추가하고 서비스·DTO·리포지토리를 확장
+- 조교 활성화 제어와 초대 히스토리 조회를 위한 컨트롤러 및 테스트를 작성
+
+### Details
+- 작업 사유: Phase5 "초대 시스템 개발" 중 교사용 백엔드 기능 부재로 현황 파악/제어 불가
+- 영향받은 테스트:
+  - `./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepositoryTest"`
+  - `./gradlew test --tests "com.classhub.domain.assignment.application.AssistantManagementServiceTest"`
+  - `./gradlew test --tests "com.classhub.domain.invitation.repository.InvitationRepositoryTest"`
+  - `./gradlew test --tests "com.classhub.domain.assignment.web.AssistantManagementControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/assignment/**, backend/src/main/java/com/classhub/domain/invitation/**, backend/src/test/java/com/classhub/domain/assignment/**, backend/src/test/java/com/classhub/domain/invitation/repository/InvitationRepositoryTest.java, docs/plan/backend/season2/assistant-management_plan.md
+- 다음 단계: 프론트엔드 조교 관리/초대 UI 연동
+## [2025-12-19 13:55] TODO v1.9 초대 시스템 백엔드 완료 표시
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase5 초대 시스템 개발의 "관련 백엔드 개발" 항목을 완료(✅)로 반영
+
+### Details
+- 작업 사유: 조교 관리/초대 API 구현 및 검증이 완료되어 TODO 상태 업데이트
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepositoryTest"` 등 동 작업 테스트 묶음
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 동일 Epic 내 프론트엔드 작업 진행

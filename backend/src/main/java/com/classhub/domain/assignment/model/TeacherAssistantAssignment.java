@@ -42,4 +42,16 @@ public class TeacherAssistantAssignment extends BaseEntity {
                 .assistantMemberId(assistantMemberId)
                 .build();
     }
+
+    public void disable() {
+        delete();
+    }
+
+    public void enable() {
+        restore();
+    }
+
+    public boolean isActive() {
+        return !isDeleted();
+    }
 }

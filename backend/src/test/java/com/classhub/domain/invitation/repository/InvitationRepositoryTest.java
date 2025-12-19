@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
@@ -138,10 +140,60 @@ class InvitationRepositoryTest {
         assertThat(expired.canUse(now)).isFalse();
     }
 
+    @Test
+    void findBySenderIdAndInviteeRole_shouldReturnPagedInvitations() {
+        UUID teacherId = UUID.randomUUID();
+        invitationRepository.save(buildInvitationWithSender(teacherId, "CODE-600"));
+        invitationRepository.save(buildInvitationWithSender(teacherId, "CODE-601"));
+        invitationRepository.save(buildInvitation("CODE-602")); // 다른 sender
+
+        Page<Invitation> page = invitationRepository.findBySenderIdAndInviteeRole(
+                teacherId,
+                InvitationRole.ASSISTANT,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent())
+                .allMatch(invitation -> invitation.getSenderId().equals(teacherId));
+    }
+
+    @Test
+    void findBySenderIdAndInviteeRoleAndStatus_shouldFilterByStatus() {
+        UUID teacherId = UUID.randomUUID();
+        Invitation pending = invitationRepository.save(buildInvitationWithSender(teacherId, "CODE-610"));
+        Invitation accepted = invitationRepository.save(buildInvitationWithSender(teacherId, "CODE-611"));
+        accepted.markAccepted();
+        invitationRepository.save(accepted);
+
+        Page<Invitation> page = invitationRepository.findBySenderIdAndInviteeRoleAndStatus(
+                teacherId,
+                InvitationRole.ASSISTANT,
+                InvitationStatus.PENDING,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent())
+                .first()
+                .extracting(Invitation::getId)
+                .isEqualTo(pending.getId());
+    }
+
     private Invitation buildInvitation(String code) {
         return Invitation.builder()
                 .senderId(UUID.randomUUID())
                 .targetEmail("assistant@classhub.com")
+                .inviteeRole(InvitationRole.ASSISTANT)
+                .code(code)
+                .expiredAt(LocalDateTime.now().plusDays(3))
+                .build();
+    }
+
+    private Invitation buildInvitationWithSender(UUID senderId, String code) {
+        return Invitation.builder()
+                .senderId(senderId)
+                .targetEmail(code.toLowerCase() + "@classhub.com")
                 .inviteeRole(InvitationRole.ASSISTANT)
                 .code(code)
                 .expiredAt(LocalDateTime.now().plusDays(3))
