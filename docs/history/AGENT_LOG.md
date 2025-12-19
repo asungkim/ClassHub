@@ -2351,3 +2351,47 @@ BEHAVIORAL
 - 영향받은 테스트: `cd frontend && npm run build -- --webpack` (Next.js root 경고 있음; 기존 다중 lockfile 구조로 인한 것이며 추후 outputFileTracingRoot 설정 필요)
 - 수정한 파일: frontend/src/app/(dashboard)/teacher/assistants/page.tsx, frontend/src/types/openapi.{d.ts,json}, docs/plan/frontend/season2/teacher-assistant-management_ui_plan.md
 - 다음 단계: 모달 UX QA 및 토스트/에러메시지 copy 검토, 필요 시 다중 lockfile 구조 정리
+
+## [2025-12-19 20:30] Company/Branch Repository 스펙 확장 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- Company/Branch 엔티티의 verifiedStatus/creatorMemberId가 이미 정의되어 있음을 확인하고, 향후 필터 기반 조회를 위한 Repository 메서드 요구사항을 정리
+- DataJpaTest 기반 리포지토리 테스트 초안(verifiedStatus/soft delete 필터링, creator 접근 제한)이 필요함을 문서화
+
+### Details
+- 작업 사유: Phase5 Company/Branch API 개발 1단계(TDD) 착수 전 기존 모델/레포 구조 점검
+- 영향받은 테스트: 없음 (reading/reconnaissance)
+- 수정한 파일: 없음
+- 다음 단계: CompanyRepository/BranchRepository에 verifiedStatus 필터링 메서드 추가 후 DataJpaTest 작성
+
+## [2025-12-19 21:16] Company/Branch Repository 쿼리 & 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- Company/Branch Repository에 verifiedStatus/type/keyword 필터와 creatorMemberId 조건을 포함한 검색 메서드를 추가하고 DataJpaTest로 soft delete 제외·필터 동작을 검증
+
+### Details
+- 작업 사유: Company/Branch API 1단계에서 필요한 조회 스펙을 데이터 계층에 반영하기 위함
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.*"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/company/**/repository/*.java, backend/src/test/java/com/classhub/domain/company/**/repository/*.java
+- 다음 단계: Service/DTO 구현 및 비즈니스 로직 TDD 진행
+
+## [2025-12-19 21:38] Company Controller + Admin API TDD 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/SuperAdmin 전용 Company API 컨트롤러를 구현해 생성/조회/검증 토글 엔드포인트를 완성하고, 응답 파라미터/인가/enum 파싱을 MockMvc 테스트로 보장
+- 생성 API는 `RsCode.CREATED` 코드에 맞춰 HTTP 201을 기대하도록 테스트를 정정하고, 나머지 목록/상세/검증 테스트도 모두 녹색 상태로 유지
+
+### Details
+- 작업 사유: Phase5 Company 관리 3단계(Controller & 통합 검증) 완료를 위해 HTTP API 계층을 작성
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.company.company.web.CompanyControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/company/company/web/CompanyController.java, backend/src/test/java/com/classhub/domain/company/company/web/CompanyControllerTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: Branch Controller/테스트 구현 후 TODO Phase5 진척도 업데이트
