@@ -4,6 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.jwt.JwtProvider;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +28,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
  * Spring Security Config PLAN의 요구사항을 통합 테스트로 검증한다.
  * - /auth/** 는 permitAll
  * - 기타 엔드포인트는 인증 필요 (없으면 401)
- * - /api/admin/** 는 SUPERADMIN 권한만 접근 가능 (권한 없으면 403)
+ * - /api/admin/** 는 SUPER_ADMIN 권한만 접근 가능 (권한 없으면 403)
  */
 @SpringBootTest(properties = "JWT_SECRET_KEY=0123456789012345678901234567890123456789012345678901234567890123")
 @Import({
@@ -70,7 +73,7 @@ class SecurityIntegrationTest {
     @Test
     @DisplayName("유효한 토큰이 있으면 보호된 경로에 접근할 수 있다")
     void protectedEndpointWithTokenReturnsOk() throws Exception {
-        String token = jwtProvider.generateAccessToken(UUID.randomUUID(), "TEACHER");
+        String token = jwtProvider.generateAccessToken(UUID.randomUUID(), MemberRole.TEACHER);
 
         mockMvc.perform(get("/api/v1/secure/ping")
                         .header("Authorization", "Bearer " + token)
@@ -80,15 +83,27 @@ class SecurityIntegrationTest {
     }
 
     @Test
+    @DisplayName("@AuthenticationPrincipal MemberPrincipal에 role 정보가 주입된다")
+    void authenticationPrincipalContainsRole() throws Exception {
+        String token = jwtProvider.generateAccessToken(UUID.randomUUID(), MemberRole.TEACHER);
+
+        mockMvc.perform(get("/api/v1/secure/role")
+                        .header("Authorization", "Bearer " + token)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string(MemberRole.TEACHER.name()));
+    }
+
+    @Test
     @DisplayName("/api/admin/** 경로는 SUPERADMIN 권한이 아니면 403을 응답한다")
     void adminEndpointRequiresSuperAdminAuthority() throws Exception {
-        String teacherToken = jwtProvider.generateAccessToken(UUID.randomUUID(), "TEACHER");
+        String teacherToken = jwtProvider.generateAccessToken(UUID.randomUUID(), MemberRole.TEACHER);
 
         mockMvc.perform(get("/api/v1/admin/panel")
                         .header("Authorization", "Bearer " + teacherToken))
                 .andExpect(status().isForbidden());
 
-        String adminToken = jwtProvider.generateAccessToken(UUID.randomUUID(), "SUPERADMIN");
+        String adminToken = jwtProvider.generateAccessToken(UUID.randomUUID(), MemberRole.SUPER_ADMIN);
         mockMvc.perform(get("/api/v1/admin/panel")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
@@ -108,6 +123,11 @@ class SecurityIntegrationTest {
         @GetMapping("/api/v1/secure/ping")
         public String securePing() {
             return "secure-ok";
+        }
+
+        @GetMapping("/api/v1/secure/role")
+        public String secureRole(@AuthenticationPrincipal MemberPrincipal principal) {
+            return principal.role().name();
         }
     }
 

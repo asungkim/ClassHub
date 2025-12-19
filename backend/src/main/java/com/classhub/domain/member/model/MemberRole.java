@@ -4,5 +4,6 @@ public enum MemberRole {
     TEACHER,
     ASSISTANT,
     STUDENT,
-    SUPERADMIN
+    ADMIN,
+    SUPER_ADMIN
 }

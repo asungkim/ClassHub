@@ -1,5 +1,6 @@
 package com.classhub.global.config;
 
+import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.exception.jwt.JwtAccessDeniedHandler;
 import com.classhub.global.exception.jwt.JwtAuthenticationEntryPoint;
 import com.classhub.global.jwt.JwtAuthenticationFilter;
@@ -43,13 +44,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/members/register/**",
                                 "/actuator/health",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/.well-known/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasAuthority("SUPERADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasAuthority(MemberRole.SUPER_ADMIN.name())
                         .anyRequest().authenticated())
                 .exceptionHandling(handler -> handler
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)

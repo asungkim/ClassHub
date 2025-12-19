@@ -3,7 +3,8 @@
 import { useEffect, useMemo, type JSX } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/components/session/session-provider";
-import { getDashboardRoute } from "@/lib/role-route";
+// Dashboard routes will be reimplemented in next task
+// import { getDashboardRoute } from "@/lib/role-route";
 
 type AllowedRoles = string | string[];
 
@@ -41,8 +42,8 @@ export function useRoleGuard(requiredRoles: AllowedRoles): RoleGuardResult {
         return;
       }
 
-      const target = getDashboardRoute(member.role) ?? "/";
-      router.replace(target);
+      // Dashboard routing will be reimplemented in next task
+      router.replace("/");
     }
   }, [status, member?.role, allowedKey, allowedRoles, router]);
 

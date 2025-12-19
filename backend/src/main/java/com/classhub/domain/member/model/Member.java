@@ -7,7 +7,9 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+
 import java.util.UUID;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,16 +35,12 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 60)
     private String name;
 
+    @Column(nullable = false, length = 40)
+    private String phoneNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private MemberRole role;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean isActive = true;
-
-    @Column(name = "teacher_id", columnDefinition = "BINARY(16)")
-    private UUID teacherId;
 
     public void changePassword(String encodedPassword) {
         this.password = encodedPassword;
@@ -60,15 +58,17 @@ public class Member extends BaseEntity {
         }
     }
 
-    public void assignTeacher(UUID teacherId) {
-        this.teacherId = teacherId;
+    public void changePhoneNumber(String phoneNumber) {
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
     }
 
     public void activate() {
-        this.isActive = true;
+        restore();
     }
 
     public void deactivate() {
-        this.isActive = false;
+        delete();
     }
 }

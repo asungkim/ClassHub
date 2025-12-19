@@ -42,10 +42,12 @@ const footerSections = [
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
-  const isDashboard = pathname?.startsWith("/dashboard");
+  const dashboardPrefixes = ["/dashboard", "/teacher", "/assistant", "/student", "/admin"];
+  const isDashboard = dashboardPrefixes.some((prefix) => pathname?.startsWith(prefix));
+  const isAuthRegister = pathname?.startsWith("/auth/register");
   const toaster = <Toaster position="top-center" richColors closeButton />;
 
-  if (isHome) {
+  if (isHome || isAuthRegister) {
     return (
       <>
         {children}

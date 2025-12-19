@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useMemo } from "react";
 import clsx from "clsx";
 
 type TabsContextType = {
@@ -22,13 +22,29 @@ type TabsProps = {
   defaultValue: string;
   children: ReactNode;
   className?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
 };
 
-export function Tabs({ defaultValue, children, className }: TabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultValue);
+export function Tabs({ defaultValue, children, className, value, onValueChange }: TabsProps) {
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const activeTab = value ?? internalValue;
+
+  const contextValue = useMemo<TabsContextType>(
+    () => ({
+      activeTab,
+      setActiveTab: (nextValue: string) => {
+        if (value === undefined) {
+          setInternalValue(nextValue);
+        }
+        onValueChange?.(nextValue);
+      }
+    }),
+    [activeTab, onValueChange, value]
+  );
 
   return (
-    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+    <TabsContext.Provider value={contextValue}>
       <div className={className}>{children}</div>
     </TabsContext.Provider>
   );

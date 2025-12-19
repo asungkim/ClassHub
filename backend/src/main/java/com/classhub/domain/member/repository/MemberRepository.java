@@ -2,9 +2,8 @@ package com.classhub.domain.member.repository;
 
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,31 +13,8 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     boolean existsByEmail(String email);
 
-    Page<Member> findAllByRoleAndTeacherId(
+    List<Member> findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(
             MemberRole role,
-            UUID teacherId,
-            Pageable pageable
-    );
-
-    Page<Member> findAllByRoleAndTeacherIdAndIsActive(
-            MemberRole role,
-            UUID teacherId,
-            boolean isActive,
-            Pageable pageable
-    );
-
-    Page<Member> findAllByRoleAndTeacherIdAndNameContainingIgnoreCase(
-            MemberRole role,
-            UUID teacherId,
-            String name,
-            Pageable pageable
-    );
-
-    Page<Member> findAllByRoleAndTeacherIdAndIsActiveAndNameContainingIgnoreCase(
-            MemberRole role,
-            UUID teacherId,
-            boolean isActive,
-            String name,
-            Pageable pageable
+            String emailFragment
     );
 }

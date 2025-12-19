@@ -4,6 +4,102 @@
 
 ---
 
+## [2025-12-18 22:45] 프론트엔드 코드 정리 및 인증 검증
+
+### Type
+
+STRUCTURAL | BEHAVIORAL
+
+### Summary
+
+- Season2 백엔드 구조에 맞춰 사용되지 않는 프론트엔드 코드 제거
+- SessionProvider 타입 시스템 강화 (MemberRole 명시적 정의)
+- 빌드 통과 및 구조 정리 완료
+
+### Details
+
+**삭제된 파일**:
+- `app/auth/*` - 인증 페이지 전체 (다음 Task에서 재구현 예정)
+- `app/dashboard/*` - 대시보드 페이지 전체 (다음 Task에서 재구현 예정)
+- `components/{clinic,course,lesson,dashboard}` - 도메인 컴포넌트 (Season2 미구현 기능)
+- `hooks/{api,clinic,queries}` - 구 API Hooks 디렉토리
+- `hooks/use-{assistants,courses,lesson-mutations,student-profiles,student-calendar}.ts` - 개별 Hooks
+- `contexts/` - Lesson Composer Context (미구현)
+- `types/api/` - 구 타입 정의
+
+**보존된 인프라**:
+- `components/ui/*` - Button, Card, TextField, Modal, Table, Badge 등 UI 컴포넌트 전체
+- `components/shared/*` - EmptyState, LoadingSkeleton, InvitationStatusBadge
+- `components/session/session-provider.tsx` - 세션 관리 (타입 수정)
+- `lib/*` - API 클라이언트, 에러 처리, 환경 변수, 역할 관리
+- `hooks/use-debounce.ts`, `hooks/use-role-guard.tsx` - 공통 Hooks
+
+**SessionProvider 타입 개선** (OpenAPI 스키마 활용):
+```typescript
+// Before
+type MemberSummary = {
+  role: string;  // ❌ any string
+}
+
+// After
+type MeResponse = components["schemas"]["MeResponse"];
+type MemberSummary = Required<MeResponse>;  // ✅ OpenAPI 스키마에서 자동 추론
+```
+
+**lib/role.ts 타입 개선**:
+```typescript
+// Before
+export const Role = {
+  TEACHER: "TEACHER",
+  ...
+} as const;
+export type Role = (typeof Role)[keyof typeof Role];
+
+// After
+type MeResponse = components["schemas"]["MeResponse"];
+export type MemberRole = NonNullable<MeResponse["role"]>;  // ✅ OpenAPI 스키마 기반
+export const ROLES = { ... } satisfies Record<string, MemberRole>;
+```
+
+**임시 비활성화**:
+- `lib/role-route.ts` - Dashboard 라우팅 로직 (다음 Task에서 재구현)
+- `app/page.tsx` - 회원가입 버튼 비활성화 처리
+- `hooks/use-role-guard.tsx` - Dashboard 라우팅 제거
+
+**빌드 검증**:
+- `npm run build -- --webpack` 통과 (컴파일 에러 0개)
+- 최종 라우트: `/`, `/components`
+
+### 다음 단계
+
+- v1.9 TODO Phase 4: 선생님 회원가입 페이지 재구현 (Company/Branch 입력 추가)
+- 조교 초대 검증 페이지 재구현
+- Assistant/Student 회원가입 페이지 신규 구현
+- 역할별 대시보드 페이지 신규 구현
+
+## [2025-02-14 15:00] 교사용 조교 관리 페이지 구현
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- `docs/plan/frontend/season2/assistant-invitation-suite_plan.md`를 근거로 Teacher 조교 관리 페이지를 구축했다.
+- 조교 목록/초대 목록 API 연동과 상태 토글, 초대 발급·복사·취소 UX를 구현했다.
+- `cd frontend && npm run build -- --webpack`을 실행해 타입 검증을 통과했다.
+
+### Details
+
+- 작업 사유: Season2 초대 플로우를 완성하기 위해 Teacher 조교 관리 화면이 필요했다.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/invitations/page.tsx`
+  - `frontend/src/components/ui/tabs.tsx`
+- 다음 단계: 초대 검증 페이지 구현, 조교 회원가입 페이지 구현
+
+---
+
 ## [2025-12-09 16:20] Course 엔티티 및 CRUD API 구현
 
 ### Type
@@ -954,3 +1050,1304 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
   - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotControllerTest.java`
 - 다음 단계: ClinicSlot API를 기반으로 ClinicSession 기능(TODO Phase 4) 설계 및 연동을 준비한다.
+
+## [2025-12-15 11:10] v1.3 스펙 및 엔티티 문서 정비
+
+### Type
+DESIGN
+
+### Summary
+- clarified requirement v1.3 내용을 반영한 `docs/spec/v1.3.md` 신규 작성
+- final entity spec에 StudentEnrollmentRequest/StudentCourseRecord/ClinicAttendance/Invitation/Course 규칙 업데이트
+
+### Details
+- 작업 사유: 최종 엔티티 스펙과 Requirement v1.3 간 불일치(승인 권한, 조교 초대 단일 사용, 클리닉 자동 배정 등)을 해소하고 차기 TODO/PLAN이 참조할 수 있는 Spec 버전을 제공
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: `docs/spec/v1.3.md`(신규), `docs/design/final-entity-spec.md`
+- 다음 단계: TODO/PLAN 문서들이 Spec v1.3을 참조하도록 업데이트 필요
+
+## [2025-12-16 17:13] TODO v1.9 작성 (Spec v1.3 반영)
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Requirement v1.3 및 Spec v1.3, Entity Refactor Plan을 기준으로 `docs/todo/v1.9.md`를 신규 생성
+- Phase 4 이후를 Season2 엔티티 리팩터링/서비스 개발/프런트 정비/테스트/릴리스 흐름으로 재구성
+- Student 초대 작업 제거 및 Teacher/Assistant 승인 기반 학생 등록 플로우로 전환
+
+### Details
+- 작업 사유: 엔티티 개편 및 새로운 요구(Company/Branch, Enrollment Request, Clinic 자동 배정, single-use Invitation 등)에 맞는 TODO 버전이 필요했음
+- 영향 문서: `docs/todo/v1.9.md`, 참조 문서 `docs/plan/backend/season2/entity-refactor-plan.md`, `docs/spec/v1.3.md`, `docs/requirement/v1.3.md`
+- 수정 항목: Phase 4~8 재작성, PLAN 작성 작업 명시, Student 초대 관련 항목 삭제, 프런트/테스트/릴리스 단계 업데이트
+- 다음 단계: Phase 4 엔티티/레포지토리 작업 착수 전 각 Epic별 PLAN 문서 작성 및 승인
+
+## [2025-12-16 18:41] Entity Refactor Plan Notice/WorkLog 보강
+
+### Type
+DESIGN
+
+### Summary
+- Season2 Entity Refactor Plan에 Notice/NoticeRead/WorkLog 스펙과 관련 Repository/체크리스트를 추가해 누락된 도메인 리팩터링 범위를 명확히 했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 Notice/WorkLog 영역이 계획 문서에 없던 점을 보완해야 했음
+- 영향 문서: `docs/plan/backend/season2/entity-refactor-plan.md`
+- 주요 변경: Section 2에 Notice/NoticeRead/WorkLog 상세 스키마 추가, Repository/작업순서/체크리스트에 해당 항목 삽입
+- 다음 단계: 해당 도메인 역시 Phase 4~5 작업 시 PLAN→구현 절차를 따름
+
+## [2025-12-16 18:42] TODO v1.9 Phase7 세분화
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.9.md` Phase 7을 역할별 QA/E2E/배치/운영 체크리스트 Epic으로 재구성하고 각 Epic에 PLAN 문서 경로를 명시했다.
+
+### Details
+- 작업 사유: 향후 PLAN 문서를 작성하기 쉽도록 Phase 7 단위를 명확히 나눠달라는 요청 반영
+- 수정 내용: 선생님/조교/학생 시나리오 QA, E2E 파이프라인, 스케줄러 안정성, 운영 체크리스트 Epic 추가 및 작업 항목 세분화
+- 다음 단계: 각 Epic별 PLAN 문서 작성 후 테스트/자동화 구현 진행
+
+## [2025-12-16 18:44] TODO v1.9 Phase4 작업순서 재정렬
+
+### Type
+TODO_UPDATE
+
+### Summary
+- `docs/todo/v1.9.md`의 Season2 도메인 파운데이션(Phase 4)을 entity-refactor-plan의 Step 1~9 순서와 동일하게 정리하고 단계별 PLAN 문서를 연결했다.
+
+### Details
+- 작업 사유: 개발 순서를 plan 문서와 일치하도록 해달라는 요청 반영
+- 수정 내용: Phase 4를 Step 1~9(기반 엔티티 → Member → Assignment → Course/Enrollment → StudentCourseRecord → Clinic → Lesson → Invitation/Feedback/Notice/WorkLog → InitData) 구조로 재작성하고 필요한 PLAN 파일 명시
+- 다음 단계: 각 Step별 PLAN을 작성/승인 후 엔티티 및 레포지토리 작업 진행
+
+## [2025-12-16 18:48] Entity Refactor Plan Phase1 항목 보강
+
+### Type
+DESIGN
+
+### Summary
+- Phase1 엔티티 수정 목록에 Notice/NoticeRead/WorkLog를 추가해 Season2 리팩터링 범위 시작 단계부터 해당 도메인이 추적되도록 했다.
+
+### Details
+- 작업 사유: Phase1 표에 Notice/WorkLog 항목이 없어 누락되었다는 피드백 반영
+- 수정 내용: `docs/plan/backend/season2/entity-refactor-plan.md` 1.2 표에 세 도메인의 현황 및 필요 변경 사항 기술
+- 다음 단계: Phase2 상세 명세/Step 8 작업 시 이 변경 내용을 참고하여 PLAN 및 구현을 진행
+## [2025-12-17 19:57] Spec v1.3 2.3.3~6 섹션 정비
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md의 2.3.3 이후 전체 섹션을 requirement/design 문서 기준으로 다시 작성해 StudentCalendar, Invitation, Company 검증, API/리소스 세부 명세를 최신화했다.
+
+### Details
+- 작업 사유: docs/requirement/v1.3.md와 docs/design/final-entity-spec.md/full-erd.md의 스펙 차이를 해소하고 이후 TODO/PLAN의 단일 참조점을 마련하기 위함
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 새 스펙을 참조해 PLAN/TODO 업데이트 및 구현을 진행
+## [2025-12-17 21:12] StudentCourseRecord 조교 배정 필드 추가
+
+### Type
+DESIGN
+
+### Summary
+- docs/design/final-entity-spec.md와 docs/design/full-erd.md에 StudentCourseRecord 전담 조교(assistantMemberId) 관계를 추가했다.
+
+### Details
+- 작업 사유: 학생별 기록을 조교에게 위임할 수 있도록 설계에 담당 조교 정보를 정의해달라는 요청 반영
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/design/final-entity-spec.md, docs/design/full-erd.md
+- 다음 단계: 필요 시 docs/spec 및 PLAN 문서에서 해당 필드를 활용하도록 후속 업데이트 진행
+## [2025-12-17 21:16] StudentCourseRecord 담당 조교 요구/스펙 반영
+
+### Type
+DESIGN
+
+### Summary
+- docs/requirement/v1.3.md와 docs/spec/v1.3.md에 StudentCourseRecord 담당 조교(`assistantMemberId`) 시나리오를 추가해 Teacher/Assistant 역할과 API 책임을 명확히 했다.
+
+### Details
+- 작업 사유: 학생별로 담당 조교를 지정하고 관리하고 싶다는 요청을 requirement~spec 전 단계에 반영하기 위함
+- 영향받은 테스트: 문서 변경으로 테스트 없음
+- 수정한 파일: docs/requirement/v1.3.md, docs/spec/v1.3.md
+- 다음 단계: 구현/PLAN 작업 시 StudentCourseRecord Patch API에서 assistantMemberId를 저장/검증하도록 설계
+## [2025-12-17 21:32] Spec v1.3 flow & API update (clinic, calendar, invitation, company)
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md 2.3.x 및 API/NFR 섹션을 피드백에 맞춰 교원 승인 플로우, 클리닉 보정, 학생 캘린더 접근, 조교 초대 링크, Company 등록 전략을 보완했다.
+
+### Details
+- 작업 사유: Teacher/Assistant 승인 UI 흐름, 당주 클리닉 자동 배정, 캘린더 접근 제한, 초대 링크 플로우, Company/Branch 생성 절차에 대한 추가 요구 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 StudentCalendar 캐시 없이 DB 조회, 클리닉 slot 선택 시 당주 Attendance 생성, 조교 초대 링크 발급/검증 흐름을 준수
+## [2025-12-17 21:59] Spec v1.3 SuperAdmin 접근 규칙 명시
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md 리소스 상세 섹션에 SuperAdmin이 모든 API에 감사/긴급 목적으로 접근할 수 있다는 기본 규칙을 추가했다.
+
+### Details
+- 작업 사유: SuperAdmin은 모든 API를 사용할 수 있어야 한다는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 권한 체크 로직에 SuperAdmin 우선권을 적용
+## [2025-12-17 22:01] Spec v1.3 출강 등록 예외 시나리오 추가
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md 2.3.5 섹션에 회사/지점 존재 여부별 Teacher 출강 등록 예외 처리 절차를 명시했다.
+
+### Details
+- 작업 사유: 회사·지점 존재 여부에 따른 입력/검증 흐름을 명확히 하려는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 Company/Branch 생성 시나리오별 UX와 SuperAdmin 검증 로직을 해당 규칙에 맞춘다
+## [2025-12-17 22:08] TeacherBranchAssignment 역할 규칙 명확화
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md의 Company/Branch 등록 흐름을 수정해 기존 학원 선택 시 FREELANCE, 신규 Company/Branch 생성 시 OWNER로 `TeacherBranchAssignment`가 생성되는 규칙을 명확히 했다.
+
+### Details
+- 작업 사유: TeacherBranchAssignment 역할 부여 조건을 분명히 하려는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 Branch/Course 생성 로직이 해당 규칙에 맞춰 Assignment 역할을 설정하도록 검증
+## [2025-12-17 22:25] INDIVIDUAL/ACADEMY 출강 플로우 명세화
+
+### Type
+DESIGN
+
+### Summary
+- docs/design/final-entity-spec.md의 Company/Branch 비고를 갱신해 개인 학원(INDIVIDUAL)과 회사 학원(ACADEMY)의 등록/검증/Assignment 생성 규칙을 명확히 했다.
+
+### Details
+- 작업 사유: 출강 등록 구조를 "개인=VERIFIED 즉시 사용, 회사=기존 목록 또는 UNVERIFIED 입력" 흐름으로 재정리하라는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/design/final-entity-spec.md
+- 다음 단계: Company/Branch 생성/검증 구현 시 해당 규칙을 준수하고 SuperAdmin 검증 로직과 Assignment 롤 부여를 맞춘다
+## [2025-12-17 22:47] VerifiedStatus & Branch creator 도입
+
+### Type
+DESIGN
+
+### Summary
+- docs/design/final-entity-spec.md, docs/design/full-erd.md, docs/requirement/v1.3.md에 VerifiedStatus(UNVERIFIED/VERIFIED)를 Company/Branch 공용으로 적용하고 Branch.creatorMemberId를 추가했으며, 개인/회사 학원 출강 플로우를 재정리했다.
+
+### Details
+- 작업 사유: CompanyStatus를 단일 VerifiedStatus로 통합해 Company/Branch 모두에 적용하고 출강 등록 단계별 역할(OWNER/FREELANCE) 규칙을 문서화하기 위함
+- 영향받은 테스트: 문서 변경만 수행 (테스트 없음)
+- 수정한 파일: docs/design/final-entity-spec.md, docs/design/full-erd.md, docs/requirement/v1.3.md
+- 다음 단계: 엔티티/서비스 구현 시 VerifiedStatus enum을 공유하고 Branch.creatorMemberId/Assignment 역할 부여 로직을 반영
+## [2025-12-17 22:51] Spec v1.3 VerifiedStatus/출강 플로우 반영
+
+### Type
+DESIGN
+
+### Summary
+- docs/spec/v1.3.md에 VerifiedStatus 도입(Company/Branch), 출강 등록 시나리오, Companies/Branches API 설명, 공개 Course 필터를 requirement/design 최신 내용과 맞췄다.
+
+### Details
+- 작업 사유: final-entity-spec & requirement에서 갱신된 VerifiedStatus/creatorMemberId/Assignment 규칙을 스펙에도 반영하기 위함
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/spec/v1.3.md
+- 다음 단계: 구현 시 Company/Branch 생성·검증 및 Course 공개 검색이 문서화된 VerifiedStatus 로직을 따른다
+## [2025-12-17 23:29] Season2 Backend Roadmap PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- docs/plan/backend/season2/season2-backend-roadmap_plan.md를 작성해 VerifiedStatus 기반 구조를 어떤 순서로 재구축할지 정의했다.
+
+### Details
+- 작업 사유: final-entity-spec/full-erd 기준으로 Season2 개발 순서를 명확히 하라는 요청 반영
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/season2-backend-roadmap_plan.md
+- 다음 단계: PLAN 순서(Company/Branch → Member Info → Course/Enrollment → Lesson/Clinic → Collaboration)를 따라 TODO/구현 진행
+## [2025-12-17 23:43] TODO v1.9 Phase4~5 재구성
+
+### Type
+TODO_UPDATE
+
+### Summary
+- docs/todo/v1.9.md Phase 4/5 구성을 Season2 backend roadmap에 맞춰 Auth 재구현 → 엔티티/레포 → 프런트 기본 작업, 그리고 기능별 Epic 가이던스로 정리했다.
+
+### Details
+- 작업 사유: 신규 PLAN(Season2 backend roadmap)에 맞춰 TODO 흐름을 재정렬하기 위함
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: Phase 4 체크리스트부터 진행하면서 각 Epic별 PLAN/구현을 연계한다
+## [2025-12-17 23:44] TODO v1.9 MemberPrincipal 항목 보정
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase 4의 첫 작업을 "MemberPrincipal에 role 저장 및 JWT 수정"으로 명확히 표현했다.
+
+### Details
+- 작업 사유: 실제 목표는 다중 role이 아니라 `MemberPrincipal` 객체에 role 값을 추가 보관하도록 하는 것이므로 TODO 표현 수정
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 해당 작업 진행 시 PLAN/TDD에서 role 저장 방식 구체화
+## [2025-12-18 10:51] StudentInfo Grade Enum & schoolName 규칙 반영
+
+### Type
+DESIGN
+
+### Summary
+- final-entity-spec, full-erd, requirement, spec 문서에서 StudentInfo.grade를 StudentGrade Enum(E1~H3 + GAP_YEAR)으로 제한하고 schoolName 입력 정규화 방식을 명시했다.
+
+### Details
+- 작업 사유: 학생 학년을 정해진 구간(초1~고3,N수)으로만 받도록 하고 schoolName 입력을 정리해달라는 요청 반영
+- 영향받은 테스트: 문서 변경만 수행
+- 수정한 파일: docs/design/final-entity-spec.md, docs/design/full-erd.md, docs/requirement/v1.3.md, docs/spec/v1.3.md
+- 다음 단계: 구현 시 StudentGrade enum/validation과 SchoolNameFormatter를 적용하고 프런트에서도 동일한 드롭다운/자동완성 UX를 제공
+## [2025-12-18 12:59] MemberPrincipal Role Claim PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Phase 4의 첫 작업을 위한 `auth-member-principal_plan` 문서를 작성해 MemberPrincipal/JWT 역할 전달 방식과 테스트 전략을 정의했다.
+
+### Details
+- 작업 사유: Requirement/Spec v1.3에서 요구하는 역할 기반 접근 제어를 구현하기 전에 인증 레이어를 재설계하기 위함
+- 영향받은 테스트: 문서 작업으로 실제 테스트는 아직 없음
+- 수정한 파일: docs/plan/backend/season2/auth-member-principal_plan.md
+- 다음 단계: 사용자가 PLAN을 검토/승인하면 MemberPrincipal, JwtProvider, 테스트 코드를 리팩터링한다
+## [2025-12-18 13:09] MemberPrincipal PLAN 3단계 작업 추가
+
+### Type
+DESIGN
+
+### Summary
+- auth-member-principal PLAN에 구현을 3단계(Principal/Enum 정비 → JWT 리팩터링 → 컨트롤러 검증)로 나눠 구체화했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 실행 순서를 명확히 하고 Phase 4 진행 시 참조할 단계별 가이드를 제공하기 위함
+- 영향받은 테스트: 문서 작업, 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/auth-member-principal_plan.md
+- 다음 단계: PLAN 기준으로 코드 수정/테스트를 진행하고 완료 후 TODO 상태 업데이트
+## [2025-12-18 13:16] MemberPrincipal Role 전달 및 JWT 스펙 갱신
+
+### Type
+BEHAVIORAL
+
+### Summary
+- MemberPrincipal에 MemberRole을 포함하고 MemberRole Enum을 ADMIN/SUPER_ADMIN까지 확장, SecurityConfig 권한 문자열을 Enum 기반으로 전환했다.
+- JwtProvider의 Access Token 클레임을 `role`로 재구성하고 MemberPrincipal이 토큰에서 role을 복원하도록 수정했으며, JwtProviderTest/SecurityIntegrationTest에 role 주입 검증을 추가했다.
+- AuthService 및 컨트롤러 테스트(MemberControllerTest)를 새 계약에 맞게 업데이트했다.
+
+### Details
+- 작업 사유: Phase 4 첫 작업(PLAN `docs/plan/backend/season2/auth-member-principal_plan.md`)에 따라 JWT→SecurityContext→Controller로 역할 정보를 일관 전달하기 위함
+- 영향받은 테스트: `JwtProviderTest`, `SecurityIntegrationTest`, `MemberControllerTest`를 업데이트했으나 Gradle wrapper 파일 잠금(`gradle-9.2.1-bin.zip.lck`)으로 실행에 실패하여 재로그인 후 재시도가 필요
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/MemberPrincipal.java, backend/src/main/java/com/classhub/domain/member/model/MemberRole.java, backend/src/main/java/com/classhub/global/jwt/JwtProvider.java, backend/src/main/java/com/classhub/domain/auth/application/AuthService.java, backend/src/main/java/com/classhub/global/config/SecurityConfig.java, backend/src/main/java/com/classhub/global/init/SeedKeys.java, backend/src/test/java/com/classhub/global/jwt/JwtProviderTest.java, backend/src/test/java/com/classhub/global/config/SecurityIntegrationTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java
+- 다음 단계: Gradle wrapper 잠금 문제를 해결해 테스트를 다시 실행하고, 이후 TODO Phase 4의 다음 항목(회원가입/초대 로직 리팩터링)을 진행
+## [2025-12-18 15:37] Teacher Register PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Member 스펙 반영 및 Teacher 회원가입 리팩터링 범위를 정의한 `auth-teacher-register_plan.md`를 작성했다.
+
+### Details
+- 작업 사유: Phase 4 두 번째 작업(Teacher 회원가입 검증/리팩터링)을 진행하기 전에 Member 엔티티와 AuthService 변경 지침을 확정하기 위함
+- 영향받은 테스트: 문서 작업으로 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/auth-teacher-register_plan.md
+- 다음 단계: 사용자가 PLAN을 검토/승인하면 Member 엔티티 및 AuthService/AuthController를 리팩터링하고 테스트를 추가한다
+## [2025-12-18 15:41] BaseEntity Soft Delete 필드 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- BaseEntity에 `deletedAt` 컬럼과 `isDeleted/delete/restore` 헬퍼를 추가해 final-entity-spec의 Soft Delete 규칙을 반영했다.
+
+### Details
+- 작업 사유: Season2 엔티티 표준에 따라 모든 엔티티가 공통 Soft Delete 필드를 갖추도록 하기 위함
+- 영향받은 테스트: 코드 변경만 수행(아직 테스트 추가 없음)
+- 수정한 파일: backend/src/main/java/com/classhub/global/entity/BaseEntity.java
+- 다음 단계: 엔티티별 soft delete 플래그를 활용하도록 리포지터리/서비스 단에서 조회 조건을 보강하고, BaseEntity 변경에 따른 마이그레이션(TODO) 준비
+## [2025-12-18 15:42] BaseTimeEntity Soft Delete 이동
+
+### Type
+STRUCTURAL
+
+### Summary
+- Soft Delete 필드를 BaseEntity에서 BaseTimeEntity로 이동시켜 BaseEntity가 id만 관리하고, BaseTimeEntity가 created/updated/deletedAt과 helper 메서드를 일괄 제공하도록 정비했다.
+
+### Details
+- 작업 사유: final-entity-spec에서 정의한 BaseEntity(id + createdAt/updatedAt/deletedAt) 구조를 실제 코드 계층(BaseTimeEntity → BaseEntity)와 맞추기 위함
+- 영향받은 테스트: 코드 변경만 수행, 테스트 없음
+- 수정한 파일: backend/src/main/java/com/classhub/global/entity/BaseTimeEntity.java
+- 다음 단계: 후속 엔티티 리팩터링에서 삭제 플래그를 활용하고, BaseEntity 관련 이전 로그와 함께 문서에 반영
+## [2025-12-18 16:09] AuthService 로그인/로그아웃 단위 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- Mockito 기반 `AuthServiceTest`를 추가해 로그인 성공/실패 시나리오와 로그아웃 토큰 블랙리스트 동작을 검증했다.
+
+### Details
+- 작업 사유: Phase 4 '로그인/로그아웃 검증' 항목에 따라 핵심 Auth 기능의 회귀 테스트를 우선 확보하기 위함
+- 영향받은 테스트: 신설된 `AuthServiceTest` 대상 `./gradlew test --tests com.classhub.domain.auth.application.AuthServiceTest` 실행을 시도했으나 Gradle wrapper가 `~/.gradle/.../gradle-9.2.1-bin.zip.lck` 파일에 접근하지 못해 실패(권한 문제). 환경 정리 후 재시도 필요
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java
+- 다음 단계: Gradle wrapper 권한 문제를 해결한 뒤 테스트를 재실행하고, 이후 토큰 재발급/회원가입 재구현 작업을 진행
+## [2025-12-18 16:12] AuthController SpringBootTest 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- SpringBootTest+MockMvc 기반 `AuthControllerTest`를 작성해 로그인시 쿠키 설정 및 로그아웃시 쿠키 추출/삭제 흐름을 검증했다.
+
+### Details
+- 작업 사유: 로그인/로그아웃 플로우를 컨트롤러 레벨에서도 회귀 테스트로 보강
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.auth.web.AuthControllerTest` 실행을 시도했으나 동일한 Gradle wrapper 락 파일(`~/.gradle/.../gradle-9.2.1-bin.zip.lck`) 접근 문제로 실패
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+- 다음 단계: Gradle wrapper 권한 이슈를 해결 후 테스트를 재실행하고, 이후 토큰 재발급/회원가입 작업으로 진행
+## [2025-12-18 16:12] AuthControllerTest 프로파일 보정
+
+### Type
+STRUCTURAL
+
+### Summary
+- AuthControllerTest에 `@ActiveProfiles("test")`를 추가해 테스트 전용 설정이 적용되도록 했다.
+
+### Details
+- 작업 사유: SpringBootTest 기반 컨트롤러 테스트가 test 프로파일 환경을 사용하도록 맞춤
+- 영향받은 테스트: 실행은 기존과 동일하게 Gradle wrapper 권한 문제로 보류 중
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+- 다음 단계: Gradle wrapper 권한을 정리한 후 테스트 재실행
+## [2025-12-18 16:14] AuthControllerTest MockMvc 시나리오 확장
+
+### Type
+STRUCTURAL
+
+### Summary
+- AuthControllerTest를 @SpringBootTest+@AutoConfigureMockMvc로 구성하고 AuthService/RefreshTokenCookieProvider를 MockBean 처리해 로그인·재발급·로그아웃 요청을 실제 HTTP 호출로 검증하도록 수정했다.
+
+### Details
+- 작업 사유: 컨트롤러 레벨에서 서비스 호출/쿠키 처리 흐름을 명확히 테스트하기 위함
+- 영향받은 테스트: Gradle wrapper 권한 문제로 실행은 아직 불가
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java
+- 다음 단계: Gradle wrapper 권한을 정리한 뒤 테스트 실행, 이어서 나머지 Auth 작업 진행
+## [2025-12-18 16:39] MemberRepository DataJpaTest 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `@DataJpaTest` 기반 MemberRepositoryTest를 작성해 이메일 조회/중복 검사를 검증했다.
+
+### Details
+- 작업 사유: MemberRepository의 기본 계약(findByEmail/existsByEmail)을 회귀 테스트로 확보
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.member.repository.MemberRepositoryTest`는 여전히 Gradle wrapper 락 파일 문제로 실행 불가
+- 수정한 파일: backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java
+- 다음 단계: Gradle wrapper 권한 정리 후 전체 테스트를 재실행하고, Auth/TODO 항목을 계속 진행
+## [2025-12-18 16:54] 백엔드 테스트 작성 지침 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `backend/AGENTS.md`에 Repository/Service/Controller 테스트 작성 방식(DataJpaTest, MockitoExtension, SpringBootTest+MockMvc) 지침을 명시했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 테스트 코드 패턴을 AGENTS에 정식 규칙으로 추가
+- 영향받은 테스트: 없음
+- 수정한 파일: backend/AGENTS.md
+- 다음 단계: 지침에 맞춰 추가 테스트 작성 시 참고
+## [2025-12-18 16:56] 백엔드 테스트 지침 세부 조건 보강
+
+### Type
+STRUCTURAL
+
+### Summary
+- backend/AGENTS.md에 Repository/Service/Controller 테스트 시 import·구성 방식(특히 DataJpaTest와 MockitoBean/SpringBootTest 세팅)을 더 명확히 명시했다.
+
+### Details
+- 작업 사유: 사용자 지시에 맞춰 테스트 코드 스타일을 문서로 강제하기 위함
+- 영향받은 테스트: 없음
+- 수정한 파일: backend/AGENTS.md
+- 다음 단계: 지침에 따라 기존/향후 테스트 코드를 점검
+## [2025-12-18 16:58] MemberRepository 기본 시나리오 DataJpaTest 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `MemberRepositoryTest`에 이메일 조회/중복/Soft Delete 검증 테스트를 AGENT 지침 방식으로 추가했다.
+
+### Details
+- 작업 사유: Repository 계층 테스트 예시를 AGENTS.md 규칙에 맞춰 확보
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.member.repository.MemberRepositoryTest` 실행은 Gradle wrapper 락 문제로 여전히 불가
+- 수정한 파일: backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java
+- 다음 단계: Gradle wrapper 권한 문제 해결 후 테스트 재실행, 이후 Auth TODO 진행
+## [2025-12-18 17:11] MemberRepositoryTest 감사 필드 활성화 및 존재 검증 수정
+
+### Type
+BUGFIX
+
+### Summary
+- DataJpaTest에서 JPA Auditing 구성을 가져오고 존재 여부 검증을 `findByEmail` 기반으로 조정해 전체 테스트가 다시 통과하게 했다.
+
+### Details
+- 작업 사유: backend에서 `./gradlew test` 실행 시 created_at 제약 위반과 존재하지 않는 `existsByEmail` 호출로 MemberRepositoryTest가 실패했기 때문
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: 추가 요청 또는 TODO 지시에 따라 후속 작업 진행
+## [2025-12-18 17:18] 백엔드 테스트 지침에 참조 파일 명시
+
+### Type
+STRUCTURAL
+
+### Summary
+- backend/AGENTS.md의 Repository/Service/Controller 테스트 규칙에 각각 참고해야 할 표준 테스트 파일(MemberRepositoryTest/AuthServiceTest/AuthControllerTest)을 명시했다.
+
+### Details
+- 작업 사유: 사용자가 테스트 코드 작성 시 따라야 할 구체 예시와 import 구성을 분명히 해달라고 요청함
+- 영향받은 테스트: 없음
+- 수정한 파일: backend/AGENTS.md, docs/history/AGENT_LOG.md
+- 다음 단계: 해당 예시 파일을 기준으로 테스트 작성/리뷰 진행
+## [2025-12-18 17:18] AuthController /me API 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `/api/v1/auth/me` 엔드포인트를 포함해 AuthController의 모든 공개 API를 MockMvc 테스트로 검증하도록 `AuthControllerTest`를 보강했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 AuthController에 선언된 API 함수 전부를 테스트로 검증해야 했기 때문
+- 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest.me_shouldReturnCurrentMemberData"`
+- 수정한 파일: backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: 없음
+## [2025-12-18 17:51] RegisterService 기반 선생님 회원가입 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- RegisterService/DTO/전화번호 Normalizer를 추가하고 `/api/v1/auth/register/teacher`를 RegisterService에 연결해 가입 직후 토큰 발급 및 Refresh 쿠키 세팅이 작동하도록 했다.
+
+### Details
+- 작업 사유: Phase4 TODO “선생님 회원가입 개발”을 수행하기 위해 공통 RegisterService 토대를 마련하고 Teacher 플로우를 복구해야 했음
+- 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.repository.MemberRepositoryTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest.registerTeacher_shouldReturnTokensAndSetCookie"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/application/RegisterService.java, backend/src/main/java/com/classhub/domain/member/dto/request/RegisterTeacherRequest.java, backend/src/main/java/com/classhub/domain/member/support/PhoneNumberNormalizer.java, backend/src/main/java/com/classhub/domain/auth/web/AuthController.java, backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java, backend/src/test/java/com/classhub/domain/member/application/RegisterServiceTest.java, backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, backend/src/test/java/com/classhub/domain/member/repository/MemberRepositoryTest.java, docs/plan/backend/season2/auth-teacher-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: RegisterService를 Assistant/Student 가입으로 확장하고 Company/Branch 온보딩 연계 로직을 추가 준비
+## [2025-12-18 17:57] MemberController로 선생님 회원가입 엔드포인트 이관
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/api/v1/members/register/teacher`를 새 MemberController에 추가하고 AuthController에서 회원가입 책임을 제거해 API 책임을 역할별로 분리했다.
+
+### Details
+- 작업 사유: 회원가입 API를 AuthController에서 분리하자는 요청에 따라 Member 전용 컨트롤러에서 RegisterService를 노출하도록 경로를 변경
+- 영향받은 테스트: `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest"` / `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.auth.web.AuthControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/auth/web/AuthController.java, backend/src/main/java/com/classhub/domain/member/web/MemberController.java, backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java, docs/plan/backend/season2/auth-teacher-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 신규 엔드포인트를 기준으로 Assistant/Student 가입 확장 및 문서/클라이언트 반영
+## [2025-12-18 18:21] 학생 회원가입 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/backend/season2/member-registration_plan.md`에 Teacher/Student 공통 RegisterService 구조, StudentInfo/StudentGrade 요구, API/TDD/Implementation 절차를 정의했다.
+
+### Details
+- 작업 사유: Phase4 “학생 회원가입 개발”을 진행하기 전 요구사항/스펙(`docs/design/final-entity-spec.md`)을 반영한 설계 문서가 필요했기 때문
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/plan/backend/season2/member-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN에 따라 RegisterService/MemberController를 구현
+## [2025-12-18 18:21] RegisterService 확장 및 학생 회원가입 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- RegisterService를 공통 RegisterMemberRequest 기반으로 리팩터링하고 StudentInfo/StudentGrade/StudentInfoRepository를 추가해 학생 가입 시 Member+StudentInfo를 생성하도록 했으며, `/api/v1/members/register/student` 엔드포인트와 시큐리티 화이트리스트를 완비했다.
+
+### Details
+- 작업 사유: Phase4 TODO “학생 회원가입 개발”을 완료해 학생이 자유 가입 후 토큰을 발급받고 StudentInfo를 저장하도록 만들기 위함
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.repository.StudentInfoRepositoryTest"`
+  - `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest"`
+  - `GRADLE_USER_HOME=$PWD/.gradle ./gradlew test --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.auth.web.AuthControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/request/RegisterMemberRequest.java, backend/src/main/java/com/classhub/domain/member/dto/request/RegisterStudentRequest.java, backend/src/main/java/com/classhub/domain/member/model/StudentGrade.java, backend/src/main/java/com/classhub/domain/member/model/StudentInfo.java, backend/src/main/java/com/classhub/domain/member/repository/StudentInfoRepository.java, backend/src/main/java/com/classhub/domain/member/support/SchoolNameFormatter.java, backend/src/main/java/com/classhub/domain/member/application/RegisterService.java, backend/src/main/java/com/classhub/domain/member/web/MemberController.java, backend/src/main/java/com/classhub/global/config/SecurityConfig.java, backend/src/main/java/com/classhub/global/jwt/JwtAuthenticationFilter.java, backend/src/test/java/com/classhub/domain/member/repository/StudentInfoRepositoryTest.java, backend/src/test/java/com/classhub/domain/member/application/RegisterServiceTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java, docs/plan/backend/season2/member-registration_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Assistant/Student 추가 요구사항에 맞춰 RegisterService/MemberController 확장 및 프런트 연동
+## [2025-12-18 18:21] TODO v1.9 학생 회원가입 완료 처리
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 “학생 회원가입 개발” 항목을 ✅로 전환해 구현 완료 상태를 반영했다.
+
+### Details
+- 작업 사유: 학생 회원가입 API 및 관련 도메인이 구현/테스트 완료됨에 따라 TODO 현황을 최신화
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/todo/v1.9.md, docs/history/AGENT_LOG.md
+- 다음 단계: 다음 TODO 항목을 선택해 PLAN/구현 진행
+
+## [2025-12-18 18:52] Invitation 도메인/레포지토리 TDD 기반 구축
+
+### Type
+STRUCTURAL
+
+### Summary
+- Invitation 엔티티/enum/DTO를 `docs/design/final-entity-spec.md`와 PLAN Step1 요구에 맞춰 정의하고 이메일/코드 정규화 및 상태 전이 헬퍼를 추가했다.
+- `InvitationRepositoryTest`로 findByCode/existsByTargetEmailAndStatus/soft-delete + 상태 전환/`canUse` 조건을 검증했다.
+
+### Details
+- 작업 사유: `docs/plan/backend/season2/invitation-assistant_plan.md` Step 1(도메인/Repository 구성)을 완료해 이후 Service/Controller 구현을 위한 토대를 마련하기 위함
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.invitation.repository.InvitationRepositoryTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/invitation/model/Invitation.java, backend/src/main/java/com/classhub/domain/invitation/model/InvitationRole.java, backend/src/main/java/com/classhub/domain/invitation/repository/InvitationRepository.java, backend/src/main/java/com/classhub/domain/invitation/dto/request/AssistantInvitationCreateRequest.java, backend/src/main/java/com/classhub/domain/invitation/dto/request/InvitationVerifyRequest.java, backend/src/main/java/com/classhub/domain/invitation/dto/response/InvitationResponse.java, backend/src/main/java/com/classhub/domain/invitation/dto/response/InvitationVerifyResponse.java, backend/src/main/java/com/classhub/domain/member/dto/request/RegisterAssistantByInvitationRequest.java, backend/src/test/java/com/classhub/domain/invitation/repository/InvitationRepositoryTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN Step 2에 따라 InvitationService create/verify/accept 로직 및 Mockito 단위 테스트를 작성
+
+## [2025-12-18 19:02] 조교 초대 가입 DTO를 RegisterMemberRequest 기반으로 통합
+
+### Type
+STRUCTURAL
+
+### Summary
+- `RegisterAssistantByInvitationRequest`가 `RegisterMemberRequest`를 `@JsonUnwrapped` 형태로 포함하도록 변경해 Teacher/Student와 동일한 검증/정규화 로직을 재사용하게 했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 조교 초대 가입 플로우에서도 공용 회원가입 요청 스키마를 활용해 중복 검증 로직을 제거
+- 영향받은 테스트: 없음 (단순 DTO 구조 변경)
+- 수정한 파일: backend/src/main/java/com/classhub/domain/member/dto/request/RegisterAssistantByInvitationRequest.java, docs/history/AGENT_LOG.md
+- 다음 단계: Invitation 기반 조교 가입 구현 시 해당 DTO를 사용해 RegisterService를 연계
+
+## [2025-12-18 19:12] Invitation Service/Controller 설계 보강
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/backend/season2/invitation-assistant_plan.md`에 Service/Controller 세부 설계를 추가해 InvitationService 책임, 메서드별 로직, Security/Controller 경로 요구사항을 명확화했다.
+- TDD/Implementation Steps에서 Service/Controller 단계 테스트 범위를 구체화했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 향후 Service/Controller 구현 시 참조할 구체적 설계/테스트 항목이 필요했기 때문
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/invitation-assistant_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 갱신된 PLAN Step 2, 3에 따라 서비스/컨트롤러 구현
+
+## [2025-12-18 19:18] 조교 초대 가입 API 경로 업데이트
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 피드백에 따라 조교 초대 가입 API 경로를 `/api/v1/members/register/assistant`로 통일하도록 PLAN 문서(Requirements/API Design/Controller 디자인/TDD 항목)를 갱신했다.
+
+### Details
+- 작업 사유: 엔드포인트 네이밍을 간결하게 유지하고 기존 register 네이밍 일관성을 맞추기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/invitation-assistant_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 업데이트된 경로를 기준으로 Controller/Security 구현
+
+## [2025-12-18 19:35] Invitation 기반 조교 초대/가입 서비스 및 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `TeacherAssistantAssignment` 도메인/Repository와 `InvitationService`를 도입해 초대 생성/검증/취소/조교 등록 로직을 완성하고 기본 만료 7일 + 랜덤 코드 제너레이터를 적용했다.
+- Auth/Member/Invitation Controller를 확장해 초대 검증(`POST /api/v1/auth/invitations/verify`), 조교 초대 생성/취소(`POST /api/v1/invitations`, `PATCH /api/v1/invitations/{code}/revoke`), 초대 기반 조교 가입(`POST /api/v1/members/register/assistant`)을 노출하고 Security/JWT 화이트리스트를 최신화했다.
+
+### Details
+- 작업 사유: `docs/plan/backend/season2/invitation-assistant_plan.md` Step2/3에 따라 조교 초대 + verify + 초대 기반 가입 플로우를 실제 서비스/컨트롤러로 구현
+- 주요 변경
+  - InvitationService + RandomInvitationCodeGenerator + Clock Bean + TeacherAssistantAssignment 도메인 추가
+  - RegisterService에 Assistant 등록 메서드 추가
+  - Auth/Member/Invitation Controller 및 DTO/Repository/TDD(서비스/컨트롤러 테스트) 보강
+  - JwtAuthenticationFilter 화이트리스트에 `/api/v1/members/register/assistant`, `/api/v1/auth/invitations/**` 추가
+- 영향받은 테스트:
+  - `./gradlew test --tests "com.classhub.domain.member.application.RegisterServiceTest" --tests "com.classhub.domain.invitation.application.InvitationServiceTest"`
+  - `./gradlew test --tests "com.classhub.domain.invitation.web.InvitationControllerTest" --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.auth.web.AuthControllerTest"`
+  - `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/assignment/model/TeacherAssistantAssignment.java, backend/src/main/java/com/classhub/domain/assignment/repository/TeacherAssistantAssignmentRepository.java, backend/src/main/java/com/classhub/domain/invitation/application/InvitationService.java, backend/src/main/java/com/classhub/domain/invitation/support/*.java, backend/src/main/java/com/classhub/domain/invitation/web/InvitationController.java, backend/src/main/java/com/classhub/domain/member/application/RegisterService.java, backend/src/main/java/com/classhub/domain/auth/web/AuthController.java, backend/src/main/java/com/classhub/domain/member/web/MemberController.java, backend/src/main/java/com/classhub/global/jwt/JwtAuthenticationFilter.java, backend/src/main/java/com/classhub/global/config/TimeConfig.java, backend/src/test/java/com/classhub/domain/member/application/RegisterServiceTest.java, backend/src/test/java/com/classhub/domain/invitation/application/InvitationServiceTest.java, backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java, backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java, backend/src/test/java/com/classhub/domain/invitation/web/InvitationControllerTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: Teacher가 생성한 초대/Assignment를 조회/관리하는 API 확장 및 TODO 업데이트
+
+## [2025-12-18 19:45] InvitationController Teacher 전용 보안 강화
+
+### Type
+STRUCTURAL
+
+### Summary
+- InvitationController의 초대 생성/취소 엔드포인트에 `@PreAuthorize("hasAuthority('TEACHER')")`를 추가해 Spring Security 단에서 Teacher만 접근할 수 있도록 강제하고, 기존 MockMvc 테스트가 통과하는지 확인했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 보안 규칙을 명시적으로 적용해 잘못된 권한 접근을 Controller 레벨에서 차단
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.invitation.web.InvitationControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/invitation/web/InvitationController.java, docs/history/AGENT_LOG.md
+- 다음 단계: 없음
+
+## [2025-12-18 19:47] RsCode 구분 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- `RsCode` 상수를 Common/Auth/Invitation/Course/Student/Lesson 영역별로 재배치하고 섹션 주석을 추가해 응답 코드를 기능 단위로 쉽게 찾을 수 있도록 정리했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 공통/엔티티별 오류 코드를 명확하게 그룹화
+- 영향받은 테스트: 없음 (열거형 재정렬)
+- 수정한 파일: backend/src/main/java/com/classhub/global/response/RsCode.java, docs/history/AGENT_LOG.md
+- 다음 단계: 없음
+
+## [2025-12-18 19:55] 도메인 Enum 작성 PLAN 수립
+
+### Type
+DESIGN
+
+### Summary
+- Phase4 TODO “도메인 ENUM 작성”을 위한 상세 PLAN(`docs/plan/backend/season2/domain-enum_plan.md`)을 작성해 필요한 Enum 목록, 패키지 구조, TDD/Implementation 단계를 정의했다.
+
+### Details
+- 작업 사유: Season2 스펙에 맞춰 Enum을 일괄 정리하기 위한 설계 문서가 필요했기 때문
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/domain-enum_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN Step 1에 따라 Enum 인벤토리를 정리하고 코드 구현을 준비
+
+## [2025-12-18 19:58] Enum PLAN 패키지/범위 조정
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 피드백을 반영해 PLAN Non-functional 섹션에 company/branch, clinic 하위 패키지 구조를 명시하고, 스펙에 존재하지 않는 NoticeType/WorkLogType/ClinicAttendanceStatus 등을 Enum 대상에서 제외하도록 수정했다.
+
+### Details
+- 작업 사유: 도메인별 폴더 구조와 작성 대상 Enum을 명확히 하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/domain-enum_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 패키지 규칙에 맞춰 Enum 구현 착수
+
+## [2025-12-18 20:00] Enum PLAN 테스트 범위 조정
+
+### Type
+DESIGN
+
+### Summary
+- Enum 작성은 단순 값 정의 작업이므로 별도 단위 테스트 섹션을 삭제하고 Implementation Steps에 통합했습니다.
+
+### Details
+- 작업 사유: 사용자 의견에 따라 굳이 테스트를 작성하지 않아도 되는 영역을 문서에서 정리
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/plan/backend/season2/domain-enum_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN Step 1 수행
+
+## [2025-12-18 20:10] 도메인 Enum 1차 구현 (Company/Assignment/Enrollment/Clinic/Feedback)
+
+### Type
+STRUCTURAL
+
+### Summary
+- PLAN Appendix에서 미구현으로 표시된 Enum 6종을 Season2 패키지 규칙에 맞춰 추가했다: `CompanyType`, `VerifiedStatus`, `BranchRole`, `EnrollmentStatus`, `ClinicSessionType`, `FeedbackStatus`.
+- 신규 도메인 패키지(`domain/company/company`, `domain/clinic/clinicsession`, `domain/enrollment`, `domain/feedback`)를 준비해 앞으로의 엔티티 구현 시 재사용할 수 있도록 정리했다.
+
+### Details
+- 작업 사유: Phase4 TODO “도메인 ENUM 작성” Step 2 실행
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/company/company/model/CompanyType.java
+  - backend/src/main/java/com/classhub/domain/company/company/model/VerifiedStatus.java
+  - backend/src/main/java/com/classhub/domain/assignment/model/BranchRole.java
+  - backend/src/main/java/com/classhub/domain/enrollment/model/EnrollmentStatus.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSessionType.java
+  - backend/src/main/java/com/classhub/domain/feedback/model/FeedbackStatus.java
+  - docs/history/AGENT_LOG.md
+- 다음 단계: 나머지 Enum(필요 시 ClinicReason 등) 정리 후 엔티티/레포 구현
+
+## [2025-12-18 20:22] 핵심 엔티티/Repository 1차 구현
+
+### Type
+STRUCTURAL
+
+### Summary
+- Company/Branch/TeacherBranchAssignment부터 Course, StudentCourseEnrollment/Record, Lesson(Shared/Personal), Clinic( Slot/Session/Attendance/Record), Notice/NoticeRead, WorkLog 엔티티와 각각의 Repository를 Season2 패키지 규칙에 맞춰 추가했다.
+- Course에는 spec에 맞는 `CourseSchedule` ElementCollection을 정의했고, 모든 엔티티는 FK UUID 필드 중심으로 구성해 이후 서비스/쿼리에서 조립하도록 설계했다.
+
+### Details
+- 작업 사유: `docs/plan/backend/season2/core-entities_plan.md` Step 2 수행으로 Phase4 TODO “핵심 엔티티 생성”을 진행
+- 영향받은 테스트: `./gradlew test`
+- 주요 수정 파일: (다수)
+  - backend/src/main/java/com/classhub/domain/company/company/model/Company.java
+  - backend/src/main/java/com/classhub/domain/company/company/repository/CompanyRepository.java
+  - backend/src/main/java/com/classhub/domain/company/branch/model/Branch.java
+  - backend/src/main/java/com/classhub/domain/company/branch/repository/BranchRepository.java
+  - backend/src/main/java/com/classhub/domain/assignment/model/TeacherBranchAssignment.java
+  - backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java
+  - backend/src/main/java/com/classhub/domain/course/model/Course.java
+  - backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseEnrollment.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseRecord.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/repository/*.java
+  - backend/src/main/java/com/classhub/domain/lesson/shared/model/SharedLesson.java
+  - backend/src/main/java/com/classhub/domain/lesson/personal/model/PersonalLesson.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicattendance/model/ClinicAttendance.java
+  - backend/src/main/java/com/classhub/domain/clinic/clinicrecord/model/ClinicRecord.java
+  - backend/src/main/java/com/classhub/domain/notice/model/{Notice,NoticeRead}.java
+  - backend/src/main/java/com/classhub/domain/worklog/model/WorkLog.java
+  - 각 엔티티에 대응하는 Repository 파일
+- 다음 단계: 엔티티 기반 Repository TDD 및 도메인 서비스 구현, TODO 상태 업데이트
+
+## [2025-12-18 20:29] StudentEnrollmentRequest 엔티티 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `StudentEnrollmentRequest` 엔티티와 Repository를 추가해 학생의 수강 신청 정보를 저장할 수 있도록 했고, 승인/거절 메서드에서 status와 처리자 정보를 업데이트할 수 있게 구성했다.
+
+### Details
+- 작업 사유: `final-entity-spec.md`에 명시된 핵심 엔티티 중 누락된 StudentEnrollmentRequest를 보완
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/enrollment/model/StudentEnrollmentRequest.java, backend/src/main/java/com/classhub/domain/enrollment/repository/StudentEnrollmentRequestRepository.java, docs/history/AGENT_LOG.md
+- 다음 단계: Repository TDD 및 Enrollment 흐름 서비스 구현
+- 다음 단계: Repository TDD 및 Enrollment 흐름 서비스 구현
+
+## [2025-12-18 20:30] Feedback 엔티티 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- 피드백 시스템을 위한 `Feedback` 엔티티와 Repository를 추가하고, `FeedbackStatus`를 활용해 제출/처리 상태를 추적하도록 했다.
+
+### Details
+- 작업 사유: final-entity-spec에 정의된 Feedback 엔티티가 누락되어 있어 핵심 도메인이 완성되지 않았기 때문
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/feedback/model/Feedback.java, backend/src/main/java/com/classhub/domain/feedback/repository/FeedbackRepository.java, docs/history/AGENT_LOG.md
+- 다음 단계: Feedback API 설계/구현 및 TODO 업데이트
+
+## [2025-12-18 20:32] 설계 문서 템플릿 섹션 확장
+
+### Type
+STRUCTURAL
+
+### Summary
+- AGENTS.md 5.3 절에 백엔드/프런트엔드 설계 템플릿을 각각 5.3.1, 5.3.2로 분리하고, 프런트 설계 시 포함해야 할 페이지 구조/컴포넌트/상태/UX/테스트 항목을 명시했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 설계 문서 작성 시 템플릿과 기대 내용을 명확히 안내하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: AGENTS.md, docs/history/AGENT_LOG.md
+- 다음 단계: 향후 PLAN 작성 시 템플릿을 준수
+
+## [2025-12-18 20:35] PLAN README에 템플릿 사용 규칙 명시
+
+### Type
+STRUCTURAL
+
+### Summary
+- `docs/plan/README.md`의 사용 방법 섹션에 “모든 PLAN 문서는 AGENTS.md 5.3 템플릿(백엔드/프런트엔드)을 반드시 따른다”는 규칙을 추가해 설계 문서 작성 시 혼선을 줄였다.
+
+### Details
+- 작업 사유: PLAN 문서 작성 시 템플릿 준수를 확실히 하기 위해 문서화 필요
+- 영향받은 테스트: 없음
+- 수정한 파일: docs/plan/README.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN 작성 시 해당 템플릿을 적용하고, 미적용 문서는 바로 수정
+
+## [2025-12-18 21:00] InitData PLAN 시드 데이터 세부 정리
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/backend/season2/initdata_plan.md`에 Member/Company/Clinic 등 각 도메인별 시드 상수, 실행 순서, 연관 관계 표를 추가해 InitData 구현 시 참고할 수 있는 구체적 스펙을 마련했다.
+
+### Details
+- 작업 사유: Phase4 TODO “InitData 구성하기” 진행 전에 어떤 데이터를 생성할지 명확히 정의해 재작업을 방지하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: PLAN 4단계에 따라 InitData CommandLineRunner를 구현하고 TODO를 갱신
+
+## [2025-12-18 21:40] InitData PLAN Stage 1 범위 축소
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 요청에 맞춰 InitData PLAN을 Member/Company/Branch 중심(Stage 1)으로 재정리하고, 나머지 도메인은 향후 Stage 2 백로그 섹션으로 이동시켜 우선순위를 명확히 했다.
+
+### Details
+- 작업 사유: 당장 프론트엔드 연동 테스트에 필요한 최소 시드(회원/학원 구조)만 우선 구현하고, 나머지는 기능별 시점에 맞춰 확장하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Stage 1 Seed Runner 구현 후 Course/Enrollment 등 도메인별 InitData를 순차적으로 추가
+
+## [2025-12-18 21:58] InitData PLAN에 전국 학원/지점 목록 반영
+
+### Type
+DESIGN
+
+### Summary
+- Stage 1 Seed Dataset에 러셀·두각·시대인재·미래탐구 ACADEMY와 전 지점 목록을 추가하고, Branch 상수 네이밍 규칙을 정의해 실제 데이터 연동 시 확장이 가능하도록 했다.
+
+### Details
+- 작업 사유: 사용자 요청으로 대형 학원/지점 정보를 사전에 Seed 계획에 포함해 향후 전국 데이터 오픈API 연동 시 구조를 재사용하려는 목적
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: 해당 상수 정의에 맞춰 InitData Runner를 구현하고 이후 Course/Clinic Seed 시 이 Branch 정보를 기반으로 확장
+
+## [2025-12-18 22:03] InitData PLAN에 prod 프로필/구조 지침 반영
+
+### Type
+DESIGN
+
+### Summary
+- Company/Branch Seed는 prod 프로필에서도 실행되도록 PLAN에 명시하고, 모든 InitData Runner가 `global.init` 기존 구조(BootstrapDataRunner/SeedKeys/data/*)를 재사용해야 한다는 지침을 추가했다.
+
+### Details
+- 작업 사유: 운영 환경에도 동일한 Branch 데이터를 사전 배포해야 하고, Seed 구현 방식이 분산되지 않도록 명확한 구조 가이드가 필요했기 때문
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Member Runner는 local/test 한정, Company/Branch Runner는 prod 포함 프로필로 구현하고, 기존 global init 패턴을 따라 실제 클래스를 작성
+
+## [2025-12-18 22:08] InitData PLAN에 BootstrapDataRunner 프로필 제약 반영
+
+### Type
+DESIGN
+
+### Summary
+- 실제 `BootstrapDataRunner`가 `@Profile({"local","dev"})`만 활성화되어 있다는 점을 PLAN에 명시하고, prod에서 Company/Branch Seed를 주입하려면 Runner 확장 또는 별도 prod Runner가 필요함을 문서화했다.
+
+### Details
+- 작업 사유: 운영 환경 Seed 계획과 현 코드 구조가 어긋나지 않도록 실제 Runner 프로필 제약 사항을 PLAN에서 안내하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: prod에서도 실행 가능한 Runner 전략(프로필 확장 또는 전용 Runner)을 선택해 구현
+
+## [2025-12-18 22:09] InitData PLAN Stage 2 내용 제거
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 요청에 따라 InitData PLAN에서 Stage 2(Assignment, Course, Clinic 등)에 대한 모든 언급과 표, 백로그를 삭제해 Stage 1 범위(Member/StudentInfo/Company/Branch)만 남겼다.
+
+### Details
+- 작업 사유: 해당 PLAN은 현 시점에 필요한 Seed 정의만 포함해야 하므로, 추후 범위를 따로 관리하기 위해 Stage 2 내용을 제거
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: docs/plan/backend/season2/initdata_plan.md, docs/history/AGENT_LOG.md
+- 다음 단계: Stage 1 Runner 구현 후, 새로운 필요가 생길 때 별도 PLAN으로 확장
+
+## [2025-12-18 22:15] Season2 Stage1 InitData 구현
+
+### Type
+STRUCTURAL
+
+### Summary
+- Member/StudentInfo/Company/Branch 시드 데이터를 정의하는 `InitMembers/InitStudentInfos/InitCompanies/InitBranches` 클래스를 추가하고, BaseInitData 기반 Runner 4종을 구현해 local/test/prod 프로필에 맞춰 자동 시드되도록 했다.
+- Member/StudentInfo/Company/Branch 엔티티와 Repository에 업데이트 메서드/조회 메서드를 보강하고, `BootstrapDataRunner`가 prod/test 프로필에서도 동작하도록 확장했다.
+
+### Details
+- 작업 사유: Stage 1 InitData PLAN 실행을 통해 프런트 연동 테스트 및 향후 기능 개발에 필요한 기본 데이터 세트를 확보하기 위함
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/global/init/data/**/*.java, backend/src/main/java/com/classhub/domain/**/{Company,Branch,Member,StudentInfo}.java, backend/src/main/java/com/classhub/domain/**/repository/*.java, backend/src/main/java/com/classhub/global/init/BootstrapDataRunner.java, docs/history/AGENT_LOG.md
+- 다음 단계: 필요 시 `bootstrap.data.enabled` 설정을 통해 환경별 시드 실행을 제어하고, 이후 Course/Enrollment 등 도메인별 InitData는 별도 PLAN으로 진행
+
+## [2025-12-18 22:51] InitData 통합 테스트 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- `Season2InitDataTest`를 추가해 test 프로필에서 Seed Runner가 실행된 후 SuperAdmin/Teacher/Student/StudentInfo와 Company/Branch 데이터가 모두 생성되는지 검증하고, Branch 개수 및 특정 지점의 verified 상태까지 확인하도록 했다.
+
+### Details
+- 작업 사유: Seed 데이터가 반복 실행 시에도 기대 상태를 유지하는지 CI에서 자동 검증하기 위함
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/test/java/com/classhub/global/init/Season2InitDataTest.java, backend/src/main/java/com/classhub/domain/company/branch/repository/BranchRepository.java, docs/history/AGENT_LOG.md
+- 다음 단계: Seed 데이터가 늘어나면 해당 테스트를 확장하거나 도메인별 전용 검증 클래스를 추가
+
+## [2025-12-18 22:57] InitData 패키지 정리 및 Season2 명칭 제거
+
+### Type
+STRUCTURAL
+
+### Summary
+- `global.init` 하위 패키지를 `runner/`, `seed/`, `seed.dataset/`로 재구성하고 Season2라는 명칭을 제거해 재사용 가능한 Seed 구조로 정리했다. 필요한 클래스·테스트의 패키지/임포트도 일관되게 변경했다.
+
+### Details
+- 작업 사유: Seed 구성 요소가 Season2 전용으로 보이지 않도록 하고, 향후 다른 단계에서도 재사용할 수 있게 패키지를 정비하기 위함
+- 영향받은 테스트: `./gradlew test`
+- 수정한 파일: backend/src/main/java/com/classhub/global/init/** (runner/seed/*), backend/src/test/java/com/classhub/global/init/InitDataSmokeTest.java, docs/history/AGENT_LOG.md
+- 다음 단계: 새로운 도메인 Seed를 추가할 때 동일한 패턴(dataset + seed 패키지)을 따라 구조 유지
+
+## [2025-12-18 23:25] 프런트 문서에 OpenAPI 타입 alias 지침 명시
+
+### Type
+DESIGN
+
+### Summary
+- CLAUDE/프런트 도우미 문서에 OpenAPI 타입 정의를 직접 alias(`type LoginRequestBody = components["schemas"]["LoginRequest"]`)로 선언해 사용하도록 명확히 지침을 추가했다.
+
+### Details
+- 작업 사유: 프런트 코드에서 중복 타입 선언을 방지하고, `openapi.d.ts` 스키마를 강제하기 위해 문서 가이드 강화 필요
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: frontend/AGENTS.md, docs/history/AGENT_LOG.md
+- 다음 단계: 프런트 구현 시 해당 alias 패턴을 준수하고, Plan/TODO 검토 시 위반 사례가 있으면 즉시 수정
+
+## [2025-12-18 23:25] CLAUDE 가이드에 OpenAPI alias 지침 반영
+
+### Type
+DESIGN
+
+### Summary
+- CLAUDE.md에도 프런트 코드가 `openapi.d.ts` 타입을 alias(`type LoginRequestBody = components["schemas"]["LoginRequest"]`)로 선언해 사용해야 한다는 규칙을 추가해 모든 도우미 문서가 일관되게 안내하도록 했다.
+
+### Details
+- 작업 사유: Frontend Agent뿐 아니라 CLAUDE Code 가이드에도 동일한 요구사항을 명시해, 어느 AI가 작업하든 OpenAPI 타입 재사용을 강제하기 위함
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일: CLAUDE.md, docs/history/AGENT_LOG.md
+- 다음 단계: 프런트 작업 시 CLAUDE/AGENT 지침 둘 다 검토해 OpenAPI 기반 타입 사용을 확인
+## [2025-12-19 00:35] 홈/회원가입 리다이렉트 정비
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 로그인 페이지와 선생님 회원가입 페이지에서 역할별 대시보드로 자동 리다이렉트
+- 대시보드 네비게이션 컴포넌트의 Link 타입 경고 해결
+
+### Details
+- 작업 사유: 로그인/회원가입 UX 일관성과 타입 안전성 확보
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/page.tsx, frontend/src/app/(public)/auth/register/teacher/page.tsx, frontend/src/components/dashboard/mobile-header.tsx, frontend/src/components/dashboard/sidebar.tsx
+- 다음 단계: 학생/조교 회원가입 페이지 설계 및 구현
+## [2025-12-19 00:39] 대시보드 레이아웃/네비게이션 리디자인
+
+### Type
+STRUCTURAL
+
+### Summary
+- 구 레거시 dashboard-shell을 참고해 사이드바/헤더/푸터 레이아웃을 재정비하고 모바일 토글 흐름을 추가
+- MobileHeader 컴포넌트를 제거하고 DashboardSidebar를 사용자 카드 + 역할별 네비게이션 카드 스타일로 개선
+
+### Details
+- 작업 사유: Header 활용도가 낮고 Footer가 과도하게 커서 전반적인 대시보드 UI 일관성이 깨져 있었음
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/layout.tsx, frontend/src/components/dashboard/sidebar.tsx, frontend/src/components/dashboard/mobile-header.tsx(삭제)
+- 다음 단계: 새로운 레이아웃을 기준으로 역할별 페이지 UI를 순차적으로 리팩터링
+## [2025-12-19 00:45] 대시보드 셸 및 Teacher 페이지 리디자인
+
+### Type
+STRUCTURAL
+
+### Summary
+- 좌측 사이드바/상단 바/메인 영역을 참조 시안 형태로 재구성하고 Teacher 대시보드 화면을 카드/캘린더 UI로 구현
+
+### Details
+- 작업 사유: Season2 대시보드가 비어 있던 상태라 시안과 같은 화면 전체 구성과 예시 콘텐츠가 필요했음
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/layout.tsx, frontend/src/components/dashboard/sidebar.tsx, frontend/src/app/(dashboard)/teacher/page.tsx (신규 UI)
+- 다음 단계: 다른 역할(Student/Assistant 등) 페이지도 동일한 카드/캘린더 패턴으로 확장
+## [2025-12-19 00:47] 대시보드 헤더 제거 및 사이드바 로그아웃 이동
+
+### Type
+STRUCTURAL
+
+### Summary
+- 레이아웃 상단 헤더를 제거하고 모바일 메뉴 버튼을 메인 영역으로 이동
+- 로그아웃 버튼을 사이드바 하단 카드로 옮겨 UX를 단순화
+
+### Details
+- 작업 사유: 헤더를 없애고 사이드바 중심 레이아웃을 유지해 시안과 유사한 전체 화면 UI 구현
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/layout.tsx, frontend/src/components/dashboard/sidebar.tsx
+- 다음 단계: 나머지 대시보드 페이지들도 새 레이아웃에 맞춰 카드 구성 정비
+## [2025-12-19 00:50] Dashboard 경로 판별 보정
+
+### Type
+STRUCTURAL
+
+### Summary
+- AppChrome에서 /teacher·/assistant·/student·/admin 경로를 대시보드 레이아웃으로 인식하도록 수정
+
+### Details
+- 작업 사유: 대시보드 그룹이 /dashboard 대신 /teacher 등으로 노출돼 홈 크롬이 잘못 렌더링되고 있었음
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/components/ui/app-chrome.tsx
+- 다음 단계: 대시보드 페이지 리팩터링 지속
+## [2025-12-19 00:52] Teacher 대시보드 역할 가드 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- useRoleGuard("TEACHER")를 적용해 다른 역할 사용자가 선생님 대시보드에 접근하지 못하도록 차단
+
+### Details
+- 작업 사유: 역할별 페이지 접근 제어 필요
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/page.tsx
+- 다음 단계: 다른 역할 페이지에도 동일 가드 적용
+## [2025-12-19 00:54] 역할별 대시보드 접근 제어 완료
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/Assistant/Student/Admin 대시보드에 `useRoleGuard`를 적용해 다른 역할에서 접근 시 즉시 차단
+
+### Details
+- 작업 사유: 역할별 전용 페이지 간 무단 접근 방지
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/page.tsx, frontend/src/app/(dashboard)/assistant/page.tsx, frontend/src/app/(dashboard)/student/page.tsx, frontend/src/app/(dashboard)/admin/page.tsx
+- 다음 단계: 각 역할 페이지 콘텐츠를 실제 카드/데이터로 확장
+## [2025-12-19 00:58] 역할별 대시보드 콘텐츠 리디자인
+
+### Type
+STRUCTURAL
+
+### Summary
+- Teacher/Assistant/Student/Admin 대시보드에 역할별 맞춤 카드/요약/빠른 작업 UI를 배치하고 캘린더/검색 데모를 제거
+
+### Details
+- 작업 사유: 공통 샘플 UI가 모든 역할에 노출돼 혼란을 주어, 역할별 핵심 정보 위주로 간결하게 표현
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/page.tsx, frontend/src/app/(dashboard)/assistant/page.tsx, frontend/src/app/(dashboard)/student/page.tsx, frontend/src/app/(dashboard)/admin/page.tsx
+- 다음 단계: 실제 데이터 연동 전 API/상태 설계를 진행
+## [2025-12-19 01:13] 학생 회원가입 페이지 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Season2 PLAN에 따라 `/auth/register/student` 폼과 UX를 구현하고 가입 성공 시 자동 로그인/대시보드 이동을 추가
+
+### Details
+- 작업 사유: Phase4 TODO "학생 회원가입 페이지" 진행
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx (신규)
+- 다음 단계: 수동 QA로 다양한 입력 케이스 확인 후 TODO 상태 업데이트
+## [2025-12-19 01:15] 학생 회원가입 CTA 추가
+
+### Type
+STRUCTURAL
+
+### Summary
+- 홈 로그인 카드 하단에 학생 회원가입 버튼을 추가해 접근 경로를 명시
+
+### Details
+- 작업 사유: 학생 가입 페이지를 노출해 사용자가 빠르게 진입하도록 안내
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/page.tsx
+- 다음 단계: 학생 가입 페이지 QA 및 TODO 상태 업데이트
+## [2025-12-19 01:18] 학생 회원가입 UX 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- 생년월일을 년→월→일 선택형으로 바꾸고 학교명 suffix 자동 보정, 학년/비밀번호 UI를 개선
+
+### Details
+- 작업 사유: 학생 가입 UX 피드백 반영
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 후 TODO 상태 업데이트
+## [2025-12-19 01:23] 학생 회원가입 UX 피드백 반영
+
+### Type
+STRUCTURAL
+
+### Summary
+- 생년월일 안내 문구 제거, 비밀번호 요구사항/확인 UI 위치 조정, 학교명 suffix 자동 정리 로직 개선
+
+### Details
+- 작업 사유: UI 피드백(입력 순서, 가독성, 자동 보정) 반영
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 후 TODO 상태 업데이트
+## [2025-12-19 01:25] 학교명 suffix 로직 보완
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 회원가입에서 '대치초/중/고' 등을 그대로 입력해도 잘리거나 재입력되지 않도록 suffix 처리 로직을 수정
+
+### Details
+- 작업 사유: 학교명 자동 포맷이 과도하게 문자열을 잘라 사용성이 떨어지는 문제 발생
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 후 TODO 상태 업데이트
+## [2025-12-19 01:27] 학교명 자동 보정 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 회원가입에서 '대치고등학교'처럼 입력하면 '대치고'까지만 유지하도록 suffix 절삭 로직을 추가
+
+### Details
+- 작업 사유: 학교명을 입력할 때 '대치'로만 잘려 불편했던 문제 해결
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: 수동 QA 후 TODO 상태 업데이트
+## [2025-12-19 09:55] 생년월일 Day 선택 UX 개선
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 회원가입에서 월/년 선택 전에는 일 옵션을 비활성화하고 안내 메시지를 표시하도록 수정
+
+### Details
+- 작업 사유: 월/년 미선택 상태에서도 1~31이 노출돼 혼란을 주던 문제 해결
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/app/(public)/auth/register/student/page.tsx
+- 다음 단계: QA 및 TODO 상태 업데이트
+## [2025-12-19 10:51] 등록 페이지 AppChrome 예외 처리
+
+### Type
+STRUCTURAL
+
+### Summary
+- `/auth/register/*` 경로에서 헤더/푸터를 제거해 로그인 카드와 동일한 풀스크린 UI만 렌더되도록 AppChrome 조건을 수정
+
+### Details
+- 작업 사유: 회원가입 페이지에서 공용 헤더·푸터가 겹치며 디자인이 깨지는 문제
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일: frontend/src/components/ui/app-chrome.tsx
+- 다음 단계: 학생/선생님 회원가입 QA 진행
+## [2025-12-19 13:55] 조교 관리/초대 백엔드 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 목록/토글/초대 목록 API를 추가하고 서비스·DTO·리포지토리를 확장
+- 조교 활성화 제어와 초대 히스토리 조회를 위한 컨트롤러 및 테스트를 작성
+
+### Details
+- 작업 사유: Phase5 "초대 시스템 개발" 중 교사용 백엔드 기능 부재로 현황 파악/제어 불가
+- 영향받은 테스트:
+  - `./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepositoryTest"`
+  - `./gradlew test --tests "com.classhub.domain.assignment.application.AssistantManagementServiceTest"`
+  - `./gradlew test --tests "com.classhub.domain.invitation.repository.InvitationRepositoryTest"`
+  - `./gradlew test --tests "com.classhub.domain.assignment.web.AssistantManagementControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/assignment/**, backend/src/main/java/com/classhub/domain/invitation/**, backend/src/test/java/com/classhub/domain/assignment/**, backend/src/test/java/com/classhub/domain/invitation/repository/InvitationRepositoryTest.java, docs/plan/backend/season2/assistant-management_plan.md
+- 다음 단계: 프론트엔드 조교 관리/초대 UI 연동
+## [2025-12-19 13:55] TODO v1.9 초대 시스템 백엔드 완료 표시
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase5 초대 시스템 개발의 "관련 백엔드 개발" 항목을 완료(✅)로 반영
+
+### Details
+- 작업 사유: 조교 관리/초대 API 구현 및 검증이 완료되어 TODO 상태 업데이트
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepositoryTest"` 등 동 작업 테스트 묶음
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 동일 Epic 내 프론트엔드 작업 진행
+## [2025-12-19 19:06] Assistant email search TODO 착수 표시
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 "선생님-조교 연결" Epic의 백엔드 작업(이메일 기반 목록 API)을 🔄 상태로 갱신해 진행 시작을 명시
+
+### Details
+- 작업 사유: 교사의 조교 연결 흐름 구현을 위해 검색 API 개발에 착수
+- 영향받은 테스트: 해당 없음 (문서 상태 업데이트)
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 설계 문서 작성 후 사용자 승인 요청
+## [2025-12-19 19:06] 조교 이메일 검색 API 설계
+
+### Type
+DESIGN
+
+### Summary
+- 초대 시스템 제거 후 교사가 조교를 직접 연결할 수 있도록 `assistant-search-assignment` 백엔드 설계 문서를 작성하고 검색 요구사항/응답 스키마/TDD 계획을 정의
+
+### Details
+- 작업 사유: Phase4 선생님-조교 연결 Epic에서 이메일 검색 API가 필요함 (`/api/v1/teachers/me/assistants/search`)
+- 영향받은 테스트: 설계 단계이므로 실행된 테스트 없음
+- 수정한 파일: docs/plan/backend/season2/assistant-search-assignment_plan.md
+- 다음 단계: 사용자 승인 후 Repository/Service/Controller를 TDD로 구현
+## [2025-12-19 19:10] 조교 Assignment 생성 요구 반영
+
+### Type
+DESIGN
+
+### Summary
+- 기존 이메일 검색 설계에 `POST /api/v1/teachers/me/assistants` 조교 연결 API를 추가하고 요청/검증/응답/TDD 범위를 확장
+
+### Details
+- 작업 사유: 교사가 검색한 조교를 실제 Assignment로 연결하는 API가 부재하여 플로우를 완성할 수 없음
+- 영향받은 테스트: 설계 단계, 없음
+- 수정한 파일: docs/plan/backend/season2/assistant-search-assignment_plan.md
+- 다음 단계: 사용자 승인 후 Assignment 생성/검색 API를 TDD로 구현
+## [2025-12-19 19:22] 조교 검색 및 직접 연결 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사용 조교 검색 API(`/assistants/search`)와 연결 생성 API(`POST /assistants`)를 추가하고 응답 DTO/서비스 로직/컨트롤러를 확장
+- Member/Assignment Repository에 검색 메서드를 추가하고 Service/Controller 단위 테스트를 보강
+
+### Details
+- 작업 사유: 초대 플로우 제거 후 조교를 이메일로 찾아 바로 연결하는 단계가 비어 있어 사용자 시나리오 진행 불가
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.member.repository.MemberRepositoryTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepositoryTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.application.AssistantManagementServiceTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.assignment.web.AssistantManagementControllerTest"`
+- 수정한 파일: backend/src/main/java/com/classhub/domain/assignment/**, backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java, backend/src/main/java/com/classhub/global/response/RsCode.java, backend/src/test/java/com/classhub/domain/**, docs/plan/backend/season2/assistant-search-assignment_plan.md
+- 다음 단계: 프론트엔드 조교 연결 UI 연동 및 QA 진행
+## [2025-12-19 19:22] TODO v1.9 조교 이메일 검색 과제 완료 표시
+
+### Type
+TODO_UPDATE
+
+### Summary
+- Phase4 "선생님-조교 연결" Epic의 백엔드 작업(이메일 기반 목록/연결 API)을 ✅ 로 반영
+
+### Details
+- 작업 사유: 조교 검색/연결 API 구현 완료
+- 영향받은 테스트: 해당 없음 (문서 업데이트)
+- 수정한 파일: docs/todo/v1.9.md
+- 다음 단계: 동일 Phase의 프론트엔드 작업 진행
+## [2025-12-19 20:15] 선생님 조교 검색/등록 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 선생님 대시보드에 "조교 검색 및 등록" 버튼과 모달을 추가해 이메일 기반 검색/연결 플로우를 UI로 완성
+- 검색 결과/선택 상태/등록 요청을 API(`/assistants/search`, `POST /assistants`)와 연동하고, 기존 목록 토글과 연결해 즉시 반영되도록 구현
+
+### Details
+- 작업 사유: 프론트엔드에서 조교 검색/등록 플로우가 비어 있어 Season2 요구사항 미충족
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack` (Next.js root 경고 있음; 기존 다중 lockfile 구조로 인한 것이며 추후 outputFileTracingRoot 설정 필요)
+- 수정한 파일: frontend/src/app/(dashboard)/teacher/assistants/page.tsx, frontend/src/types/openapi.{d.ts,json}, docs/plan/frontend/season2/teacher-assistant-management_ui_plan.md
+- 다음 단계: 모달 UX QA 및 토스트/에러메시지 copy 검토, 필요 시 다중 lockfile 구조 정리
