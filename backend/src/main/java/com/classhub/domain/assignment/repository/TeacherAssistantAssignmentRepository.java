@@ -37,4 +37,9 @@ public interface TeacherAssistantAssignmentRepository
     );
 
     List<TeacherAssistantAssignment> findByAssistantMemberIdAndDeletedAtIsNull(UUID assistantMemberId);
+
+    Optional<TeacherAssistantAssignment> findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(
+            UUID teacherMemberId,
+            UUID assistantMemberId
+    );
 }

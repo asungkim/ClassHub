@@ -49,7 +49,15 @@ public enum RsCode {
     PERSONAL_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "개별 진도 기록을 찾을 수 없습니다."),
     SHARED_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "공통 진도 기록을 찾을 수 없습니다."),
     CLINIC_SLOT_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 슬롯을 찾을 수 없습니다."),
-    CLINIC_SLOT_CONFLICT(RsConstant.CONFLICT, "다른 클리닉 슬롯과 시간이 겹칩니다.");
+    CLINIC_SLOT_CONFLICT(RsConstant.CONFLICT, "다른 클리닉 슬롯과 시간이 겹칩니다."),
+
+    // ===== Enrollment =====
+    STUDENT_ENROLLMENT_REQUEST_NOT_FOUND(RsConstant.NOT_FOUND, "수업 신청을 찾을 수 없습니다."),
+    STUDENT_ENROLLMENT_REQUEST_CONFLICT(RsConstant.CONFLICT, "이미 처리 중인 신청이 있습니다."),
+    STUDENT_ENROLLMENT_ALREADY_EXISTS(RsConstant.CONFLICT, "이미 수강 중인 반입니다."),
+    INVALID_ENROLLMENT_REQUEST_STATE(RsConstant.BAD_REQUEST, "현재 상태에서는 처리할 수 없습니다."),
+
+    STUDENT_COURSE_RECORD_NOT_FOUND(RsConstant.NOT_FOUND, "학생 수업 기록을 찾을 수 없습니다.");
 
     private final Integer code;
     private final String message;

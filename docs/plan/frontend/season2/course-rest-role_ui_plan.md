@@ -4,7 +4,7 @@
 - Admin/Assistant/Student가 사용할 Course 전용 화면이 없어, 새로 추가된 역할별 API(`GET /api/v1/admin/courses`, `DELETE /api/v1/admin/courses/{courseId}`, `GET /api/v1/assistants/me/courses`, `GET /api/v1/courses/public`)를 소비할 수 없다.
 - SuperAdmin은 대시보드에서 전체 반을 검색하고 필요 시 하드 삭제를 수행해야 하며, 필터 옵션이 많아 관리 UI 구조가 필요하다.
 - Assistant는 활성 TeacherAssistantAssignment에 연결된 선생님의 Course를 쉽게 조회해야 하며, 선생님 선택/상태 필터/검색 기능이 필요하다.
-- Student는 ‘반 관리’ 메뉴에서 공개 Course를 검색하고 상세 설명과 함께 “등록 요청” 버튼을 눌러 차후 Enrollment 플로우를 시작할 수 있어야 한다(현재는 버튼만 노출).
+- Student는 대시보드 ‘반 검색’ 메뉴에서 공개 Course를 검색하고, 별도 ‘내 수업’ 페이지에서 신청/승인 상태를 확인할 수 있어야 한다(현재는 버튼/플레이스홀더만 노출).
 
 ## 2. User Flows & Use Cases
 - **SuperAdmin**
@@ -16,9 +16,10 @@
   2. 상단에서 연결된 Teacher 드롭다운(활성 Assignment만)과 Status/Keyword 필터 선택 → `GET /api/v1/assistants/me/courses`.
   3. 리스트 카드/테이블에서 Course 정보 확인(Teacher 이름 포함). 추후 상세 모달 전환 준비.
 - **Student**
-  1. 학생 대시보드 사이드바 → “반 관리”.
+  1. 학생 대시보드 사이드바 → “반 검색”.
   2. 상단 툴바에서 Company/Branch/Teacher 선택 또는 검색어 입력 → `GET /api/v1/courses/public`.
   3. 결과 카드에서 companyName+branchName, Course 이름, Teacher 이름, scheduleSummary, description 확인 후 “등록 요청” 버튼 클릭(향후 Enrollment API 연결 예정, 현재는 비활성 또는 Toast).
+  4. 사이드바 “내 수업” 페이지에서 추후 Enrollment 승인/대기 목록을 확인(현재는 EmptyState 안내 및 ‘반 검색’ 이동 버튼만 제공).
 
 ## 3. Page & Layout Structure
 - **공통 레이아웃**
@@ -31,10 +32,14 @@
 - **Assistant Course Overview**
   - `Toolbar`: Teacher Select(Assignment 기반), Status Toggle(전체/활성/비활성), Keyword Input.
   - `List`: 카드 또는 간단 테이블. 각 카드에 Course 이름, Teacher 이름, 회사/지점, 기간, 스케줄 요약. 추후 상세 버튼 placeholder.
-- **Student Course Search**
+- **Student Course Search (반 검색)**
   - `Toolbar`: Company Select, Branch Select(Company 선택 시만 활성), Teacher Select, Keyword Search, onlyVerified 스위치(기본 true).
   - `Card Grid`: 각 카드에 company+branch, Course 이름, Teacher 이름, scheduleSummary, description, “등록 요청” 버튼.
   - 빈 상태/에러 상태 컴포넌트 재사용.
+- **Student My Courses (내 수업)**
+  - 승인/대기 목록이 들어갈 컨테이너 카드 + EmptyState로 구성.
+  - 반 검색으로 이어지는 주요 버튼을 제공해 새로운 UI 흐름을 안내.
+  - 향후 Enrollment 데이터가 준비되면 리스트/탭 형태로 확장 예정.
 
 ## 4. Component Breakdown
 - `CourseFilterToolbar` (역할별 variant)
