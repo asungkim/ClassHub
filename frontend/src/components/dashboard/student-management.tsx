@@ -352,7 +352,7 @@ function StudentsTab({ role, courseOptions, courseOptionsLoading }: StudentsTabP
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">{student.phoneNumber ?? "-"}</TableCell>
                       <TableCell className="text-sm text-slate-600">
-                        {student.schoolName ?? "-"} {student.grade ?? ""}
+                        {student.schoolName ?? "-"} {formatGrade(student.grade)}
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">{student.age ?? "-"}</TableCell>
                       <TableCell>
@@ -843,16 +843,17 @@ function StudentDetailModal({
           <div className="grid gap-4 md:grid-cols-2">
             <InfoCard
               title="학생 정보"
-              items={[
-                { label: "이름", value: detail.student?.name ?? "-" },
-                { label: "이메일", value: detail.student?.email ?? "-" },
-                { label: "연락처", value: detail.student?.phoneNumber ?? "-" },
-                {
-                  label: "학교/학년",
-                  value: `${detail.student?.schoolName ?? "-"} ${detail.student?.grade ?? ""}`.trim()
-                }
-              ]}
-            />
+            items={[
+              { label: "이름", value: detail.student?.name ?? "-" },
+              { label: "이메일", value: detail.student?.email ?? "-" },
+              { label: "연락처", value: detail.student?.phoneNumber ?? "-" },
+              {
+                label: "학교/학년",
+                value: `${detail.student?.schoolName ?? "-"} ${formatGrade(detail.student?.grade)}`.trim()
+              },
+              { label: "학부모 연락처", value: detail.student?.parentPhone ?? "-" }
+            ]}
+          />
             <InfoCard
               title="Course 정보"
               items={[
@@ -1084,6 +1085,28 @@ function InfoCard({ title, items }: { title: string; items: { label: string; val
       </dl>
     </div>
   );
+}
+
+function formatGrade(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+  const map: Record<string, string> = {
+    ELEMENTARY_1: "초1",
+    ELEMENTARY_2: "초2",
+    ELEMENTARY_3: "초3",
+    ELEMENTARY_4: "초4",
+    ELEMENTARY_5: "초5",
+    ELEMENTARY_6: "초6",
+    MIDDLE_1: "중1",
+    MIDDLE_2: "중2",
+    MIDDLE_3: "중3",
+    HIGH_1: "고1",
+    HIGH_2: "고2",
+    HIGH_3: "고3",
+    GAP_YEAR: "N수"
+  };
+  return map[value] ?? value;
 }
 
 function formatDateTime(value?: string | null) {
