@@ -2641,3 +2641,24 @@ BEHAVIORAL
 - 수정한 파일:
   - frontend/src/app/(dashboard)/teacher/courses/page.tsx
 - 다음 단계: Course 모달 다중 스케줄 QA 및 캘린더 빈 상태/툴팁 디자인 보강
+
+## [2025-12-20 12:30] Admin/Assistant Course API 테스트 안정화
+
+### Type
+STRUCTURAL
+
+### Summary
+- Admin/Assistant Course 컨트롤러 테스트가 기본 `size` 파라미터 미지정으로 실패하던 문제를 재현 후 요청 파라미터를 명시하고 디버그 출력을 제거했다.
+- Admin/Assistant 서비스 단위 테스트 및 Course 패키지 전체 테스트 스위트를 재실행해 신규 API 추가에 따른 회귀를 검증했다.
+
+### Details
+- 작업 사유: PLAN 1·2단계 구현 이후 컨트롤러 테스트가 실패하고 있어 API 계약 검증을 안정화하기 위함.
+- 영향받은 테스트:
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.web.AdminCourseControllerTest`
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.web.AssistantCourseControllerTest`
+  - `cd backend && ./gradlew test --tests 'com.classhub.domain.course.application.*Test'`
+  - `cd backend && ./gradlew test --tests 'com.classhub.domain.course.*'`
+- 수정한 파일:
+  - backend/src/test/java/com/classhub/domain/course/web/AdminCourseControllerTest.java
+  - backend/src/test/java/com/classhub/domain/course/web/AssistantCourseControllerTest.java
+- 다음 단계: PLAN 3단계(Student 공개 Course 검색) 구현 준비 및 추가 API 검증.

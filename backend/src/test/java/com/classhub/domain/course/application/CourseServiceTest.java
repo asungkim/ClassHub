@@ -26,6 +26,7 @@ import com.classhub.domain.course.dto.request.CourseUpdateRequest;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
+import com.classhub.domain.course.application.CourseViewAssembler;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
@@ -62,8 +63,9 @@ class CourseServiceTest {
     @Mock
     private CompanyRepository companyRepository;
 
-    @InjectMocks
     private CourseService courseService;
+
+    private CourseViewAssembler courseViewAssembler;
 
     private UUID teacherId;
     private UUID branchId;
@@ -82,6 +84,14 @@ class CourseServiceTest {
         company = Company.create("러셀", "desc", CompanyType.ACADEMY, VerifiedStatus.VERIFIED, teacherId);
         ReflectionTestUtils.setField(company, "id", companyId);
         assignment = TeacherBranchAssignment.create(teacherId, branchId, BranchRole.FREELANCE);
+        courseViewAssembler = new CourseViewAssembler(branchRepository, companyRepository);
+        courseService = new CourseService(
+                courseRepository,
+                teacherBranchAssignmentRepository,
+                branchRepository,
+                companyRepository,
+                courseViewAssembler
+        );
     }
 
     @Test

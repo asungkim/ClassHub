@@ -13,7 +13,6 @@ import com.classhub.domain.course.dto.request.CourseScheduleRequest;
 import com.classhub.domain.course.dto.request.CourseStatusUpdateRequest;
 import com.classhub.domain.course.dto.request.CourseUpdateRequest;
 import com.classhub.domain.course.dto.response.CourseResponse;
-import com.classhub.domain.course.dto.response.CourseScheduleResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.course.validator.CoursePeriodValidator;
@@ -22,8 +21,6 @@ import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,6 +42,7 @@ public class CourseService {
     private final TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
     private final BranchRepository branchRepository;
     private final CompanyRepository companyRepository;
+    private final CourseViewAssembler courseViewAssembler;
 
     public CourseResponse createCourse(UUID teacherId, CourseCreateRequest request) {
         Branch branch = requireActiveBranch(request.branchId());
@@ -84,12 +82,8 @@ public class CourseService {
                 normalizeKeyword(keyword),
                 PageRequest.of(page, size)
         );
-        CourseContext context = buildContext(result.getContent());
-        Page<CourseResponse> mapped = result.map(course -> toCourseResponse(
-                course,
-                context.branches().get(course.getBranchId()),
-                context.companies().get(context.branchCompanyMap().get(course.getBranchId()))
-        ));
+        CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(result.getContent());
+        Page<CourseResponse> mapped = result.map(course -> courseViewAssembler.toCourseResponse(course, context));
         return PageResponse.from(mapped);
     }
 
@@ -99,13 +93,9 @@ public class CourseService {
                                                        LocalDate endDate) {
         CoursePeriodValidator.validate(startDate, endDate);
         List<Course> courses = courseRepository.findCoursesWithinPeriod(teacherId, startDate, endDate);
-        CourseContext context = buildContext(courses);
+        CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(courses);
         return courses.stream()
-                .map(course -> toCourseResponse(
-                        course,
-                        context.branches().get(course.getBranchId()),
-                        context.companies().get(context.branchCompanyMap().get(course.getBranchId()))
-                ))
+                .map(course -> courseViewAssembler.toCourseResponse(course, context))
                 .toList();
     }
 
@@ -116,11 +106,8 @@ public class CourseService {
         if (!Objects.equals(course.getTeacherMemberId(), teacherId)) {
             throw new BusinessException(RsCode.COURSE_FORBIDDEN);
         }
-        CourseContext context = buildContext(List.of(course));
-        Branch branch = context.branches().get(course.getBranchId());
-        UUID companyId = context.branchCompanyMap().get(course.getBranchId());
-        Company company = context.companies().get(companyId);
-        return toCourseResponse(course, branch, company);
+        CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(List.of(course));
+        return courseViewAssembler.toCourseResponse(course, context);
     }
 
     public CourseResponse updateCourse(UUID teacherId,
@@ -144,11 +131,8 @@ public class CourseService {
             course.replaceSchedules(toSchedules(request.schedules()));
         }
         Course saved = courseRepository.save(course);
-        CourseContext context = buildContext(List.of(saved));
-        Branch branch = context.branches().get(saved.getBranchId());
-        UUID companyId = context.branchCompanyMap().get(saved.getBranchId());
-        Company company = context.companies().get(companyId);
-        return toCourseResponse(saved, branch, company);
+        CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(List.of(saved));
+        return courseViewAssembler.toCourseResponse(saved, context);
     }
 
     public CourseResponse updateCourseStatus(UUID teacherId,
@@ -168,11 +152,8 @@ public class CourseService {
             course.deactivate();
         }
         Course saved = courseRepository.save(course);
-        CourseContext context = buildContext(List.of(saved));
-        Branch branch = context.branches().get(saved.getBranchId());
-        UUID companyId = context.branchCompanyMap().get(saved.getBranchId());
-        Company company = context.companies().get(companyId);
-        return toCourseResponse(saved, branch, company);
+        CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(List.of(saved));
+        return courseViewAssembler.toCourseResponse(saved, context);
     }
 
     private Branch requireActiveBranch(UUID branchId) {
@@ -206,65 +187,6 @@ public class CourseService {
                 .collect(Collectors.toSet());
     }
 
-    private CourseResponse toCourseResponse(Course course, Branch branch, Company company) {
-        if (branch == null || branch.isDeleted()) {
-            throw new BusinessException(RsCode.BRANCH_NOT_FOUND);
-        }
-        if (company == null || company.isDeleted()) {
-            throw new BusinessException(RsCode.COMPANY_NOT_FOUND);
-        }
-        return new CourseResponse(
-                course.getId(),
-                branch.getId(),
-                branch.getName(),
-                company.getId(),
-                company.getName(),
-                course.getName(),
-                course.getDescription(),
-                course.getStartDate(),
-                course.getEndDate(),
-                !course.isDeleted(),
-                toScheduleResponses(course.getSchedules())
-        );
-    }
-
-    private List<CourseScheduleResponse> toScheduleResponses(Set<Course.CourseSchedule> schedules) {
-        return schedules.stream()
-                .sorted(Comparator
-                        .comparing((Course.CourseSchedule s) -> s.getDayOfWeek().getValue())
-                        .thenComparing(Course.CourseSchedule::getStartTime))
-                .map(schedule -> new CourseScheduleResponse(
-                        schedule.getDayOfWeek(),
-                        schedule.getStartTime(),
-                        schedule.getEndTime()
-                ))
-                .toList();
-    }
-
-    private CourseContext buildContext(Collection<Course> courses) {
-        Set<UUID> branchIds = courses.stream()
-                .map(Course::getBranchId)
-                .collect(Collectors.toSet());
-        List<Branch> branches = branchRepository.findAllById(branchIds);
-        Map<UUID, Branch> branchMap = branches.stream()
-                .collect(Collectors.toMap(Branch::getId, branch -> branch));
-        if (branchMap.size() < branchIds.size()) {
-            throw new BusinessException(RsCode.BRANCH_NOT_FOUND);
-        }
-        Set<UUID> companyIds = branchMap.values().stream()
-                .map(Branch::getCompanyId)
-                .collect(Collectors.toSet());
-        List<Company> companies = companyRepository.findAllById(companyIds);
-        Map<UUID, Company> companyMap = companies.stream()
-                .collect(Collectors.toMap(Company::getId, company -> company));
-        if (companyMap.size() < companyIds.size()) {
-            throw new BusinessException(RsCode.COMPANY_NOT_FOUND);
-        }
-        Map<UUID, UUID> branchCompanyMap = branchMap.values().stream()
-                .collect(Collectors.toMap(Branch::getId, Branch::getCompanyId));
-        return new CourseContext(branchMap, companyMap, branchCompanyMap);
-    }
-
     private String normalizeKeyword(String keyword) {
         if (keyword == null) {
             return null;
@@ -273,10 +195,12 @@ public class CourseService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private record CourseContext(
-            Map<UUID, Branch> branches,
-            Map<UUID, Company> companies,
-            Map<UUID, UUID> branchCompanyMap
-    ) {
+    private CourseResponse toCourseResponse(Course course, Branch branch, Company company) {
+        CourseViewAssembler.CourseContext context = new CourseViewAssembler.CourseContext(
+                Map.of(branch.getId(), branch),
+                Map.of(company.getId(), company),
+                Map.of(branch.getId(), company.getId())
+        );
+        return courseViewAssembler.toCourseResponse(course, context);
     }
 }
