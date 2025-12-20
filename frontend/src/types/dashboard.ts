@@ -22,3 +22,14 @@ export type BranchVerifiedStatusRequest = components["schemas"]["BranchVerifiedS
 
 export type TeacherAssignmentFilter = "ACTIVE" | "INACTIVE" | "ALL";
 export type VerificationFilter = "ALL" | "VERIFIED" | "UNVERIFIED";
+
+export type CourseResponse = components["schemas"]["CourseResponse"];
+export type CourseListResponse = components["schemas"]["RsDataPageResponseCourseResponse"];
+export type CourseCalendarResponse = components["schemas"]["RsDataListCourseResponse"];
+export type CourseStatusFilter = "ACTIVE" | "INACTIVE" | "ALL";
+export type CourseCreateRequest = components["schemas"]["CourseCreateRequest"];
+export type CourseUpdateRequest = components["schemas"]["CourseUpdateRequest"];
+export type CourseStatusUpdateRequest = components["schemas"]["CourseStatusUpdateRequest"];
+export type CourseScheduleRequest = components["schemas"]["CourseScheduleRequest"];
+export type CourseWithTeacherResponse = components["schemas"]["CourseWithTeacherResponse"];
+export type PublicCourseResponse = components["schemas"]["PublicCourseResponse"];

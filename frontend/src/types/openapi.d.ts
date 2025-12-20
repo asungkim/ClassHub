@@ -112,6 +112,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Course 목록 조회
+         * @description 선생님이 생성한 Course를 목록 뷰로 조회한다.
+         */
+        get: operations["getCourses"];
+        put?: never;
+        /**
+         * Course 생성
+         * @description 선생님이 Course를 생성한다.
+         */
+        post: operations["createCourse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/companies": {
         parameters: {
             query?: never;
@@ -260,6 +284,50 @@ export interface paths {
         patch: operations["updateAssistantStatus"];
         trace?: never;
     };
+    "/api/v1/courses/{courseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Course 상세 조회
+         * @description Course 상세 정보를 조회한다.
+         */
+        get: operations["getCourse"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Course 수정
+         * @description Course 기본 정보와 스케줄을 수정한다.
+         */
+        patch: operations["updateCourse"];
+        trace?: never;
+    };
+    "/api/v1/courses/{courseId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Course 활성/비활성화
+         * @description Course 상태를 on/off 한다.
+         */
+        patch: operations["updateCourseStatus"];
+        trace?: never;
+    };
     "/api/v1/branches/{branchId}": {
         parameters: {
             query?: never;
@@ -340,6 +408,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Course 캘린더 조회
+         * @description 기간 내 Course 스케줄 목록을 조회한다.
+         */
+        get: operations["getCourseSchedules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/courses/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 공개 Course 검색 */
+        get: operations["getPublicCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -352,6 +457,40 @@ export interface paths {
          * @description Access 토큰 기준으로 현재 사용자의 식별자/역할을 조회한다.
          */
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistants/me/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 조교 Course 목록 조회 */
+        get: operations["getCourses_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 모든 Course 조회 */
+        get: operations["getCourses_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -395,6 +534,23 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/courses/{courseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Course 하드 삭제 */
+        delete: operations["deleteCourse"];
         options?: never;
         head?: never;
         patch?: never;
@@ -514,6 +670,53 @@ export interface components {
             birthDate: string;
             parentPhone: string;
         };
+        CourseCreateRequest: {
+            /** Format: uuid */
+            branchId: string;
+            name: string;
+            description?: string;
+            /** Format: date */
+            startDate: string;
+            /** Format: date */
+            endDate: string;
+            schedules: components["schemas"]["CourseScheduleRequest"][];
+        };
+        CourseScheduleRequest: {
+            /** @enum {string} */
+            dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime: string;
+            endTime: string;
+        };
+        CourseResponse: {
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            name?: string;
+            description?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            active?: boolean;
+            schedules?: components["schemas"]["CourseScheduleResponse"][];
+        };
+        CourseScheduleResponse: {
+            /** @enum {string} */
+            dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime?: string;
+            endTime?: string;
+        };
+        RsDataCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["CourseResponse"];
+        };
         CompanyCreateRequest: {
             name: string;
             description?: string;
@@ -591,6 +794,18 @@ export interface components {
         AssistantAssignmentStatusUpdateRequest: {
             enabled: boolean;
         };
+        CourseUpdateRequest: {
+            name?: string;
+            description?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            schedules?: components["schemas"]["CourseScheduleRequest"][];
+        };
+        CourseStatusUpdateRequest: {
+            enabled: boolean;
+        };
         BranchUpdateRequest: {
             name?: string;
             enabled?: boolean;
@@ -662,6 +877,72 @@ export interface components {
             message?: string;
             data?: components["schemas"]["AssistantSearchResponse"][];
         };
+        PageResponseCourseResponse: {
+            content?: components["schemas"]["CourseResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseCourseResponse"];
+        };
+        RsDataListCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["CourseResponse"][];
+        };
+        PageResponsePublicCourseResponse: {
+            content?: components["schemas"]["PublicCourseResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        PublicCourseResponse: {
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            name?: string;
+            description?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            active?: boolean;
+            schedules?: components["schemas"]["CourseScheduleResponse"][];
+            /** Format: uuid */
+            teacherId?: string;
+            teacherName?: string;
+            scheduleSummary?: string;
+        };
+        RsDataPageResponsePublicCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponsePublicCourseResponse"];
+        };
         PageResponseCompanyResponse: {
             content?: components["schemas"]["CompanyResponse"][];
             /** Format: int32 */
@@ -713,6 +994,46 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["MeResponse"];
+        };
+        CourseWithTeacherResponse: {
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            name?: string;
+            description?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            active?: boolean;
+            schedules?: components["schemas"]["CourseScheduleResponse"][];
+            /** Format: uuid */
+            teacherId?: string;
+            teacherName?: string;
+        };
+        PageResponseCourseWithTeacherResponse: {
+            content?: components["schemas"]["CourseWithTeacherResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseCourseWithTeacherResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseCourseWithTeacherResponse"];
         };
     };
     responses: never;
@@ -887,6 +1208,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataLoginResponse"];
+                };
+            };
+        };
+    };
+    getCourses: {
+        parameters: {
+            query?: {
+                status?: string;
+                branchId?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCourseResponse"];
+                };
+            };
+        };
+    };
+    createCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCourseResponse"];
                 };
             };
         };
@@ -1111,6 +1482,80 @@ export interface operations {
             };
         };
     };
+    getCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCourseResponse"];
+                };
+            };
+        };
+    };
+    updateCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCourseResponse"];
+                };
+            };
+        };
+    };
+    updateCourseStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseStatusUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCourseResponse"];
+                };
+            };
+        };
+    };
     updateBranch: {
         parameters: {
             query?: never;
@@ -1211,6 +1656,57 @@ export interface operations {
             };
         };
     };
+    getCourseSchedules: {
+        parameters: {
+            query: {
+                startDate: string;
+                endDate: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListCourseResponse"];
+                };
+            };
+        };
+    };
+    getPublicCourses: {
+        parameters: {
+            query?: {
+                companyId?: string;
+                branchId?: string;
+                teacherId?: string;
+                keyword?: string;
+                onlyVerified?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponsePublicCourseResponse"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -1227,6 +1723,60 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataMeResponse"];
+                };
+            };
+        };
+    };
+    getCourses_1: {
+        parameters: {
+            query?: {
+                teacherId?: string;
+                status?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCourseWithTeacherResponse"];
+                };
+            };
+        };
+    };
+    getCourses_2: {
+        parameters: {
+            query?: {
+                teacherId?: string;
+                branchId?: string;
+                companyId?: string;
+                status?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCourseResponse"];
                 };
             };
         };
@@ -1275,6 +1825,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataCompanyResponse"];
+                };
+            };
+        };
+    };
+    deleteCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
                 };
             };
         };

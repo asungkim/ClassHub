@@ -2505,3 +2505,247 @@ BEHAVIORAL
   - frontend/src/types/openapi.{json,d.ts}
   - docs/history/AGENT_LOG.md
 - 다음 단계: Teacher 학원 관리 페이지 수동 QA(회사/지점 검색 및 직접 입력) 후 TODO/PLAN 상태 갱신 검토
+
+## [2025-12-20 00:57] Course Repository/Validator TDD 1단계
+
+### Type
+STRUCTURAL
+
+### Summary
+- `docs/plan/backend/season2/course-teacher-management_plan.md` 6번 계획 중 1~2단계에 맞춰 Course Repository/Validator 기반을 보완하고 단위 테스트를 추가했다.
+- 상태 필터 쿼리를 boolean 파라미터 기반으로 재작성하고 null/겹침 검증을 BusinessException으로 통일해 이후 Service 계층에서 재사용할 수 있도록 했다.
+
+### Details
+- 작업 사유: Teacher Course API TDD 1~2단계(Repository + Validator 선 구현)를 마무리해야 이후 Service/Controller 구현을 이어갈 수 있음
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.course.*"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/course/model/Course.java
+  - backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java
+  - backend/src/main/java/com/classhub/domain/course/validator/CoursePeriodValidator.java
+  - backend/src/main/java/com/classhub/domain/course/validator/CourseScheduleValidator.java
+  - backend/src/main/java/com/classhub/domain/member/model/Member.java
+  - backend/src/test/java/com/classhub/domain/course/repository/CourseRepositoryTest.java
+  - backend/src/test/java/com/classhub/domain/course/validator/CoursePeriodValidatorTest.java
+  - backend/src/test/java/com/classhub/domain/course/validator/CourseScheduleValidatorTest.java
+  - docs/todo/v1.9.md
+- 다음 단계: PLAN 6번 3단계(서비스 로직) 설계/구현 전 사용자 피드백 수령 후 진행
+
+## [2025-12-20 01:11] Teacher Course Service & Controller 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/backend/season2/course-teacher-management_plan.md` 6번 중 3~4단계를 따라 CourseService와 Teacher 전용 Controller를 구현했다.
+- Course CRUD/목록/캘린더/상태 토글 API를 완성하고 DTO/Request/Response, MockMvc 테스트, Mockito 기반 Service 단위 테스트를 모두 추가했다.
+
+### Details
+- 작업 사유: Teacher 대시보드 반 관리 API가 없어 프런트 연동이 불가능해 PLAN 단계에서 정의한 서비스/컨트롤러 계층을 작성
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.course.*"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/course/model/Course.java
+  - backend/src/main/java/com/classhub/domain/course/application/CourseService.java
+  - backend/src/main/java/com/classhub/domain/course/dto/request/\*.java
+  - backend/src/main/java/com/classhub/domain/course/dto/response/\*.java
+  - backend/src/main/java/com/classhub/domain/course/web/CourseController.java
+  - backend/src/test/java/com/classhub/domain/course/application/CourseServiceTest.java
+  - backend/src/test/java/com/classhub/domain/course/web/CourseControllerTest.java
+- 다음 단계: 사용자 피드백을 반영해 Course Service 리팩터 또는 Student/프런트 연동을 진행하고 TODO Phase5 상태 업데이트 검토
+
+## [2025-12-20 01:25] Teacher Course Frontend Plan 작성
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/frontend/season2/teacher-course-management_ui_plan.md`에 Course 목록/캘린더 UI 구조, 컴포넌트, 상태·데이터 흐름, 테스트 전략을 정의했다.
+
+### Details
+- 작업 사유: 프런트 구현 전에 요구사항을 명확히 기록해 이후 단계별 개발/리뷰를 수월하게 하기 위함
+- 영향받은 테스트: 해당 없음
+- 수정한 파일:
+  - docs/plan/frontend/season2/teacher-course-management_ui_plan.md
+- 다음 단계: PLAN 1단계(데이터 레이어 & 뷰 스켈레톤) 구현
+
+## [2025-12-20 01:33] Teacher Course 목록/캘린더 뷰 스켈레톤
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher Course 페이지에 상태 탭·지점/검색 필터와 목록/캘린더 전환 탭을 구현하고 Course/Branch API 연동, 주간 이동 및 시간축 그리드를 구성했다.
+- Course 관련 타입과 대시보드 API 헬퍼를 확장해 목록/캘린더 데이터를 공용으로 사용할 수 있게 했다.
+
+### Details
+- 작업 사유: 프런트 PLAN 1단계(데이터 레이어 + 스켈레톤)를 완료해 이후 생성/수정 모달 구현 기반 마련
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - docs/plan/frontend/season2/teacher-course-management_ui_plan.md
+  - frontend/src/types/dashboard.ts
+  - frontend/src/types/openapi.d.ts
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: Course 생성/수정 모달, 상태 토글 UI, 캘린더 카드 디테일 구현
+
+## [2025-12-20 11:12] Teacher Course 생성/수정 모달 & 토글 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/frontend/season2/teacher-course-management_ui_plan.md` 2~3단계에 맞춰 반 생성/수정 모달과 상태 토글, 성공/실패 토스트를 Teacher Course 페이지에 연동했다.
+- Course 생성/수정/상태 변경 API 헬퍼를 추가하고, 목록/캘린더 데이터를 자동 새로고침하도록 연결했다.
+
+### Details
+- 작업 사유: 선생님이 UI에서 반을 직접 등록/수정하고 활성 상태를 제어할 수 있게 하기 위해 PLAN 후속 단계를 구현함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: 캘린더 카드 hover/tooltip·빈 상태 개선 등 PLAN 3단계 마무리 및 QA
+
+## [2025-12-20 11:25] Teacher Course 캘린더/모달 UX 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 캘린더 카드에 클릭 이벤트를 연결해 일정 블록을 누르면 곧바로 수정 모달이 열리도록 하고, 시간 텍스트를 제거해 시각 정보를 색상 블록으로만 전달하도록 정리했다.
+- 생성/수정 모달의 날짜 입력 형식을 `yyyy/mm/dd` 순서로 보이도록 `lang`/패턴을 조정하고, 스케줄 입력을 06:00~22:00 범위 토글 버튼으로 재구성해 AM/PM 없이 빠르게 선택하도록 개선했다.
+
+### Details
+- 작업 사유: 사용자 요구사항에 맞춰 캘린더 인터랙션/표시와 시간·날짜 입력 UX를 수정해 실제 사용 흐름을 맞추기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: 캘린더 빈 상태/tooltip 등 잔여 PLAN 3단계 항목 보완 및 Course 생성 모달의 추가 검증(다중 스케줄 등) QA
+
+## [2025-12-20 11:32] Teacher Course 날짜/시간 입력 보완
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 생성/수정 모달의 날짜 입력을 `YYYY/MM/DD` 텍스트 필드로 변경하고 서버 전송 시 ISO(`YYYY-MM-DD`)로 변환해 한국식 순서를 명확히 했다.
+- 스케줄 시간 토글을 30분 단위(06:00~22:00)로 확장하고 종료 시간이 항상 시작 시간 이후가 되도록 자동 보정·검증 로직을 추가했다.
+
+### Details
+- 작업 사유: 사용자가 요구한 날짜 표기 순서와 30분 단위 시간 선택 UX를 반영해 입력 혼란을 줄이기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: Course 모달 다중 스케줄 QA 및 캘린더 빈 상태/툴팁 디자인 보강
+
+## [2025-12-20 12:30] Admin/Assistant Course API 테스트 안정화
+
+### Type
+STRUCTURAL
+
+### Summary
+- Admin/Assistant Course 컨트롤러 테스트가 기본 `size` 파라미터 미지정으로 실패하던 문제를 재현 후 요청 파라미터를 명시하고 디버그 출력을 제거했다.
+- Admin/Assistant 서비스 단위 테스트 및 Course 패키지 전체 테스트 스위트를 재실행해 신규 API 추가에 따른 회귀를 검증했다.
+
+### Details
+- 작업 사유: PLAN 1·2단계 구현 이후 컨트롤러 테스트가 실패하고 있어 API 계약 검증을 안정화하기 위함.
+- 영향받은 테스트:
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.web.AdminCourseControllerTest`
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.web.AssistantCourseControllerTest`
+  - `cd backend && ./gradlew test --tests 'com.classhub.domain.course.application.*Test'`
+  - `cd backend && ./gradlew test --tests 'com.classhub.domain.course.*'`
+- 수정한 파일:
+  - backend/src/test/java/com/classhub/domain/course/web/AdminCourseControllerTest.java
+  - backend/src/test/java/com/classhub/domain/course/web/AssistantCourseControllerTest.java
+- 다음 단계: PLAN 3단계(Student 공개 Course 검색) 구현 준비 및 추가 API 검증.
+
+## [2025-12-20 12:42] Course 공개 검색 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- PLAN 3단계 요구에 따라 학생/비회원이 사용할 `GET /api/v1/courses/public` API를 구현하고 CourseRepository에 공개 검색 전용 쿼리를 추가했다.
+- CourseViewAssembler를 재사용해 `PublicCourseResponse` DTO를 구성하고, teacher 이름 및 스케줄 요약 문자열을 포함하도록 PublicCourseService를 작성했다.
+- Spring Security 허용 목록에 `/api/v1/courses/public/**`를 추가해 토큰 없이 접근 가능하도록 열고, 서비스/컨트롤러 단위 테스트를 작성했다.
+
+### Details
+- 작업 사유: Course-rest-role PLAN 3단계(학생 공개 검색)를 마무리해 역할별 API 구성을 완결해야 했다.
+- 영향받은 테스트:
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.application.PublicCourseServiceTest`
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.web.PublicCourseControllerTest`
+  - `cd backend && ./gradlew test --tests 'com.classhub.domain.course.*'`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java
+  - backend/src/main/java/com/classhub/domain/course/dto/response/PublicCourseResponse.java
+  - backend/src/main/java/com/classhub/domain/course/application/PublicCourseService.java
+  - backend/src/main/java/com/classhub/domain/course/web/PublicCourseController.java
+  - backend/src/main/java/com/classhub/global/config/SecurityConfig.java
+  - backend/src/test/java/com/classhub/domain/course/application/PublicCourseServiceTest.java
+  - backend/src/test/java/com/classhub/domain/course/web/PublicCourseControllerTest.java
+- 다음 단계: Student 공개 Course 검색 API를 기반으로 한 실제 프런트 UI 및 enrollment flow를 설계/구현하고, 필요 시 공개 Course DTO 확장 검토.
+
+## [2025-12-20 13:25] Admin/Assistant Course UI 1차 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `course-rest-role_ui_plan.md` 기반으로 SuperAdmin/Assistant용 Course 페이지를 대시보드에 추가해 역할별 Course API를 소비하도록 했다.
+- SuperAdmin 페이지에 툴바형 필터(Teacher/Company/Branch/Status/Keyword), 반 목록 테이블, 하드 삭제 모달을 구현하고 `/admin/courses` 라우트에 연결했다.
+- Assistant 페이지에 연결된 선생님 필터, 상태/검색 필터, 카드형 반 목록을 구현해 `/assistant/courses`에서 확인할 수 있도록 했다.
+- `dashboard-api`에 Admin/Assistant/Public Course API 클라이언트 함수를 추가했고, `sidebar` 메뉴를 갱신했다.
+
+### Details
+- 작업 사유: PLAN 3단계 이후 프런트에서도 Admin/Assistant가 Course 데이터를 확인할 수 있어야 했다.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - docs/plan/frontend/season2/course-rest-role_ui_plan.md (신규)
+  - frontend/src/components/dashboard/sidebar.tsx
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/types/dashboard.ts
+  - frontend/src/app/(dashboard)/admin/courses/page.tsx (신규)
+  - frontend/src/app/(dashboard)/assistant/courses/page.tsx (신규)
+- 다음 단계: Student 공개 Course 검색 UI 및 Enrollment 요청 버튼 플로우 구현, 필터 옵션(Teacher 목록 등) UX 개선.
+
+## [2025-12-20 14:10] Student Course 검색 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 대시보드 사이드바에 ‘반 관리’ 메뉴를 추가하고 `/student/courses` 페이지에서 공개 Course 검색 UI를 구현했다.
+- Company/Branch/Teacher/Keyword 필터 + 검증 여부 토글을 제공하고, `GET /api/v1/courses/public` 응답을 카드 형태로 보여주며 “등록 요청” 버튼(추후 연동 예정)을 노출한다.
+- `docs/todo/v1.9.md`의 Course 페이지 항목을 완료(✅) 상태로 업데이트했다.
+
+### Details
+- 작업 사유: PLAN 3단계(Student) 구현을 마무리하고 학생이 공개 Course를 탐색할 수 있는 UI가 필요했다.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/student/courses/page.tsx (신규)
+  - frontend/src/components/dashboard/sidebar.tsx
+  - docs/todo/v1.9.md
+- 다음 단계: 등록 요청 플로우(Enrollment) 백엔드/프런트 연동과 학생용 “내 수업” 화면 구현, 공개 Course 필터 UX 개선.
+
+## [2025-12-20 14:25] 학생 Course 필터 권한 오류 수정
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 공개 Course 화면에서 학원/지점 옵션을 `searchTeacherCompanies`/`searchBranches`로 불러오며 403이 발생하던 문제를 수정했다.
+- `/student/courses`는 이제 `fetchPublicCourses` 응답을 기반으로 회사/지점 옵션을 동적으로 구성하므로 권한 오류 없이 필터를 사용할 수 있다.
+
+### Details
+- 작업 사유: Student Role에 Teacher/Admin 전용 API를 호출해 “접근 권한이 없습니다.” 오류가 발생했음.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/student/courses/page.tsx
+- 다음 단계: Enrollment 요청 플로우 연계 및 공개 Course 필터 UX 정교화.

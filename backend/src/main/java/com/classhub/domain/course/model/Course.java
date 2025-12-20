@@ -11,6 +11,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -46,6 +47,12 @@ public class Course extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDate endDate;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "course_schedule",
@@ -58,11 +65,15 @@ public class Course extends BaseEntity {
                    UUID teacherMemberId,
                    String name,
                    String description,
+                   LocalDate startDate,
+                   LocalDate endDate,
                    Set<CourseSchedule> schedules) {
         this.branchId = Objects.requireNonNull(branchId, "branchId must not be null");
         this.teacherMemberId = Objects.requireNonNull(teacherMemberId, "teacherMemberId must not be null");
         this.name = Objects.requireNonNull(name, "name must not be null").trim();
         this.description = description;
+        this.startDate = Objects.requireNonNull(startDate, "startDate must not be null");
+        this.endDate = Objects.requireNonNull(endDate, "endDate must not be null");
         if (schedules != null && !schedules.isEmpty()) {
             this.schedules = new HashSet<>(schedules);
         }
@@ -72,12 +83,16 @@ public class Course extends BaseEntity {
                                 UUID teacherMemberId,
                                 String name,
                                 String description,
+                                LocalDate startDate,
+                                LocalDate endDate,
                                 Set<CourseSchedule> schedules) {
         return Course.builder()
                 .branchId(branchId)
                 .teacherMemberId(teacherMemberId)
                 .name(name)
                 .description(description)
+                .startDate(startDate)
+                .endDate(endDate)
                 .schedules(schedules)
                 .build();
     }
@@ -86,11 +101,37 @@ public class Course extends BaseEntity {
         return Collections.unmodifiableSet(schedules);
     }
 
-    public void updateSchedules(Set<CourseSchedule> newSchedules) {
+    public void updateInfo(String name, LocalDate startDate, LocalDate endDate) {
+        if (name != null && !name.isBlank()) {
+            this.name = name.trim();
+        }
+        if (startDate != null) {
+            this.startDate = startDate;
+        }
+        if (endDate != null) {
+            this.endDate = endDate;
+        }
+    }
+
+    public void updateDescription(String description) {
+        if (description != null) {
+            this.description = description;
+        }
+    }
+
+    public void replaceSchedules(Set<CourseSchedule> newSchedules) {
         this.schedules.clear();
         if (newSchedules != null) {
             this.schedules.addAll(newSchedules);
         }
+    }
+
+    public void deactivate() {
+        delete();
+    }
+
+    public void activate() {
+        restore();
     }
 
     @Embeddable
@@ -111,6 +152,24 @@ public class Course extends BaseEntity {
             this.dayOfWeek = Objects.requireNonNull(dayOfWeek, "dayOfWeek must not be null");
             this.startTime = Objects.requireNonNull(startTime, "startTime must not be null");
             this.endTime = Objects.requireNonNull(endTime, "endTime must not be null");
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof CourseSchedule that)) {
+                return false;
+            }
+            return dayOfWeek == that.dayOfWeek
+                    && Objects.equals(startTime, that.startTime)
+                    && Objects.equals(endTime, that.endTime);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(dayOfWeek, startTime, endTime);
         }
     }
 }

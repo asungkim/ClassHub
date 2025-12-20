@@ -5,6 +5,14 @@ import type {
   BranchVerifiedStatusRequest,
   CompanyResponse,
   CompanyVerifiedStatusRequest,
+  CourseCreateRequest,
+  CourseResponse,
+  CourseScheduleRequest,
+  CourseStatusFilter,
+  CourseStatusUpdateRequest,
+  CourseUpdateRequest,
+  CourseWithTeacherResponse,
+  PublicCourseResponse,
   TeacherAssignmentFilter,
   TeacherBranchAssignment,
   TeacherBranchAssignmentCreateRequest,
@@ -195,4 +203,210 @@ export async function updateAdminBranchStatus(branchId: string, payload: BranchV
     throw new Error(getApiErrorMessage(response.error, "지점 검증 상태를 변경하지 못했습니다."));
   }
   return response.data.data as BranchResponse;
+}
+
+export async function fetchAdminCourses(params: {
+  teacherId?: string;
+  branchId?: string;
+  companyId?: string;
+  status: CourseStatusFilter;
+  keyword?: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<CourseResponse>> {
+  const { teacherId, branchId, companyId, status, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/admin/courses", {
+    params: {
+      query: {
+        teacherId: teacherId || undefined,
+        branchId: branchId || undefined,
+        companyId: companyId || undefined,
+        status,
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "반 목록을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as CourseResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function deleteAdminCourse(courseId: string) {
+  const response = (await api.DELETE("/api/v1/admin/courses/{courseId}", {
+    params: { path: { courseId } }
+  })) as { error?: unknown };
+
+  if (response.error) {
+    throw new Error(getApiErrorMessage(response.error, "반을 삭제하지 못했습니다."));
+  }
+}
+
+export async function fetchAssistantCourses(params: {
+  teacherId?: string;
+  status: CourseStatusFilter;
+  keyword?: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<CourseWithTeacherResponse>> {
+  const { teacherId, status, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/assistants/me/courses", {
+    params: {
+      query: {
+        teacherId: teacherId || undefined,
+        status,
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "배정된 반을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as CourseWithTeacherResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchPublicCourses(params: {
+  companyId?: string;
+  branchId?: string;
+  teacherId?: string;
+  keyword?: string;
+  onlyVerified?: boolean;
+  page: number;
+  size?: number;
+}): Promise<ListResult<PublicCourseResponse>> {
+  const {
+    companyId,
+    branchId,
+    teacherId,
+    keyword,
+    onlyVerified = true,
+    page,
+    size = DASHBOARD_PAGE_SIZE
+  } = params;
+
+  const response = await api.GET("/api/v1/courses/public", {
+    params: {
+      query: {
+        companyId: companyId || undefined,
+        branchId: branchId || undefined,
+        teacherId: teacherId || undefined,
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        onlyVerified,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "공개 반을 검색하지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as PublicCourseResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchTeacherCourses(params: {
+  status: CourseStatusFilter;
+  branchId?: string;
+  keyword?: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<CourseResponse>> {
+  const { status, branchId, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/courses", {
+    params: {
+      query: {
+        status,
+        branchId,
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "반 목록을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as CourseResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchCourseCalendar(params: { startDate: string; endDate: string }) {
+  const response = await api.GET("/api/v1/courses/schedule", {
+    params: {
+      query: {
+        startDate: params.startDate,
+        endDate: params.endDate
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "캘린더 데이터를 불러오지 못했습니다."));
+  }
+
+  return (response.data.data ?? []) as CourseResponse[];
+}
+
+export async function createCourse(payload: CourseCreateRequest) {
+  const response = await api.POST("/api/v1/courses", {
+    body: payload
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "반을 생성하지 못했습니다."));
+  }
+
+  return response.data.data as CourseResponse;
+}
+
+export async function updateCourse(courseId: string, payload: CourseUpdateRequest) {
+  const response = await api.PATCH("/api/v1/courses/{courseId}", {
+    params: { path: { courseId } },
+    body: payload
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "반 정보를 수정하지 못했습니다."));
+  }
+
+  return response.data.data as CourseResponse;
+}
+
+export async function updateCourseStatus(courseId: string, payload: CourseStatusUpdateRequest) {
+  const response = await api.PATCH("/api/v1/courses/{courseId}/status", {
+    params: { path: { courseId } },
+    body: payload
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "반 상태를 변경하지 못했습니다."));
+  }
+
+  return response.data.data as CourseResponse;
 }
