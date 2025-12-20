@@ -3104,3 +3104,22 @@ STRUCTURAL
   - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
   - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseManagementControllerTest.java`
+## [2025-12-21 01:19] StudentSummaryResponse UI 정합성 반영
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 관리/어드민 신청 화면에 StudentSummaryResponse의 학부모 연락처·생년월일·학년 표기를 반영했다.
+
+### Details
+- 작업 사유
+  - OpenAPI에 parentPhone/birthDate가 추가되어 프론트 UI와 타입 불일치를 해소해야 했다.
+- 영향받은 테스트
+  - `npm run lint` (프론트엔드, 스크립트 미정의로 실행 불가)
+- 수정한 파일
+  - frontend/src/components/dashboard/student-management.tsx
+  - frontend/src/app/(dashboard)/admin/student-enrollment-requests/page.tsx
+  - frontend/src/utils/student.ts
+- 다음 단계
+  - 필요 시 lint 스크립트를 정의하거나 별도 품질 검증 절차 마련

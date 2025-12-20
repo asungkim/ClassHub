@@ -997,7 +997,7 @@ export interface components {
             message?: string;
             data?: components["schemas"]["TeacherEnrollmentRequestResponse"];
         };
-        StudentSummary: {
+        StudentSummaryResponse: {
             /** Format: uuid */
             memberId?: string;
             name?: string;
@@ -1005,14 +1005,17 @@ export interface components {
             phoneNumber?: string;
             schoolName?: string;
             grade?: string;
+            /** Format: date */
+            birthDate?: string;
             /** Format: int32 */
             age?: number;
+            parentPhone?: string;
         };
         TeacherEnrollmentRequestResponse: {
             /** Format: uuid */
             requestId?: string;
             course?: components["schemas"]["CourseResponse"];
-            student?: components["schemas"]["StudentSummary"];
+            student?: components["schemas"]["StudentSummaryResponse"];
             /** @enum {string} */
             status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
             studentMessage?: string;
@@ -1039,7 +1042,7 @@ export interface components {
         StudentCourseDetailResponse: {
             /** Format: uuid */
             recordId?: string;
-            student?: components["schemas"]["StudentSummary"];
+            student?: components["schemas"]["StudentSummaryResponse"];
             course?: components["schemas"]["CourseResponse"];
             /** Format: uuid */
             assistantMemberId?: string;

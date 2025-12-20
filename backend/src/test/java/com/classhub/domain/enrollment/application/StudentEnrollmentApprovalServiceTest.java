@@ -17,10 +17,10 @@ import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.enrollment.dto.response.TeacherEnrollmentRequestResponse;
-import com.classhub.domain.enrollment.dto.response.TeacherEnrollmentRequestResponse.StudentSummary;
 import com.classhub.domain.enrollment.model.EnrollmentStatus;
 import com.classhub.domain.enrollment.model.StudentEnrollmentRequest;
 import com.classhub.domain.enrollment.repository.StudentEnrollmentRequestRepository;
+import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.model.StudentGrade;
@@ -178,7 +178,7 @@ class StudentEnrollmentApprovalServiceTest {
         assertThat(response.content()).hasSize(1);
         TeacherEnrollmentRequestResponse dto = response.content().getFirst();
         assertThat(dto.requestId()).isEqualTo(request.getId());
-        StudentSummary summary = dto.student();
+        StudentSummaryResponse summary = dto.student();
         assertThat(summary.name()).isEqualTo("홍길동");
         assertThat(summary.schoolName()).isEqualTo("ClassHub 중학교");
         verify(requestRepository).searchRequestsForTeacher(

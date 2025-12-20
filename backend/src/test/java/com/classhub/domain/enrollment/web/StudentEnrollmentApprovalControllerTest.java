@@ -14,9 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.enrollment.application.StudentEnrollmentApprovalService;
 import com.classhub.domain.enrollment.dto.response.TeacherEnrollmentRequestResponse;
-import com.classhub.domain.enrollment.dto.response.TeacherEnrollmentRequestResponse.StudentSummary;
 import com.classhub.domain.enrollment.model.EnrollmentStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
+import java.time.LocalDate;
+import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
@@ -76,15 +77,17 @@ class StudentEnrollmentApprovalControllerTest {
                         true,
                         List.of()
                 ),
-                new StudentSummary(
-                        UUID.randomUUID(),
-                        "홍길동",
-                        "student@classhub.dev",
-                        "010-0000-0000",
-                        "ClassHub 고등학교",
-                        "HIGH_2",
-                        18
-                ),
+                StudentSummaryResponse.builder()
+                        .memberId(UUID.randomUUID())
+                        .name("홍길동")
+                        .email("student@classhub.dev")
+                        .phoneNumber("010-0000-0000")
+                        .schoolName("ClassHub 고등학교")
+                        .grade("HIGH_2")
+                        .birthDate(LocalDate.now().minusYears(18))
+                        .age(18)
+                        .parentPhone("010-1111-2222")
+                        .build(),
                 EnrollmentStatus.PENDING,
                 "신청합니다",
                 null,

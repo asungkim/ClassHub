@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Modal } from "@/components/ui/modal";
 import type { EnrollmentStatus, TeacherEnrollmentRequestResponse } from "@/types/dashboard";
 import { DASHBOARD_PAGE_SIZE, fetchAdminEnrollmentRequests } from "@/lib/dashboard-api";
+import { formatStudentBirthDate, formatStudentGrade } from "@/utils/student";
 
 const statusOptions: { label: string; value: EnrollmentStatus }[] = [
   { label: "대기", value: "PENDING" },
@@ -238,7 +239,12 @@ const handleStatusToggle = (status: EnrollmentStatus, checked: boolean) => {
                     <TableCell>
                       <div className="flex flex-col text-sm">
                         <span className="font-semibold text-slate-900">{request.student?.name ?? "-"}</span>
-                        <span className="text-xs text-slate-500">{request.student?.email ?? request.student?.phoneNumber}</span>
+                        <span className="text-xs text-slate-500">
+                          {request.student?.email ?? request.student?.phoneNumber ?? "-"}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {request.student?.schoolName ?? "-"} {formatStudentGrade(request.student?.grade)}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -300,7 +306,13 @@ function DetailModal({ open, request, onClose }: DetailModalProps) {
               { label: "이름", value: request.student?.name ?? "-" },
               { label: "이메일", value: request.student?.email ?? "-" },
               { label: "연락처", value: request.student?.phoneNumber ?? "-" },
-              { label: "학교/학년", value: `${request.student?.schoolName ?? "-"} ${request.student?.grade ?? ""}`.trim() },
+              {
+                label: "학교/학년",
+                value: `${request.student?.schoolName ?? "-"} ${formatStudentGrade(request.student?.grade)}`.trim()
+              },
+              { label: "생년월일", value: formatStudentBirthDate(request.student?.birthDate) },
+              { label: "나이", value: request.student?.age ? `${request.student?.age}세` : "-" },
+              { label: "학부모 연락처", value: request.student?.parentPhone ?? "-" }
             ]}
           />
           <InfoCard

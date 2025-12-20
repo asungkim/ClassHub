@@ -7,10 +7,10 @@ import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.enrollment.dto.response.TeacherEnrollmentRequestResponse;
-import com.classhub.domain.enrollment.dto.response.TeacherEnrollmentRequestResponse.StudentSummary;
 import com.classhub.domain.enrollment.model.EnrollmentStatus;
 import com.classhub.domain.enrollment.model.StudentEnrollmentRequest;
 import com.classhub.domain.enrollment.repository.StudentEnrollmentRequestRepository;
+import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.StudentInfo;
 import com.classhub.domain.member.repository.MemberRepository;
@@ -149,7 +149,7 @@ public class StudentEnrollmentApprovalService {
             return PageResponse.from(emptyPage);
         }
         Map<UUID, CourseResponse> courseMap = buildCourseResponseMap(requestPage.getContent());
-        Map<UUID, StudentSummary> studentMap = buildStudentSummaryMap(requestPage.getContent());
+        Map<UUID, StudentSummaryResponse> studentMap = buildStudentSummaryMap(requestPage.getContent());
         List<TeacherEnrollmentRequestResponse> content = requestPage.getContent().stream()
                 .map(request -> toResponse(request, courseMap, studentMap))
                 .toList();
@@ -184,7 +184,7 @@ public class StudentEnrollmentApprovalService {
                         course -> courseViewAssembler.toCourseResponse(course, context)));
     }
 
-    private Map<UUID, StudentSummary> buildStudentSummaryMap(Collection<StudentEnrollmentRequest> requests) {
+    private Map<UUID, StudentSummaryResponse> buildStudentSummaryMap(Collection<StudentEnrollmentRequest> requests) {
         List<UUID> studentIds = requests.stream()
                 .map(StudentEnrollmentRequest::getStudentMemberId)
                 .distinct()
@@ -210,12 +210,12 @@ public class StudentEnrollmentApprovalService {
 
     private TeacherEnrollmentRequestResponse toResponse(StudentEnrollmentRequest request,
             Map<UUID, CourseResponse> courseMap,
-            Map<UUID, StudentSummary> studentMap) {
+            Map<UUID, StudentSummaryResponse> studentMap) {
         CourseResponse courseResponse = courseMap.get(request.getCourseId());
         if (courseResponse == null) {
             throw new BusinessException(RsCode.COURSE_NOT_FOUND);
         }
-        StudentSummary summary = studentMap.get(request.getStudentMemberId());
+        StudentSummaryResponse summary = studentMap.get(request.getStudentMemberId());
         if (summary == null) {
             throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
         }
@@ -233,7 +233,7 @@ public class StudentEnrollmentApprovalService {
     private TeacherEnrollmentRequestResponse buildSingleResponse(StudentEnrollmentRequest request, Course course) {
         CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(List.of(course));
         CourseResponse courseResponse = courseViewAssembler.toCourseResponse(course, context);
-        StudentSummary summary = loadStudentSummary(request.getStudentMemberId());
+        StudentSummaryResponse summary = loadStudentSummary(request.getStudentMemberId());
         return new TeacherEnrollmentRequestResponse(
                 request.getId(),
                 courseResponse,
@@ -245,7 +245,7 @@ public class StudentEnrollmentApprovalService {
                 request.getCreatedAt());
     }
 
-    private StudentSummary loadStudentSummary(UUID studentId) {
+    private StudentSummaryResponse loadStudentSummary(UUID studentId) {
         Member member = memberRepository.findById(studentId)
                 .orElseThrow(() -> new BusinessException(RsCode.MEMBER_NOT_FOUND));
         StudentInfo studentInfo = studentInfoRepository.findByMemberId(studentId)
@@ -253,15 +253,18 @@ public class StudentEnrollmentApprovalService {
         return toStudentSummary(member, studentInfo);
     }
 
-    private StudentSummary toStudentSummary(Member member, StudentInfo info) {
-        return new StudentSummary(
-                member.getId(),
-                member.getName(),
-                member.getEmail(),
-                member.getPhoneNumber(),
-                info.getSchoolName(),
-                info.getGrade().name(),
-                calculateAge(info.getBirthDate()));
+    private StudentSummaryResponse toStudentSummary(Member member, StudentInfo info) {
+        return StudentSummaryResponse.builder()
+                .memberId(member.getId())
+                .name(member.getName())
+                .email(member.getEmail())
+                .phoneNumber(member.getPhoneNumber())
+                .schoolName(info.getSchoolName())
+                .grade(info.getGrade().name())
+                .birthDate(info.getBirthDate())
+                .age(calculateAge(info.getBirthDate()))
+                .parentPhone(info.getParentPhone())
+                .build();
     }
 
     private Integer calculateAge(LocalDate birthDate) {

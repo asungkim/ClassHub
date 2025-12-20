@@ -7,6 +7,7 @@ import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.model.StudentInfo;
@@ -15,13 +16,13 @@ import com.classhub.domain.member.repository.StudentInfoRepository;
 import com.classhub.domain.studentcourse.dto.StudentCourseStatusFilter;
 import com.classhub.domain.studentcourse.dto.request.StudentCourseRecordUpdateRequest;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseDetailResponse;
-import com.classhub.domain.studentcourse.dto.response.StudentCourseDetailResponse.StudentSummary;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseListItemResponse;
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Collection;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -50,11 +52,11 @@ public class StudentCourseManagementService {
     private final CourseViewAssembler courseViewAssembler;
 
     public PageResponse<StudentCourseListItemResponse> getStudentCourses(MemberPrincipal principal,
-                                                                        UUID courseId,
-                                                                        StudentCourseStatusFilter statusFilter,
-                                                                        String keyword,
-                                                                        int page,
-                                                                        int size) {
+                                                                         UUID courseId,
+                                                                         StudentCourseStatusFilter statusFilter,
+                                                                         String keyword,
+                                                                         int page,
+                                                                         int size) {
         PageRequest pageable = PageRequest.of(page, size);
         String normalizedKeyword = normalizeKeyword(keyword);
         boolean activeOnly = statusFilter == StudentCourseStatusFilter.ACTIVE;
@@ -67,8 +69,7 @@ public class StudentCourseManagementService {
                     activeOnly,
                     inactiveOnly,
                     normalizedKeyword,
-                    pageable
-            );
+                    pageable);
         } else if (principal.role() == MemberRole.ASSISTANT) {
             List<TeacherAssistantAssignment> assignments = assignmentRepository
                     .findByAssistantMemberIdAndDeletedAtIsNull(principal.id());
@@ -85,8 +86,7 @@ public class StudentCourseManagementService {
                     activeOnly,
                     inactiveOnly,
                     normalizedKeyword,
-                    pageable
-            );
+                    pageable);
         } else {
             throw new BusinessException(RsCode.FORBIDDEN);
         }
@@ -102,8 +102,7 @@ public class StudentCourseManagementService {
         Page<StudentCourseListItemResponse> dtoPage = new PageImpl<>(
                 content,
                 pageable,
-                recordPage.getTotalElements()
-        );
+                recordPage.getTotalElements());
         return PageResponse.from(dtoPage);
     }
 
@@ -142,7 +141,7 @@ public class StudentCourseManagementService {
         }
         CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(List.of(course));
         CourseResponse courseResponse = courseViewAssembler.toCourseResponse(course, context);
-        StudentSummary studentSummary = loadStudentSummary(record.getStudentMemberId());
+        StudentSummaryResponse studentSummary = loadStudentSummary(record.getStudentMemberId());
         return new StudentCourseDetailResponse(
                 record.getId(),
                 studentSummary,
@@ -150,14 +149,13 @@ public class StudentCourseManagementService {
                 record.getAssistantMemberId(),
                 record.getDefaultClinicSlotId(),
                 record.getTeacherNotes(),
-                !record.isDeleted()
-        );
+                !record.isDeleted());
     }
 
     private StudentCourseDetailResponse buildDetailResponse(StudentCourseRecord record, Course course) {
         CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(List.of(course));
         CourseResponse courseResponse = courseViewAssembler.toCourseResponse(course, context);
-        StudentSummary studentSummary = loadStudentSummary(record.getStudentMemberId());
+        StudentSummaryResponse studentSummary = loadStudentSummary(record.getStudentMemberId());
         return new StudentCourseDetailResponse(
                 record.getId(),
                 studentSummary,
@@ -165,26 +163,25 @@ public class StudentCourseManagementService {
                 record.getAssistantMemberId(),
                 record.getDefaultClinicSlotId(),
                 record.getTeacherNotes(),
-                !record.isDeleted()
-        );
+                !record.isDeleted());
     }
 
-    private StudentSummary loadStudentSummary(UUID studentId) {
+    private StudentSummaryResponse loadStudentSummary(UUID studentId) {
         Member member = memberRepository.findById(studentId)
                 .orElseThrow(() -> new BusinessException(RsCode.MEMBER_NOT_FOUND));
         StudentInfo info = studentInfoRepository.findByMemberId(studentId)
                 .orElseThrow(() -> new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND));
-        return new StudentSummary(
-                member.getId(),
-                member.getName(),
-                member.getEmail(),
-                member.getPhoneNumber(),
-                info.getSchoolName(),
-                info.getGrade().name(),
-                info.getBirthDate(),
-                calculateAge(info.getBirthDate()),
-                info.getParentPhone()
-        );
+        return StudentSummaryResponse.builder()
+                .memberId(member.getId())
+                .name(member.getName())
+                .email(member.getEmail())
+                .phoneNumber(member.getPhoneNumber())
+                .schoolName(info.getSchoolName())
+                .grade(info.getGrade().name())
+                .birthDate(info.getBirthDate())
+                .age(calculateAge(info.getBirthDate()))
+                .parentPhone(info.getParentPhone())
+                .build();
     }
 
     private StudentCourseListItemResponse toListItem(StudentCourseRecord record,
@@ -210,8 +207,7 @@ public class StudentCourseManagementService {
                 course.getName(),
                 !record.isDeleted(),
                 record.getAssistantMemberId(),
-                record.getDefaultClinicSlotId()
-        );
+                record.getDefaultClinicSlotId());
     }
 
     private Map<UUID, Member> loadMembers(Collection<StudentCourseRecord> records) {

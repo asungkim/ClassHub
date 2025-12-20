@@ -27,6 +27,7 @@ import {
   rejectEnrollmentRequest,
   updateStudentCourseRecord
 } from "@/lib/dashboard-api";
+import { formatStudentBirthDate, formatStudentGrade } from "@/utils/student";
 import type {
   EnrollmentStatus,
   StudentCourseDetailResponse,
@@ -352,7 +353,7 @@ function StudentsTab({ role, courseOptions, courseOptionsLoading }: StudentsTabP
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">{student.phoneNumber ?? "-"}</TableCell>
                       <TableCell className="text-sm text-slate-600">
-                        {student.schoolName ?? "-"} {formatGrade(student.grade)}
+                        {student.schoolName ?? "-"} {formatStudentGrade(student.grade)}
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">{student.age ?? "-"}</TableCell>
                       <TableCell>
@@ -849,8 +850,10 @@ function StudentDetailModal({
               { label: "연락처", value: detail.student?.phoneNumber ?? "-" },
               {
                 label: "학교/학년",
-                value: `${detail.student?.schoolName ?? "-"} ${formatGrade(detail.student?.grade)}`.trim()
+                value: `${detail.student?.schoolName ?? "-"} ${formatStudentGrade(detail.student?.grade)}`.trim()
               },
+              { label: "생년월일", value: formatStudentBirthDate(detail.student?.birthDate) },
+              { label: "나이", value: detail.student?.age ? `${detail.student?.age}세` : "-" },
               { label: "학부모 연락처", value: detail.student?.parentPhone ?? "-" }
             ]}
           />
@@ -1085,28 +1088,6 @@ function InfoCard({ title, items }: { title: string; items: { label: string; val
       </dl>
     </div>
   );
-}
-
-function formatGrade(value?: string | null) {
-  if (!value) {
-    return "";
-  }
-  const map: Record<string, string> = {
-    ELEMENTARY_1: "초1",
-    ELEMENTARY_2: "초2",
-    ELEMENTARY_3: "초3",
-    ELEMENTARY_4: "초4",
-    ELEMENTARY_5: "초5",
-    ELEMENTARY_6: "초6",
-    MIDDLE_1: "중1",
-    MIDDLE_2: "중2",
-    MIDDLE_3: "중3",
-    HIGH_1: "고1",
-    HIGH_2: "고2",
-    HIGH_3: "고3",
-    GAP_YEAR: "N수"
-  };
-  return map[value] ?? value;
 }
 
 function formatDateTime(value?: string | null) {

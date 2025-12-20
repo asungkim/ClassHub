@@ -17,7 +17,7 @@ import com.classhub.domain.studentcourse.application.StudentCourseManagementServ
 import com.classhub.domain.studentcourse.dto.StudentCourseStatusFilter;
 import com.classhub.domain.studentcourse.dto.request.StudentCourseRecordUpdateRequest;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseDetailResponse;
-import com.classhub.domain.studentcourse.dto.response.StudentCourseDetailResponse.StudentSummary;
+import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseListItemResponse;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
@@ -78,17 +78,17 @@ class StudentCourseManagementControllerTest {
         );
         detailResponse = new StudentCourseDetailResponse(
                 listItem.recordId(),
-                new StudentSummary(
-                        listItem.studentMemberId(),
-                        "홍길동",
-                        "student@classhub.dev",
-                        "010-0000-0000",
-                        "ClassHub 고등학교",
-                        "HIGH_2",
-                        LocalDate.now().minusYears(18),
-                        18,
-                        "010-1111-2222"
-                ),
+                StudentSummaryResponse.builder()
+                        .memberId(listItem.studentMemberId())
+                        .name("홍길동")
+                        .email("student@classhub.dev")
+                        .phoneNumber("010-0000-0000")
+                        .schoolName("ClassHub 고등학교")
+                        .grade("HIGH_2")
+                        .birthDate(LocalDate.now().minusYears(18))
+                        .age(18)
+                        .parentPhone("010-1111-2222")
+                        .build(),
                 null,
                 null,
                 null,
