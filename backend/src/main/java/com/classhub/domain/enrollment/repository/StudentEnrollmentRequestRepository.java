@@ -56,4 +56,21 @@ public interface StudentEnrollmentRequestRepository extends JpaRepository<Studen
                                                              @Param("statuses") Collection<EnrollmentStatus> statuses,
                                                              @Param("studentName") String studentName,
                                                              Pageable pageable);
+
+    @Query("""
+            SELECT req
+            FROM StudentEnrollmentRequest req
+            JOIN Course c ON c.id = req.courseId
+            JOIN Member m ON m.id = req.studentMemberId
+            WHERE (:teacherId IS NULL OR c.teacherMemberId = :teacherId)
+              AND (:courseId IS NULL OR req.courseId = :courseId)
+              AND req.status IN :statuses
+              AND (:studentName IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :studentName, '%')))
+            ORDER BY req.createdAt DESC
+            """)
+    Page<StudentEnrollmentRequest> searchRequestsForAdmin(@Param("teacherId") UUID teacherId,
+                                                          @Param("courseId") UUID courseId,
+                                                          @Param("statuses") Collection<EnrollmentStatus> statuses,
+                                                          @Param("studentName") String studentName,
+                                                          Pageable pageable);
 }

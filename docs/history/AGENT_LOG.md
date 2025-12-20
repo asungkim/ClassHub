@@ -2958,3 +2958,29 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseManagementControllerTest.java`
   - `backend/src/main/java/com/classhub/global/response/RsCode.java` (STUDENT_COURSE_RECORD_NOT_FOUND 추가)
 - 다음 단계: PLAN 3단계(Admin 전체 조회 API) 구현 및 최종 통합
+
+## [2025-12-20 19:44] Admin 수업 신청 조회 API 구현
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- PLAN 3단계 요구에 따라 관리자 전용 수업 신청 조회 서비스/컨트롤러(`StudentEnrollmentAdminService`, `AdminStudentEnrollmentController`)를 TDD로 구현했다.
+- 필터(teacherId/courseId/status/studentName)와 Course/Member/StudentInfo 조합으로 `TeacherEnrollmentRequestResponse`를 구성하도록 Repository 쿼리를 확장했다.
+- SUPER_ADMIN 전용 MockMvc 테스트와 서비스 단위 테스트를 작성해 전체 흐름을 검증했다.
+
+### Details
+
+- 작업 사유: 어드민 감사 시나리오를 지원하기 위해 전체 수업 신청을 조회하는 API가 필요함.
+- 영향받은 테스트:
+  - `./gradlew test --tests "com.classhub.domain.enrollment.application.StudentEnrollmentAdminServiceTest"`
+  - `./gradlew test --tests "com.classhub.domain.enrollment.web.AdminStudentEnrollmentControllerTest"`
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentEnrollmentRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/AdminStudentEnrollmentController.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/AdminStudentEnrollmentControllerTest.java`
+- 다음 단계: 전체 Student Enrollment Suite 통합 점검 및 추가 피드백 대응
