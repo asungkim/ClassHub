@@ -2749,3 +2749,38 @@ STRUCTURAL
 - 수정한 파일:
   - frontend/src/app/(dashboard)/student/courses/page.tsx
 - 다음 단계: Enrollment 요청 플로우 연계 및 공개 Course 필터 UX 정교화.
+
+## [2025-12-20 15:05] Student Course 플로우 문서 보강
+
+### Type
+DESIGN
+
+### Summary
+- `course-rest-role_ui_plan.md`의 Student 섹션을 최신 흐름(‘반 검색’ 페이지 + ‘내 수업’ 페이지)으로 갱신했다.
+- 사용자 여정, 페이지 구조, 컴포넌트 설명에 새 메뉴 명칭과 향후 Enrollment 연계를 반영했다.
+
+### Details
+- 작업 사유: 학생 대시보드 네비게이션 개편에 맞춰 PLAN 문서가 실제 구현과 동기화되어야 했다.
+- 영향받은 테스트: 해당 없음(문서 수정).
+- 수정한 파일:
+  - docs/plan/frontend/season2/course-rest-role_ui_plan.md
+- 다음 단계: Enrollment 요청 구현 시 본 계획을 기반으로 구체적인 UI/상태 정의 확장.
+
+## [2025-12-20 15:15] Student 반 검색/내 수업 UI 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `/student/courses` 헤더와 설명을 ‘반 검색’ 흐름에 맞춰 업데이트해 공개 Course 탐색 목적을 명확히 했다.
+- `/student/my-courses` 페이지에 Next `Link` 기반 CTA와 EmptyState 안내를 추가해 학생이 자연스럽게 반 검색으로 이동할 수 있도록 했다.
+- 새 페이지가 빌드에 포함되도록 Next.js 생산 빌드로 검증했다.
+
+### Details
+- 작업 사유: 학생 네비게이션 분리(반 검색 vs 내 수업)에 맞춰 UI 카피와 링크를 재정렬해야 했다.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/student/courses/page.tsx
+  - frontend/src/app/(dashboard)/student/my-courses/page.tsx
+- 다음 단계: 추후 Enrollment 데이터가 준비되면 ‘내 수업’ 페이지에서 승인/대기 상태 리스트를 렌더링하고 버튼을 실제 신청 흐름과 연결.

@@ -137,10 +137,11 @@ function StudentCourseSearchContent() {
   return (
     <div className="space-y-6 lg:space-y-8">
       <header className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-100 sm:px-8">
-        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Student · Public Courses</p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">반 관리</h1>
+        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Student · Course Search</p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-900">반 검색</h1>
         <p className="mt-2 text-sm text-slate-500">
-          공개된 Course를 검색해 원하는 반을 확인하고, 준비 중인 등록 요청 버튼을 통해 참여 의사를 남길 수 있습니다.
+          공개된 Course를 학원/지점/선생님 기준으로 찾아보고, 마음에 드는 반을 선택해 등록 요청 준비를 해두세요.{" "}
+          승인된 내역은 ‘내 수업’ 페이지에서 확인하게 됩니다.
         </p>
       </header>
 
