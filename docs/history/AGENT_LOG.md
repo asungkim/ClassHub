@@ -2553,3 +2553,91 @@ BEHAVIORAL
   - backend/src/test/java/com/classhub/domain/course/application/CourseServiceTest.java
   - backend/src/test/java/com/classhub/domain/course/web/CourseControllerTest.java
 - 다음 단계: 사용자 피드백을 반영해 Course Service 리팩터 또는 Student/프런트 연동을 진행하고 TODO Phase5 상태 업데이트 검토
+
+## [2025-12-20 01:25] Teacher Course Frontend Plan 작성
+
+### Type
+DESIGN
+
+### Summary
+- `docs/plan/frontend/season2/teacher-course-management_ui_plan.md`에 Course 목록/캘린더 UI 구조, 컴포넌트, 상태·데이터 흐름, 테스트 전략을 정의했다.
+
+### Details
+- 작업 사유: 프런트 구현 전에 요구사항을 명확히 기록해 이후 단계별 개발/리뷰를 수월하게 하기 위함
+- 영향받은 테스트: 해당 없음
+- 수정한 파일:
+  - docs/plan/frontend/season2/teacher-course-management_ui_plan.md
+- 다음 단계: PLAN 1단계(데이터 레이어 & 뷰 스켈레톤) 구현
+
+## [2025-12-20 01:33] Teacher Course 목록/캘린더 뷰 스켈레톤
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher Course 페이지에 상태 탭·지점/검색 필터와 목록/캘린더 전환 탭을 구현하고 Course/Branch API 연동, 주간 이동 및 시간축 그리드를 구성했다.
+- Course 관련 타입과 대시보드 API 헬퍼를 확장해 목록/캘린더 데이터를 공용으로 사용할 수 있게 했다.
+
+### Details
+- 작업 사유: 프런트 PLAN 1단계(데이터 레이어 + 스켈레톤)를 완료해 이후 생성/수정 모달 구현 기반 마련
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - docs/plan/frontend/season2/teacher-course-management_ui_plan.md
+  - frontend/src/types/dashboard.ts
+  - frontend/src/types/openapi.d.ts
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: Course 생성/수정 모달, 상태 토글 UI, 캘린더 카드 디테일 구현
+
+## [2025-12-20 11:12] Teacher Course 생성/수정 모달 & 토글 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/frontend/season2/teacher-course-management_ui_plan.md` 2~3단계에 맞춰 반 생성/수정 모달과 상태 토글, 성공/실패 토스트를 Teacher Course 페이지에 연동했다.
+- Course 생성/수정/상태 변경 API 헬퍼를 추가하고, 목록/캘린더 데이터를 자동 새로고침하도록 연결했다.
+
+### Details
+- 작업 사유: 선생님이 UI에서 반을 직접 등록/수정하고 활성 상태를 제어할 수 있게 하기 위해 PLAN 후속 단계를 구현함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: 캘린더 카드 hover/tooltip·빈 상태 개선 등 PLAN 3단계 마무리 및 QA
+
+## [2025-12-20 11:25] Teacher Course 캘린더/모달 UX 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 캘린더 카드에 클릭 이벤트를 연결해 일정 블록을 누르면 곧바로 수정 모달이 열리도록 하고, 시간 텍스트를 제거해 시각 정보를 색상 블록으로만 전달하도록 정리했다.
+- 생성/수정 모달의 날짜 입력 형식을 `yyyy/mm/dd` 순서로 보이도록 `lang`/패턴을 조정하고, 스케줄 입력을 06:00~22:00 범위 토글 버튼으로 재구성해 AM/PM 없이 빠르게 선택하도록 개선했다.
+
+### Details
+- 작업 사유: 사용자 요구사항에 맞춰 캘린더 인터랙션/표시와 시간·날짜 입력 UX를 수정해 실제 사용 흐름을 맞추기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: 캘린더 빈 상태/tooltip 등 잔여 PLAN 3단계 항목 보완 및 Course 생성 모달의 추가 검증(다중 스케줄 등) QA
+
+## [2025-12-20 11:32] Teacher Course 날짜/시간 입력 보완
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 생성/수정 모달의 날짜 입력을 `YYYY/MM/DD` 텍스트 필드로 변경하고 서버 전송 시 ISO(`YYYY-MM-DD`)로 변환해 한국식 순서를 명확히 했다.
+- 스케줄 시간 토글을 30분 단위(06:00~22:00)로 확장하고 종료 시간이 항상 시작 시간 이후가 되도록 자동 보정·검증 로직을 추가했다.
+
+### Details
+- 작업 사유: 사용자가 요구한 날짜 표기 순서와 30분 단위 시간 선택 UX를 반영해 입력 혼란을 줄이기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/teacher/courses/page.tsx
+- 다음 단계: Course 모달 다중 스케줄 QA 및 캘린더 빈 상태/툴팁 디자인 보강
