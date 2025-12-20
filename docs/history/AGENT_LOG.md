@@ -2662,3 +2662,29 @@ STRUCTURAL
   - backend/src/test/java/com/classhub/domain/course/web/AdminCourseControllerTest.java
   - backend/src/test/java/com/classhub/domain/course/web/AssistantCourseControllerTest.java
 - 다음 단계: PLAN 3단계(Student 공개 Course 검색) 구현 준비 및 추가 API 검증.
+
+## [2025-12-20 12:42] Course 공개 검색 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- PLAN 3단계 요구에 따라 학생/비회원이 사용할 `GET /api/v1/courses/public` API를 구현하고 CourseRepository에 공개 검색 전용 쿼리를 추가했다.
+- CourseViewAssembler를 재사용해 `PublicCourseResponse` DTO를 구성하고, teacher 이름 및 스케줄 요약 문자열을 포함하도록 PublicCourseService를 작성했다.
+- Spring Security 허용 목록에 `/api/v1/courses/public/**`를 추가해 토큰 없이 접근 가능하도록 열고, 서비스/컨트롤러 단위 테스트를 작성했다.
+
+### Details
+- 작업 사유: Course-rest-role PLAN 3단계(학생 공개 검색)를 마무리해 역할별 API 구성을 완결해야 했다.
+- 영향받은 테스트:
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.application.PublicCourseServiceTest`
+  - `cd backend && ./gradlew test --tests com.classhub.domain.course.web.PublicCourseControllerTest`
+  - `cd backend && ./gradlew test --tests 'com.classhub.domain.course.*'`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java
+  - backend/src/main/java/com/classhub/domain/course/dto/response/PublicCourseResponse.java
+  - backend/src/main/java/com/classhub/domain/course/application/PublicCourseService.java
+  - backend/src/main/java/com/classhub/domain/course/web/PublicCourseController.java
+  - backend/src/main/java/com/classhub/global/config/SecurityConfig.java
+  - backend/src/test/java/com/classhub/domain/course/application/PublicCourseServiceTest.java
+  - backend/src/test/java/com/classhub/domain/course/web/PublicCourseControllerTest.java
+- 다음 단계: Student 공개 Course 검색 API를 기반으로 한 실제 프런트 UI 및 enrollment flow를 설계/구현하고, 필요 시 공개 Course DTO 확장 검토.

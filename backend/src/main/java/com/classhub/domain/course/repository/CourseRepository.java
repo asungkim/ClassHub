@@ -135,4 +135,47 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    default Page<Course> searchPublicCourses(UUID companyId,
+                                             UUID branchId,
+                                             UUID teacherId,
+                                             String keyword,
+                                             boolean onlyVerified,
+                                             Pageable pageable) {
+        return searchPublicCoursesInternal(
+                companyId,
+                branchId,
+                teacherId,
+                keyword,
+                onlyVerified,
+                pageable
+        );
+    }
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            JOIN Branch b ON b.id = c.branchId
+            JOIN Company comp ON comp.id = b.companyId
+            WHERE c.deletedAt IS NULL
+              AND b.deletedAt IS NULL
+              AND comp.deletedAt IS NULL
+              AND (:companyId IS NULL OR comp.id = :companyId)
+              AND (:branchId IS NULL OR b.id = :branchId)
+              AND (:teacherId IS NULL OR c.teacherMemberId = :teacherId)
+              AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (
+                    :onlyVerified = false OR
+                    (b.verifiedStatus = com.classhub.domain.company.company.model.VerifiedStatus.VERIFIED
+                     AND comp.verifiedStatus = com.classhub.domain.company.company.model.VerifiedStatus.VERIFIED)
+              )
+            """)
+    Page<Course> searchPublicCoursesInternal(
+            @Param("companyId") UUID companyId,
+            @Param("branchId") UUID branchId,
+            @Param("teacherId") UUID teacherId,
+            @Param("keyword") String keyword,
+            @Param("onlyVerified") boolean onlyVerified,
+            Pageable pageable
+    );
 }
