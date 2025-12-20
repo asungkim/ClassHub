@@ -73,4 +73,10 @@ public class StudentEnrollmentRequest extends BaseEntity {
         this.processedByMemberId = processorId;
         this.processedAt = processedAt == null ? LocalDateTime.now() : processedAt;
     }
+
+    public void cancel(UUID studentId, LocalDateTime canceledAt) {
+        this.status = EnrollmentStatus.CANCELED;
+        this.processedByMemberId = studentId;
+        this.processedAt = canceledAt == null ? LocalDateTime.now() : canceledAt;
+    }
 }

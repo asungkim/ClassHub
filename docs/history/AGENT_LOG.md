@@ -2784,3 +2784,101 @@ BEHAVIORAL
   - frontend/src/app/(dashboard)/student/courses/page.tsx
   - frontend/src/app/(dashboard)/student/my-courses/page.tsx
 - 다음 단계: 추후 Enrollment 데이터가 준비되면 ‘내 수업’ 페이지에서 승인/대기 상태 리스트를 렌더링하고 버튼을 실제 신청 흐름과 연결.
+
+## [2025-12-20 15:35] Student Enrollment Workflow PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- `docs/spec/v1.3.md` FR-02 요구를 바탕으로 StudentEnrollmentRequest CRUD, Teacher·Assistant 처리, StudentCourse 조회/수정, Admin 감사 조회까지 포함한 새로운 PLAN(`student-enrollment-management_plan.md`)을 작성했다.
+- UI 흐름에 맞춰 Teacher/Assistant(StudentEnrollmentRequest + StudentData), Student(내 수업/신청 내역), Admin(전체 조회) API 항목을 정리하고, 배치 승인/거절 옵션도 명시했다.
+- 상태 전이(PENDING/APPROVED/REJECTED/CANCELED), Enrollment/Record 생성 규칙, 권한 검증, TDD 단계별 테스트 목록을 포함해 구현 준비를 마쳤다.
+
+### Details
+- 작업 사유: Enrollment epic을 구현하기 전 PLAN 문서가 필요했음.
+- 영향받은 테스트: 해당 없음(문서 작업).
+- 수정한 파일:
+  - docs/plan/backend/season2/student-enrollment-management_plan.md
+- 다음 단계: PLAN 승인 후 Student → Teacher/Assistant → Admin 순으로 TDD 기반 구현 진행.
+
+## [2025-12-20 15:45] Student Enrollment PLAN 정리 (단건 처리로 수정)
+
+### Type
+DESIGN
+
+### Summary
+- 배치 승인/거절 API는 후속 개선 사항으로 미루기로 결정해, PLAN에서 관련 요구/엔드포인트/TDD 시나리오를 제거했다.
+- 현재 단계에서는 단건 요청 API만으로 Teacher/Assistant 흐름을 구현하도록 명확히 했다.
+
+### Details
+- 작업 사유: 사용자 요청에 따라 대량 처리 범위를 제외.
+- 영향받은 테스트: 없음(문서 수정).
+- 수정한 파일:
+  - docs/plan/backend/season2/student-enrollment-management_plan.md
+- 다음 단계: 단건 API 기준으로 TDD/구현 진행, 대량 처리는 차후 개선 과제로 분리.
+
+## [2025-12-20 15:55] StudentData 조회 범위 수정
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant StudentData 요구를 명확히 하기 위해 PLAN을 조정했다. 목록 조회는 이름/연락처/학교/학년/나이/수강 반 이름 등 기본 정보만 제공하고, 상세 조회는 Teacher 전용으로 전체 StudentInfo+Record를 제공하도록 정의했다.
+
+### Details
+- 작업 사유: 요청에 따라 Teacher만 상세 데이터를 열람/수정하고, 조교는 기본 정보만 확인하도록 역할을 구분.
+- 영향받은 테스트: 없음(문서 수정).
+- 수정한 파일:
+  - docs/plan/backend/season2/student-enrollment-management_plan.md
+- 다음 단계: 이 범위를 기준으로 StudentData API TDD/구현 진행.
+
+## [2025-12-20 16:05] Student Enrollment PLAN 구현 단계 추가
+
+### Type
+DESIGN
+
+### Summary
+- PLAN 6번 섹션에 학생 → Teacher/Assistant → Admin 순으로 진행할 3단계 구현 계획을 추가했다.
+- 각 단계에서 어떤 API를 개발/검증할지 명시해 추후 작업 순서를 명확히 했다.
+
+### Details
+- 작업 사유: 사용자가 요청한 3단계 구현 순서를 문서화하기 위함.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - docs/plan/backend/season2/student-enrollment-management_plan.md
+- 다음 단계: 1단계(Student 기능)부터 TDD 사이클로 구현 착수.
+
+## [2025-12-20 18:40] Student Enrollment 1단계 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- PLAN 1단계에 따라 학생용 Enrollment API를 구현했다. 신청 생성/조회/취소 컨트롤러(`POST/GET /student-enrollment-requests`, `PATCH /{id}/cancel`)와 승인된 수업 조회(`GET /students/me/courses`)를 추가했다.
+- `StudentEnrollmentRequestService`는 Course 유효성/중복/기존 수강 여부를 검증하고 CANCELED 상태 전이 로직을 포함하며, Course 정보까지 포함된 DTO를 반환한다. `StudentCourseQueryService`는 활성 Enrollment와 Course 메타를 결합해 학생 수업 목록을 제공한다.
+- Repository에 중복 검사/검색 쿼리를 추가하고 `EnrollmentStatus`에 `CANCELED`를 도입했으며, 필요한 DTO/응답 모델과 RsCode를 신설했다.
+- `StudentEnrollmentRequestControllerTest`, `StudentCourseControllerTest`, `StudentEnrollmentRequestServiceTest`, `StudentCourseQueryServiceTest` 등 TDD 기반 테스트를 모두 작성/통과시켰다.
+
+### Details
+- 작업 사유: Student Enrollment PLAN 1단계를 완료해 프론트에서 학생 흐름을 바로 사용할 수 있도록 함.
+- 영향받은 테스트:
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.enrollment.application.StudentEnrollmentRequestServiceTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.studentcourse.application.StudentCourseQueryServiceTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.enrollment.web.StudentEnrollmentRequestControllerTest"`
+  - `cd backend && GRADLE_USER_HOME=../.gradle ./gradlew test --tests "com.classhub.domain.studentcourse.web.StudentCourseControllerTest"`
+- 수정한 파일:
+  - backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentRequestService.java
+  - backend/src/main/java/com/classhub/domain/enrollment/dto/** (신규)
+  - backend/src/main/java/com/classhub/domain/enrollment/model/EnrollmentStatus.java
+  - backend/src/main/java/com/classhub/domain/enrollment/model/StudentEnrollmentRequest.java
+  - backend/src/main/java/com/classhub/domain/enrollment/repository/StudentEnrollmentRequestRepository.java
+  - backend/src/main/java/com/classhub/domain/enrollment/web/StudentEnrollmentRequestController.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseQueryService.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseResponse.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java
+  - backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java
+  - backend/src/main/java/com/classhub/global/response/RsCode.java
+  - backend/src/test/java/com/classhub/domain/enrollment/** (신규 테스트)
+  - backend/src/test/java/com/classhub/domain/studentcourse/** (신규 테스트)
+- 다음 단계: PLAN 2단계(Teacher/Assistant 요청 처리 + StudentData)에 착수한다.
