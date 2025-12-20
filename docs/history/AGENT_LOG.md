@@ -156,8 +156,8 @@ BEHAVIORAL
    - `POST /api/v1/courses`: 반 생성
    - `GET /api/v1/courses`: 반 목록 조회
    - `GET /api/v1/courses/{courseId}`: 반 상세 조회
-   - `PATCH /api/v1/courses/{courseId}`: 반 수정
-   - `PATCH /api/v1/courses/{courseId}/deactivate`: 반 비활성화
+- `PATCH /api/v1/courses/{courseId}`: 반 수정
+- `PATCH /api/v1/courses/{courseId}/deactivate`: 반 비활성화
    - `PATCH /api/v1/courses/{courseId}/activate`: 반 활성화
 
 6. **InitData 수정** ([CourseInitData.java](backend/src/main/java/com/classhub/global/init/data/CourseInitData.java))
@@ -2877,8 +2877,56 @@ BEHAVIORAL
   - backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseQueryService.java
   - backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseResponse.java
   - backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java
-  - backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java
-  - backend/src/main/java/com/classhub/global/response/RsCode.java
-  - backend/src/test/java/com/classhub/domain/enrollment/** (신규 테스트)
-  - backend/src/test/java/com/classhub/domain/studentcourse/** (신규 테스트)
+- backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java
+- backend/src/main/java/com/classhub/global/response/RsCode.java
+- backend/src/test/java/com/classhub/domain/enrollment/** (신규 테스트)
+- backend/src/test/java/com/classhub/domain/studentcourse/** (신규 테스트)
 - 다음 단계: PLAN 2단계(Teacher/Assistant 요청 처리 + StudentData)에 착수한다.
+
+---
+
+## [2025-12-20 19:16] Teacher/Assistant 수업 신청 승인 서비스 구축
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- `docs/plan/backend/season2/student-enrollment-management_plan.md` 2단계에 따라 Teacher/Assistant용 요청 목록/승인/거절 서비스 로직을 TDD로 구현했다.
+- 조교/선생님 권한 검증, Enrollment/Record 생성 트랜잭션, StudentSummary 조합을 포함하는 `StudentEnrollmentApprovalService`를 추가하고 DTO 사양을 정리했다.
+- `StudentEnrollmentApprovalServiceTest`를 통해 목록/승인/거절/권한 시나리오를 검증하고 gradle 테스트를 통과시켰다.
+
+### Details
+
+- 작업 사유: Teacher/Assistant가 학생 신청을 처리할 수 있도록 서비스 계층을 완성해야 함.
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.enrollment.application.StudentEnrollmentApprovalServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/TeacherEnrollmentRequestResponse.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalServiceTest.java`
+- 삭제한 파일: `backend/src/main/java/com/classhub/domain/enrollment/dto/request/StudentEnrollmentDecisionRequest.java`
+- 다음 단계: StudentData 목록/상세/수정 API 및 Admin 요청 조회 API 구현
+
+## [2025-12-20 19:28] Teacher/Assistant 수업 신청 Controller 구현
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- 승인 서비스와 연동되는 Teacher/Assistant 웹 API(`GET /student-enrollment-requests`, `GET /{id}`, `PATCH /{id}/approve|reject`)를 신규 컨트롤러로 구현했다.
+- 역할에 따라 Teacher/Assistant 목록 조회 분기를 적용하고, 단건 조회/승인/거절은 `StudentEnrollmentApprovalService`를 호출하도록 연결했다.
+- `StudentEnrollmentApprovalControllerTest`를 작성해 Teacher/Assistant 요청/상세/승인/거절 흐름을 MockMvc로 검증했다.
+
+### Details
+
+- 작업 사유: UI에서 Teacher/Assistant용 신청 처리 플로우를 사용할 수 있도록 HTTP 엔드포인트를 제공해야 함.
+- 영향받은 테스트: `./gradlew test --tests com.classhub.domain.enrollment.web.StudentEnrollmentApprovalControllerTest`
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentEnrollmentApprovalController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalService.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentEnrollmentApprovalControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalServiceTest.java` (상세 조회 테스트 추가)
+- 다음 단계: StudentData API(TODO 2단계 잔여) 구현 및 Admin 요청 조회 API 개발

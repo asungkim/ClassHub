@@ -40,21 +40,19 @@ public class StudentEnrollmentRequestService {
 
     @Transactional
     public StudentEnrollmentRequestResponse createRequest(UUID studentId,
-                                                          StudentEnrollmentRequestCreateRequest request) {
+            StudentEnrollmentRequestCreateRequest request) {
         UUID courseId = Objects.requireNonNull(request.courseId(), "courseId must not be null");
         Course course = loadActiveCourse(courseId);
         boolean pendingExists = requestRepository.existsByStudentMemberIdAndCourseIdAndStatusIn(
                 studentId,
                 courseId,
-                EnumSet.of(EnrollmentStatus.PENDING)
-        );
+                EnumSet.of(EnrollmentStatus.PENDING));
         if (pendingExists) {
             throw new BusinessException(RsCode.STUDENT_ENROLLMENT_REQUEST_CONFLICT);
         }
         boolean alreadyEnrolled = enrollmentRepository.existsByStudentMemberIdAndCourseIdAndDeletedAtIsNull(
                 studentId,
-                courseId
-        );
+                courseId);
         if (alreadyEnrolled) {
             throw new BusinessException(RsCode.STUDENT_ENROLLMENT_ALREADY_EXISTS);
         }
@@ -70,9 +68,9 @@ public class StudentEnrollmentRequestService {
     }
 
     public PageResponse<StudentEnrollmentRequestResponse> getMyRequests(UUID studentId,
-                                                                        Set<EnrollmentStatus> statuses,
-                                                                        int page,
-                                                                        int size) {
+            Set<EnrollmentStatus> statuses,
+            int page,
+            int size) {
         Set<EnrollmentStatus> effectiveStatuses = (statuses == null || statuses.isEmpty())
                 ? EnumSet.of(EnrollmentStatus.PENDING)
                 : EnumSet.copyOf(statuses);
@@ -81,14 +79,12 @@ public class StudentEnrollmentRequestService {
                 .findByStudentMemberIdAndStatusInOrderByCreatedAtDesc(
                         studentId,
                         effectiveStatuses,
-                        pageable
-                );
+                        pageable);
         if (requestPage.isEmpty()) {
             return PageResponse.from(new PageImpl<>(
                     List.of(),
                     pageable,
-                    requestPage.getTotalElements()
-            ));
+                    requestPage.getTotalElements()));
         }
         Map<UUID, CourseResponse> courseResponseMap = buildCourseResponseMap(requestPage.getContent());
         List<StudentEnrollmentRequestResponse> content = requestPage.stream()
@@ -103,8 +99,7 @@ public class StudentEnrollmentRequestService {
         Page<StudentEnrollmentRequestResponse> dtoPage = new PageImpl<>(
                 content,
                 pageable,
-                requestPage.getTotalElements()
-        );
+                requestPage.getTotalElements());
         return PageResponse.from(dtoPage);
     }
 
@@ -151,12 +146,11 @@ public class StudentEnrollmentRequestService {
         return courses.stream()
                 .collect(Collectors.toMap(
                         Course::getId,
-                        course -> courseViewAssembler.toCourseResponse(course, context)
-                ));
+                        course -> courseViewAssembler.toCourseResponse(course, context)));
     }
 
     private StudentEnrollmentRequestResponse toResponse(StudentEnrollmentRequest request,
-                                                        CourseResponse courseResponse) {
+            CourseResponse courseResponse) {
         return new StudentEnrollmentRequestResponse(
                 request.getId(),
                 courseResponse,
@@ -164,8 +158,7 @@ public class StudentEnrollmentRequestService {
                 request.getMessage(),
                 request.getProcessedAt(),
                 request.getProcessedByMemberId(),
-                request.getCreatedAt()
-        );
+                request.getCreatedAt());
     }
 
     private String trimMessage(String message) {

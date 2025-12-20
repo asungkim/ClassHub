@@ -36,7 +36,7 @@ const menuByRole: Record<Role, MenuItem[]> = {
   STUDENT: [
     { href: "/student", label: "대시보드", icon: "📊" },
     { href: "/student/my-courses", label: "내 수업", icon: "🎓" },
-    { href: "/student/courses", label: "반 검색", icon: "🔍" },
+    { href: "/student/course/search", label: "반 검색", icon: "🔍" },
     { href: "/student/calendar", label: "일정", icon: "📅" },
     { href: "/student/clinics", label: "클리닉", icon: "🩺" },
   ],

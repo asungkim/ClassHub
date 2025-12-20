@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public record StudentEnrollmentRequestCreateRequest(
-        @NotNull UUID courseId,
-        @Size(max = 2000) String message
-) {
+                @NotNull UUID courseId,
+                @Size(max = 2000) String message) {
 }
