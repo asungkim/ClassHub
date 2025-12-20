@@ -2688,3 +2688,64 @@ BEHAVIORAL
   - backend/src/test/java/com/classhub/domain/course/application/PublicCourseServiceTest.java
   - backend/src/test/java/com/classhub/domain/course/web/PublicCourseControllerTest.java
 - 다음 단계: Student 공개 Course 검색 API를 기반으로 한 실제 프런트 UI 및 enrollment flow를 설계/구현하고, 필요 시 공개 Course DTO 확장 검토.
+
+## [2025-12-20 13:25] Admin/Assistant Course UI 1차 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `course-rest-role_ui_plan.md` 기반으로 SuperAdmin/Assistant용 Course 페이지를 대시보드에 추가해 역할별 Course API를 소비하도록 했다.
+- SuperAdmin 페이지에 툴바형 필터(Teacher/Company/Branch/Status/Keyword), 반 목록 테이블, 하드 삭제 모달을 구현하고 `/admin/courses` 라우트에 연결했다.
+- Assistant 페이지에 연결된 선생님 필터, 상태/검색 필터, 카드형 반 목록을 구현해 `/assistant/courses`에서 확인할 수 있도록 했다.
+- `dashboard-api`에 Admin/Assistant/Public Course API 클라이언트 함수를 추가했고, `sidebar` 메뉴를 갱신했다.
+
+### Details
+- 작업 사유: PLAN 3단계 이후 프런트에서도 Admin/Assistant가 Course 데이터를 확인할 수 있어야 했다.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - docs/plan/frontend/season2/course-rest-role_ui_plan.md (신규)
+  - frontend/src/components/dashboard/sidebar.tsx
+  - frontend/src/lib/dashboard-api.ts
+  - frontend/src/types/dashboard.ts
+  - frontend/src/app/(dashboard)/admin/courses/page.tsx (신규)
+  - frontend/src/app/(dashboard)/assistant/courses/page.tsx (신규)
+- 다음 단계: Student 공개 Course 검색 UI 및 Enrollment 요청 버튼 플로우 구현, 필터 옵션(Teacher 목록 등) UX 개선.
+
+## [2025-12-20 14:10] Student Course 검색 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 대시보드 사이드바에 ‘반 관리’ 메뉴를 추가하고 `/student/courses` 페이지에서 공개 Course 검색 UI를 구현했다.
+- Company/Branch/Teacher/Keyword 필터 + 검증 여부 토글을 제공하고, `GET /api/v1/courses/public` 응답을 카드 형태로 보여주며 “등록 요청” 버튼(추후 연동 예정)을 노출한다.
+- `docs/todo/v1.9.md`의 Course 페이지 항목을 완료(✅) 상태로 업데이트했다.
+
+### Details
+- 작업 사유: PLAN 3단계(Student) 구현을 마무리하고 학생이 공개 Course를 탐색할 수 있는 UI가 필요했다.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/student/courses/page.tsx (신규)
+  - frontend/src/components/dashboard/sidebar.tsx
+  - docs/todo/v1.9.md
+- 다음 단계: 등록 요청 플로우(Enrollment) 백엔드/프런트 연동과 학생용 “내 수업” 화면 구현, 공개 Course 필터 UX 개선.
+
+## [2025-12-20 14:25] 학생 Course 필터 권한 오류 수정
+
+### Type
+STRUCTURAL
+
+### Summary
+- 학생 공개 Course 화면에서 학원/지점 옵션을 `searchTeacherCompanies`/`searchBranches`로 불러오며 403이 발생하던 문제를 수정했다.
+- `/student/courses`는 이제 `fetchPublicCourses` 응답을 기반으로 회사/지점 옵션을 동적으로 구성하므로 권한 오류 없이 필터를 사용할 수 있다.
+
+### Details
+- 작업 사유: Student Role에 Teacher/Admin 전용 API를 호출해 “접근 권한이 없습니다.” 오류가 발생했음.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - frontend/src/app/(dashboard)/student/courses/page.tsx
+- 다음 단계: Enrollment 요청 플로우 연계 및 공개 Course 필터 UX 정교화.

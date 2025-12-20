@@ -428,6 +428,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 공개 Course 검색 */
+        get: operations["getPublicCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -440,6 +457,40 @@ export interface paths {
          * @description Access 토큰 기준으로 현재 사용자의 식별자/역할을 조회한다.
          */
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistants/me/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 조교 Course 목록 조회 */
+        get: operations["getCourses_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 모든 Course 조회 */
+        get: operations["getCourses_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -483,6 +534,23 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/courses/{courseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Course 하드 삭제 */
+        delete: operations["deleteCourse"];
         options?: never;
         head?: never;
         patch?: never;
@@ -834,6 +902,47 @@ export interface components {
             message?: string;
             data?: components["schemas"]["CourseResponse"][];
         };
+        PageResponsePublicCourseResponse: {
+            content?: components["schemas"]["PublicCourseResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        PublicCourseResponse: {
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            name?: string;
+            description?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            active?: boolean;
+            schedules?: components["schemas"]["CourseScheduleResponse"][];
+            /** Format: uuid */
+            teacherId?: string;
+            teacherName?: string;
+            scheduleSummary?: string;
+        };
+        RsDataPageResponsePublicCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponsePublicCourseResponse"];
+        };
         PageResponseCompanyResponse: {
             content?: components["schemas"]["CompanyResponse"][];
             /** Format: int32 */
@@ -885,6 +994,46 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["MeResponse"];
+        };
+        CourseWithTeacherResponse: {
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            name?: string;
+            description?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            active?: boolean;
+            schedules?: components["schemas"]["CourseScheduleResponse"][];
+            /** Format: uuid */
+            teacherId?: string;
+            teacherName?: string;
+        };
+        PageResponseCourseWithTeacherResponse: {
+            content?: components["schemas"]["CourseWithTeacherResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseCourseWithTeacherResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseCourseWithTeacherResponse"];
         };
     };
     responses: never;
@@ -1530,6 +1679,34 @@ export interface operations {
             };
         };
     };
+    getPublicCourses: {
+        parameters: {
+            query?: {
+                companyId?: string;
+                branchId?: string;
+                teacherId?: string;
+                keyword?: string;
+                onlyVerified?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponsePublicCourseResponse"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -1546,6 +1723,60 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataMeResponse"];
+                };
+            };
+        };
+    };
+    getCourses_1: {
+        parameters: {
+            query?: {
+                teacherId?: string;
+                status?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCourseWithTeacherResponse"];
+                };
+            };
+        };
+    };
+    getCourses_2: {
+        parameters: {
+            query?: {
+                teacherId?: string;
+                branchId?: string;
+                companyId?: string;
+                status?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCourseResponse"];
                 };
             };
         };
@@ -1594,6 +1825,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataCompanyResponse"];
+                };
+            };
+        };
+    };
+    deleteCourse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
                 };
             };
         };

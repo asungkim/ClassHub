@@ -31,3 +31,5 @@ export type CourseCreateRequest = components["schemas"]["CourseCreateRequest"];
 export type CourseUpdateRequest = components["schemas"]["CourseUpdateRequest"];
 export type CourseStatusUpdateRequest = components["schemas"]["CourseStatusUpdateRequest"];
 export type CourseScheduleRequest = components["schemas"]["CourseScheduleRequest"];
+export type CourseWithTeacherResponse = components["schemas"]["CourseWithTeacherResponse"];
+export type PublicCourseResponse = components["schemas"]["PublicCourseResponse"];
