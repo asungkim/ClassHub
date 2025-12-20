@@ -55,7 +55,9 @@ public enum RsCode {
     STUDENT_ENROLLMENT_REQUEST_NOT_FOUND(RsConstant.NOT_FOUND, "수업 신청을 찾을 수 없습니다."),
     STUDENT_ENROLLMENT_REQUEST_CONFLICT(RsConstant.CONFLICT, "이미 처리 중인 신청이 있습니다."),
     STUDENT_ENROLLMENT_ALREADY_EXISTS(RsConstant.CONFLICT, "이미 수강 중인 반입니다."),
-    INVALID_ENROLLMENT_REQUEST_STATE(RsConstant.BAD_REQUEST, "현재 상태에서는 처리할 수 없습니다.");
+    INVALID_ENROLLMENT_REQUEST_STATE(RsConstant.BAD_REQUEST, "현재 상태에서는 처리할 수 없습니다."),
+
+    STUDENT_COURSE_RECORD_NOT_FOUND(RsConstant.NOT_FOUND, "학생 수업 기록을 찾을 수 없습니다.");
 
     private final Integer code;
     private final String message;

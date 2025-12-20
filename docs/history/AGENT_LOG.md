@@ -2930,3 +2930,31 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentEnrollmentApprovalControllerTest.java`
   - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalServiceTest.java` (상세 조회 테스트 추가)
 - 다음 단계: StudentData API(TODO 2단계 잔여) 구현 및 Admin 요청 조회 API 개발
+
+## [2025-12-20 19:39] StudentData API (Teacher/Assistant) 구현
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- PLAN 2단계의 StudentData 범위에 따라 `StudentCourseManagementService`를 도입하고 목록/상세/수정 로직을 구현했다.
+- Teacher/Assistant별 권한 분기, 조교 배정 검증, Course/Member/StudentInfo 조합 DTO(`StudentCourseListItemResponse`, `StudentCourseDetailResponse`)를 추가했다.
+- `StudentCourseRecordRepository`에 Teacher/Assistant 검색용 쿼리를 정의하고, `StudentCourseManagementController` + MockMvc 테스트를 작성했다.
+
+### Details
+
+- 작업 사유: 선생님/조교가 학생 수업 데이터를 조회·갱신할 수 있는 API가 필요함.
+- 영향받은 테스트:
+  - `./gradlew test --tests "com.classhub.domain.studentcourse.application.StudentCourseManagementServiceTest"`
+  - `./gradlew test --tests "com.classhub.domain.studentcourse.web.StudentCourseManagementControllerTest"`
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/**` (StatusFilter, List/Detail Response, Update Request)
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseManagementController.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseManagementControllerTest.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java` (STUDENT_COURSE_RECORD_NOT_FOUND 추가)
+- 다음 단계: PLAN 3단계(Admin 전체 조회 API) 구현 및 최종 통합
