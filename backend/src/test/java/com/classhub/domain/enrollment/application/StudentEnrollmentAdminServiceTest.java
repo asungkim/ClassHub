@@ -164,4 +164,62 @@ class StudentEnrollmentAdminServiceTest {
                 eq(PageRequest.of(0, 10))
         );
     }
+
+    @Test
+    void shouldHandleMissingStudentInfoGracefully() {
+        Page<StudentEnrollmentRequest> page = new PageImpl<>(List.of(request), PageRequest.of(0, 10), 1);
+        when(requestRepository.searchRequestsForAdmin(any(), any(), anySet(), any(), any())).thenReturn(page);
+        when(courseRepository.findAllById(anyCollection())).thenReturn(List.of(course));
+        CourseViewAssembler.CourseContext context = new CourseViewAssembler.CourseContext(
+                java.util.Map.of(),
+                java.util.Map.of(),
+                java.util.Map.of()
+        );
+        when(courseViewAssembler.buildContext(anyCollection())).thenReturn(context);
+        when(courseViewAssembler.toCourseResponse(any(), any())).thenReturn(courseResponse);
+        when(memberRepository.findAllById(anyCollection())).thenReturn(List.of(studentMember));
+        when(studentInfoRepository.findByMemberIdIn(anyCollection())).thenReturn(List.of());
+
+        PageResponse<TeacherEnrollmentRequestResponse> response = adminService.getRequests(
+                null,
+                null,
+                null,
+                null,
+                0,
+                10
+        );
+
+        assertThat(response.content()).hasSize(1);
+        StudentSummary summary = response.content().getFirst().student();
+        assertThat(summary.schoolName()).isNull();
+        assertThat(summary.grade()).isNull();
+    }
+
+    @Test
+    void shouldHandleMissingCourseGracefully() {
+        Page<StudentEnrollmentRequest> page = new PageImpl<>(List.of(request), PageRequest.of(0, 10), 1);
+        when(requestRepository.searchRequestsForAdmin(any(), any(), anySet(), any(), any())).thenReturn(page);
+        when(courseRepository.findAllById(anyCollection())).thenReturn(List.of());
+        CourseViewAssembler.CourseContext context = new CourseViewAssembler.CourseContext(
+                java.util.Map.of(),
+                java.util.Map.of(),
+                java.util.Map.of()
+        );
+        when(courseViewAssembler.buildContext(anyCollection())).thenReturn(context);
+        when(memberRepository.findAllById(anyCollection())).thenReturn(List.of(studentMember));
+        when(studentInfoRepository.findByMemberIdIn(anyCollection())).thenReturn(List.of(studentInfo));
+
+        PageResponse<TeacherEnrollmentRequestResponse> response = adminService.getRequests(
+                null,
+                null,
+                null,
+                null,
+                0,
+                10
+        );
+
+        assertThat(response.content()).hasSize(1);
+        CourseResponse fallback = response.content().getFirst().course();
+        assertThat(fallback.name()).isEqualTo("삭제된 Course");
+    }
 }

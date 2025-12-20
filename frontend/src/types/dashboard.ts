@@ -33,3 +33,18 @@ export type CourseStatusUpdateRequest = components["schemas"]["CourseStatusUpdat
 export type CourseScheduleRequest = components["schemas"]["CourseScheduleRequest"];
 export type CourseWithTeacherResponse = components["schemas"]["CourseWithTeacherResponse"];
 export type PublicCourseResponse = components["schemas"]["PublicCourseResponse"];
+
+export type TeacherEnrollmentRequestResponse = components["schemas"]["TeacherEnrollmentRequestResponse"];
+export type TeacherEnrollmentRequestPage = components["schemas"]["PageResponseTeacherEnrollmentRequestResponse"];
+export type EnrollmentStatus = NonNullable<TeacherEnrollmentRequestResponse["status"]>;
+
+export type StudentCourseListItemResponse = components["schemas"]["StudentCourseListItemResponse"];
+export type StudentCourseListPage = components["schemas"]["PageResponseStudentCourseListItemResponse"];
+export type StudentCourseDetailResponse = components["schemas"]["StudentCourseDetailResponse"];
+export type StudentCourseRecordUpdateRequest = components["schemas"]["StudentCourseRecordUpdateRequest"];
+export type StudentCourseResponse = components["schemas"]["StudentCourseResponse"];
+export type StudentCoursePage = components["schemas"]["PageResponseStudentCourseResponse"];
+export type StudentCourseStatusFilter = "ACTIVE" | "INACTIVE" | "ALL";
+export type StudentEnrollmentRequestCreateRequest = components["schemas"]["StudentEnrollmentRequestCreateRequest"];
+export type StudentEnrollmentRequestResponse = components["schemas"]["StudentEnrollmentRequestResponse"];
+export type StudentEnrollmentRequestPage = components["schemas"]["PageResponseStudentEnrollmentRequestResponse"];

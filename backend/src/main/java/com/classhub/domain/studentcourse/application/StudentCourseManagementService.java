@@ -202,6 +202,7 @@ public class StudentCourseManagementService {
                 member.getId(),
                 member.getName(),
                 member.getPhoneNumber(),
+                info.getParentPhone(),
                 info.getSchoolName(),
                 info.getGrade().name(),
                 calculateAge(info.getBirthDate()),

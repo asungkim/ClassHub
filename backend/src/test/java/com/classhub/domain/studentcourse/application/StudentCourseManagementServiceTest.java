@@ -160,6 +160,7 @@ class StudentCourseManagementServiceTest {
         StudentCourseListItemResponse item = response.content().getFirst();
         assertThat(item.studentName()).isEqualTo("홍길동");
         assertThat(item.courseName()).isEqualTo("고2 수학");
+        assertThat(item.parentPhoneNumber()).isEqualTo("010-1111-2222");
         verify(recordRepository).searchRecordsForTeacher(
                 teacherId,
                 courseId,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -12,9 +13,10 @@ import { Button } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/inline-error";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import type { PublicCourseResponse } from "@/types/dashboard";
-import { DASHBOARD_PAGE_SIZE, fetchPublicCourses } from "@/lib/dashboard-api";
+import { DASHBOARD_PAGE_SIZE, createStudentEnrollmentRequest, fetchPublicCourses } from "@/lib/dashboard-api";
 
 type Option = { value: string; label: string };
 
@@ -27,6 +29,7 @@ export default function StudentCourseSearchPage() {
 }
 
 function StudentCourseSearchContent() {
+  const router = useRouter();
   const { showToast } = useToast();
   const [companyId, setCompanyId] = useState("");
   const [branchId, setBranchId] = useState("");
@@ -44,6 +47,9 @@ function StudentCourseSearchContent() {
   const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
   const [branchOptionMap, setBranchOptionMap] = useState<Record<string, Record<string, string>>>({});
   const [teacherOptions, setTeacherOptions] = useState<Option[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<PublicCourseResponse | null>(null);
+  const [requestMessage, setRequestMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const loadCourses = useCallback(async () => {
     setLoading(true);
@@ -123,8 +129,35 @@ function StudentCourseSearchContent() {
     setPage(0);
   };
 
-  const handleRequestClick = () => {
-    showToast("info", "등록 요청 기능은 준비 중입니다.");
+  const handleOpenRequest = (course: PublicCourseResponse) => {
+    setSelectedCourse(course);
+    setRequestMessage("");
+  };
+
+  const closeModal = () => {
+    setSelectedCourse(null);
+    setRequestMessage("");
+  };
+
+  const handleSubmitRequest = async () => {
+    if (!selectedCourse?.courseId) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await createStudentEnrollmentRequest({
+        courseId: selectedCourse.courseId,
+        message: requestMessage.trim().length > 0 ? requestMessage.trim() : undefined
+      });
+      showToast("success", "신청이 완료되었습니다. 신청 내역에서 상태를 확인하세요.");
+      closeModal();
+      router.push("/student/my-courses?tab=requests");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "등록 요청을 보내지 못했습니다.";
+      showToast("error", message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const emptyDescription = useMemo(() => {
@@ -135,8 +168,9 @@ function StudentCourseSearchContent() {
   }, [onlyVerified]);
 
   return (
-    <div className="space-y-6 lg:space-y-8">
-      <header className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-100 sm:px-8">
+    <>
+      <div className="space-y-6 lg:space-y-8">
+        <header className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-100 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Student · Course Search</p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">반 검색</h1>
         <p className="mt-2 text-sm text-slate-500">
@@ -264,7 +298,7 @@ function StudentCourseSearchContent() {
                     <dd className="text-slate-500">{courseScheduleSummary(course)}</dd>
                   </div>
                 </dl>
-                <Button className="mt-4 w-full" onClick={handleRequestClick}>
+                <Button className="mt-4 w-full" onClick={() => handleOpenRequest(course)}>
                   등록 요청
                 </Button>
               </article>
@@ -276,7 +310,18 @@ function StudentCourseSearchContent() {
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
         )}
       </Card>
-    </div>
+      </div>
+
+      <CourseRequestModal
+        open={Boolean(selectedCourse)}
+        course={selectedCourse}
+        message={requestMessage}
+        onMessageChange={setRequestMessage}
+        onConfirm={handleSubmitRequest}
+        onClose={closeModal}
+        loading={submitting}
+      />
+    </>
   );
 }
 
@@ -369,5 +414,59 @@ function Field({ label, className, children }: FieldProps) {
       <span>{label}</span>
       {children}
     </label>
+  );
+}
+
+type CourseRequestModalProps = {
+  open: boolean;
+  course: PublicCourseResponse | null;
+  message: string;
+  onMessageChange: (value: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+  loading: boolean;
+};
+
+function CourseRequestModal({ open, course, message, onMessageChange, onConfirm, onClose, loading }: CourseRequestModalProps) {
+  return (
+    <Modal open={open} onClose={loading ? () => undefined : onClose} title="등록 요청 확인" size="lg">
+      {course ? (
+        <div className="space-y-6">
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">선택한 Course</p>
+            <div className="mt-2 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
+              <h3 className="text-lg font-bold text-slate-900">{course.name}</h3>
+              <p className="text-sm text-slate-500">{formatAcademyName(course)}</p>
+              <p className="text-xs text-slate-500">기간 {formatPeriod(course)} · {course.teacherName ?? "선생님 미지정"}</p>
+            </div>
+          </section>
+          <section>
+            <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
+              <span>전달 메시지 (선택)</span>
+              <textarea
+                className="h-32 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="선생님께 전달하고 싶은 내용을 적어주세요."
+                value={message}
+                onChange={(event) => onMessageChange(event.target.value)}
+                disabled={loading}
+              />
+            </label>
+          </section>
+          <p className="text-xs text-slate-500">
+            신청이 완료되면 ‘내 수업 → 신청 내역’에서 상태를 확인할 수 있습니다. 승인 전까지는 언제든 취소할 수 있습니다.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={onClose} disabled={loading}>
+              닫기
+            </Button>
+            <Button onClick={onConfirm} disabled={loading}>
+              {loading ? "요청 중..." : "신청 보내기"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-slate-600">선택된 Course가 없습니다.</p>
+      )}
+    </Modal>
   );
 }

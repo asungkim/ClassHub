@@ -66,6 +66,7 @@ class StudentCourseManagementControllerTest {
                 UUID.randomUUID(),
                 "홍길동",
                 "010-0000-0000",
+                "010-1111-2222",
                 "ClassHub 고등학교",
                 "HIGH_2",
                 18,

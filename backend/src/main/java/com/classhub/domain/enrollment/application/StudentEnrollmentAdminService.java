@@ -16,6 +16,8 @@ import com.classhub.domain.member.repository.StudentInfoRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -81,9 +83,6 @@ public class StudentEnrollmentAdminService {
                 .distinct()
                 .toList();
         List<Course> courses = courseRepository.findAllById(courseIds);
-        if (courses.size() < courseIds.size()) {
-            throw new BusinessException(RsCode.COURSE_NOT_FOUND);
-        }
         CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(courses);
         return courses.stream()
                 .collect(Collectors.toMap(
@@ -97,48 +96,22 @@ public class StudentEnrollmentAdminService {
                 .map(StudentEnrollmentRequest::getStudentMemberId)
                 .distinct()
                 .toList();
-        List<Member> members = memberRepository.findAllById(studentIds);
-        if (members.size() < studentIds.size()) {
-            throw new BusinessException(RsCode.MEMBER_NOT_FOUND);
-        }
-        Map<UUID, Member> memberMap = members.stream()
+        Map<UUID, Member> memberMap = memberRepository.findAllById(studentIds).stream()
                 .collect(Collectors.toMap(Member::getId, member -> member));
-        List<StudentInfo> infos = studentInfoRepository.findByMemberIdIn(studentIds);
-        if (infos.size() < studentIds.size()) {
-            throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
-        }
-        Map<UUID, StudentInfo> infoMap = infos.stream()
+        Map<UUID, StudentInfo> infoMap = studentInfoRepository.findByMemberIdIn(studentIds).stream()
                 .collect(Collectors.toMap(StudentInfo::getMemberId, info -> info));
         return studentIds.stream()
                 .collect(Collectors.toMap(
                         studentId -> studentId,
-                        studentId -> {
-                            Member member = memberMap.get(studentId);
-                            StudentInfo info = infoMap.get(studentId);
-                            return new StudentSummary(
-                                    member.getId(),
-                                    member.getName(),
-                                    member.getEmail(),
-                                    member.getPhoneNumber(),
-                                    info.getSchoolName(),
-                                    info.getGrade().name(),
-                                    info.getBirthDate() == null ? null : java.time.Period.between(info.getBirthDate(), java.time.LocalDate.now()).getYears()
-                            );
-                        }
+                        studentId -> toStudentSummary(memberMap.get(studentId), infoMap.get(studentId))
                 ));
     }
 
     private TeacherEnrollmentRequestResponse toResponse(StudentEnrollmentRequest request,
                                                         Map<UUID, CourseResponse> courseMap,
                                                         Map<UUID, StudentSummary> studentMap) {
-        CourseResponse courseResponse = courseMap.get(request.getCourseId());
+        CourseResponse courseResponse = courseMap.getOrDefault(request.getCourseId(), fallbackCourseResponse(request));
         StudentSummary summary = studentMap.get(request.getStudentMemberId());
-        if (courseResponse == null) {
-            throw new BusinessException(RsCode.COURSE_NOT_FOUND);
-        }
-        if (summary == null) {
-            throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
-        }
         return new TeacherEnrollmentRequestResponse(
                 request.getId(),
                 courseResponse,
@@ -157,5 +130,44 @@ public class StudentEnrollmentAdminService {
         }
         String trimmed = keyword.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private StudentSummary toStudentSummary(Member member, StudentInfo info) {
+        if (member == null) {
+            return new StudentSummary(null, "알 수 없음", null, null, info == null ? null : info.getSchoolName(),
+                    info == null || info.getGrade() == null ? null : info.getGrade().name(), calculateAge(info));
+        }
+        return new StudentSummary(
+                member.getId(),
+                member.getName(),
+                member.getEmail(),
+                member.getPhoneNumber(),
+                info == null ? null : info.getSchoolName(),
+                info == null || info.getGrade() == null ? null : info.getGrade().name(),
+                calculateAge(info)
+        );
+    }
+
+    private Integer calculateAge(StudentInfo info) {
+        if (info == null || info.getBirthDate() == null) {
+            return null;
+        }
+        return Period.between(info.getBirthDate(), LocalDate.now()).getYears();
+    }
+
+    private CourseResponse fallbackCourseResponse(StudentEnrollmentRequest request) {
+        return new CourseResponse(
+                request.getCourseId(),
+                null,
+                null,
+                null,
+                null,
+                "삭제된 Course",
+                "원본 Course 정보를 찾을 수 없습니다.",
+                null,
+                null,
+                false,
+                List.of()
+        );
     }
 }

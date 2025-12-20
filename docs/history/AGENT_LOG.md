@@ -2984,3 +2984,123 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminServiceTest.java`
   - `backend/src/test/java/com/classhub/domain/enrollment/web/AdminStudentEnrollmentControllerTest.java`
 - 다음 단계: 전체 Student Enrollment Suite 통합 점검 및 추가 피드백 대응
+
+## [2025-12-20 19:55] Admin 학생 요청 관리 UI 구현
+
+### Type
+
+BEHAVIORAL
+
+### Summary
+
+- `docs/plan/frontend/season2/student-enrollment-management_ui_plan.md` 1단계에 맞춰 SUPER_ADMIN 전용 “학생 요청 관리” 페이지를 추가했다.
+- OpenAPI 타입을 확장하고 `dashboard-api`에 관리자용 신청 목록 API 래퍼를 구현해 Teacher/Course/상태/이름 필터를 지원했다.
+- 상세 모달, 상태 배지, Pagination, 사이드바 메뉴 연결까지 포함한 기본 UX를 구성했고 `npm run build -- --webpack`으로 타입 검증을 완료했다.
+
+### Details
+
+- 작업 사유: 관리자에게 학습 지원 신청을 감사하는 화면이 없어 백엔드 API를 활용할 수 없었음.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/admin/student-enrollment-requests/page.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+  - `frontend/src/components/dashboard/sidebar.tsx`
+- `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+- 다음 단계: 선생님/조교용 학생 관리/신청 처리 UI 구현
+
+## [2025-12-20 22:15] Teacher/Assistant 학생 관리 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/frontend/season2/student-enrollment-management_ui_plan.md` 2단계에 맞춰 교사·조교 공용 학생 관리 화면을 구현하고 라우팅/사이드바에 연결했다.
+- 학생 목록/상세, 신청 처리 탭을 통합한 `StudentManagementView`를 추가하고, Teacher 전용 상세 모달/조교 전용 읽기 제한, 신청 일괄 승인·거절 UX를 구성했다.
+- StudentCourse/EnrollmentRequest를 위한 대시보드 API 헬퍼와 타입을 확장해 필터·선택 동작을 타입 안정성 있게 처리했다.
+
+### Details
+- 작업 사유: Teacher/Assistant 역할이 백엔드에서 제공하는 학생 관리/신청 처리 API를 소비할 수 있는 UI가 없어 Season2 플로우가 막혀 있었음.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정/추가 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/app/(dashboard)/teacher/students/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/students/page.tsx`
+- `frontend/src/components/dashboard/sidebar.tsx`
+- `frontend/src/lib/dashboard-api.ts`
+- `frontend/src/types/dashboard.ts`
+- 다음 단계: 학생 역할 UI(내 수업/신청 내역/반 검색 CTA) 구현 및 수동 브라우저 검증
+
+## [2025-12-20 23:05] Student 내 수업/신청 UI 및 반 검색 요청 흐름 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- `docs/plan/frontend/season2/student-enrollment-management_ui_plan.md` 3단계에 맞춰 학생 대시보드의 “내 수업” 페이지를 탭 구조로 재구성해 수업 목록/신청 내역을 모두 확인할 수 있게 했다.
+- 학생 전용 API 헬퍼(`fetchStudentMyCourses`, `fetchMyEnrollmentRequests`, `createStudentEnrollmentRequest`, `cancelStudentEnrollmentRequest`)와 타입을 추가해 OpenAPI 스키마와 동기화했다.
+- 수업 목록 탭은 검색/페이지네이션을 제공하고, 신청 내역 탭은 상태 필터 + 취소 Confirm Dialog로 대기 요청을 취소할 수 있게 했다.
+- 반 검색 페이지의 “등록 요청” 버튼을 신청 모달(메시지 입력/확인)로 연결하고, 성공 시 `student/my-courses?tab=requests`로 이동하도록 UX를 완성했다.
+- `npm run build -- --webpack`으로 타입/빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: 학생이 Enrollment API를 활용할 UI가 없어 신청 진행 상황/취소/재신청 흐름이 막혀 있었음.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정/추가 파일:
+  - `frontend/src/types/dashboard.ts`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+  - `frontend/src/app/(dashboard)/student/course/search/page.tsx`
+- 다음 단계: 학생 UI 수동 테스트 및 후속 피드백 대응
+
+## [2025-12-20 23:40] 학생 관리 상세 수정/검색 UX 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher 학생 상세 모달에 “수업 기록” 수정 버튼을 추가하고, 조교/클리닉 슬롯/노트 필드를 편집해 `PATCH /api/v1/student-courses/{recordId}`로 저장할 수 있도록 했다.
+- 저장/취소 액션 시 토스트와 리스트 리프레시가 반영되며, 조교는 여전히 읽기 전용이다.
+- 학생 목록 검색 입력은 수동 적용(검색 버튼/Enter)으로 바뀌어 타이핑 중 자동 refetch로 인해 포커스가 날아가는 문제를 해결했다.
+
+### Details
+- 작업 사유: Teacher가 수업 기록을 즉시 수정할 수 없고, 자동 검색이 입력 UX를 방해함.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정/추가 파일:
+- `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 브라우저에서 Teacher 계정으로 학생 상세 수정/검색 UX를 수동 확인
+
+## [2025-12-20 23:55] Admin 학생 요청 조회 서버 오류 해결
+
+### Type
+BUGFIX
+
+### Summary
+- `StudentEnrollmentAdminService`에서 Course/StudentInfo가 삭제된 신청을 만났을 때 `BusinessException`이 발생하던 문제를 해결했다.
+- CourseResponse/StudentSummary를 생성할 때 기본값을 제공하고, 테스트로 누락 케이스를 검증해 `/admin/student-enrollment-requests`에서 서버 오류 없이 응답이 내려온다.
+
+### Details
+- 작업 사유: Admin UI에서 “서버 오류입니다”가 표시되며 목록을 확인할 수 없었음.
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.enrollment.application.StudentEnrollmentAdminServiceTest"` (로컬 Gradle 권한 문제로 실행 불가, 환경 정리 필요)
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminService.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminServiceTest.java`
+- 다음 단계: 서버 재기동 후 Admin 학생 신청 목록을 수동 확인
+
+## [2025-12-21 00:10] StudentCourseListItemResponse 부모 연락처 노출
+
+### Type
+STRUCTURAL
+
+### Summary
+- Teacher/Assistant 학생 목록 API 응답(`StudentCourseListItemResponse`)에 학부모 연락처를 추가해 프론트가 바로 확인할 수 있도록 백엔드 DTO/서비스/테스트를 수정했다.
+- Service에서 StudentInfo의 `parentPhone`을 매핑하고, Controller/Service 테스트 데이터를 새로운 필드에 맞게 갱신했다.
+
+### Details
+- 작업 사유: 학생 관리 화면에서 학부모 연락처 정보를 바로 제공하기 위해 응답 필드 확장이 필요함.
+- 영향받은 테스트: `./gradlew test --tests "com.classhub.domain.studentcourse.application.StudentCourseManagementServiceTest"` (Gradle wrapper lock 파일 권한 문제로 실행 실패)
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseListItemResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseManagementControllerTest.java`

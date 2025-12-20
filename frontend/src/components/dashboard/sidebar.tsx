@@ -30,6 +30,7 @@ const menuByRole: Record<Role, MenuItem[]> = {
   ASSISTANT: [
     { href: "/assistant", label: "대시보드", icon: "📊" },
     { href: "/assistant/courses", label: "반 목록", icon: "📚" },
+    { href: "/assistant/students", label: "학생 관리", icon: "👨‍🎓" },
     { href: "/assistant/clinics", label: "클리닉 일정", icon: "🩺" },
     { href: "/assistant/worklogs", label: "근무 일지", icon: "📝" },
   ],
@@ -43,6 +44,7 @@ const menuByRole: Record<Role, MenuItem[]> = {
   SUPER_ADMIN: [
     { href: "/admin", label: "대시보드", icon: "📊" },
     { href: "/admin/courses", label: "반 관리", icon: "📚" },
+    { href: "/admin/student-enrollment-requests", label: "학생 요청 관리", icon: "📝" },
     { href: "/admin/companies", label: "학원 검증", icon: "🏢" },
     { href: "/admin/branches", label: "지점 검증", icon: "🏪" },
   ],

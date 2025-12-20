@@ -7,6 +7,7 @@ public record StudentCourseListItemResponse(
         UUID studentMemberId,
         String studentName,
         String phoneNumber,
+        String parentPhoneNumber,
         String schoolName,
         String grade,
         Integer age,
