@@ -12,6 +12,7 @@ import com.classhub.domain.progress.dto.ProgressSliceResponse;
 import com.classhub.domain.progress.personal.dto.request.PersonalProgressCreateRequest;
 import com.classhub.domain.progress.personal.dto.request.PersonalProgressUpdateRequest;
 import com.classhub.domain.progress.personal.dto.response.PersonalProgressResponse;
+import com.classhub.domain.progress.personal.mapper.PersonalProgressMapper;
 import com.classhub.domain.progress.personal.model.PersonalProgress;
 import com.classhub.domain.progress.personal.repository.PersonalProgressRepository;
 import com.classhub.domain.progress.support.ProgressPermissionValidator;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -38,6 +40,9 @@ class PersonalProgressServiceTest {
     private PersonalProgressRepository personalProgressRepository;
     @Mock
     private ProgressPermissionValidator permissionValidator;
+
+    @Spy
+    private PersonalProgressMapper personalProgressMapper = new PersonalProgressMapper();
 
     @InjectMocks
     private PersonalProgressService personalProgressService;

@@ -7,6 +7,7 @@ import com.classhub.domain.progress.dto.ProgressSliceResponse.ProgressCursor;
 import com.classhub.domain.progress.personal.dto.request.PersonalProgressCreateRequest;
 import com.classhub.domain.progress.personal.dto.request.PersonalProgressUpdateRequest;
 import com.classhub.domain.progress.personal.dto.response.PersonalProgressResponse;
+import com.classhub.domain.progress.personal.mapper.PersonalProgressMapper;
 import com.classhub.domain.progress.personal.model.PersonalProgress;
 import com.classhub.domain.progress.personal.repository.PersonalProgressRepository;
 import com.classhub.domain.progress.support.ProgressPermissionValidator;
@@ -32,6 +33,7 @@ public class PersonalProgressService {
 
     private final PersonalProgressRepository personalProgressRepository;
     private final ProgressPermissionValidator permissionValidator;
+    private final PersonalProgressMapper personalProgressMapper;
 
     public PersonalProgressResponse createPersonalProgress(MemberPrincipal principal,
                                                            UUID recordId,
@@ -49,7 +51,7 @@ public class PersonalProgressService {
                 .content(request.content())
                 .build();
         PersonalProgress saved = personalProgressRepository.save(progress);
-        return toResponse(saved, record.getCourseId(), MemberRole.TEACHER);
+        return personalProgressMapper.toResponse(saved, record.getCourseId(), MemberRole.TEACHER);
     }
 
     @Transactional(readOnly = true)
@@ -72,7 +74,7 @@ public class PersonalProgressService {
                 PageRequest.of(0, pageSize)
         );
         List<PersonalProgressResponse> items = progressList.stream()
-                .map(progress -> toResponse(progress, record.getCourseId(), MemberRole.TEACHER))
+                .map(progress -> personalProgressMapper.toResponse(progress, record.getCourseId(), MemberRole.TEACHER))
                 .toList();
         ProgressCursor nextCursor = resolveNextCursor(progressList, pageSize);
         return new ProgressSliceResponse<>(items, nextCursor);
@@ -89,7 +91,7 @@ public class PersonalProgressService {
         );
         progress.update(request.date(), request.title(), request.content());
         PersonalProgress saved = personalProgressRepository.save(progress);
-        return toResponse(saved, record.getCourseId(), MemberRole.TEACHER);
+        return personalProgressMapper.toResponse(saved, record.getCourseId(), MemberRole.TEACHER);
     }
 
     public void deletePersonalProgress(MemberPrincipal principal, UUID progressId) {
@@ -105,22 +107,6 @@ public class PersonalProgressService {
     private PersonalProgress loadProgress(UUID progressId) {
         return personalProgressRepository.findById(progressId)
                 .orElseThrow(() -> new BusinessException(RsCode.PERSONAL_LESSON_NOT_FOUND));
-    }
-
-    private PersonalProgressResponse toResponse(PersonalProgress progress,
-                                                UUID courseId,
-                                                MemberRole writerRole) {
-        return new PersonalProgressResponse(
-                progress.getId(),
-                progress.getStudentCourseRecordId(),
-                courseId,
-                progress.getDate(),
-                progress.getTitle(),
-                progress.getContent(),
-                progress.getWriterId(),
-                writerRole,
-                progress.getCreatedAt()
-        );
     }
 
     private ProgressCursor resolveNextCursor(List<PersonalProgress> progressList, int limit) {

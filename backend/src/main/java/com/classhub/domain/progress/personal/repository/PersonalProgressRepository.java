@@ -40,4 +40,15 @@ public interface PersonalProgressRepository extends JpaRepository<PersonalProgre
     List<PersonalProgress> findByStudentAndDateRange(@Param("studentId") UUID studentId,
                                                      @Param("startDate") LocalDate startDate,
                                                      @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            SELECT pp
+            FROM PersonalProgress pp
+            WHERE pp.studentCourseRecordId IN :recordIds
+              AND pp.date BETWEEN :startDate AND :endDate
+            ORDER BY pp.date ASC, pp.id ASC
+            """)
+    List<PersonalProgress> findByRecordIdsAndDateRange(@Param("recordIds") List<UUID> recordIds,
+                                                      @Param("startDate") LocalDate startDate,
+                                                      @Param("endDate") LocalDate endDate);
 }

@@ -3251,3 +3251,70 @@ BUGFIX
   - `backend/src/test/java/com/classhub/domain/progress/personal/repository/PersonalProgressRepositoryTest.java`
   - `backend/src/test/java/com/classhub/domain/progress/support/ProgressPermissionValidatorTest.java`
 - 다음 단계: Stage3(Student Calendar Aggregation) 착수 여부 확인.
+
+## [2025-12-21 18:19] Gradle 테스트 실행 가이드 업데이트
+
+### Type
+DESIGN
+
+### Summary
+- 샌드박스 권한 문제를 피하기 위한 Gradle 실행 가이드를 backend/AGENTS.md에 명시했다.
+
+### Details
+- 작업 사유: 현재 진행 중인 테스트 실행 방식(GRADLE_USER_HOME 지정)을 표준화하기 위함.
+- 영향받은 테스트: 없음 (문서 업데이트)
+- 수정한 파일:
+  - `backend/AGENTS.md`
+- 다음 단계: Progress Stage3(Student Calendar Aggregation) TDD 구현 진행.
+
+## [2025-12-21 18:29] Progress Stage3 학생 캘린더 집계 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Student Calendar 집계를 위한 Course/Personal/Clinic 조회 쿼리와 프로젝션을 추가하고, 월간 캘린더 서비스/컨트롤러를 구현했다.
+- 캘린더 응답에 courseName/recordSummary까지 매핑하도록 writerRole 및 course 정보를 로드하는 로직을 넣었다.
+- 캘린더 및 클리닉 이벤트 쿼리/서비스/컨트롤러 테스트를 작성해 Stage3 흐름을 검증했다.
+
+### Details
+- 작업 사유: progress-management_plan Stage3(Student Calendar Aggregation) 구현을 완료하기 위함.
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle-local ./gradlew test`
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/progress/application/StudentCalendarService.java`
+  - `backend/src/main/java/com/classhub/domain/progress/web/StudentCalendarController.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/repository/CourseProgressRepository.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/repository/PersonalProgressRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceEventProjection.java`
+  - `backend/src/test/java/com/classhub/domain/progress/application/StudentCalendarServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/web/StudentCalendarControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/course/repository/CourseProgressRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/personal/repository/PersonalProgressRepositoryTest.java`
+- 다음 단계: Progress Stage3 이후 리팩터링(Mapper 분리) 여부 검토.
+
+## [2025-12-21 19:04] Progress/Calendar 매퍼 분리 리팩터링
+
+### Type
+STRUCTURAL
+
+### Summary
+- Course/Personal Progress와 Student Calendar 응답 매핑 로직을 전용 Mapper 클래스로 분리했다.
+- StudentCalendar 테스트 패키지를 calendar 도메인 구조에 맞게 이동해 파일 구조를 정리했다.
+
+### Details
+- 작업 사유: progress-management_plan Step 6(매퍼 분리) 구조 정리를 완료하기 위함.
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle-local ./gradlew test`
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/progress/course/mapper/CourseProgressMapper.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/mapper/PersonalProgressMapper.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/application/CourseProgressService.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/application/PersonalProgressService.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/application/StudentCalendarService.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/course/application/CourseProgressServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/personal/application/PersonalProgressServiceTest.java`
+- 다음 단계: 추가 리팩터링 필요 여부 확인.

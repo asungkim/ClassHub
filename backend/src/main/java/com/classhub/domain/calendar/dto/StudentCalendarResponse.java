@@ -1,4 +1,4 @@
-package com.classhub.domain.progress.dto;
+package com.classhub.domain.calendar.dto;
 
 import com.classhub.domain.member.model.MemberRole;
 import java.time.LocalDate;

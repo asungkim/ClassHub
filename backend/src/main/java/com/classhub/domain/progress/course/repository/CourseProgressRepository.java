@@ -40,4 +40,15 @@ public interface CourseProgressRepository extends JpaRepository<CourseProgress, 
     List<CourseProgress> findByStudentAndDateRange(@Param("studentId") UUID studentId,
                                                    @Param("startDate") LocalDate startDate,
                                                    @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            SELECT cp
+            FROM CourseProgress cp
+            WHERE cp.courseId IN :courseIds
+              AND cp.date BETWEEN :startDate AND :endDate
+            ORDER BY cp.date ASC, cp.id ASC
+            """)
+    List<CourseProgress> findByCourseIdsAndDateRange(@Param("courseIds") List<UUID> courseIds,
+                                                     @Param("startDate") LocalDate startDate,
+                                                     @Param("endDate") LocalDate endDate);
 }

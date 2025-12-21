@@ -100,6 +100,32 @@ class CourseProgressRepositoryTest {
                 .containsExactly("Included 1", "Included 2");
     }
 
+    @Test
+    @DisplayName("Course 목록 기준 월별 조회는 해당 Course만 반환한다")
+    void findByCourseIdsAndDateRange_shouldFilterByCourseIds() {
+        LocalDate start = LocalDate.of(2024, Month.MARCH, 1);
+        LocalDate end = LocalDate.of(2024, Month.MARCH, 31);
+
+        persistProgress(course, LocalDateTime.of(2024, 3, 4, 9, 0), LocalDate.of(2024, 3, 4), "Included A");
+        persistProgress(course, LocalDateTime.of(2024, 4, 1, 9, 0), LocalDate.of(2024, 4, 1), "Excluded future");
+
+        Course otherCourse = courseRepository.save(createCourse(UUID.randomUUID()));
+        persistProgress(otherCourse, LocalDateTime.of(2024, 3, 6, 9, 0), LocalDate.of(2024, 3, 6), "Included B");
+
+        Course unrelated = courseRepository.save(createCourse(UUID.randomUUID()));
+        persistProgress(unrelated, LocalDateTime.of(2024, 3, 5, 9, 0), LocalDate.of(2024, 3, 5), "Excluded C");
+
+        List<CourseProgress> results = courseProgressRepository.findByCourseIdsAndDateRange(
+                List.of(course.getId(), otherCourse.getId()),
+                start,
+                end
+        );
+
+        assertThat(results)
+                .extracting(CourseProgress::getTitle)
+                .containsExactly("Included A", "Included B");
+    }
+
     private Course createCourse(UUID ownerId) {
         return Course.create(
                 UUID.randomUUID(),

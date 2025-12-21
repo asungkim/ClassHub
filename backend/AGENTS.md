@@ -81,6 +81,14 @@
 8. 구조 변경과 행동 변경을 분리해 커밋한다.
 9. 다음 기능 단위에 대한 테스트를 추가하고 반복한다.
 
+## Gradle 실행 가이드
+
+- 샌드박스 환경에서 권한 문제를 피하려면 Gradle 캐시 경로를 로컬로 지정한다.
+- 예시:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew build`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.auth.application.AuthServiceTest"`
+
 ## 2. 테스트 코드 작성 지침
 
 ### 2.1 Repository 테스트

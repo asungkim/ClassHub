@@ -7,6 +7,7 @@ import com.classhub.domain.progress.course.dto.request.CourseProgressComposeRequ
 import com.classhub.domain.progress.course.dto.request.CourseProgressCreateRequest;
 import com.classhub.domain.progress.course.dto.request.CourseProgressUpdateRequest;
 import com.classhub.domain.progress.course.dto.response.CourseProgressResponse;
+import com.classhub.domain.progress.course.mapper.CourseProgressMapper;
 import com.classhub.domain.progress.course.model.CourseProgress;
 import com.classhub.domain.progress.course.repository.CourseProgressRepository;
 import com.classhub.domain.progress.dto.ProgressSliceResponse;
@@ -38,6 +39,7 @@ public class CourseProgressService {
     private final CourseProgressRepository courseProgressRepository;
     private final PersonalProgressRepository personalProgressRepository;
     private final ProgressPermissionValidator permissionValidator;
+    private final CourseProgressMapper courseProgressMapper;
 
     public CourseProgressResponse createCourseProgress(MemberPrincipal principal,
                                                        UUID courseId,
@@ -51,7 +53,7 @@ public class CourseProgressService {
                 .content(request.content())
                 .build();
         CourseProgress saved = courseProgressRepository.save(progress);
-        return toResponse(saved, MemberRole.TEACHER);
+        return courseProgressMapper.toResponse(saved, MemberRole.TEACHER);
     }
 
     public CourseProgressResponse composeCourseProgress(MemberPrincipal principal,
@@ -72,7 +74,7 @@ public class CourseProgressService {
         if (!personalProgresses.isEmpty()) {
             personalProgressRepository.saveAll(personalProgresses);
         }
-        return toResponse(saved, MemberRole.TEACHER);
+        return courseProgressMapper.toResponse(saved, MemberRole.TEACHER);
     }
 
     @Transactional(readOnly = true)
@@ -91,7 +93,7 @@ public class CourseProgressService {
                 PageRequest.of(0, pageSize)
         );
         List<CourseProgressResponse> items = progressList.stream()
-                .map(progress -> toResponse(progress, MemberRole.TEACHER))
+                .map(progress -> courseProgressMapper.toResponse(progress, MemberRole.TEACHER))
                 .toList();
         ProgressCursor nextCursor = resolveNextCursor(progressList, pageSize);
         return new ProgressSliceResponse<>(items, nextCursor);
@@ -104,7 +106,7 @@ public class CourseProgressService {
         permissionValidator.ensureCourseAccess(principal, progress.getCourseId(), ProgressAccessMode.WRITE);
         progress.update(request.date(), request.title(), request.content());
         CourseProgress saved = courseProgressRepository.save(progress);
-        return toResponse(saved, MemberRole.TEACHER);
+        return courseProgressMapper.toResponse(saved, MemberRole.TEACHER);
     }
 
     public void deleteCourseProgress(MemberPrincipal principal, UUID progressId) {
@@ -136,19 +138,6 @@ public class CourseProgressService {
                 .title(request.title())
                 .content(request.content())
                 .build();
-    }
-
-    private CourseProgressResponse toResponse(CourseProgress progress, MemberRole writerRole) {
-        return new CourseProgressResponse(
-                progress.getId(),
-                progress.getCourseId(),
-                progress.getDate(),
-                progress.getTitle(),
-                progress.getContent(),
-                progress.getWriterId(),
-                writerRole,
-                progress.getCreatedAt()
-        );
     }
 
     private ProgressCursor resolveNextCursor(List<CourseProgress> progressList, int limit) {
