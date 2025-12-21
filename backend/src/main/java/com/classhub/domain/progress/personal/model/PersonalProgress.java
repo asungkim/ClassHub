@@ -52,4 +52,16 @@ public class PersonalProgress extends BaseEntity {
         this.title = Objects.requireNonNull(title, "title must not be null").trim();
         this.content = Objects.requireNonNull(content, "content must not be null");
     }
+
+    public void update(LocalDate date, String title, String content) {
+        if (date != null) {
+            this.date = date;
+        }
+        if (title != null) {
+            this.title = title.trim();
+        }
+        if (content != null) {
+            this.content = content;
+        }
+    }
 }

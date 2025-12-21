@@ -3203,3 +3203,51 @@ DESIGN
 - 수정한 파일:
   - `docs/plan/backend/season2/progress-management_plan.md`
 - 다음 단계: Stage 1부터 TODO 진행.
+
+## [2025-12-21 17:36] Progress Stage2 CRUD 서비스/컨트롤러 구축
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Progress Stage2에 필요한 Course/Personal Progress CRUD 서비스와 API 컨트롤러를 추가하고, compose/커서 목록 로직까지 구현했다.
+- Course/Personal Progress 커서 조회 및 학생-교사 필터 쿼리를 보완해 Stage1 테스트가 동작하도록 정비했다.
+- 서비스/컨트롤러 단위 테스트를 추가해 생성·수정·삭제·커서 응답 흐름을 검증할 기반을 마련했다.
+
+### Details
+- 작업 사유: progress-management_plan Stage2(Progress CRUD) 구현을 이어가기 위해 서비스/엔드포인트와 커서 응답 포맷이 필요함.
+- 영향받은 테스트: `./gradlew test --tests "*CourseProgressServiceTest" --tests "*PersonalProgressServiceTest" --tests "*CourseProgressControllerTest" --tests "*PersonalProgressControllerTest" --tests "*CourseProgressRepositoryTest" --tests "*PersonalProgressRepositoryTest" --tests "*StudentCourseRecordRepositoryTest"` (미실행; 기존 Gradle lock 이슈로 보류)
+- 수정/추가 파일:
+  - `backend/src/main/java/com/classhub/domain/progress/course/application/CourseProgressService.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/application/PersonalProgressService.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/web/CourseProgressController.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/web/PersonalProgressController.java`
+  - `backend/src/main/java/com/classhub/domain/progress/dto/ProgressSliceResponse.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/repository/CourseProgressRepository.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/repository/PersonalProgressRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/model/CourseProgress.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/model/PersonalProgress.java`
+  - `backend/src/test/java/com/classhub/domain/progress/course/application/CourseProgressServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/personal/application/PersonalProgressServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/course/web/CourseProgressControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/personal/web/PersonalProgressControllerTest.java`
+- 다음 단계: Gradle lock 해결 후 Stage2 테스트 실행, 필요 시 Stage3(Student Calendar Aggregation) 착수.
+
+## [2025-12-21 17:46] Progress 커서 조회 테스트 안정화
+
+### Type
+BUGFIX
+
+### Summary
+- Progress 커서 조회 테스트가 createdAt 정렬과 맞지 않아 실패하던 문제를 수정했다.
+- 불필요한 Mockito stub을 제거해 ProgressPermissionValidator 테스트가 strict mode에서 통과하도록 정리했다.
+
+### Details
+- 작업 사유: 전체 테스트 실행 시 Progress 관련 저장소/권한 테스트가 실패함.
+- 영향받은 테스트: `cd backend && GRADLE_USER_HOME=../.gradle-local ./gradlew test`
+- 수정한 파일:
+  - `backend/src/test/java/com/classhub/domain/progress/course/repository/CourseProgressRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/personal/repository/PersonalProgressRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/support/ProgressPermissionValidatorTest.java`
+- 다음 단계: Stage3(Student Calendar Aggregation) 착수 여부 확인.

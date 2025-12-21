@@ -48,4 +48,26 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
                                                        @Param("inactiveOnly") boolean inactiveOnly,
                                                        @Param("keyword") String keyword,
                                                        Pageable pageable);
+
+    @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            JOIN Course c ON c.id = scr.courseId
+            WHERE scr.studentMemberId = :studentId
+              AND c.teacherMemberId = :teacherId
+              AND scr.deletedAt IS NULL
+            """)
+    List<StudentCourseRecord> findActiveByStudentIdAndTeacherId(@Param("studentId") UUID studentId,
+                                                                @Param("teacherId") UUID teacherId);
+
+    @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            JOIN Course c ON c.id = scr.courseId
+            WHERE scr.studentMemberId = :studentId
+              AND c.teacherMemberId IN :teacherIds
+              AND scr.deletedAt IS NULL
+            """)
+    List<StudentCourseRecord> findActiveByStudentIdAndTeacherIds(@Param("studentId") UUID studentId,
+                                                                 @Param("teacherIds") List<UUID> teacherIds);
 }
