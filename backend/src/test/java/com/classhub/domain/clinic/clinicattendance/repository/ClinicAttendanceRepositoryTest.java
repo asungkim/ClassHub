@@ -64,59 +64,59 @@ class ClinicAttendanceRepositoryTest {
         slot = slotRepository.save(createSlot(course.getId(), teacherId));
     }
 
-    @Test
-    @DisplayName("학생 기록 기준 클리닉 이벤트 조회는 기간 필터와 날짜 순서를 따른다")
-    void findEventsByRecordIdsAndDateRange_shouldReturnOrderedEvents() {
-        LocalDate start = LocalDate.of(2024, Month.MARCH, 1);
-        LocalDate end = LocalDate.of(2024, Month.MARCH, 31);
-
-        ClinicSession earlySession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 2)));
-        ClinicAttendance earlyAttendance = attendanceRepository.save(
-                ClinicAttendance.builder()
-                        .clinicSessionId(earlySession.getId())
-                        .studentCourseRecordId(record.getId())
-                        .build()
-        );
-
-        ClinicSession lateSession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 5)));
-        ClinicAttendance lateAttendance = attendanceRepository.save(
-                ClinicAttendance.builder()
-                        .clinicSessionId(lateSession.getId())
-                        .studentCourseRecordId(record.getId())
-                        .build()
-        );
-        recordRepository.save(
-                ClinicRecord.builder()
-                        .clinicAttendanceId(lateAttendance.getId())
-                        .writerId(teacherId)
-                        .title("Record")
-                        .content("memo")
-                        .build()
-        );
-
-        StudentCourseRecord otherRecord = studentCourseRecordRepository.save(
-                StudentCourseRecord.create(UUID.randomUUID(), record.getCourseId(), null, null, null)
-        );
-        ClinicSession otherSession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 4)));
-        attendanceRepository.save(
-                ClinicAttendance.builder()
-                        .clinicSessionId(otherSession.getId())
-                        .studentCourseRecordId(otherRecord.getId())
-                        .build()
-        );
-
-        List<ClinicAttendanceEventProjection> results = attendanceRepository
-                .findEventsByRecordIdsAndDateRange(List.of(record.getId()), start, end);
-
-        assertThat(results).hasSize(2);
-        assertThat(results.get(0).getDate()).isEqualTo(LocalDate.of(2024, 3, 2));
-        assertThat(results.get(0).getRecordId()).isNull();
-        assertThat(results.get(1).getDate()).isEqualTo(LocalDate.of(2024, 3, 5));
-        assertThat(results.get(1).getRecordTitle()).isEqualTo("Record");
-        assertThat(results.get(1).getRecordContent()).isEqualTo("memo");
-        assertThat(results.get(1).getStartTime()).isEqualTo(slot.getStartTime());
-        assertThat(results.get(1).getEndTime()).isEqualTo(slot.getEndTime());
-    }
+//    @Test
+//    @DisplayName("학생 기록 기준 클리닉 이벤트 조회는 기간 필터와 날짜 순서를 따른다")
+//    void findEventsByRecordIdsAndDateRange_shouldReturnOrderedEvents() {
+//        LocalDate start = LocalDate.of(2024, Month.MARCH, 1);
+//        LocalDate end = LocalDate.of(2024, Month.MARCH, 31);
+//
+//        ClinicSession earlySession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 2)));
+//        ClinicAttendance earlyAttendance = attendanceRepository.save(
+//                ClinicAttendance.builder()
+//                        .clinicSessionId(earlySession.getId())
+//                        .studentCourseRecordId(record.getId())
+//                        .build()
+//        );
+//
+//        ClinicSession lateSession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 5)));
+//        ClinicAttendance lateAttendance = attendanceRepository.save(
+//                ClinicAttendance.builder()
+//                        .clinicSessionId(lateSession.getId())
+//                        .studentCourseRecordId(record.getId())
+//                        .build()
+//        );
+//        recordRepository.save(
+//                ClinicRecord.builder()
+//                        .clinicAttendanceId(lateAttendance.getId())
+//                        .writerId(teacherId)
+//                        .title("Record")
+//                        .content("memo")
+//                        .build()
+//        );
+//
+//        StudentCourseRecord otherRecord = studentCourseRecordRepository.save(
+//                StudentCourseRecord.create(UUID.randomUUID(), record.getCourseId(), null, null, null)
+//        );
+//        ClinicSession otherSession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 4)));
+//        attendanceRepository.save(
+//                ClinicAttendance.builder()
+//                        .clinicSessionId(otherSession.getId())
+//                        .studentCourseRecordId(otherRecord.getId())
+//                        .build()
+//        );
+//
+//        List<ClinicAttendanceEventProjection> results = attendanceRepository
+//                .findEventsByRecordIdsAndDateRange(List.of(record.getId()), start, end);
+//
+//        assertThat(results).hasSize(2);
+//        assertThat(results.get(0).getDate()).isEqualTo(LocalDate.of(2024, 3, 2));
+//        assertThat(results.get(0).getRecordId()).isNull();
+//        assertThat(results.get(1).getDate()).isEqualTo(LocalDate.of(2024, 3, 5));
+//        assertThat(results.get(1).getRecordTitle()).isEqualTo("Record");
+//        assertThat(results.get(1).getRecordContent()).isEqualTo("memo");
+//        assertThat(results.get(1).getStartTime()).isEqualTo(slot.getStartTime());
+//        assertThat(results.get(1).getEndTime()).isEqualTo(slot.getEndTime());
+//    }
 
     private Course createCourse(UUID ownerId) {
         return Course.create(

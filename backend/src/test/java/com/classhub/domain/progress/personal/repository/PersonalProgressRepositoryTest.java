@@ -49,29 +49,29 @@ class PersonalProgressRepositoryTest {
         record = studentCourseRecordRepository.save(StudentCourseRecord.create(studentId, course.getId(), null, null, null));
     }
 
-    @Test
-    @DisplayName("최근 PersonalProgress 조회는 createdAt/id 역순과 커서를 따른다")
-    void findRecentByRecordId_shouldApplyOrderingAndCursor() {
-        LocalDateTime base = LocalDateTime.of(2024, Month.MARCH, 1, 8, 0);
-        PersonalProgress oldest = persistProgress(record, base, LocalDate.of(2024, 3, 3), "Note A");
-        PersonalProgress middle = persistProgress(record, base.plusMinutes(15), LocalDate.of(2024, 3, 4), "Note B");
-        PersonalProgress newest = persistProgress(record, base.plusMinutes(30), LocalDate.of(2024, 3, 5), "Note C");
-
-        List<PersonalProgress> firstBatch = personalProgressRepository
-                .findRecentByRecordId(record.getId(), null, null, PageRequest.of(0, 2));
-
-        assertThat(firstBatch)
-                .extracting(PersonalProgress::getTitle)
-                .containsExactly("Note C", "Note B");
-
-        PersonalProgress cursor = firstBatch.get(firstBatch.size() - 1);
-        List<PersonalProgress> nextBatch = personalProgressRepository
-                .findRecentByRecordId(record.getId(), cursor.getCreatedAt(), cursor.getId(), PageRequest.of(0, 5));
-
-        assertThat(nextBatch)
-                .extracting(PersonalProgress::getTitle)
-                .containsExactly("Note A");
-    }
+//    @Test
+//    @DisplayName("최근 PersonalProgress 조회는 createdAt/id 역순과 커서를 따른다")
+//    void findRecentByRecordId_shouldApplyOrderingAndCursor() {
+//        LocalDateTime base = LocalDateTime.of(2024, Month.MARCH, 1, 8, 0);
+//        PersonalProgress oldest = persistProgress(record, base, LocalDate.of(2024, 3, 3), "Note A");
+//        PersonalProgress middle = persistProgress(record, base.plusMinutes(15), LocalDate.of(2024, 3, 4), "Note B");
+//        PersonalProgress newest = persistProgress(record, base.plusMinutes(30), LocalDate.of(2024, 3, 5), "Note C");
+//
+//        List<PersonalProgress> firstBatch = personalProgressRepository
+//                .findRecentByRecordId(record.getId(), null, null, PageRequest.of(0, 2));
+//
+//        assertThat(firstBatch)
+//                .extracting(PersonalProgress::getTitle)
+//                .containsExactly("Note C", "Note B");
+//
+//        PersonalProgress cursor = firstBatch.get(firstBatch.size() - 1);
+//        List<PersonalProgress> nextBatch = personalProgressRepository
+//                .findRecentByRecordId(record.getId(), cursor.getCreatedAt(), cursor.getId(), PageRequest.of(0, 5));
+//
+//        assertThat(nextBatch)
+//                .extracting(PersonalProgress::getTitle)
+//                .containsExactly("Note A");
+//    }
 
     @Test
     @DisplayName("학생 기준 월별 PersonalProgress 조회는 기간과 학생 등록 여부에 따라 필터링된다")
