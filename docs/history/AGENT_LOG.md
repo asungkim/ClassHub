@@ -198,6 +198,25 @@ BEHAVIORAL
 
 BEHAVIORAL
 
+## [2025-12-21 12:50] 개선 백로그 정리 및 학생 그룹화 개선안 추가
+
+### Type
+
+TODO_UPDATE
+
+### Summary
+
+- `docs/refactor/improvment-backlog.md` 문서를 재구성해 각 아이템의 목적·작업 범위를 명확히 했다.
+- 선생님 대시보드 학생 목록을 학생 단위로 묶는 신규 개선안을 backlog에 추가했다.
+
+### Details
+
+- 작업 사유: 베타 이후 단계적으로 처리할 이슈를 표준 포맷으로 정리하고, 학생 목록 중복 노출 문제를 추적하기 위함.
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/refactor/improvment-backlog.md`
+- 다음 단계: 해당 개선안이 구체화되면 Requirement/Spec/TODO에 반영하고 PLAN 문서 작성 후 구현 착수.
+
 ### Summary
 
 - Course 도메인에 요일/시간 검증을 추가하고 권한/존재 검증 예외 코드를 명확히 했다.
@@ -3123,3 +3142,64 @@ BEHAVIORAL
   - frontend/src/utils/student.ts
 - 다음 단계
   - 필요 시 lint 스크립트를 정의하거나 별도 품질 검증 절차 마련
+
+## [2025-12-21 15:59] Progress 관리 백엔드 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- CourseProgress/PersonalProgress/Calendar 요구를 다루는 백엔드 전용 Progress Management 계획을 작성했다.
+- 생성·조회·수정·삭제 API, 배치 작성 흐름, 권한 검증 흐름, Student Calendar 집계, 그리고 단계별 TDD 전략을 정의했다.
+
+### Details
+- 작업 사유: Phase 5 Progress Epic을 구현하기 전 API/도메인/테스트 범위를 명확히 하기 위함.
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일:
+  - `docs/plan/backend/season2/progress-management_plan.md`
+- 다음 단계: 계획 검토/승인 후 TODO 상태 업데이트 및 TDD/구현 착수.
+
+## [2025-12-21 16:10] Progress PLAN 권한 정책 수정
+
+### Type
+DESIGN
+
+### Summary
+- 사용자 피드백에 따라 Progress 백엔드 설계에서 Assistant의 생성/수정 권한을 제거하고, Student/Admin이 모든 Progress/Calendar API에 접근할 수 없도록 갱신했다.
+
+### Details
+- 작업 사유: Teacher 전용 작성/편집 흐름을 강제하고, 추후 요구가 있을 때만 권한을 열기 위함.
+- 영향받은 테스트: 없음 (문서 작업)
+- 수정한 파일:
+  - `docs/plan/backend/season2/progress-management_plan.md`
+- 다음 단계: 이 변경 기준으로 구현을 설계/진행.
+
+## [2025-12-21 16:11] Progress homework 개선 아이디어 기록
+
+### Type
+TODO_UPDATE
+
+### Summary
+- 향후 Course/Personal Progress에 homework 필드를 추가해 학생이 본인 숙제만 조회할 수 있도록 개선하는 아이디어를 개선 백로그에 추가했다.
+
+### Details
+- 작업 사유: Progress 데이터를 학생에게 한정 공개할 필요성이 있어 향후 확장 포인트로 기록.
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/refactor/improvment-backlog.md`
+- 다음 단계: Progress CRUD 안정화 후 개선 항목 검토.
+
+## [2025-12-21 16:13] Progress PLAN 구현 단계 추가
+
+### Type
+DESIGN
+
+### Summary
+- Progress 백엔드 플랜에 Stage 1~3 구현 단계를 추가해 Permission → CRUD → Calendar 순으로 개발 흐름을 명확히 했다.
+
+### Details
+- 작업 사유: 실행 순서를 3단계로 나눠 추후 착수 시 참조하도록 요청받음.
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/backend/season2/progress-management_plan.md`
+- 다음 단계: Stage 1부터 TODO 진행.

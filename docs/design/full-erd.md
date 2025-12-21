@@ -49,11 +49,11 @@ erDiagram
     %% ========================================
     %% 진도 관리
     %% ========================================
-    COURSE ||--o{ SHARED_LESSON : has
-    MEMBER ||--o{ SHARED_LESSON : writes
+    COURSE ||--o{ COURSE_PROGRESS : has
+    MEMBER ||--o{ COURSE_PROGRESS : writes
 
-    STUDENT_COURSE_RECORD ||--o{ PERSONAL_LESSON : owns
-    MEMBER ||--o{ PERSONAL_LESSON : writes
+    STUDENT_COURSE_RECORD ||--o{ PERSONAL_PROGRESS : owns
+    MEMBER ||--o{ PERSONAL_PROGRESS : writes
 
     %% ========================================
     %% 클리닉 구조
@@ -213,7 +213,7 @@ erDiagram
         %% assistantMemberId nullable, references ASSISTANT
     }
 
-    SHARED_LESSON {
+    COURSE_PROGRESS {
         uuid id PK
         uuid courseId FK
         uuid writerId FK
@@ -224,7 +224,7 @@ erDiagram
         datetime updatedAt
     }
 
-    PERSONAL_LESSON {
+    PERSONAL_PROGRESS {
         uuid id PK
         uuid studentCourseRecordId FK
         uuid writerId FK
@@ -342,9 +342,9 @@ erDiagram
 - Branch → Course
 - Member(TEACHER) → Course
 - Member(ASSISTANT) → StudentCourseRecord
-- Course → SharedLesson (CASCADE)
+- Course → CourseProgress (CASCADE)
 - Course → ClinicSlot
-- StudentCourseRecord → PersonalLesson
+- StudentCourseRecord → PersonalProgress
 - Member(TEACHER) → ClinicSlot (teacherMemberId)
 - Member → ClinicSlot (creatorMemberId)
 - Branch → ClinicSlot
@@ -365,7 +365,7 @@ erDiagram
 
 - StudentCourseRecord: (studentMemberId + courseId) UK
   - 학생 1명이 Course마다 별도 Record
-  - PersonalLesson, ClinicAttendance는 이 Record 기준
+  - PersonalProgress, ClinicAttendance는 이 Record 기준
 
 ## 인덱스 전략
 
@@ -402,10 +402,10 @@ erDiagram
 - `student_course_enrollment.course_id` on (courseId)
 - `student_course_record.student_member_id` on (studentMemberId)
 - `student_course_record.course_id` on (courseId)
-- `shared_lesson.course_id` on (course_id)
-- `shared_lesson.date` on (date)
-- `personal_lesson.student_course_record_id` on (studentCourseRecordId)
-- `personal_lesson.date` on (date)
+- `course_progress.course_id` on (course_id)
+- `course_progress.date` on (date)
+- `personal_progress.student_course_record_id` on (studentCourseRecordId)
+- `personal_progress.date` on (date)
 - `clinic_slot.course_id` on (courseId)
 - `clinic_slot.teacher_member_id` on (teacherMemberId)
 - `clinic_slot.creator_member_id` on (creatorMemberId)
@@ -430,7 +430,7 @@ erDiagram
 
 ### Hard Delete (ON DELETE CASCADE)
 
-- SharedLesson → Course
+- CourseProgress → Course
   - 반 삭제 시 공통 진도도 함께 삭제
 
 ### Soft Delete (deletedAt timestamp)
@@ -459,7 +459,7 @@ erDiagram
 
 ### 실제 DELETE 허용
 
-- PersonalLesson (삭제 시 실제 DELETE)
+- PersonalProgress (삭제 시 실제 DELETE)
 - ClinicRecord (삭제 시 실제 DELETE)
 - StudentEnrollmentRequest (삭제 시 실제 DELETE)
 - ClinicAttendance (삭제 시 실제 DELETE)

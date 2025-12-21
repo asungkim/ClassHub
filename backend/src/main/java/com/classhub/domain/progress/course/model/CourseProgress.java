@@ -1,4 +1,4 @@
-package com.classhub.domain.lesson.shared.model;
+package com.classhub.domain.progress.course.model;
 
 import com.classhub.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SharedLesson extends BaseEntity {
+public class CourseProgress extends BaseEntity {
 
     @Column(name = "course_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID courseId;
@@ -41,11 +41,11 @@ public class SharedLesson extends BaseEntity {
     private String content;
 
     @Builder
-    private SharedLesson(UUID courseId,
-                         UUID writerId,
-                         LocalDate date,
-                         String title,
-                         String content) {
+    private CourseProgress(UUID courseId,
+                           UUID writerId,
+                           LocalDate date,
+                           String title,
+                           String content) {
         this.courseId = Objects.requireNonNull(courseId, "courseId must not be null");
         this.writerId = Objects.requireNonNull(writerId, "writerId must not be null");
         this.date = Objects.requireNonNull(date, "date must not be null");

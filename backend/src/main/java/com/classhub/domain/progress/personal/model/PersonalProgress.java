@@ -1,4 +1,4 @@
-package com.classhub.domain.lesson.personal.model;
+package com.classhub.domain.progress.personal.model;
 
 import com.classhub.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PersonalLesson extends BaseEntity {
+public class PersonalProgress extends BaseEntity {
 
     @Column(name = "student_course_record_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID studentCourseRecordId;
@@ -41,11 +41,11 @@ public class PersonalLesson extends BaseEntity {
     private String content;
 
     @Builder
-    private PersonalLesson(UUID studentCourseRecordId,
-                           UUID writerId,
-                           LocalDate date,
-                           String title,
-                           String content) {
+    private PersonalProgress(UUID studentCourseRecordId,
+                             UUID writerId,
+                             LocalDate date,
+                             String title,
+                             String content) {
         this.studentCourseRecordId = Objects.requireNonNull(studentCourseRecordId, "studentCourseRecordId must not be null");
         this.writerId = Objects.requireNonNull(writerId, "writerId must not be null");
         this.date = Objects.requireNonNull(date, "date must not be null");
