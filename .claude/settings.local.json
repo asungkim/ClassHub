@@ -23,7 +23,9 @@
       "Bash(do find \"$dir\" -type f -name \"*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)",
       "Bash(find /Users/asungkim/dev/OwnProject/classhub/backend/src/main/java/com/classhub/domain/invitation -type f -name \"*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)",
       "Bash(find /Users/asungkim/dev/OwnProject/classhub/backend/src/test/java/com/classhub/domain/invitation -type f -name \"*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)",
-      "Bash(find /Users/asungkim/dev/OwnProject/classhub/backend/src/main/java/com/classhub/domain/auth -type f -name \"*Invitation*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)"
+      "Bash(find /Users/asungkim/dev/OwnProject/classhub/backend/src/main/java/com/classhub/domain/auth -type f -name \"*Invitation*.java\" ! -name \"*.bak\" -exec bash -c 'mv \"\"$0\"\" \"\"$0.bak\"\"' {} ;)",
+      "Bash(../gradlew test:*)",
+      "Bash(/Users/asungkim/dev/OwnProject/classhub/gradlew test:*)"
     ],
     "deny": [],
     "ask": []
