@@ -3318,3 +3318,171 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/progress/course/application/CourseProgressServiceTest.java`
   - `backend/src/test/java/com/classhub/domain/progress/personal/application/PersonalProgressServiceTest.java`
 - 다음 단계: 추가 리팩터링 필요 여부 확인.
+
+## [2025-12-21 19:38] Teacher Progress/Calendar UI 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- 통합 수업 작성 모달, 진도 관리 페이지, 학생별 캘린더 UI를 포함한 프런트엔드 설계 문서를 작성했다.
+
+### Details
+- 작업 사유: Teacher Progress/Calendar UI 개발을 위해 명확한 사용자 흐름과 상태/컴포넌트 계획이 필요함.
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-progress-calendar_ui_plan.md`
+- 다음 단계: 설계 리뷰/승인 후 구현 착수.
+
+## [2025-12-21 19:39] Progress UI 설계에 조교 조회 재사용 반영
+
+### Type
+DESIGN
+
+### Summary
+- 진도 조회 화면을 Teacher/Assistant가 공통 컴포넌트로 재사용할 수 있도록 설계 문서를 보강했다.
+
+### Details
+- 작업 사유: 조회 기능은 조교도 사용하므로 공통 컴포넌트로 분리하기 위함.
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-progress-calendar_ui_plan.md`
+- 다음 단계: 설계 승인 후 구현 착수.
+
+## [2025-12-21 19:55] Progress/Calendar UI 설계 피드백 반영
+
+### Type
+DESIGN
+
+### Summary
+- CourseProgress/PersonalProgress 입력을 제목/내용 중심으로 정리하고, compose API 호출 조건을 반영했다.
+- 진도 관리 메뉴의 아코디언 구조, 캘린더 수정/삭제 정책, Teacher 대시보드 버튼 위치를 설계에 반영했다.
+- 캘린더 페이지를 Teacher/Assistant 공통 라우팅으로 확장하도록 설계를 보강했다.
+
+### Details
+- 작업 사유: 사용자가 전달한 설계 피드백을 반영해 UI 계획을 구체화하기 위함.
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-progress-calendar_ui_plan.md`
+- 다음 단계: 기간 필터 처리 방식 확정 후 구현 착수.
+
+## [2025-12-21 20:00] Progress UI 설계 기간 필터 제거 반영
+
+### Type
+DESIGN
+
+### Summary
+- 진도 페이지의 기간 필터를 제거하고 커서 기반 “더 보기” 흐름으로 설계를 단순화했다.
+
+### Details
+- 작업 사유: 당장은 기간 필터가 필요 없다는 사용자 결정 반영.
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-progress-calendar_ui_plan.md`
+- 다음 단계: 설계 승인 후 구현 착수.
+
+## [2025-12-21 20:27] Teacher/Assistant 진도 관리 & 학생 캘린더 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 통합 수업 작성 모달, 진도 목록(반별/개인), 학생 캘린더 페이지를 추가하고 Teacher/Assistant에서 공통 조회가 가능하도록 구성했다.
+- 진도 조회용 API 헬퍼/타입을 추가하고, 캘린더 상세에서 공통/개인 진도 수정·삭제 흐름을 연결했다.
+- 사이드바에 진도 관리 아코디언 및 학생별 캘린더 링크를 추가하고 Teacher 대시보드에 수업 작성 버튼을 배치했다.
+
+### Details
+- 작업 사유: Progress/Calendar 프런트 Stage를 완료하고 실제 UI 흐름을 제공하기 위함.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack`
+- 수정/추가 파일:
+  - `frontend/src/types/progress.ts`
+  - `frontend/src/lib/progress-api.ts`
+  - `frontend/src/components/dashboard/progress/progress-filter-bar.tsx`
+  - `frontend/src/components/dashboard/progress/progress-card-list.tsx`
+  - `frontend/src/components/dashboard/progress/course-progress-section.tsx`
+  - `frontend/src/components/dashboard/progress/personal-progress-section.tsx`
+  - `frontend/src/components/dashboard/progress/teacher-lesson-compose-modal.tsx`
+  - `frontend/src/components/dashboard/progress/progress-edit-modal.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-header.tsx`
+  - `frontend/src/components/dashboard/calendar/student-info-card.tsx`
+  - `frontend/src/components/dashboard/calendar/monthly-calendar-grid.tsx`
+  - `frontend/src/components/dashboard/calendar/calendar-day-detail-modal.tsx`
+  - `frontend/src/components/dashboard/sidebar.tsx`
+  - `frontend/src/app/(dashboard)/teacher/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/progress/course/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/progress/personal/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/progress/course/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/progress/personal/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/calendar/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/calendar/page.tsx`
+- 다음 단계: 캘린더 상세 수정 시 content 제공 방식(백엔드 확장/프론트 보완) 확정.
+
+## [2025-12-21 21:22] 캘린더/진도 UI 보완
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 캘린더 월 표시와 일정 요약 라인을 디자인에 맞게 조정했다.
+- 개인 진도 검색 시 자동 선택 흐름과 카드 상단 정보 배치를 개선했다.
+
+### Details
+- 작업 사유: 캘린더 디자인 및 개인 진도 검색 UX 보완.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack` (workspace root 경고 발생)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/monthly-calendar-grid.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+  - `frontend/src/components/dashboard/progress/personal-progress-section.tsx`
+  - `frontend/src/components/dashboard/progress/progress-card-list.tsx`
+- 수동 테스트: 미실행 (로컬 화면 확인 필요)
+- 다음 단계: 캘린더/진도 화면 수동 확인 및 OpenAPI 재생성 후 타입 재확인.
+
+## [2025-12-21 21:33] 개인 진도 검색/캘린더 요약 UI 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 개인 진도 검색을 자동완성 선택 흐름으로 전환하고 반 선택 후 목록이 노출되도록 조정했다.
+- 캘린더 월간 셀을 4단 구성으로 분리해 공통/개인/클리닉별 색상 요약 라인을 표시했다.
+
+### Details
+- 작업 사유: 개인 진도 검색 UX 및 캘린더 요약 표시 개선 요청 반영.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack` (workspace root 경고 발생)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/progress/personal-progress-section.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+  - `frontend/src/components/dashboard/calendar/monthly-calendar-grid.tsx`
+- 수동 테스트: 미실행 (로컬 화면 확인 필요)
+- 다음 단계: 캘린더/개인 진도 화면 수동 확인.
+
+## [2025-12-21 21:37] 캘린더 요약 라인 방향 조정
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 캘린더 요약 라인을 좌측 세로 라인으로 변경해 제목 가독성을 개선했다.
+
+### Details
+- 작업 사유: 캘린더 카드에서 라인 방향/위치를 조정해 제목이 더 잘 보이도록 개선.
+- 영향받은 테스트: `cd frontend && npm run build -- --webpack` (workspace root 경고 발생)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/monthly-calendar-grid.tsx`
+- 수동 테스트: 미실행 (로컬 화면 확인 필요)
+- 다음 단계: 캘린더 화면 수동 확인.
+
+## [2025-12-21 21:41] 모바일 UI 개선 백로그 추가
+
+### Type
+DESIGN
+
+### Summary
+- 휴대폰 320~420px 환경에서 깨지는 UI를 개선하기 위한 백로그 항목을 추가했다.
+
+### Details
+- 작업 사유: 모바일 화면 대응 필요성을 개선 백로그에 반영.
+- 수정한 파일:
+  - `docs/refactor/improvment-backlog.md`
+- 다음 단계: 모바일 대응 범위를 구체화해 별도 PLAN으로 분리.

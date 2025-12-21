@@ -29,6 +29,7 @@ public class StudentCalendarMapper {
                         resolveCourseName(courseMap, progress.getCourseId()),
                         progress.getDate(),
                         progress.getTitle(),
+                        progress.getContent(),
                         progress.getWriterId(),
                         resolveWriterRole(roleMap, progress.getWriterId())
                 ))
@@ -49,6 +50,7 @@ public class StudentCalendarMapper {
                             resolveCourseName(courseMap, courseId),
                             progress.getDate(),
                             progress.getTitle(),
+                            progress.getContent(),
                             resolveWriterRole(roleMap, progress.getWriterId())
                     );
                 })
@@ -81,6 +83,7 @@ public class StudentCalendarMapper {
         return new ClinicRecordSummary(
                 event.getRecordId(),
                 event.getRecordTitle(),
+                event.getRecordContent(),
                 writerRole
         );
     }

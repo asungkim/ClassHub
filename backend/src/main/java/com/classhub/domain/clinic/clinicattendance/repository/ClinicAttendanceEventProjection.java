@@ -26,4 +26,6 @@ public interface ClinicAttendanceEventProjection {
     String getRecordTitle();
 
     UUID getRecordWriterId();
+
+    String getRecordContent();
 }

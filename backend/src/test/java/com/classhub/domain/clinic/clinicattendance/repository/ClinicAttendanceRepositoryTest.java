@@ -113,6 +113,7 @@ class ClinicAttendanceRepositoryTest {
         assertThat(results.get(0).getRecordId()).isNull();
         assertThat(results.get(1).getDate()).isEqualTo(LocalDate.of(2024, 3, 5));
         assertThat(results.get(1).getRecordTitle()).isEqualTo("Record");
+        assertThat(results.get(1).getRecordContent()).isEqualTo("memo");
         assertThat(results.get(1).getStartTime()).isEqualTo(slot.getStartTime());
         assertThat(results.get(1).getEndTime()).isEqualTo(slot.getEndTime());
     }

@@ -114,7 +114,8 @@ class StudentCalendarServiceTest {
                 false,
                 UUID.randomUUID(),
                 "Clinic",
-                assistantId
+                assistantId,
+                "clinic memo"
         );
 
         given(courseProgressRepository.findByCourseIdsAndDateRange(any(), any(), any()))
@@ -140,9 +141,12 @@ class StudentCalendarServiceTest {
 
         assertThat(response.courseProgress()).hasSize(1);
         assertThat(response.courseProgress().get(0).courseName()).isEqualTo("중3 수학");
+        assertThat(response.courseProgress().get(0).content()).isEqualTo("memo");
         assertThat(response.personalProgress()).hasSize(1);
         assertThat(response.personalProgress().get(0).courseName()).isEqualTo("중3 수학");
+        assertThat(response.personalProgress().get(0).content()).isEqualTo("memo");
         assertThat(response.clinicEvents()).hasSize(1);
+        assertThat(response.clinicEvents().get(0).recordSummary().content()).isEqualTo("clinic memo");
         assertThat(response.clinicEvents().get(0).recordSummary().writerRole())
                 .isEqualTo(MemberRole.ASSISTANT);
     }
@@ -204,7 +208,8 @@ class StudentCalendarServiceTest {
             boolean canceled,
             UUID recordId,
             String recordTitle,
-            UUID recordWriterId
+            UUID recordWriterId,
+            String recordContent
     ) implements ClinicAttendanceEventProjection {
         @Override
         public UUID getClinicSessionId() {
@@ -259,6 +264,11 @@ class StudentCalendarServiceTest {
         @Override
         public UUID getRecordWriterId() {
             return recordWriterId;
+        }
+
+        @Override
+        public String getRecordContent() {
+            return recordContent;
         }
     }
 }

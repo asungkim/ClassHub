@@ -22,7 +22,8 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
                 cs.canceled AS canceled,
                 cr.id AS recordId,
                 cr.title AS recordTitle,
-                cr.writerId AS recordWriterId
+                cr.writerId AS recordWriterId,
+                cr.content AS recordContent
             FROM ClinicAttendance ca
             JOIN StudentCourseRecord scr ON scr.id = ca.studentCourseRecordId
             JOIN ClinicSession cs ON cs.id = ca.clinicSessionId

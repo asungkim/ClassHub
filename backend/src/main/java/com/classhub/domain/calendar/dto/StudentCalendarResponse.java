@@ -20,6 +20,7 @@ public record StudentCalendarResponse(
             String courseName,
             LocalDate date,
             String title,
+            String content,
             UUID writerId,
             MemberRole writerRole
     ) {
@@ -32,6 +33,7 @@ public record StudentCalendarResponse(
             String courseName,
             LocalDate date,
             String title,
+            String content,
             MemberRole writerRole
     ) {
     }
@@ -52,6 +54,7 @@ public record StudentCalendarResponse(
     public record ClinicRecordSummary(
             UUID id,
             String title,
+            String content,
             MemberRole writerRole
     ) {
     }

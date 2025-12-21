@@ -67,6 +67,7 @@ class StudentCalendarControllerTest {
                 "중3 수학",
                 LocalDate.of(2024, Month.MARCH, 2),
                 "3주차",
+                "공통 내용",
                 teacherPrincipal.id(),
                 MemberRole.TEACHER
         );
@@ -77,11 +78,13 @@ class StudentCalendarControllerTest {
                 "중3 수학",
                 LocalDate.of(2024, Month.MARCH, 3),
                 "개별",
+                "개인 내용",
                 MemberRole.ASSISTANT
         );
         ClinicRecordSummary recordSummary = new ClinicRecordSummary(
                 UUID.randomUUID(),
                 "클리닉",
+                "클리닉 내용",
                 MemberRole.TEACHER
         );
         ClinicEvent clinicEvent = new ClinicEvent(
@@ -113,8 +116,11 @@ class StudentCalendarControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data.courseProgress[0].courseName").value("중3 수학"))
+                .andExpect(jsonPath("$.data.courseProgress[0].content").value("공통 내용"))
                 .andExpect(jsonPath("$.data.personalProgress[0].writerRole").value("ASSISTANT"))
-                .andExpect(jsonPath("$.data.clinicEvents[0].recordSummary.title").value("클리닉"));
+                .andExpect(jsonPath("$.data.personalProgress[0].content").value("개인 내용"))
+                .andExpect(jsonPath("$.data.clinicEvents[0].recordSummary.title").value("클리닉"))
+                .andExpect(jsonPath("$.data.clinicEvents[0].recordSummary.content").value("클리닉 내용"));
     }
 
     private RequestPostProcessor auth(MemberPrincipal principal) {
