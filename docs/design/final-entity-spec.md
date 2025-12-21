@@ -286,7 +286,7 @@ enum BranchRole {
 
 ## 6. 진도 관리
 
-### COURSE_PROGRESS
+### SHARED_LESSON
 
 - course (ManyToOne → Course, not null, ON DELETE CASCADE)
 - writerId (UUID, FK → Member, not null)
@@ -305,12 +305,12 @@ private Course course;
 
 **인덱스:**
 
-- `idx_course_progress_course` on (course_id)
-- `idx_course_progress_date` on (date)
+- `idx_shared_lesson_course` on (course_id)
+- `idx_shared_lesson_date` on (date)
 
-**Cascade:** Course 삭제 시 CourseProgress도 함께 삭제
+**Cascade:** Course 삭제 시 SharedLesson도 함께 삭제
 
-### PERSONAL_PROGRESS
+### PERSONAL_LESSON
 
 - studentCourseRecordId (UUID, FK → StudentCourseRecord, not null)
 - writerId (UUID, FK → Member, not null)
@@ -320,8 +320,8 @@ private Course course;
 
 **인덱스:**
 
-- `idx_personal_progress_record` on (studentCourseRecordId)
-- `idx_personal_progress_date` on (date)
+- `idx_personal_lesson_record` on (studentCourseRecordId)
+- `idx_personal_lesson_date` on (date)
 
 **비고:**
 
@@ -557,9 +557,9 @@ enum FeedbackStatus {
 - Branch → Course
 - Member(TEACHER) → Course
 - Member(ASSISTANT) → StudentCourseRecord (담당 조교 지정)
-- Course → CourseProgress (CASCADE)
+- Course → SharedLesson (CASCADE)
 - Course → ClinicSlot
-- StudentCourseRecord → PersonalProgress
+- StudentCourseRecord → PersonalLesson
 - Member(TEACHER) → ClinicSlot (teacherMemberId)
 - Member → ClinicSlot (creatorMemberId)
 - Branch → ClinicSlot
@@ -580,7 +580,7 @@ enum FeedbackStatus {
 
 - StudentCourseRecord: (studentMemberId + courseId) UK
   - 학생 1명이 Course마다 별도 Record
-  - PersonalProgress, ClinicAttendance는 이 Record 기준
+  - PersonalLesson, ClinicAttendance는 이 Record 기준
 
 ---
 
@@ -588,7 +588,7 @@ enum FeedbackStatus {
 
 ### Hard Delete (ON DELETE CASCADE)
 
-- CourseProgress → Course
+- SharedLesson → Course
   - 반 삭제 시 공통 진도도 함께 삭제
 
 ### Soft Delete (deletedAt timestamp)
@@ -617,7 +617,7 @@ enum FeedbackStatus {
 
 ### 실제 DELETE 허용
 
-- PersonalProgress (삭제 시 실제 DELETE)
+- PersonalLesson (삭제 시 실제 DELETE)
 - ClinicRecord (삭제 시 실제 DELETE)
 - StudentEnrollmentRequest (삭제 시 실제 DELETE)
 - ClinicAttendance (삭제 시 실제 DELETE)

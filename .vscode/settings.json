@@ -2,7 +2,6 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "interactive",
     "java.project.sourcePaths": [
-        "frontend/src/app/(dashboard)/student/courses",
-        "frontend/src/app/(dashboard"
+        "frontend/src/app/(dashboard)/student/courses"
     ]
 }

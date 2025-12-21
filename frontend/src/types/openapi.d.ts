@@ -70,24 +70,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/student-courses/{recordId}/personal-progress": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 개별 진도 목록 조회 */
-        get: operations["getPersonalProgresses"];
-        put?: never;
-        /** 개별 진도 생성 */
-        post: operations["createPersonalProgress"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/members/register/teacher": {
         parameters: {
             query?: never;
@@ -166,41 +148,6 @@ export interface paths {
          * @description 선생님이 Course를 생성한다.
          */
         post: operations["createCourse"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/courses/{courseId}/course-progress": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 반 공통 진도 목록 조회 */
-        get: operations["getCourseProgresses"];
-        put?: never;
-        /** 반 공통 진도 생성 */
-        post: operations["createCourseProgress"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/courses/{courseId}/course-progress/compose": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 공통 진도 + 개인 진도 배치 생성 */
-        post: operations["composeCourseProgress"];
         delete?: never;
         options?: never;
         head?: never;
@@ -424,24 +371,6 @@ export interface paths {
         patch: operations["updateStudentCourse"];
         trace?: never;
     };
-    "/api/v1/personal-progress/{progressId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** 개별 진도 삭제 */
-        delete: operations["deletePersonalProgress"];
-        options?: never;
-        head?: never;
-        /** 개별 진도 수정 */
-        patch: operations["updatePersonalProgress"];
-        trace?: never;
-    };
     "/api/v1/courses/{courseId}": {
         parameters: {
             query?: never;
@@ -484,24 +413,6 @@ export interface paths {
          * @description Course 상태를 on/off 한다.
          */
         patch: operations["updateCourseStatus"];
-        trace?: never;
-    };
-    "/api/v1/course-progress/{progressId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** 반 공통 진도 삭제 */
-        delete: operations["deleteCourseProgress"];
-        options?: never;
-        head?: never;
-        /** 반 공통 진도 수정 */
-        patch: operations["updateCourseProgress"];
         trace?: never;
     };
     "/api/v1/branches/{branchId}": {
@@ -576,23 +487,6 @@ export interface paths {
          * @description 이미 가입한 조교를 이메일로 검색한다.
          */
         get: operations["searchAssistants"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/students/{studentId}/calendar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 학생 월간 캘린더 조회 */
-        get: operations["getStudentCalendar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -964,36 +858,6 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
-        PersonalProgressCreateRequest: {
-            /** Format: date */
-            date: string;
-            title: string;
-            content: string;
-        };
-        PersonalProgressResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            studentCourseRecordId?: string;
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        RsDataPersonalProgressResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PersonalProgressResponse"];
-        };
         RegisterMemberRequest: {
             /** Format: email */
             email: string;
@@ -1049,46 +913,6 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["CourseResponse"];
-        };
-        CourseProgressCreateRequest: {
-            /** Format: date */
-            date: string;
-            title: string;
-            content: string;
-        };
-        CourseProgressResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        RsDataCourseProgressResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["CourseProgressResponse"];
-        };
-        CourseProgressComposeRequest: {
-            courseProgress: components["schemas"]["CourseProgressCreateRequest"];
-            personalProgressList: components["schemas"]["PersonalProgressComposeRequest"][];
-        };
-        PersonalProgressComposeRequest: {
-            /** Format: uuid */
-            studentCourseRecordId: string;
-            /** Format: date */
-            date: string;
-            title: string;
-            content: string;
         };
         CompanyCreateRequest: {
             name: string;
@@ -1227,12 +1051,6 @@ export interface components {
             teacherNotes?: string;
             active?: boolean;
         };
-        PersonalProgressUpdateRequest: {
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-        };
         CourseUpdateRequest: {
             name?: string;
             description?: string;
@@ -1244,12 +1062,6 @@ export interface components {
         };
         CourseStatusUpdateRequest: {
             enabled: boolean;
-        };
-        CourseProgressUpdateRequest: {
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
         };
         BranchUpdateRequest: {
             name?: string;
@@ -1321,77 +1133,6 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["AssistantSearchResponse"][];
-        };
-        ClinicEvent: {
-            /** Format: uuid */
-            clinicSessionId?: string;
-            /** Format: uuid */
-            clinicAttendanceId?: string;
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: uuid */
-            slotId?: string;
-            /** Format: date */
-            date?: string;
-            startTime?: string;
-            endTime?: string;
-            canceled?: boolean;
-            recordSummary?: components["schemas"]["ClinicRecordSummary"];
-        };
-        ClinicRecordSummary: {
-            /** Format: uuid */
-            id?: string;
-            title?: string;
-            content?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
-        };
-        CourseProgressEvent: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            courseId?: string;
-            courseName?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** Format: uuid */
-            writerId?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
-        };
-        PersonalProgressEvent: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            studentCourseRecordId?: string;
-            /** Format: uuid */
-            courseId?: string;
-            courseName?: string;
-            /** Format: date */
-            date?: string;
-            title?: string;
-            content?: string;
-            /** @enum {string} */
-            writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
-        };
-        RsDataStudentCalendarResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["StudentCalendarResponse"];
-        };
-        StudentCalendarResponse: {
-            /** Format: uuid */
-            studentId?: string;
-            /** Format: int32 */
-            year?: number;
-            /** Format: int32 */
-            month?: number;
-            courseProgress?: components["schemas"]["CourseProgressEvent"][];
-            personalProgress?: components["schemas"]["PersonalProgressEvent"][];
-            clinicEvents?: components["schemas"]["ClinicEvent"][];
         };
         PageResponseStudentCourseResponse: {
             content?: components["schemas"]["StudentCourseResponse"][];
@@ -1497,22 +1238,6 @@ export interface components {
             /** Format: uuid */
             defaultClinicSlotId?: string;
         };
-        ProgressCursor: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        ProgressSliceResponsePersonalProgressResponse: {
-            items?: components["schemas"]["PersonalProgressResponse"][];
-            nextCursor?: components["schemas"]["ProgressCursor"];
-        };
-        RsDataProgressSliceResponsePersonalProgressResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["ProgressSliceResponsePersonalProgressResponse"];
-        };
         PageResponseCourseResponse: {
             content?: components["schemas"]["CourseResponse"][];
             /** Format: int32 */
@@ -1531,16 +1256,6 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["PageResponseCourseResponse"];
-        };
-        ProgressSliceResponseCourseProgressResponse: {
-            items?: components["schemas"]["CourseProgressResponse"][];
-            nextCursor?: components["schemas"]["ProgressCursor"];
-        };
-        RsDataProgressSliceResponseCourseProgressResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["ProgressSliceResponseCourseProgressResponse"];
         };
         RsDataListCourseResponse: {
             /** Format: int32 */
@@ -1836,58 +1551,6 @@ export interface operations {
             };
         };
     };
-    getPersonalProgresses: {
-        parameters: {
-            query?: {
-                cursorCreatedAt?: string;
-                cursorId?: string;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                recordId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataProgressSliceResponsePersonalProgressResponse"];
-                };
-            };
-        };
-    };
-    createPersonalProgress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                recordId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonalProgressCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPersonalProgressResponse"];
-                };
-            };
-        };
-    };
     registerTeacher: {
         parameters: {
             query?: never;
@@ -2006,84 +1669,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataCourseResponse"];
-                };
-            };
-        };
-    };
-    getCourseProgresses: {
-        parameters: {
-            query?: {
-                cursorCreatedAt?: string;
-                cursorId?: string;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataProgressSliceResponseCourseProgressResponse"];
-                };
-            };
-        };
-    };
-    createCourseProgress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CourseProgressCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataCourseProgressResponse"];
-                };
-            };
-        };
-    };
-    composeCourseProgress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                courseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CourseProgressComposeRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataCourseProgressResponse"];
                 };
             };
         };
@@ -2422,54 +2007,6 @@ export interface operations {
             };
         };
     };
-    deletePersonalProgress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                progressId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    updatePersonalProgress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                progressId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonalProgressUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPersonalProgressResponse"];
-                };
-            };
-        };
-    };
     getCourse: {
         parameters: {
             query?: never;
@@ -2540,54 +2077,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataCourseResponse"];
-                };
-            };
-        };
-    };
-    deleteCourseProgress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                progressId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataVoid"];
-                };
-            };
-        };
-    };
-    updateCourseProgress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                progressId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CourseProgressUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataCourseProgressResponse"];
                 };
             };
         };
@@ -2688,31 +2177,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataListAssistantSearchResponse"];
-                };
-            };
-        };
-    };
-    getStudentCalendar: {
-        parameters: {
-            query: {
-                year: number;
-                month: number;
-            };
-            header?: never;
-            path: {
-                studentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataStudentCalendarResponse"];
                 };
             };
         };

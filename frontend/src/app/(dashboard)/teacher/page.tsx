@@ -1,10 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useState } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
-import { Button } from "@/components/ui/button";
-import { TeacherLessonComposeModal } from "@/components/dashboard/progress/teacher-lesson-compose-modal";
 
 const highlightCards = [
   { label: "활성 반", value: "5개", sub: "이번 주 수업", tone: "from-blue-500 to-indigo-500" },
@@ -22,7 +19,6 @@ const quickActions = [
 
 export default function TeacherDashboardPage() {
   const { canRender, fallback } = useRoleGuard("TEACHER");
-  const [composeOpen, setComposeOpen] = useState(false);
   if (!canRender) {
     return fallback;
   }
@@ -30,16 +26,11 @@ export default function TeacherDashboardPage() {
   return (
     <div className="space-y-6 lg:space-y-8">
       <section className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-100 sm:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Teacher Dashboard</p>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900">반과 학생을 한눈에 관리하세요.</h1>
-            <p className="mt-2 text-sm text-slate-500">
-              진행 중인 반, 초대 상태, 조교 배치 현황을 간단히 확인하고 필요한 액션을 바로 수행할 수 있습니다.
-            </p>
-          </div>
-          <Button onClick={() => setComposeOpen(true)}>+ 수업 내용 작성</Button>
-        </div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Teacher Dashboard</p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-900">반과 학생을 한눈에 관리하세요.</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          진행 중인 반, 초대 상태, 조교 배치 현황을 간단히 확인하고 필요한 액션을 바로 수행할 수 있습니다.
+        </p>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -71,8 +62,6 @@ export default function TeacherDashboardPage() {
           ))}
         </div>
       </section>
-
-      <TeacherLessonComposeModal open={composeOpen} onClose={() => setComposeOpen(false)} />
     </div>
   );
 }

@@ -8,5 +8,4 @@
 infra/terraform/*.tfvars
 infra/terraform/env/*.tfvars
 .terraform.lock.hcl
-.gradle-local
-.gradle-codex
+.gradle
