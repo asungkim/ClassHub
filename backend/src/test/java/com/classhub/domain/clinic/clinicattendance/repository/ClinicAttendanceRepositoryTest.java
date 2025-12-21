@@ -47,6 +47,8 @@ class ClinicAttendanceRepositoryTest {
     private StudentCourseRecordRepository studentCourseRecordRepository;
     @Autowired
     private CourseRepository courseRepository;
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
 
     private UUID teacherId;
     private UUID studentId;
@@ -71,20 +73,24 @@ class ClinicAttendanceRepositoryTest {
         LocalDate end = LocalDate.of(2024, Month.MARCH, 31);
 
         ClinicSession earlySession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 2)));
+        entityManager.flush();
         ClinicAttendance earlyAttendance = attendanceRepository.save(
                 ClinicAttendance.builder()
                         .clinicSessionId(earlySession.getId())
                         .studentCourseRecordId(record.getId())
                         .build()
         );
+        entityManager.flush();
 
         ClinicSession lateSession = sessionRepository.save(createSession(slot.getId(), LocalDate.of(2024, 3, 5)));
+        entityManager.flush();
         ClinicAttendance lateAttendance = attendanceRepository.save(
                 ClinicAttendance.builder()
                         .clinicSessionId(lateSession.getId())
                         .studentCourseRecordId(record.getId())
                         .build()
         );
+        entityManager.flush();
         recordRepository.save(
                 ClinicRecord.builder()
                         .clinicAttendanceId(lateAttendance.getId())
@@ -93,6 +99,7 @@ class ClinicAttendanceRepositoryTest {
                         .content("memo")
                         .build()
         );
+        entityManager.flush();
 
         StudentCourseRecord otherRecord = studentCourseRecordRepository.save(
                 StudentCourseRecord.create(UUID.randomUUID(), record.getCourseId(), null, null, null)

@@ -36,6 +36,8 @@ class CourseProgressRepositoryTest {
     private CourseRepository courseRepository;
     @Autowired
     private StudentCourseRecordRepository studentCourseRecordRepository;
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
 
     private UUID teacherId;
     private UUID studentId;
@@ -151,6 +153,8 @@ class CourseProgressRepositoryTest {
                 .build();
         ReflectionTestUtils.setField(progress, "createdAt", createdAt);
         ReflectionTestUtils.setField(progress, "updatedAt", createdAt);
-        return courseProgressRepository.save(progress);
+        CourseProgress saved = courseProgressRepository.save(progress);
+        entityManager.flush();
+        return saved;
     }
 }
