@@ -117,6 +117,7 @@ class ClinicAttendanceRepositoryTest {
 //        assertThat(results.get(1).getStartTime()).isEqualTo(slot.getStartTime());
 //        assertThat(results.get(1).getEndTime()).isEqualTo(slot.getEndTime());
 //    }
+   
 
     private Course createCourse(UUID ownerId) {
         return Course.create(

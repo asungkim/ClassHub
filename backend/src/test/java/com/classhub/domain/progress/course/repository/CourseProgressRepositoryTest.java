@@ -152,5 +152,7 @@ class CourseProgressRepositoryTest {
         ReflectionTestUtils.setField(progress, "createdAt", createdAt);
         ReflectionTestUtils.setField(progress, "updatedAt", createdAt);
         return courseProgressRepository.save(progress);
+        CourseProgress saved = courseProgressRepository.save(progress);
+        return saved;
     }
 }
