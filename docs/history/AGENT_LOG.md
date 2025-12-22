@@ -4352,3 +4352,30 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
 - 다음 단계: Phase 5-3 스케줄러/주중 슬롯 처리.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 01:09] Phase 5-3 스케줄러 및 주중 슬롯 처리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 배치 스케줄러를 추가하고 주중 슬롯 생성 시 잔여 세션/출석 자동 생성을 연결했다.
+- ClinicBatchService에 잔여 세션 생성 및 출석 생성 로직을 확장했다.
+
+### Details
+- 작업 사유: Phase 5-3 스케줄러/주중 슬롯 처리 구현.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+  - `ClinicBatchSchedulerTest`
+  - `ClinicSlotServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchScheduler.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/global/config/SchedulingConfig.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchSchedulerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 배치 예외 케이스 확대 및 모니터링 로그 추가.
+- MCP: 사용하지 않음.

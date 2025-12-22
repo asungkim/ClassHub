@@ -3,6 +3,7 @@ package com.classhub.domain.clinic.clinicslot.application;
 import com.classhub.domain.assignment.model.TeacherBranchAssignment;
 import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.clinicbatch.application.ClinicBatchService;
 import com.classhub.domain.clinic.clinicslot.dto.request.ClinicSlotCreateRequest;
 import com.classhub.domain.clinic.clinicslot.dto.request.ClinicSlotUpdateRequest;
 import com.classhub.domain.clinic.clinicslot.model.ClinicSlot;
@@ -20,6 +21,7 @@ import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -38,6 +40,7 @@ public class ClinicSlotService {
     private final TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
     private final BranchRepository branchRepository;
     private final CourseRepository courseRepository;
+    private final ClinicBatchService clinicBatchService;
 
     public ClinicSlot createSlot(UUID teacherId, ClinicSlotCreateRequest request) {
         validateCreateRequest(request);
@@ -54,7 +57,9 @@ public class ClinicSlotService {
                 .defaultCapacity(request.defaultCapacity())
                 .build();
 
-        return clinicSlotRepository.save(slot);
+        ClinicSlot saved = clinicSlotRepository.save(slot);
+        clinicBatchService.generateRemainingSessionsForSlot(saved, LocalDateTime.now());
+        return saved;
     }
 
     @Transactional(readOnly = true)

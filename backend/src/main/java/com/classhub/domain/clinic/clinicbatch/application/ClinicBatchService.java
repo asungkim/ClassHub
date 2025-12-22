@@ -14,9 +14,12 @@ import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,37 +91,47 @@ public class ClinicBatchService {
             if (session == null || session.isCanceled()) {
                 continue;
             }
-            List<StudentCourseRecord> records = studentCourseRecordRepository
-                    .findByDefaultClinicSlotIdAndDeletedAtIsNull(slot.getId());
-            long currentCount = clinicAttendanceRepository.countByClinicSessionId(session.getId());
-            for (StudentCourseRecord record : records) {
-                if (currentCount >= session.getCapacity()) {
-                    break;
-                }
-                if (clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(
-                        session.getId(),
-                        record.getId()
-                )) {
-                    continue;
-                }
-                long overlap = clinicAttendanceRepository.countOverlappingAttendances(
-                        record.getId(),
-                        session.getDate(),
-                        session.getStartTime(),
-                        session.getEndTime()
-                );
-                if (overlap > 0) {
-                    continue;
-                }
-                ClinicAttendance attendance = ClinicAttendance.builder()
-                        .clinicSessionId(session.getId())
-                        .studentCourseRecordId(record.getId())
-                        .build();
-                created.add(clinicAttendanceRepository.save(attendance));
-                currentCount++;
-            }
+            created.addAll(createAttendancesForSession(session, slot.getId()));
         }
         return created;
+    }
+
+    public List<ClinicSession> generateRemainingSessionsForSlot(ClinicSlot slot, LocalDateTime now) {
+        if (slot == null || now == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        if (!isSlotValid(slot)) {
+            return List.of();
+        }
+        ClinicAttendancePolicy.WeekRange weekRange = ClinicAttendancePolicy.resolveWeek(now.toLocalDate());
+        LocalDate sessionDate = resolveSessionDate(weekRange, slot.getDayOfWeek());
+        if (sessionDate == null) {
+            return List.of();
+        }
+        if (isSessionTimePassed(sessionDate, slot.getStartTime(), now)) {
+            return List.of();
+        }
+        boolean exists = clinicSessionRepository
+                .findBySlotIdAndDateAndDeletedAtIsNull(slot.getId(), sessionDate)
+                .isPresent();
+        if (exists) {
+            return List.of();
+        }
+        ClinicSession session = ClinicSession.builder()
+                .slotId(slot.getId())
+                .teacherMemberId(slot.getTeacherMemberId())
+                .branchId(slot.getBranchId())
+                .sessionType(ClinicSessionType.REGULAR)
+                .creatorMemberId(null)
+                .date(sessionDate)
+                .startTime(slot.getStartTime())
+                .endTime(slot.getEndTime())
+                .capacity(slot.getDefaultCapacity())
+                .canceled(false)
+                .build();
+        ClinicSession saved = clinicSessionRepository.save(session);
+        createAttendancesForSession(saved, slot.getId());
+        return List.of(saved);
     }
 
     private boolean isSlotValid(ClinicSlot slot) {
@@ -133,6 +146,50 @@ public class ClinicBatchService {
             return false;
         }
         return slot.getStartTime().isBefore(slot.getEndTime());
+    }
+
+    private boolean isSessionTimePassed(LocalDate sessionDate, LocalTime startTime, LocalDateTime now) {
+        if (sessionDate.isBefore(now.toLocalDate())) {
+            return true;
+        }
+        if (sessionDate.isAfter(now.toLocalDate())) {
+            return false;
+        }
+        return !startTime.isAfter(now.toLocalTime());
+    }
+
+    private List<ClinicAttendance> createAttendancesForSession(ClinicSession session, UUID slotId) {
+        List<ClinicAttendance> created = new ArrayList<>();
+        List<StudentCourseRecord> records = studentCourseRecordRepository
+                .findByDefaultClinicSlotIdAndDeletedAtIsNull(slotId);
+        long currentCount = clinicAttendanceRepository.countByClinicSessionId(session.getId());
+        for (StudentCourseRecord record : records) {
+            if (currentCount >= session.getCapacity()) {
+                break;
+            }
+            if (clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(
+                    session.getId(),
+                    record.getId()
+            )) {
+                continue;
+            }
+            long overlap = clinicAttendanceRepository.countOverlappingAttendances(
+                    record.getId(),
+                    session.getDate(),
+                    session.getStartTime(),
+                    session.getEndTime()
+            );
+            if (overlap > 0) {
+                continue;
+            }
+            ClinicAttendance attendance = ClinicAttendance.builder()
+                    .clinicSessionId(session.getId())
+                    .studentCourseRecordId(record.getId())
+                    .build();
+            created.add(clinicAttendanceRepository.save(attendance));
+            currentCount++;
+        }
+        return created;
     }
 
     private LocalDate resolveSessionDate(ClinicAttendancePolicy.WeekRange weekRange, DayOfWeek dayOfWeek) {

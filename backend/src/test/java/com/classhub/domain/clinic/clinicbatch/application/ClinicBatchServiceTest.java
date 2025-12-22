@@ -18,6 +18,7 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.List;
@@ -197,6 +198,54 @@ class ClinicBatchServiceTest {
 
         assertThat(created).hasSize(1);
         verify(clinicAttendanceRepository, times(1)).save(any(ClinicAttendance.class));
+    }
+
+    @Test
+    void generateRemainingSessionsForSlot_shouldCreateSessionAndAttendances() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        ClinicSlot slot = createSlot(teacherId, branchId, DayOfWeek.WEDNESDAY, 3);
+        LocalDateTime now = LocalDateTime.of(2024, Month.MARCH, 5, 10, 0);
+        LocalDate sessionDate = LocalDate.of(2024, Month.MARCH, 6);
+        StudentCourseRecord recordOne = createRecord(slot.getId());
+        StudentCourseRecord recordTwo = createRecord(slot.getId());
+
+        given(clinicSessionRepository.findBySlotIdAndDateAndDeletedAtIsNull(slot.getId(), sessionDate))
+                .willReturn(Optional.empty());
+        given(clinicSessionRepository.save(any(ClinicSession.class))).willAnswer(invocation -> {
+            ClinicSession session = invocation.getArgument(0);
+            ReflectionTestUtils.setField(session, "id", UUID.randomUUID());
+            return session;
+        });
+        given(studentCourseRecordRepository.findByDefaultClinicSlotIdAndDeletedAtIsNull(slot.getId()))
+                .willReturn(List.of(recordOne, recordTwo));
+        given(clinicAttendanceRepository.countByClinicSessionId(any())).willReturn(0L);
+        given(clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(any(), any()))
+                .willReturn(false);
+        given(clinicAttendanceRepository.countOverlappingAttendances(any(), any(), any(), any()))
+                .willReturn(0L);
+        given(clinicAttendanceRepository.save(any(ClinicAttendance.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        List<ClinicSession> created = clinicBatchService.generateRemainingSessionsForSlot(slot, now);
+
+        assertThat(created).hasSize(1);
+        verify(clinicSessionRepository, times(1)).save(any(ClinicSession.class));
+        verify(clinicAttendanceRepository, times(2)).save(any(ClinicAttendance.class));
+    }
+
+    @Test
+    void generateRemainingSessionsForSlot_shouldSkipWhenTimePassed() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        ClinicSlot slot = createSlot(teacherId, branchId, DayOfWeek.TUESDAY, 3);
+        LocalDateTime now = LocalDateTime.of(2024, Month.MARCH, 5, 20, 0);
+
+        List<ClinicSession> created = clinicBatchService.generateRemainingSessionsForSlot(slot, now);
+
+        assertThat(created).isEmpty();
+        verify(clinicSessionRepository, never()).save(any(ClinicSession.class));
+        verify(clinicAttendanceRepository, never()).save(any(ClinicAttendance.class));
     }
 
     private ClinicSession createSession(ClinicSlot slot, LocalDate date) {

@@ -11,6 +11,7 @@ import com.classhub.domain.assignment.model.BranchRole;
 import com.classhub.domain.assignment.model.TeacherBranchAssignment;
 import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.clinicbatch.application.ClinicBatchService;
 import com.classhub.domain.clinic.clinicslot.dto.request.ClinicSlotCreateRequest;
 import com.classhub.domain.clinic.clinicslot.dto.request.ClinicSlotUpdateRequest;
 import com.classhub.domain.clinic.clinicslot.model.ClinicSlot;
@@ -22,8 +23,10 @@ import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import java.time.LocalDateTime;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -49,6 +52,9 @@ class ClinicSlotServiceTest {
     @Mock
     private CourseRepository courseRepository;
 
+    @Mock
+    private ClinicBatchService clinicBatchService;
+
     @InjectMocks
     private ClinicSlotService clinicSlotService;
 
@@ -71,6 +77,8 @@ class ClinicSlotServiceTest {
                 .willReturn(Optional.of(assignment));
         given(clinicSlotRepository.save(any(ClinicSlot.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
+        given(clinicBatchService.generateRemainingSessionsForSlot(any(ClinicSlot.class), any(LocalDateTime.class)))
+                .willReturn(List.of());
 
         ClinicSlot slot = clinicSlotService.createSlot(teacherId, request);
 
@@ -81,6 +89,8 @@ class ClinicSlotServiceTest {
         assertThat(slot.getStartTime()).isEqualTo(LocalTime.of(18, 0));
         assertThat(slot.getEndTime()).isEqualTo(LocalTime.of(19, 0));
         assertThat(slot.getDefaultCapacity()).isEqualTo(10);
+        verify(clinicBatchService)
+                .generateRemainingSessionsForSlot(any(ClinicSlot.class), any(LocalDateTime.class));
     }
 
     @Test
