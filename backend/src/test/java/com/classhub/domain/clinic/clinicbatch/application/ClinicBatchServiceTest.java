@@ -30,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -133,6 +134,32 @@ class ClinicBatchServiceTest {
     }
 
     @Test
+    void generateWeeklySessions_shouldContinueWhenSessionSaveFails() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        ClinicSlot mondaySlot = createSlot(teacherId, branchId, DayOfWeek.MONDAY, 5);
+        ClinicSlot tuesdaySlot = createSlot(teacherId, branchId, DayOfWeek.TUESDAY, 5);
+        LocalDate baseDate = LocalDate.of(2024, Month.MARCH, 6);
+        LocalDate mondayDate = LocalDate.of(2024, Month.MARCH, 4);
+        LocalDate tuesdayDate = LocalDate.of(2024, Month.MARCH, 5);
+
+        given(clinicSlotRepository.findByDeletedAtIsNull())
+                .willReturn(List.of(mondaySlot, tuesdaySlot));
+        given(clinicSessionRepository.findBySlotIdAndDateAndDeletedAtIsNull(mondaySlot.getId(), mondayDate))
+                .willReturn(Optional.empty());
+        given(clinicSessionRepository.findBySlotIdAndDateAndDeletedAtIsNull(tuesdaySlot.getId(), tuesdayDate))
+                .willReturn(Optional.empty());
+        given(clinicSessionRepository.save(any(ClinicSession.class)))
+                .willThrow(new DataIntegrityViolationException("dup"))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        List<ClinicSession> created = clinicBatchService.generateWeeklySessions(baseDate);
+
+        assertThat(created).hasSize(1);
+        verify(clinicSessionRepository, times(2)).save(any(ClinicSession.class));
+    }
+
+    @Test
     void generateWeeklyAttendances_shouldCreateAttendancesForDefaultSlots() {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
@@ -198,6 +225,49 @@ class ClinicBatchServiceTest {
 
         assertThat(created).hasSize(1);
         verify(clinicAttendanceRepository, times(1)).save(any(ClinicAttendance.class));
+    }
+
+    @Test
+    void generateWeeklyAttendances_shouldContinueWhenAttendanceSaveFails() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        ClinicSlot slot = createSlot(teacherId, branchId, DayOfWeek.MONDAY, 3);
+        LocalDate baseDate = LocalDate.of(2024, Month.MARCH, 6);
+        LocalDate sessionDate = LocalDate.of(2024, Month.MARCH, 4);
+        ClinicSession session = createSession(slot, sessionDate);
+        StudentCourseRecord recordOne = createRecord(slot.getId());
+        StudentCourseRecord recordTwo = createRecord(slot.getId());
+
+        given(clinicSlotRepository.findByDeletedAtIsNull()).willReturn(List.of(slot));
+        given(clinicSessionRepository.findBySlotIdAndDateAndDeletedAtIsNull(slot.getId(), sessionDate))
+                .willReturn(Optional.of(session));
+        given(studentCourseRecordRepository.findByDefaultClinicSlotIdAndDeletedAtIsNull(slot.getId()))
+                .willReturn(List.of(recordOne, recordTwo));
+        given(clinicAttendanceRepository.countByClinicSessionId(session.getId())).willReturn(0L);
+        given(clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(session.getId(), recordOne.getId()))
+                .willReturn(false);
+        given(clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(session.getId(), recordTwo.getId()))
+                .willReturn(false);
+        given(clinicAttendanceRepository.countOverlappingAttendances(
+                recordOne.getId(),
+                sessionDate,
+                session.getStartTime(),
+                session.getEndTime()
+        )).willReturn(0L);
+        given(clinicAttendanceRepository.countOverlappingAttendances(
+                recordTwo.getId(),
+                sessionDate,
+                session.getStartTime(),
+                session.getEndTime()
+        )).willReturn(0L);
+        given(clinicAttendanceRepository.save(any(ClinicAttendance.class)))
+                .willThrow(new DataIntegrityViolationException("dup"))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        List<ClinicAttendance> created = clinicBatchService.generateWeeklyAttendances(baseDate);
+
+        assertThat(created).hasSize(1);
+        verify(clinicAttendanceRepository, times(2)).save(any(ClinicAttendance.class));
     }
 
     @Test

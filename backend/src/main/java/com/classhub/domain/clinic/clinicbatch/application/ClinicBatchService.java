@@ -21,12 +21,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class ClinicBatchService {
 
     private final ClinicSlotRepository clinicSlotRepository;
@@ -66,7 +70,14 @@ public class ClinicBatchService {
                     .capacity(slot.getDefaultCapacity())
                     .canceled(false)
                     .build();
-            created.add(clinicSessionRepository.save(session));
+            try {
+                created.add(clinicSessionRepository.save(session));
+            } catch (ObjectOptimisticLockingFailureException | DataIntegrityViolationException ex) {
+                log.warn("Clinic batch session skip: slotId={}, date={}, reason={}",
+                        slot.getId(),
+                        sessionDate,
+                        ex.getClass().getSimpleName());
+            }
         }
         return created;
     }
@@ -129,9 +140,17 @@ public class ClinicBatchService {
                 .capacity(slot.getDefaultCapacity())
                 .canceled(false)
                 .build();
-        ClinicSession saved = clinicSessionRepository.save(session);
-        createAttendancesForSession(saved, slot.getId());
-        return List.of(saved);
+        try {
+            ClinicSession saved = clinicSessionRepository.save(session);
+            createAttendancesForSession(saved, slot.getId());
+            return List.of(saved);
+        } catch (ObjectOptimisticLockingFailureException | DataIntegrityViolationException ex) {
+            log.warn("Clinic batch session skip: slotId={}, date={}, reason={}",
+                    slot.getId(),
+                    sessionDate,
+                    ex.getClass().getSimpleName());
+            return List.of();
+        }
     }
 
     private boolean isSlotValid(ClinicSlot slot) {
@@ -186,8 +205,15 @@ public class ClinicBatchService {
                     .clinicSessionId(session.getId())
                     .studentCourseRecordId(record.getId())
                     .build();
-            created.add(clinicAttendanceRepository.save(attendance));
-            currentCount++;
+            try {
+                created.add(clinicAttendanceRepository.save(attendance));
+                currentCount++;
+            } catch (ObjectOptimisticLockingFailureException | DataIntegrityViolationException ex) {
+                log.warn("Clinic batch attendance skip: sessionId={}, recordId={}, reason={}",
+                        session.getId(),
+                        record.getId(),
+                        ex.getClass().getSimpleName());
+            }
         }
         return created;
     }

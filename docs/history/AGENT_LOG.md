@@ -4379,3 +4379,22 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
 - 다음 단계: 배치 예외 케이스 확대 및 모니터링 로그 추가.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 01:15] 배치 예외 스킵 로직 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 배치 세션/출석 생성 중 동시성·중복 예외를 스킵하도록 보강했다.
+- 예외 케이스 테스트를 추가해 배치가 중단되지 않도록 검증했다.
+
+### Details
+- 작업 사유: 배치 예외 상황을 스킵+로그로 처리하도록 강화.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+- 다음 단계: 배치 요약 로그/모니터링 추가 여부 검토.
+- MCP: 사용하지 않음.
