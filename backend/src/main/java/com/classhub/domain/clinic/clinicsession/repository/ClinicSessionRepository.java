@@ -18,6 +18,20 @@ public interface ClinicSessionRepository extends JpaRepository<ClinicSession, UU
     @Query("""
             SELECT cs
             FROM ClinicSession cs
+            WHERE cs.slotId = :slotId
+              AND cs.date BETWEEN :startDate AND :endDate
+              AND cs.deletedAt IS NULL
+            ORDER BY cs.date ASC, cs.startTime ASC, cs.id ASC
+            """)
+    List<ClinicSession> findBySlotIdAndDateRange(
+            @Param("slotId") UUID slotId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("""
+            SELECT cs
+            FROM ClinicSession cs
             WHERE cs.teacherMemberId = :teacherId
               AND cs.branchId = :branchId
               AND cs.date BETWEEN :startDate AND :endDate

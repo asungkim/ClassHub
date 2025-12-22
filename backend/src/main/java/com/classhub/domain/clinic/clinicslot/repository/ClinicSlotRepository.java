@@ -10,5 +10,7 @@ public interface ClinicSlotRepository extends JpaRepository<ClinicSlot, UUID> {
 
     List<ClinicSlot> findByTeacherMemberIdAndBranchIdAndDeletedAtIsNull(UUID teacherMemberId, UUID branchId);
 
+    List<ClinicSlot> findByIdInAndDeletedAtIsNull(List<UUID> slotIds);
+
     Optional<ClinicSlot> findByIdAndDeletedAtIsNull(UUID slotId);
 }

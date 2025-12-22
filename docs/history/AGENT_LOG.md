@@ -4234,3 +4234,34 @@ DESIGN
   - `docs/spec/v1.4.md`
 - 다음 단계: Permission/Policy 정리 및 배치 단계 준비.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 20:45] 학생 기본 클리닉 슬롯 설정 API 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 기본 클리닉 슬롯 변경 서비스와 검증 로직을 추가했다.
+- 기본 슬롯 지정 API와 관련 DTO/테스트를 확장했다.
+
+### Details
+- 작업 사유: Phase 4.5 학생 기본 슬롯 설정 및 검증 구현.
+- 영향받은 테스트:
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicSessionRepositoryTest`
+  - `StudentCourseControllerTest`
+  - `StudentCourseManagementServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/request/StudentDefaultClinicSlotRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentDefaultClinicSlotResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+- 다음 단계: 배치/스케줄러(Phase 5) 구현 준비.
+- MCP: 사용하지 않음.

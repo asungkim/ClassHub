@@ -80,6 +80,34 @@ class ClinicSessionRepositoryTest {
                 .containsExactlyInAnyOrder(regularSession.getId(), emergencySession.getId());
     }
 
+    @Test
+    void findBySlotIdAndDateRange_shouldReturnSlotSessions() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        ClinicSlot slot = clinicSlotRepository.save(createSlot(teacherId, branchId));
+        ClinicSession inRangeSession = clinicSessionRepository.save(
+                createRegularSession(slot, teacherId, branchId, LocalDate.of(2024, Month.MARCH, 7))
+        );
+        clinicSessionRepository.save(
+                createRegularSession(slot, teacherId, branchId, LocalDate.of(2024, Month.APRIL, 1))
+        );
+
+        ClinicSlot otherSlot = clinicSlotRepository.save(createSlot(teacherId, branchId));
+        clinicSessionRepository.save(
+                createRegularSession(otherSlot, teacherId, branchId, LocalDate.of(2024, Month.MARCH, 7))
+        );
+
+        List<ClinicSession> results = clinicSessionRepository.findBySlotIdAndDateRange(
+                slot.getId(),
+                LocalDate.of(2024, Month.MARCH, 1),
+                LocalDate.of(2024, Month.MARCH, 31)
+        );
+
+        assertThat(results)
+                .extracting(ClinicSession::getId)
+                .containsExactly(inRangeSession.getId());
+    }
+
     private ClinicSlot createSlot(UUID teacherId, UUID branchId) {
         return ClinicSlot.builder()
                 .teacherMemberId(teacherId)

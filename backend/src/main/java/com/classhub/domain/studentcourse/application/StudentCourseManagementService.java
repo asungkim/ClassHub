@@ -2,6 +2,7 @@ package com.classhub.domain.studentcourse.application;
 
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.clinicdefaultslot.application.ClinicDefaultSlotService;
 import com.classhub.domain.course.application.CourseViewAssembler;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
@@ -50,6 +51,7 @@ public class StudentCourseManagementService {
     private final StudentInfoRepository studentInfoRepository;
     private final TeacherAssistantAssignmentRepository assignmentRepository;
     private final CourseViewAssembler courseViewAssembler;
+    private final ClinicDefaultSlotService clinicDefaultSlotService;
 
     public PageResponse<StudentCourseListItemResponse> getStudentCourses(MemberPrincipal principal,
                                                                          UUID courseId,
@@ -134,7 +136,7 @@ public class StudentCourseManagementService {
             record.updateAssistant(request.assistantMemberId());
         }
         if (request.defaultClinicSlotId() != null) {
-            record.updateDefaultClinicSlot(request.defaultClinicSlotId());
+            clinicDefaultSlotService.applyDefaultSlot(record, course, request.defaultClinicSlotId());
         }
         if (request.teacherNotes() != null) {
             record.updateTeacherNotes(request.teacherNotes());
