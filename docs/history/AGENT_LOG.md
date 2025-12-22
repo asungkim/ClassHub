@@ -3701,3 +3701,72 @@ DESIGN
   - `docs/spec/v1.4.md`
 - 다음 단계: 없음.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 15:32] Clinic 백엔드 PLAN 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- Clinic 도메인(슬롯/세션/출석/기록) 백엔드 PLAN을 v1.4 스펙 기준으로 상세 작성했다.
+- 배치/권한/검증/테스트 계획을 단계별로 정리했다.
+
+### Details
+- 작업 사유: Season2 Clinic 백엔드 구현을 위한 상세 설계 확보.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: PLAN 리뷰 및 승인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:58] Clinic PLAN 기본 슬롯 정책 보완
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot 수정 시 defaultClinicSlotId 자동 해제 규칙을 명시했다.
+- 학생의 defaultClinicSlotId 최초 지정 API와 1회 제한 규칙을 추가했다.
+
+### Details
+- 작업 사유: Slot 수정/학생 지정 동작을 명확히 하기 위해 PLAN을 보완.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: PLAN 피드백 반영 후 승인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:59] Clinic PLAN 학생 기본 슬롯 변경 허용
+
+### Type
+DESIGN
+
+### Summary
+- 학생이 defaultClinicSlotId를 반복 변경할 수 있도록 PLAN을 수정했다.
+- 최초 1회 제한 관련 요구/테스트/설계 문구를 제거했다.
+
+### Details
+- 작업 사유: 학생 변경 제한이 불필요하다는 피드백 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: 요구사항/스펙 문서와 정합성 확인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 16:03] Clinic SLOT 수정 규칙 및 개선 백로그 추가
+
+### Type
+DESIGN
+
+### Summary
+- Slot 요일/시간 변경 시 defaultClinicSlotId 해제, 정원 변경은 해제 없이 검증하도록 PLAN을 수정했다.
+- Slot 변경 알림 기능을 개선 백로그에 추가했다.
+
+### Details
+- 작업 사유: Slot 변경 정책과 후속 알림을 명확히 하기 위해 문서를 보완.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+  - `docs/refactor/improvment-backlog.md`
+- 다음 단계: PLAN 피드백 반영 후 승인.
+- MCP: 사용하지 않음.
