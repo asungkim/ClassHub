@@ -73,7 +73,7 @@ class ClinicDefaultSlotServiceTest {
         given(recordRepository.findByStudentMemberIdAndCourseIdAndDeletedAtIsNull(studentId, courseId))
                 .willReturn(Optional.of(record));
         given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
-        given(clinicSlotRepository.findByIdAndDeletedAtIsNull(slotId)).willReturn(Optional.of(slot));
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(slotId)).willReturn(Optional.of(slot));
         given(recordRepository.findByStudentMemberIdAndDeletedAtIsNull(studentId))
                 .willReturn(List.of(record));
         given(recordRepository.countByDefaultClinicSlotIdAndDeletedAtIsNull(slotId)).willReturn(0L);
@@ -104,7 +104,7 @@ class ClinicDefaultSlotServiceTest {
         Course course = createCourse(courseId, teacherId, branchId);
         ClinicSlot slot = createSlot(slotId, teacherId, branchId, DayOfWeek.MONDAY);
 
-        given(clinicSlotRepository.findByIdAndDeletedAtIsNull(slotId)).willReturn(Optional.of(slot));
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(slotId)).willReturn(Optional.of(slot));
         given(recordRepository.findByStudentMemberIdAndDeletedAtIsNull(studentId))
                 .willReturn(List.of(record, otherRecord));
 
@@ -128,7 +128,7 @@ class ClinicDefaultSlotServiceTest {
         ClinicSlot slot = createSlot(slotId, teacherId, branchId, DayOfWeek.TUESDAY);
         ClinicSlot otherSlot = createSlot(otherSlotId, teacherId, branchId, DayOfWeek.TUESDAY);
 
-        given(clinicSlotRepository.findByIdAndDeletedAtIsNull(slotId)).willReturn(Optional.of(slot));
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(slotId)).willReturn(Optional.of(slot));
         given(recordRepository.findByStudentMemberIdAndDeletedAtIsNull(studentId))
                 .willReturn(List.of(record, otherRecord));
         given(clinicSlotRepository.findByIdInAndDeletedAtIsNull(List.of(otherSlotId)))
@@ -151,7 +151,7 @@ class ClinicDefaultSlotServiceTest {
         ClinicSlot slot = createSlot(slotId, teacherId, branchId, DayOfWeek.FRIDAY);
         ReflectionTestUtils.setField(slot, "defaultCapacity", 2);
 
-        given(clinicSlotRepository.findByIdAndDeletedAtIsNull(slotId)).willReturn(Optional.of(slot));
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(slotId)).willReturn(Optional.of(slot));
         given(recordRepository.findByStudentMemberIdAndDeletedAtIsNull(studentId))
                 .willReturn(List.of(record));
         given(recordRepository.countByDefaultClinicSlotIdAndDeletedAtIsNull(slotId)).willReturn(2L);
@@ -173,7 +173,7 @@ class ClinicDefaultSlotServiceTest {
         Course course = createCourse(courseId, teacherId, branchId);
         ClinicSlot slot = createSlot(slotId, teacherId, branchId, DayOfWeek.MONDAY);
 
-        given(clinicSlotRepository.findByIdAndDeletedAtIsNull(slotId)).willReturn(Optional.of(slot));
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(slotId)).willReturn(Optional.of(slot));
         given(recordRepository.findByStudentMemberIdAndDeletedAtIsNull(studentId))
                 .willReturn(List.of(record));
         given(recordRepository.countByDefaultClinicSlotIdAndDeletedAtIsNull(slotId)).willReturn(0L);

@@ -5,13 +5,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ClinicSessionRepository extends JpaRepository<ClinicSession, UUID> {
 
     Optional<ClinicSession> findByIdAndDeletedAtIsNull(UUID id);
+
+    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    @Query("""
+            SELECT cs
+            FROM ClinicSession cs
+            WHERE cs.id = :id
+              AND cs.deletedAt IS NULL
+            """)
+    Optional<ClinicSession> findByIdAndDeletedAtIsNullForUpdate(@Param("id") UUID id);
 
     Optional<ClinicSession> findBySlotIdAndDateAndDeletedAtIsNull(UUID slotId, LocalDate date);
 

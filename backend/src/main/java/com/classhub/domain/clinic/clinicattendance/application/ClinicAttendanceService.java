@@ -65,7 +65,7 @@ public class ClinicAttendanceService {
     }
 
     public ClinicAttendance addAttendance(MemberPrincipal principal, UUID sessionId, UUID recordId) {
-        ClinicSession session = loadSession(sessionId);
+        ClinicSession session = loadSessionForUpdate(sessionId);
         ensureStaffAccess(principal, session);
         ensureSessionWritable(session);
         StudentCourseRecord record = loadActiveRecord(recordId);
@@ -89,7 +89,7 @@ public class ClinicAttendanceService {
 
     public ClinicAttendance requestAttendance(MemberPrincipal principal, UUID sessionId, UUID recordId) {
         ensureStudentRole(principal);
-        ClinicSession session = loadSession(sessionId);
+        ClinicSession session = loadSessionForUpdate(sessionId);
         ensureSessionActive(session);
         ensureSessionNotLocked(session);
         StudentCourseRecord record = loadActiveRecord(recordId);
@@ -108,7 +108,7 @@ public class ClinicAttendanceService {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
         ClinicSession fromSession = loadSession(fromSessionId);
-        ClinicSession toSession = loadSession(toSessionId);
+        ClinicSession toSession = loadSessionForUpdate(toSessionId);
         ensureSessionActive(fromSession);
         ensureSessionActive(toSession);
 
@@ -171,6 +171,14 @@ public class ClinicAttendanceService {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
         return clinicSessionRepository.findByIdAndDeletedAtIsNull(sessionId)
+                .orElseThrow(RsCode.CLINIC_SESSION_NOT_FOUND::toException);
+    }
+
+    private ClinicSession loadSessionForUpdate(UUID sessionId) {
+        if (sessionId == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        return clinicSessionRepository.findByIdAndDeletedAtIsNullForUpdate(sessionId)
                 .orElseThrow(RsCode.CLINIC_SESSION_NOT_FOUND::toException);
     }
 

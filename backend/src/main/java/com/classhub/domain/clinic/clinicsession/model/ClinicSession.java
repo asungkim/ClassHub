@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
@@ -62,6 +63,10 @@ public class ClinicSession extends BaseEntity {
 
     @Column(name = "is_canceled", nullable = false)
     private boolean canceled;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     @Builder
     private ClinicSession(UUID slotId,

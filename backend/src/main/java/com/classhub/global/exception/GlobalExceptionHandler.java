@@ -6,8 +6,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import static com.classhub.global.response.RsCode.BAD_REQUEST;
+import static com.classhub.global.response.RsCode.CONCURRENT_UPDATE;
 import static com.classhub.global.response.RsCode.INTERNAL_SERVER;
 import static com.classhub.global.response.RsCode.FORBIDDEN;
 
@@ -36,6 +38,12 @@ public class GlobalExceptionHandler {
     public RsData<?> handleAuthorizationDenied(AuthorizationDeniedException ex) {
         logWarn(ex);
         return RsData.from(FORBIDDEN);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public RsData<?> handleOptimisticLockException(ObjectOptimisticLockingFailureException ex) {
+        logWarn(ex);
+        return RsData.from(CONCURRENT_UPDATE);
     }
 
     @ExceptionHandler(Exception.class)

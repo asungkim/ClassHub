@@ -67,7 +67,7 @@ class ClinicAttendanceServiceTest {
         StudentCourseRecord record = createRecord(recordId, studentId, courseId);
         Course course = createCourse(courseId, teacherId, branchId);
 
-        given(clinicSessionRepository.findByIdAndDeletedAtIsNull(sessionId))
+        given(clinicSessionRepository.findByIdAndDeletedAtIsNullForUpdate(sessionId))
                 .willReturn(Optional.of(session));
         given(studentCourseRecordRepository.findById(recordId)).willReturn(Optional.of(record));
         given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
@@ -101,7 +101,7 @@ class ClinicAttendanceServiceTest {
         ClinicSession session = createSession(sessionId, teacherId, branchId, LocalDate.now().plusDays(1));
         session.cancel();
 
-        given(clinicSessionRepository.findByIdAndDeletedAtIsNull(sessionId))
+        given(clinicSessionRepository.findByIdAndDeletedAtIsNullForUpdate(sessionId))
                 .willReturn(Optional.of(session));
 
         assertThatThrownBy(() -> clinicAttendanceService.requestAttendance(principal, sessionId, recordId))
@@ -133,7 +133,7 @@ class ClinicAttendanceServiceTest {
         );
         given(clinicSessionRepository.findByIdAndDeletedAtIsNull(fromSessionId))
                 .willReturn(Optional.of(fromSession));
-        given(clinicSessionRepository.findByIdAndDeletedAtIsNull(toSessionId))
+        given(clinicSessionRepository.findByIdAndDeletedAtIsNullForUpdate(toSessionId))
                 .willReturn(Optional.of(toSession));
 
         assertThatThrownBy(() -> clinicAttendanceService.moveAttendance(principal, fromSessionId, toSessionId))

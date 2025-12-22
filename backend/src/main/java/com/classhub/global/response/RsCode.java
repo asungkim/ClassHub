@@ -22,6 +22,7 @@ public enum RsCode {
     UNAUTHORIZED(RsConstant.FORBIDDEN, "접근 권한이 없습니다."),
     MEMBER_NOT_FOUND(RsConstant.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
     DUPLICATE_EMAIL(RsConstant.CONFLICT, "이미 사용 중인 이메일입니다."),
+    CONCURRENT_UPDATE(RsConstant.CONFLICT, "동시 요청으로 작업을 처리할 수 없습니다."),
     MEMBER_INACTIVE(RsConstant.UNAUTHORIZED, "비활성화된 계정입니다."),
 
     // ===== Invitation =====

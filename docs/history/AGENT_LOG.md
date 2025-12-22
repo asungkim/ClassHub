@@ -4265,3 +4265,34 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
 - 다음 단계: 배치/스케줄러(Phase 5) 구현 준비.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 22:39] 클리닉 동시성 충돌 처리(낙관적 락)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 슬롯/세션/학생 기록에 낙관적 락 버전을 추가했다.
+- 동시성 충돌을 새 RsCode로 매핑하고 서비스가 락 조회를 사용하도록 수정했다.
+
+### Details
+- 작업 사유: defaultClinicSlot 지정 및 Attendance 신청/이동 시 동시성 충돌 방지.
+- 영향받은 테스트:
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicAttendanceServiceTest`
+  - `StudentCourseControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseRecord.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/global/exception/GlobalExceptionHandler.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+- 다음 단계: 배치/스케줄러(Phase 5) 준비.
+- MCP: 사용하지 않음.

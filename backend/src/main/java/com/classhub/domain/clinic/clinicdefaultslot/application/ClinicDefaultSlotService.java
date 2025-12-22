@@ -56,7 +56,7 @@ public class ClinicDefaultSlotService {
         if (Objects.equals(defaultSlotId, record.getDefaultClinicSlotId())) {
             throw new BusinessException(RsCode.CLINIC_SLOT_DUPLICATED);
         }
-        ClinicSlot slot = clinicSlotRepository.findByIdAndDeletedAtIsNull(defaultSlotId)
+        ClinicSlot slot = clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(defaultSlotId)
                 .orElseThrow(RsCode.CLINIC_SLOT_NOT_FOUND::toException);
         ensureSlotMatchesCourse(slot, course);
 

@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Objects;
@@ -47,6 +48,10 @@ public class ClinicSlot extends BaseEntity {
 
     @Column(name = "default_capacity", nullable = false)
     private Integer defaultCapacity;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     @Builder
     private ClinicSlot(UUID teacherMemberId,

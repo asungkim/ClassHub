@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -137,6 +138,29 @@ class StudentCourseControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data.studentCourseRecordId").value(record.getId().toString()))
                 .andExpect(jsonPath("$.data.defaultClinicSlotId").value(slotId.toString()));
+
+        verify(clinicDefaultSlotService).updateDefaultSlotForStudent(studentPrincipal.id(), courseId, slotId);
+    }
+
+    @Test
+    void updateDefaultClinicSlot_shouldReturnConflict_whenOptimisticLockFails() throws Exception {
+        UUID courseId = UUID.randomUUID();
+        UUID slotId = UUID.randomUUID();
+        StudentDefaultClinicSlotRequest request = new StudentDefaultClinicSlotRequest(slotId);
+        ObjectOptimisticLockingFailureException exception = new ObjectOptimisticLockingFailureException(
+                StudentCourseRecord.class,
+                UUID.randomUUID()
+        );
+
+        given(clinicDefaultSlotService.updateDefaultSlotForStudent(studentPrincipal.id(), courseId, slotId))
+                .willThrow(exception);
+
+        mockMvc.perform(patch("/api/v1/students/me/courses/{courseId}/clinic-slot", courseId)
+                        .with(auth())
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(RsCode.CONCURRENT_UPDATE.getCode()));
 
         verify(clinicDefaultSlotService).updateDefaultSlotForStudent(studentPrincipal.id(), courseId, slotId);
     }
