@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.classhub.domain.clinic.clinicattendance.application.ClinicAttendanceService;
 import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceCreateRequest;
 import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceMoveRequest;
+import com.classhub.domain.clinic.clinicattendance.dto.response.ClinicAttendanceDetailResponse;
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceListResponse;
 import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceResponse;
@@ -27,7 +28,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,18 +69,30 @@ class ClinicAttendanceControllerTest {
     void getAttendances_shouldReturnList() throws Exception {
         UUID teacherId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
-        ClinicAttendance attendance = createAttendance(sessionId);
-        given(clinicAttendanceService.getAttendances(any(MemberPrincipal.class), eq(sessionId)))
-                .willReturn(List.of(attendance));
+        ClinicAttendanceDetailResponse response = new ClinicAttendanceDetailResponse(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "Student",
+                "01012345678",
+                "School",
+                "MIDDLE_1",
+                "01099998888",
+                16
+        );
+        given(clinicAttendanceService.getAttendanceDetails(any(MemberPrincipal.class), eq(sessionId)))
+                .willReturn(List.of(response));
 
         mockMvc.perform(get("/api/v1/clinic-attendances")
                         .param("clinicSessionId", sessionId.toString())
                         .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(teacherId, MemberRole.TEACHER))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
-                .andExpect(jsonPath("$.data[0].attendanceId").value(attendance.getId().toString()));
+                .andExpect(jsonPath("$.data[0].attendanceId").value(response.attendanceId().toString()))
+                .andExpect(jsonPath("$.data[0].studentName").value("Student"))
+                .andExpect(jsonPath("$.data[0].age").value(16));
 
-        verify(clinicAttendanceService).getAttendances(any(MemberPrincipal.class), eq(sessionId));
+        verify(clinicAttendanceService).getAttendanceDetails(any(MemberPrincipal.class), eq(sessionId));
     }
 
     @Test

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceDetailProjection;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSessionType;
 import com.classhub.domain.clinic.clinicsession.repository.ClinicSessionRepository;
@@ -142,6 +143,37 @@ class ClinicAttendanceServiceTest {
         verify(clinicAttendanceRepository, never()).save(any());
     }
 
+    @Test
+    void getAttendanceDetails_shouldReturnStudentInfoWithAge() {
+        UUID teacherId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        ClinicSession session = createSession(sessionId, teacherId, UUID.randomUUID(), LocalDate.now().plusDays(1));
+        LocalDate birthDate = LocalDate.of(2010, Month.MARCH, 5);
+        ClinicAttendanceDetailProjection projection = new TestDetailProjection(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "Student",
+                "01012345678",
+                "School",
+                com.classhub.domain.member.model.StudentGrade.MIDDLE_1,
+                "01099998888",
+                birthDate
+        );
+
+        given(clinicSessionRepository.findByIdAndDeletedAtIsNull(sessionId))
+                .willReturn(Optional.of(session));
+        given(clinicAttendanceRepository.findDetailsByClinicSessionId(sessionId))
+                .willReturn(List.of(projection));
+
+        var responses = clinicAttendanceService.getAttendanceDetails(principal, sessionId);
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).studentName()).isEqualTo("Student");
+        assertThat(responses.get(0).age()).isNotNull();
+    }
+
     private ClinicSession createSession(UUID sessionId, UUID teacherId, UUID branchId, LocalDate date) {
         ClinicSession session = ClinicSession.builder()
                 .slotId(UUID.randomUUID())
@@ -177,5 +209,83 @@ class ClinicAttendanceServiceTest {
         );
         ReflectionTestUtils.setField(course, "id", courseId);
         return course;
+    }
+
+    private static class TestDetailProjection implements ClinicAttendanceDetailProjection {
+
+        private final UUID attendanceId;
+        private final UUID studentCourseRecordId;
+        private final UUID studentMemberId;
+        private final String studentName;
+        private final String phoneNumber;
+        private final String schoolName;
+        private final com.classhub.domain.member.model.StudentGrade grade;
+        private final String parentPhoneNumber;
+        private final LocalDate birthDate;
+
+        private TestDetailProjection(UUID attendanceId,
+                                     UUID studentCourseRecordId,
+                                     UUID studentMemberId,
+                                     String studentName,
+                                     String phoneNumber,
+                                     String schoolName,
+                                     com.classhub.domain.member.model.StudentGrade grade,
+                                     String parentPhoneNumber,
+                                     LocalDate birthDate) {
+            this.attendanceId = attendanceId;
+            this.studentCourseRecordId = studentCourseRecordId;
+            this.studentMemberId = studentMemberId;
+            this.studentName = studentName;
+            this.phoneNumber = phoneNumber;
+            this.schoolName = schoolName;
+            this.grade = grade;
+            this.parentPhoneNumber = parentPhoneNumber;
+            this.birthDate = birthDate;
+        }
+
+        @Override
+        public UUID getAttendanceId() {
+            return attendanceId;
+        }
+
+        @Override
+        public UUID getStudentCourseRecordId() {
+            return studentCourseRecordId;
+        }
+
+        @Override
+        public UUID getStudentMemberId() {
+            return studentMemberId;
+        }
+
+        @Override
+        public String getStudentName() {
+            return studentName;
+        }
+
+        @Override
+        public String getPhoneNumber() {
+            return phoneNumber;
+        }
+
+        @Override
+        public String getSchoolName() {
+            return schoolName;
+        }
+
+        @Override
+        public com.classhub.domain.member.model.StudentGrade getGrade() {
+            return grade;
+        }
+
+        @Override
+        public String getParentPhoneNumber() {
+            return parentPhoneNumber;
+        }
+
+        @Override
+        public LocalDate getBirthDate() {
+            return birthDate;
+        }
     }
 }

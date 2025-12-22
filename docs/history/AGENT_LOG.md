@@ -4063,3 +4063,28 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
 - 다음 단계: ClinicRecord API 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 18:45] 클리닉 출석부 학생 정보 확장
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석부 API 응답에 학생 기본 정보와 나이를 포함하도록 확장했다.
+- 출석부 조회용 projection 쿼리와 서비스 매핑을 추가했다.
+
+### Details
+- 작업 사유: 출석부 화면에 학생 정보(이름/연락처/학교/학년/보호자/나이) 제공.
+- 영향받은 테스트:
+  - `ClinicAttendanceControllerTest`
+  - `ClinicAttendanceServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/ClinicAttendanceDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceDetailProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.

@@ -3,10 +3,12 @@ package com.classhub.domain.clinic.clinicattendance.application;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceDetailProjection;
 import com.classhub.domain.clinic.clinicattendance.support.ClinicAttendancePolicy;
 import com.classhub.domain.clinic.clinicattendance.dto.response.ClinicAttendanceResponse;
 import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceListResponse;
 import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceResponse;
+import com.classhub.domain.clinic.clinicattendance.dto.response.ClinicAttendanceDetailResponse;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
 import com.classhub.domain.clinic.clinicsession.repository.ClinicSessionRepository;
 import com.classhub.domain.course.model.Course;
@@ -19,6 +21,7 @@ import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,10 +43,24 @@ public class ClinicAttendanceService {
     private final TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
 
     @Transactional(readOnly = true)
-    public List<ClinicAttendance> getAttendances(MemberPrincipal principal, UUID sessionId) {
+    public List<ClinicAttendanceDetailResponse> getAttendanceDetails(MemberPrincipal principal, UUID sessionId) {
         ClinicSession session = loadSession(sessionId);
         ensureStaffAccess(principal, session);
-        return clinicAttendanceRepository.findByClinicSessionId(sessionId);
+        List<ClinicAttendanceDetailProjection> projections =
+                clinicAttendanceRepository.findDetailsByClinicSessionId(sessionId);
+        return projections.stream()
+                .map(projection -> new ClinicAttendanceDetailResponse(
+                        projection.getAttendanceId(),
+                        projection.getStudentCourseRecordId(),
+                        projection.getStudentMemberId(),
+                        projection.getStudentName(),
+                        projection.getPhoneNumber(),
+                        projection.getSchoolName(),
+                        projection.getGrade() == null ? null : projection.getGrade().name(),
+                        projection.getParentPhoneNumber(),
+                        calculateAge(projection.getBirthDate())
+                ))
+                .toList();
     }
 
     public ClinicAttendance addAttendance(MemberPrincipal principal, UUID sessionId, UUID recordId) {
@@ -274,5 +291,12 @@ public class ClinicAttendanceService {
                 .studentCourseRecordId(recordId)
                 .build();
         return clinicAttendanceRepository.save(attendance);
+    }
+
+    private Integer calculateAge(LocalDate birthDate) {
+        if (birthDate == null) {
+            return null;
+        }
+        return Period.between(birthDate, LocalDate.now()).getYears();
     }
 }

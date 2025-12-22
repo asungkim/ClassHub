@@ -3,6 +3,7 @@ package com.classhub.domain.clinic.clinicattendance.web;
 import com.classhub.domain.clinic.clinicattendance.application.ClinicAttendanceService;
 import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceCreateRequest;
 import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceMoveRequest;
+import com.classhub.domain.clinic.clinicattendance.dto.response.ClinicAttendanceDetailResponse;
 import com.classhub.domain.clinic.clinicattendance.dto.response.ClinicAttendanceResponse;
 import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceListResponse;
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
@@ -40,14 +41,12 @@ public class ClinicAttendanceController {
     @GetMapping("/clinic-attendances")
     @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "클리닉 출석 명단 조회")
-    public RsData<List<ClinicAttendanceResponse>> getAttendances(
+    public RsData<List<ClinicAttendanceDetailResponse>> getAttendances(
             @AuthenticationPrincipal MemberPrincipal principal,
             @RequestParam("clinicSessionId") UUID clinicSessionId
     ) {
-        List<ClinicAttendance> attendances = clinicAttendanceService.getAttendances(principal, clinicSessionId);
-        List<ClinicAttendanceResponse> response = attendances.stream()
-                .map(ClinicAttendanceResponse::from)
-                .toList();
+        List<ClinicAttendanceDetailResponse> response =
+                clinicAttendanceService.getAttendanceDetails(principal, clinicSessionId);
         return RsData.from(RsCode.SUCCESS, response);
     }
 
