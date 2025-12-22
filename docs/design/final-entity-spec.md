@@ -283,6 +283,7 @@ enum BranchRole {
 - defaultClinicSlotId 저장/변경 시 slot.teacherMemberId/branchId가 course와 동일한지 검증한다.
 - 같은 학생은 동일 Slot을 여러 Course에 중복 선택할 수 없다.
 - 같은 학생의 defaultClinicSlotId는 요일/시간이 겹치면 설정할 수 없다.
+- defaultClinicSlotId 지정 인원은 slot.defaultCapacity를 초과할 수 없다.
 - assistantMemberId는 TeacherAssistantAssignment로 연결된 ASSISTANT만 지정할 수 있으며, Course 담당 Teacher가 관리 범위를 위임한 조교를 명시한다. Nullable이라 조교 미배정 상태도 허용한다.
 
 ---

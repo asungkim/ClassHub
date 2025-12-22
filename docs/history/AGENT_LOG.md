@@ -3579,3 +3579,125 @@ DESIGN
   - `docs/spec/v1.4.md`
 - 다음 단계: 없음.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 12:07] 학생 추가 참석 신청 API 명시
+
+### Type
+DESIGN
+
+### Summary
+- 학생 전용 ClinicAttendance 추가 신청 API를 스펙에 추가했다.
+- requirement에 학생 직접 신청 문구를 보강했다.
+
+### Details
+- 작업 사유: 추가 참석 신청을 학생 API로 분리하라는 요구 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 12:45] Clinic 운영 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot 생성/변경 시 세션 생성 시점과 기본 슬롯 적용 시점을 스펙에 명시했다.
+- 세션 취소 처리와 학생 참석 목록 조회 정의를 추가했다.
+- 학생 추가 신청/이동의 검증 규칙을 구체화했다.
+
+### Details
+- 작업 사유: 운영 규칙 확정(주간 생성, 다음 주 적용, 취소 정책) 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 사용자 확인 후 API 설계 확정.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 12:54] ClinicSession 수정 제거
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSession 수정 없이 취소 후 재생성하도록 requirement를 정리했다.
+- 조교 세션 관리 문구에서 수정 항목을 제거했다.
+
+### Details
+- 작업 사유: 세션 수정 API 없이 취소/재생성 정책 확정.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 14:18] Clinic API 역할별 정리 반영
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot/Session API를 teacher/assistant/student 역할에 맞게 분리했다.
+- branchId/teacherId 파라미터 구분과 student courseId 조회 규칙을 명시했다.
+
+### Details
+- 작업 사유: 역할별 API 호출 방식 확정.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/spec/v1.4.md`
+- 다음 단계: 프런트 화면 설계 문서 작성.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 14:56] ClinicSlot 정원 제한 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- defaultClinicSlotId 지정 인원이 slot.defaultCapacity를 초과할 수 없음을 엔티티 스펙에 추가했다.
+
+### Details
+- 작업 사유: 슬롯 정원 초과 방지 규칙을 설계 문서에 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/design/final-entity-spec.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:04] 학생 세션 조회/그룹핑 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생의 teacher/branch 기준 슬롯 그룹핑과 세션 조회 규칙을 명시했다.
+- 학생 추가 신청/이동을 위한 ClinicSessions 조회 권한을 추가했다.
+
+### Details
+- 작업 사유: 학생 UI 흐름(추가/이동)을 API와 연결.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:05] Clinic API 역할별 스펙 보강
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot/ClinicSession/ClinicAttendance API 설명을 역할별 요청 파라미터에 맞춰 보강했다.
+- 긴급 세션 생성 시 Assistant의 teacherId 전달 규칙을 명시했다.
+
+### Details
+- 작업 사유: 역할별 API 목록을 스펙에 일치시키기 위해 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
