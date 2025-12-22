@@ -22,6 +22,18 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
                                                                                List<UUID> recordIds);
 
     @Query("""
+            SELECT ca
+            FROM ClinicAttendance ca
+            JOIN ClinicSession cs ON cs.id = ca.clinicSessionId
+            WHERE ca.studentCourseRecordId IN :recordIds
+              AND cs.date BETWEEN :startDate AND :endDate
+            ORDER BY cs.date ASC, cs.startTime ASC, ca.id ASC
+            """)
+    List<ClinicAttendance> findByStudentCourseRecordIdInAndDateRange(@Param("recordIds") List<UUID> recordIds,
+                                                                     @Param("startDate") LocalDate startDate,
+                                                                     @Param("endDate") LocalDate endDate);
+
+    @Query("""
             SELECT
                 cs.id AS clinicSessionId,
                 ca.id AS clinicAttendanceId,

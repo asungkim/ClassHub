@@ -14,6 +14,7 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -111,6 +112,24 @@ public class ClinicAttendanceService {
         ensureAttendanceCreatable(toSession, record.getId());
         clinicAttendanceRepository.delete(attendance);
         return saveAttendance(toSessionId, record.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClinicAttendance> getStudentAttendances(MemberPrincipal principal,
+                                                        LocalDate startDate,
+                                                        LocalDate endDate) {
+        ensureStudentRole(principal);
+        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        List<StudentCourseRecord> records = studentCourseRecordRepository.findByStudentMemberIdAndDeletedAtIsNull(
+                principal.id()
+        );
+        List<UUID> recordIds = records.stream().map(StudentCourseRecord::getId).toList();
+        if (recordIds.isEmpty()) {
+            return List.of();
+        }
+        return clinicAttendanceRepository.findByStudentCourseRecordIdInAndDateRange(recordIds, startDate, endDate);
     }
 
     private ClinicSession loadSession(UUID sessionId) {

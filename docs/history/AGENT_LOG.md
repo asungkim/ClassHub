@@ -4012,3 +4012,30 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
 - 다음 단계: Attendance API/Controller 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 18:22] ClinicAttendance API 컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicAttendance CRUD/학생 신청/이동 API를 추가했다.
+- 학생 출석 목록 조회 응답 DTO를 추가했다.
+
+### Details
+- 작업 사유: Phase 3-3 컨트롤러/API 구현.
+- 영향받은 테스트:
+  - `ClinicAttendanceControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/request/ClinicAttendanceCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/request/ClinicAttendanceMoveRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/ClinicAttendanceResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/StudentClinicAttendanceResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/StudentClinicAttendanceListResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.
