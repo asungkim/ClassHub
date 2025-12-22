@@ -66,9 +66,15 @@
 
 #### 2.5 ClinicRecord
 - `clinicAttendanceId` 기준 1:1 기록을 생성/조회/수정/삭제한다.
-- Teacher/Assistant만 작성/수정/삭제 가능, Student는 본인 Attendance에 한해 조회만 가능하다.
+- Teacher/Assistant만 작성/수정/삭제 가능하며, **학생은 조회 불가**.
+- Assistant는 TeacherAssistantAssignment가 ACTIVE인 경우에만 기록 작성 가능.
 - ClinicRecord가 존재하면 해당 Attendance는 COMPLETED로 간주된다. (상태는 Record 존재 여부로 계산)
 - ClinicRecord 삭제 시 Attendance는 유지되며, 캘린더 집계 시 record가 제거된 상태로 반영한다.
+- 출석부 조회(`GET /clinic-attendances?clinicSessionId=...`) 결과에 `recordId`를 포함하여 작성/수정 UI 상태를 판단한다.
+- 기록 작성 흐름
+  - 출석부 목록에서 `recordId == null`이면 “작성” 버튼 노출
+  - `recordId != null`이면 “수정/삭제” 버튼 노출
+  - 작성 완료 시 출석부 재조회 시 `recordId`가 채워짐
 
 #### 2.6 권한/검증
 - Teacher 권한
@@ -186,7 +192,7 @@
   - Body: `{ "clinicAttendanceId": "uuid", "title": "...", "content": "...", "homeworkProgress": "..." }`
   - Errors: `CLINIC_RECORD_ALREADY_EXISTS`, `CLINIC_ATTENDANCE_NOT_FOUND`
 - `GET /api/v1/clinic-records?clinicAttendanceId=uuid`
-  - Teacher/Assistant/Student(본인 Attendance)
+  - Teacher/Assistant 전용 (학생 조회 불가)
 - `PATCH /api/v1/clinic-records/{recordId}`
   - Body: `{ "title": "...", "content": "...", "homeworkProgress": "..." }`
 - `DELETE /api/v1/clinic-records/{recordId}`
@@ -228,6 +234,7 @@
   - 시간 겹침 검사, capacity 검사, 10분 lock/30분 이동 제한
 - `ClinicRecordService`
   - record CRUD, 존재 여부로 Attendance 완료 상태 계산
+  - Assistant 권한은 TeacherAssistantAssignment ACTIVE 여부로 검증
 - `ClinicPermissionValidator`
   - Teacher/Assistant/Student 접근 규칙을 공통으로 검증
 
@@ -285,7 +292,8 @@
    - student 이동: 동일 주차/30분 제한/삭제+생성 로직 검증.
 8. **ClinicRecordService Tests**
    - record 생성/수정/삭제, 1:1 제약 위반 검증.
-   - student 조회 권한 제한 확인.
+   - Assistant 권한 미부여 시 작성 불가 확인.
+   - Student 조회 차단 확인.
 9. **Controller Tests (MockMvc)**
    - 각 엔드포인트별 200/400/403/409 응답 검증.
    - 학생 조회 응답 스키마(시간표 형태) 검증.

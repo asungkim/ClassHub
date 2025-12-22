@@ -4112,3 +4112,20 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
 - 다음 단계: ClinicRecord API 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 19:02] ClinicRecord PLAN 상세 보강
+
+### Type
+DESIGN
+
+### Summary
+- ClinicRecord 생성/조회/수정 흐름과 출석부 연동 규칙을 상세화했다.
+- Assistant 권한 조건 및 학생 조회 차단 규칙을 명시했다.
+
+### Details
+- 작업 사유: ClinicRecord 구현 범위와 검증 규칙을 명확히 하기 위해 PLAN 보강.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: ClinicRecord 구현 착수.
+- MCP: 사용하지 않음.
