@@ -1,7 +1,7 @@
 package com.classhub.domain.studentcourse.web;
 
 import com.classhub.domain.member.dto.MemberPrincipal;
-import com.classhub.domain.clinic.clinicdefaultslot.application.ClinicDefaultSlotService;
+import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.studentcourse.application.StudentCourseQueryService;
 import com.classhub.domain.studentcourse.dto.request.StudentDefaultClinicSlotRequest;
 import com.classhub.domain.studentcourse.dto.response.StudentDefaultClinicSlotResponse;

@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.classhub.domain.clinic.clinicdefaultslot.application.ClinicDefaultSlotService;
+import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;

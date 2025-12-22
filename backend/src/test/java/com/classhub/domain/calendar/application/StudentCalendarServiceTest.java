@@ -7,8 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import com.classhub.domain.calendar.mapper.StudentCalendarMapper;
-import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceEventProjection;
-import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceEventProjection;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;

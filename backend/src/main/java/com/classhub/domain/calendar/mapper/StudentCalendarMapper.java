@@ -4,7 +4,7 @@ import com.classhub.domain.calendar.dto.StudentCalendarResponse.ClinicEvent;
 import com.classhub.domain.calendar.dto.StudentCalendarResponse.ClinicRecordSummary;
 import com.classhub.domain.calendar.dto.StudentCalendarResponse.CourseProgressEvent;
 import com.classhub.domain.calendar.dto.StudentCalendarResponse.PersonalProgressEvent;
-import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceEventProjection;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceEventProjection;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.progress.course.model.CourseProgress;

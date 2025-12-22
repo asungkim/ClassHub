@@ -4398,3 +4398,82 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
 - 다음 단계: 배치 요약 로그/모니터링 추가 여부 검토.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 01:21] 배치/기본 슬롯 패키지 구조 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- clinicbatch 패키지를 clinic/batch로 이동하고 scheduler 분리 구조로 정리했다.
+- ClinicDefaultSlotService를 clinicslot/application로 이동했다.
+
+### Details
+- 작업 사유: 패키지 구조 개선 및 역할 분리.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+  - `ClinicBatchSchedulerTest`
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicSlotServiceTest`
+  - `StudentCourseControllerTest`
+  - `StudentCourseManagementServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/batch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/batch/scheduler/ClinicBatchScheduler.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/batch/application/ClinicBatchServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/batch/scheduler/ClinicBatchSchedulerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicDefaultSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+- 다음 단계: Phase 6 권한/정책 정리 준비.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:35] 클리닉 하위 패키지 네이밍 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- clinic 하위 패키지명을 attendance/session/slot/record로 일괄 변경했다.
+- 관련 테스트 패키지와 import 경로를 모두 정리했다.
+
+### Details
+- 작업 사유: 패키지 명명 일관성 개선.
+- 영향받은 테스트:
+  - `ClinicAttendanceServiceTest`
+  - `ClinicAttendanceControllerTest`
+  - `ClinicAttendanceRepositoryTest`
+  - `ClinicAttendanceRepositoryQueryTest`
+  - `ClinicSessionServiceTest`
+  - `ClinicSessionRepositoryTest`
+  - `ClinicSessionControllerTest`
+  - `ClinicSlotServiceTest`
+  - `ClinicSlotRepositoryTest`
+  - `ClinicSlotControllerTest`
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicRecordServiceTest`
+  - `ClinicRecordRepositoryTest`
+  - `ClinicRecordControllerTest`
+  - `ClinicBatchServiceTest`
+  - `ClinicBatchSchedulerTest`
+  - `StudentCalendarServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/record/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/record/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/batch/application/ClinicBatchService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/batch/application/ClinicBatchServiceTest.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/application/StudentCalendarService.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
+- 다음 단계: Phase 6 권한/정책 정리.
+- MCP: 사용하지 않음.

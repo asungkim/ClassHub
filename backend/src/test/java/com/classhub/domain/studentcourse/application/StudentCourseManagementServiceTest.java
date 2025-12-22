@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
-import com.classhub.domain.clinic.clinicdefaultslot.application.ClinicDefaultSlotService;
+import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.course.application.CourseViewAssembler;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
