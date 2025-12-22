@@ -84,6 +84,7 @@ public class StudentCalendarMapper {
                 event.getRecordId(),
                 event.getRecordTitle(),
                 event.getRecordContent(),
+                event.getRecordHomeworkProgress(),
                 writerRole
         );
     }

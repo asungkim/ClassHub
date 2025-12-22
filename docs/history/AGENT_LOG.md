@@ -4210,3 +4210,27 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/web/ClinicRecordControllerTest.java`
 - 다음 단계: Permission/Policy 정리 및 배치 단계 준비.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 19:29] 학생 캘린더 ClinicRecord 숙제 필드 반영
+
+### Type
+DESIGN
+
+### Summary
+- StudentCalendar의 ClinicRecord 응답에 homeworkProgress 필드를 추가했다.
+
+### Details
+- 작업 사유: 캘린더에 숙제 진행 상태를 노출하기 위한 스펙 반영.
+- 영향받은 테스트:
+  - `StudentCalendarServiceTest`
+  - `StudentCalendarControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceEventProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/StudentCalendarResponse.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+  - `docs/spec/v1.4.md`
+- 다음 단계: Permission/Policy 정리 및 배치 단계 준비.
+- MCP: 사용하지 않음.

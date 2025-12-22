@@ -55,6 +55,7 @@ public record StudentCalendarResponse(
             UUID id,
             String title,
             String content,
+            String homeworkProgress,
             MemberRole writerRole
     ) {
     }

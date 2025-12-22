@@ -28,4 +28,6 @@ public interface ClinicAttendanceEventProjection {
     UUID getRecordWriterId();
 
     String getRecordContent();
+
+    String getRecordHomeworkProgress();
 }
