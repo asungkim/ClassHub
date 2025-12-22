@@ -17,8 +17,8 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
                 scr.courseId AS courseId,
                 cs.slotId AS slotId,
                 cs.date AS date,
-                slot.startTime AS startTime,
-                slot.endTime AS endTime,
+                cs.startTime AS startTime,
+                cs.endTime AS endTime,
                 cs.canceled AS canceled,
                 cr.id AS recordId,
                 cr.title AS recordTitle,
@@ -27,7 +27,6 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
             FROM ClinicAttendance ca
             JOIN StudentCourseRecord scr ON scr.id = ca.studentCourseRecordId
             JOIN ClinicSession cs ON cs.id = ca.clinicSessionId
-            LEFT JOIN ClinicSlot slot ON slot.id = cs.slotId
             LEFT JOIN ClinicRecord cr ON cr.clinicAttendanceId = ca.id
             WHERE ca.studentCourseRecordId IN :recordIds
               AND cs.date BETWEEN :startDate AND :endDate

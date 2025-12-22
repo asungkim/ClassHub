@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -42,6 +43,12 @@ public class ClinicSession extends BaseEntity {
     @Column(name = "session_date", nullable = false)
     private LocalDate date;
 
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
+
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
+
     @Column(nullable = false)
     private Integer capacity;
 
@@ -53,12 +60,16 @@ public class ClinicSession extends BaseEntity {
                           ClinicSessionType sessionType,
                           UUID creatorMemberId,
                           LocalDate date,
+                          LocalTime startTime,
+                          LocalTime endTime,
                           Integer capacity,
                           boolean canceled) {
         this.slotId = slotId;
         this.sessionType = Objects.requireNonNull(sessionType, "sessionType must not be null");
         this.creatorMemberId = creatorMemberId;
         this.date = Objects.requireNonNull(date, "date must not be null");
+        this.startTime = Objects.requireNonNull(startTime, "startTime must not be null");
+        this.endTime = Objects.requireNonNull(endTime, "endTime must not be null");
         this.capacity = Objects.requireNonNull(capacity, "capacity must not be null");
         this.canceled = canceled;
     }

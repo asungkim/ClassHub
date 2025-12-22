@@ -19,7 +19,6 @@ import lombok.NoArgsConstructor;
 @Table(
         name = "clinic_slot",
         indexes = {
-                @Index(name = "idx_clinic_slot_course", columnList = "course_id"),
                 @Index(name = "idx_clinic_slot_teacher", columnList = "teacher_member_id"),
                 @Index(name = "idx_clinic_slot_creator", columnList = "creator_member_id"),
                 @Index(name = "idx_clinic_slot_branch", columnList = "branch_id")
@@ -27,9 +26,6 @@ import lombok.NoArgsConstructor;
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ClinicSlot extends BaseEntity {
-
-    @Column(name = "course_id", nullable = false, columnDefinition = "BINARY(16)")
-    private UUID courseId;
 
     @Column(name = "teacher_member_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID teacherMemberId;
@@ -53,15 +49,13 @@ public class ClinicSlot extends BaseEntity {
     private Integer defaultCapacity;
 
     @Builder
-    private ClinicSlot(UUID courseId,
-                       UUID teacherMemberId,
+    private ClinicSlot(UUID teacherMemberId,
                        UUID creatorMemberId,
                        UUID branchId,
                        DayOfWeek dayOfWeek,
                        LocalTime startTime,
                        LocalTime endTime,
                        Integer defaultCapacity) {
-        this.courseId = Objects.requireNonNull(courseId, "courseId must not be null");
         this.teacherMemberId = Objects.requireNonNull(teacherMemberId, "teacherMemberId must not be null");
         this.creatorMemberId = Objects.requireNonNull(creatorMemberId, "creatorMemberId must not be null");
         this.branchId = Objects.requireNonNull(branchId, "branchId must not be null");

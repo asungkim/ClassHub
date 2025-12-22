@@ -61,7 +61,7 @@ class ClinicAttendanceRepositoryTest {
         record = studentCourseRecordRepository.save(
                 StudentCourseRecord.create(studentId, course.getId(), null, null, null)
         );
-        slot = slotRepository.save(createSlot(course.getId(), teacherId));
+        slot = slotRepository.save(createSlot(teacherId));
     }
 
 //    @Test
@@ -130,9 +130,8 @@ class ClinicAttendanceRepositoryTest {
         );
     }
 
-    private ClinicSlot createSlot(UUID courseId, UUID teacherId) {
+    private ClinicSlot createSlot(UUID teacherId) {
         return ClinicSlot.builder()
-                .courseId(courseId)
                 .teacherMemberId(teacherId)
                 .creatorMemberId(teacherId)
                 .branchId(UUID.randomUUID())
@@ -149,6 +148,8 @@ class ClinicAttendanceRepositoryTest {
                 .sessionType(ClinicSessionType.REGULAR)
                 .creatorMemberId(null)
                 .date(date)
+                .startTime(LocalTime.of(18, 0))
+                .endTime(LocalTime.of(19, 0))
                 .capacity(10)
                 .canceled(false)
                 .build();

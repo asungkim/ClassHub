@@ -3770,3 +3770,23 @@ DESIGN
   - `docs/refactor/improvment-backlog.md`
 - 다음 단계: PLAN 피드백 반영 후 승인.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 16:12] Clinic Phase0 엔티티 스키마 반영
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSlot에서 courseId를 제거하고 teacher/branch 중심 필드만 남겼다.
+- ClinicSession에 startTime/endTime 필드를 추가하고 출석 집계 쿼리를 갱신했다.
+
+### Details
+- 작업 사유: v1.4 스펙의 슬롯 공유 및 세션 시간 필드 반영을 위한 스키마 정리.
+- 영향받은 테스트: `ClinicAttendanceRepositoryTest` 헬퍼 업데이트.
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryTest.java`
+- 다음 단계: Phase0 추가 엔티티 변경 여부 확인.
+- MCP: 사용하지 않음.
