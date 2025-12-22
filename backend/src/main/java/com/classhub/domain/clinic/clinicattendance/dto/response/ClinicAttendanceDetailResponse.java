@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public record ClinicAttendanceDetailResponse(
         UUID attendanceId,
+        UUID recordId,
         UUID studentCourseRecordId,
         UUID studentMemberId,
         String studentName,

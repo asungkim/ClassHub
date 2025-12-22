@@ -36,6 +36,7 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
     @Query("""
             SELECT
                 ca.id AS attendanceId,
+                cr.id AS recordId,
                 scr.id AS studentCourseRecordId,
                 m.id AS studentMemberId,
                 m.name AS studentName,
@@ -48,6 +49,7 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
             JOIN StudentCourseRecord scr ON scr.id = ca.studentCourseRecordId
             JOIN Member m ON m.id = scr.studentMemberId
             JOIN StudentInfo si ON si.memberId = m.id
+            LEFT JOIN ClinicRecord cr ON cr.clinicAttendanceId = ca.id
             WHERE ca.clinicSessionId = :sessionId
             ORDER BY m.name ASC, ca.id ASC
             """)

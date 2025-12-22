@@ -69,8 +69,10 @@ class ClinicAttendanceControllerTest {
     void getAttendances_shouldReturnList() throws Exception {
         UUID teacherId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
+        UUID recordId = UUID.randomUUID();
         ClinicAttendanceDetailResponse response = new ClinicAttendanceDetailResponse(
                 UUID.randomUUID(),
+                recordId,
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 "Student",
@@ -89,6 +91,7 @@ class ClinicAttendanceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data[0].attendanceId").value(response.attendanceId().toString()))
+                .andExpect(jsonPath("$.data[0].recordId").value(recordId.toString()))
                 .andExpect(jsonPath("$.data[0].studentName").value("Student"))
                 .andExpect(jsonPath("$.data[0].age").value(16));
 

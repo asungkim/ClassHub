@@ -7,6 +7,8 @@ import java.util.UUID;
 public interface ClinicAttendanceDetailProjection {
     UUID getAttendanceId();
 
+    UUID getRecordId();
+
     UUID getStudentCourseRecordId();
 
     UUID getStudentMemberId();

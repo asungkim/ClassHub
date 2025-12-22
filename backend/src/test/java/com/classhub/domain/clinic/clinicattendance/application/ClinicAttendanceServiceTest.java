@@ -154,6 +154,7 @@ class ClinicAttendanceServiceTest {
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 UUID.randomUUID(),
+                UUID.randomUUID(),
                 "Student",
                 "01012345678",
                 "School",
@@ -214,6 +215,7 @@ class ClinicAttendanceServiceTest {
     private static class TestDetailProjection implements ClinicAttendanceDetailProjection {
 
         private final UUID attendanceId;
+        private final UUID recordId;
         private final UUID studentCourseRecordId;
         private final UUID studentMemberId;
         private final String studentName;
@@ -224,6 +226,7 @@ class ClinicAttendanceServiceTest {
         private final LocalDate birthDate;
 
         private TestDetailProjection(UUID attendanceId,
+                                     UUID recordId,
                                      UUID studentCourseRecordId,
                                      UUID studentMemberId,
                                      String studentName,
@@ -233,6 +236,7 @@ class ClinicAttendanceServiceTest {
                                      String parentPhoneNumber,
                                      LocalDate birthDate) {
             this.attendanceId = attendanceId;
+            this.recordId = recordId;
             this.studentCourseRecordId = studentCourseRecordId;
             this.studentMemberId = studentMemberId;
             this.studentName = studentName;
@@ -246,6 +250,11 @@ class ClinicAttendanceServiceTest {
         @Override
         public UUID getAttendanceId() {
             return attendanceId;
+        }
+
+        @Override
+        public UUID getRecordId() {
+            return recordId;
         }
 
         @Override

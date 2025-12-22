@@ -51,6 +51,7 @@ public class ClinicAttendanceService {
         return projections.stream()
                 .map(projection -> new ClinicAttendanceDetailResponse(
                         projection.getAttendanceId(),
+                        projection.getRecordId(),
                         projection.getStudentCourseRecordId(),
                         projection.getStudentMemberId(),
                         projection.getStudentName(),

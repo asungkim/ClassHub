@@ -4088,3 +4088,27 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
 - 다음 단계: ClinicRecord API 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 19:01] 클리닉 출석부 recordId/나이 응답 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석부 응답에 `recordId`를 포함해 작성/수정 버튼 분기 근거를 제공했다.
+- 출석 상세 projection 및 서비스 매핑을 갱신했다.
+
+### Details
+- 작업 사유: 출석부에서 기록 작성 여부를 판별하기 위한 식별자 제공.
+- 영향받은 테스트:
+  - `ClinicAttendanceControllerTest`
+  - `ClinicAttendanceServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/ClinicAttendanceDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceDetailProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.
