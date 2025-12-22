@@ -4190,3 +4190,23 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordServiceTest.java`
 - 다음 단계: ClinicRecord API/Controller 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 19:25] ClinicRecord API 컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicRecord CRUD API와 응답 DTO를 추가했다.
+- Controller/MockMvc 테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 4-3 ClinicRecord API 구현.
+- 영향받은 테스트:
+  - `ClinicRecordControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/web/ClinicRecordController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/dto/response/ClinicRecordResponse.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/web/ClinicRecordControllerTest.java`
+- 다음 단계: Permission/Policy 정리 및 배치 단계 준비.
+- MCP: 사용하지 않음.
