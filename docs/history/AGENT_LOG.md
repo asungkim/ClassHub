@@ -3790,3 +3790,27 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryTest.java`
 - 다음 단계: Phase0 추가 엔티티 변경 여부 확인.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 16:21] ClinicSlot 기반 리포지토리/코드 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSlot 조회용 리포지토리 메서드와 테스트를 추가했다.
+- defaultClinicSlotId 인원 집계를 위한 StudentCourseRecord 카운트 메서드를 추가했다.
+- ClinicSlot 검증용 RsCode를 확장했다.
+
+### Details
+- 작업 사유: Phase 1-1 기초 계약/검증 준비.
+- 영향받은 테스트:
+  - `ClinicSlotRepositoryTest`
+  - `StudentCourseRecordRepositoryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepositoryTest.java`
+- 다음 단계: ClinicSlot 서비스/검증 로직 구현.
+- MCP: 사용하지 않음.

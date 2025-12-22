@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface StudentCourseRecordRepository extends JpaRepository<StudentCourseRecord, UUID> {
 
+    long countByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
+
     @Query("""
             SELECT scr
             FROM StudentCourseRecord scr

@@ -50,6 +50,11 @@ public enum RsCode {
     SHARED_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "공통 진도 기록을 찾을 수 없습니다."),
     CLINIC_SLOT_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 슬롯을 찾을 수 없습니다."),
     CLINIC_SLOT_CONFLICT(RsConstant.CONFLICT, "다른 클리닉 슬롯과 시간이 겹칩니다."),
+    CLINIC_SLOT_TIME_INVALID(RsConstant.BAD_REQUEST, "클리닉 슬롯 시간이 올바르지 않습니다."),
+    CLINIC_SLOT_TIME_OVERLAP(RsConstant.CONFLICT, "클리닉 슬롯 시간이 겹칩니다."),
+    CLINIC_SLOT_CAPACITY_CONFLICT(RsConstant.CONFLICT, "클리닉 슬롯 정원이 현재 배정 인원보다 작습니다."),
+    CLINIC_SLOT_CAPACITY_EXCEEDED(RsConstant.CONFLICT, "클리닉 슬롯 정원이 초과되었습니다."),
+    CLINIC_SLOT_DUPLICATED(RsConstant.CONFLICT, "이미 선택된 클리닉 슬롯입니다."),
 
     // ===== Enrollment =====
     STUDENT_ENROLLMENT_REQUEST_NOT_FOUND(RsConstant.NOT_FOUND, "수업 신청을 찾을 수 없습니다."),
