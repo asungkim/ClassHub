@@ -3954,3 +3954,20 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionControllerTest.java`
 - 다음 단계: ClinicSession 배치/스케줄러 설계 확정 후 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 18:01] Clinic 배치/스케줄러 계획 상세화
+
+### Type
+DESIGN
+
+### Summary
+- 배치/스케줄러 동작 규칙과 예외 처리 방식을 PLAN에 상세히 추가했다.
+- 구현 단계에서 배치가 Phase 3 이후로 이동하도록 로드맵을 조정했다.
+
+### Details
+- 작업 사유: 배치/자동 생성의 기준과 예외 케이스를 명확히 하기 위해 계획을 보강.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: Phase 3 완료 후 배치 구현 착수.
+- MCP: 사용하지 않음.

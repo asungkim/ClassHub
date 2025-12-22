@@ -35,10 +35,6 @@
   - Null로 해제 시: 다음 주 자동 Attendance 생성 중지 (이미 생성된 Attendance는 삭제하지 않음).
 
 #### 2.3 ClinicSession
-- 주간 배치: 매주 일요일 자정에 활성 Slot을 순회하며 월~일 Session을 자동 생성한다.
-  - SessionType=REGULAR, slotId 설정, startTime/endTime/ capacity는 Slot 값 복사.
-  - `(slotId, date)` 중복이 있으면 생성하지 않는다.
-- Slot이 주중에 새로 생성되면, 해당 주에 시간이 지나지 않은 요일의 Session을 추가 생성한다.
 - Teacher는 `POST /clinic-slots/{slotId}/sessions`로 정규 Session을 수동 생성할 수 있다.
 - Teacher/Assistant는 `POST /clinic-sessions/emergency`로 EMERGENCY Session을 생성한다.
   - slotId=null, creatorMemberId 기록, date/startTime/endTime/capacity를 직접 입력.
@@ -88,6 +84,32 @@
 #### 2.7 Student Calendar 연동
 - ClinicAttendance/ClinicRecord는 StudentCalendar 집계 대상이므로, 월간 범위 조회를 위한 Repository Query를 제공한다.
 - `ClinicAttendanceEventProjection`은 Session/Attendance/Record를 조인하여 날짜/시간/취소 여부/Record 여부를 반환한다.
+
+#### 2.8 Batch & Scheduler (자동 생성)
+- **배치 실행 시간**: 매주 일요일 00:00 (월~일 주차 대상, Asia/Seoul 기준)
+- **대상 슬롯**: `deletedAt IS NULL`인 활성 ClinicSlot
+- **세션 생성 로직**
+  - Slot의 `dayOfWeek`에 해당하는 날짜를 계산해 REGULAR Session 생성
+  - SessionType=REGULAR, slotId 설정, startTime/endTime/capacity는 Slot 값 복사
+  - `(slotId, date)` 중복 존재 시 스킵 (idempotent)
+- **Attendance 자동 생성 로직**
+  - Session 생성 후 `defaultClinicSlotId = slotId`인 활성 StudentCourseRecord 대상으로 Attendance 생성
+  - `(clinicSessionId, studentCourseRecordId)` 중복은 스킵
+  - 정원 초과는 원칙적으로 defaultClinicSlotId 설정 시 차단되며, 배치에서 초과 감지 시 **스킵 + 로그 기록**
+- **주중 Slot 생성 처리**
+  - Slot이 주중에 생성되면, 해당 주에서 **시간이 지나지 않은 요일만** 즉시 Session 생성
+  - 생성 후 Attendance 자동 생성 규칙 동일 적용
+- **defaultClinicSlotId 신규 지정 처리**
+  - 신규 지정(Null → Slot) 시 이번 주 남은 Session(시작 전)에 Attendance를 즉시 생성
+  - 세션 시작 10분 이내라도 자동 생성은 허용 (변경 API만 제한)
+- **Slot 요일/시간 변경 처리**
+  - 변경으로 인해 **이번 주 Session이 이미 존재**하면 Teacher가 **유지/재생성**을 선택
+  - 이번 주 Session이 없는 경우에는 추가 선택 없이 변경만 적용
+- **Slot 삭제(soft delete) 처리**
+  - 이번 주 Session이 존재하면 Teacher가 **유지/재생성**을 선택
+  - 이후 배치에서는 삭제된 Slot을 생성 대상에서 제외
+- **로그/모니터링**
+  - 배치 실행 시 생성/스킵/정원 초과 스킵을 구조화 로그로 기록 (slotId, branchId, teacherId, sessionDate)
 
 ### Non-functional
 - 모든 쓰기 요청은 DTO `@Valid` 검증, 존재 여부 검증, 권한 검증을 순차로 수행한다.
@@ -195,8 +217,12 @@
   - 중복/겹침/정원 검증 + null 처리
   - 신규 지정 시 남은 Session Attendance 즉시 생성
 - `ClinicSessionService`
-  - weekly batch 생성, slot 기반 수동 생성, emergency 생성, 취소 처리
-  - batch 생성은 idempotent + 트랜잭션
+- `ClinicSessionService`
+  - slot 기반 수동 생성, emergency 생성, 취소 처리, 역할별 조회
+- `ClinicBatchService`
+  - 주간 Session/Attendance 자동 생성
+  - 주중 Slot 생성 시 잔여 주차 생성
+  - 정원 초과/중복 스킵 및 로그 기록
 - `ClinicAttendanceService`
   - auto 생성, teacher/assistant 추가/삭제, student 추가/이동/조회
   - 시간 겹침 검사, capacity 검사, 10분 lock/30분 이동 제한
@@ -246,19 +272,21 @@
    - 신규 지정 시 남은 세션 Attendance 생성 확인.
    - Slot 변경 시 이번 주 자동 이동 미발생 확인.
 5. **ClinicSessionService Tests**
-   - 주간 배치 생성: slot 순회 + session 생성 idempotent 검증.
-   - mid-week slot 생성 시 남은 날짜 session 생성 확인.
    - emergency 생성 규칙(slotId null, creatorMemberId not null) 검증.
    - cancel 시 isCanceled true + attendance 유지 확인.
-6. **ClinicAttendanceService Tests**
+6. **ClinicBatchService Tests**
+   - 주간 배치 생성: slot 순회 + session 생성 idempotent 검증.
+   - mid-week slot 생성 시 남은 날짜 session 생성 확인.
+   - 정원 초과 시 Attendance 생성 스킵 + 로그 기록 확인.
+7. **ClinicAttendanceService Tests**
    - auto 생성 시 capacity/중복 방지 검증.
    - teacher/assistant 추가/삭제 + 10분 lock 규칙.
    - student 추가 신청 성공/실패(취소, capacity, overlap) 케이스.
    - student 이동: 동일 주차/30분 제한/삭제+생성 로직 검증.
-7. **ClinicRecordService Tests**
+8. **ClinicRecordService Tests**
    - record 생성/수정/삭제, 1:1 제약 위반 검증.
    - student 조회 권한 제한 확인.
-8. **Controller Tests (MockMvc)**
+9. **Controller Tests (MockMvc)**
    - 각 엔드포인트별 200/400/403/409 응답 검증.
    - 학생 조회 응답 스키마(시간표 형태) 검증.
 
@@ -270,12 +298,15 @@
 2. **Phase 1 – ClinicSlot**
    - Slot CRUD + validator + 기본 조회 API.
 3. **Phase 2 – ClinicSession**
-   - 배치/수동/긴급 생성 + 취소 처리.
+   - 조회/수동/긴급 생성 + 취소 처리.
 4. **Phase 3 – ClinicAttendance**
    - 자동 생성, teacher/assistant 추가/삭제, student 신청/이동, 시간표 조회.
 5. **Phase 4 – ClinicRecord**
    - 출석 기록 CRUD + StudentCalendar 연동 쿼리 확정.
-6. **Phase 5 – Permission/Policy 정리**
+6. **Phase 5 – Batch/Scheduler**
+   - 주간 자동 생성(세션+출석) + 주중 Slot 생성 처리.
+   - 정원 초과/중복 스킵 로깅.
+7. **Phase 6 – Permission/Policy 정리**
    - 권한 validator 통합 + RsCode 매핑 정리.
-7. **Phase 6 – 테스트/시나리오 정리**
-   - 주간 배치/학생 이동/취소 케이스 통합 테스트.
+8. **Phase 7 – 테스트/시나리오 정리**
+   - 배치/학생 이동/취소 케이스 통합 테스트.
