@@ -162,6 +162,23 @@ class ClinicDefaultSlotServiceTest {
     }
 
     @Test
+    void applyDefaultSlot_shouldThrow_whenSlotTeacherBranchMismatch() {
+        UUID studentId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        UUID slotId = UUID.randomUUID();
+        StudentCourseRecord record = createRecord(studentId, courseId, null);
+        Course course = createCourse(courseId, teacherId, branchId);
+        ClinicSlot slot = createSlot(slotId, UUID.randomUUID(), UUID.randomUUID(), DayOfWeek.MONDAY);
+
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(slotId)).willReturn(Optional.of(slot));
+        assertThatThrownBy(() -> clinicDefaultSlotService.applyDefaultSlot(record, course, slotId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SLOT_NOT_FOUND);
+    }
+
+    @Test
     void applyDefaultSlot_shouldSkipAttendanceCreation_whenChangingSlot() {
         UUID studentId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();

@@ -4508,3 +4508,39 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/clinic/record/application/ClinicRecordServiceTest.java`
 - 다음 단계: 권한 RsCode 매핑 정리 및 통합 테스트 점검.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 01:50] defaultClinicSlotId RsCode 매핑 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 기본 슬롯의 teacher/branch 불일치 시 RsCode를 CLINIC_SLOT_NOT_FOUND로 통일했다.
+- 해당 매핑을 검증하는 테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 6 RsCode 매핑 정리.
+- 영향받은 테스트:
+  - `ClinicDefaultSlotServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotServiceTest.java`
+- 다음 단계: 권한/정책 정리 이어서 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:54] Phase 7 클리닉 통합 시나리오 테스트
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 배치 생성, 학생 이동, 세션 취소 시나리오를 통합 테스트로 검증했다.
+
+### Details
+- 작업 사유: Phase 7 시나리오 통합 테스트 보강.
+- 영향받은 테스트:
+  - `ClinicScenarioIntegrationTest`
+- 수정한 파일:
+  - `backend/src/test/java/com/classhub/domain/clinic/scenario/ClinicScenarioIntegrationTest.java`
+- 다음 단계: Phase 6 RsCode 정리 마무리 또는 추가 시나리오 확장 검토.
+- MCP: 사용하지 않음.

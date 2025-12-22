@@ -77,7 +77,7 @@ public class ClinicDefaultSlotService {
     private void ensureSlotMatchesCourse(ClinicSlot slot, Course course) {
         if (!Objects.equals(slot.getTeacherMemberId(), course.getTeacherMemberId())
                 || !Objects.equals(slot.getBranchId(), course.getBranchId())) {
-            throw new BusinessException(RsCode.FORBIDDEN);
+            throw new BusinessException(RsCode.CLINIC_SLOT_NOT_FOUND);
         }
     }
 
