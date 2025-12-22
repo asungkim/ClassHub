@@ -3543,3 +3543,39 @@ DESIGN
   - `docs/design/final-entity-spec.md`
 - 다음 단계: 사용자 검증 후 v1.4 requirement/spec 갱신.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 11:38] Requirement/Spec v1.4 문서 재작성
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot teacher/branch 기준 규칙과 defaultClinicSlotId 검증을 v1.4 요구사항에 반영했다.
+- ClinicSession startTime/endTime 및 긴급 세션 시간 입력 규칙을 스펙에 추가했다.
+- v1.4 requirement/spec 문서를 v1.3 기반으로 새로 정리했다.
+
+### Details
+- 작업 사유: ClinicSlotCourse 제거 및 클리닉 시간표 규칙 변경 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 사용자 검토 후 TODO/PLAN 갱신.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 11:57] Clinic 자동 생성 흐름 명확화
+
+### Type
+DESIGN
+
+### Summary
+- 주간 ClinicSession 생성 후 Attendance 생성 순서를 스펙에 명시했다.
+- ClinicAttendance 자동 생성 흐름을 섹션 2.3.2와 4.8.3에 추가했다.
+
+### Details
+- 작업 사유: ClinicSession → ClinicAttendance 자동 생성 규칙을 명확히 문서화.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
