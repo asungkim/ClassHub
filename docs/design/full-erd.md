@@ -58,7 +58,7 @@ erDiagram
     %% ========================================
     %% 클리닉 구조
     %% ========================================
-    COURSE ||--o{ CLINIC_SLOT : has
+    %% Course ↔ ClinicSlot은 teacherMemberId + branchId 규칙으로 연결
     MEMBER ||--o{ CLINIC_SLOT : owns
     MEMBER ||--o{ CLINIC_SLOT : creates
     BRANCH ||--o{ CLINIC_SLOT : locates
@@ -237,7 +237,6 @@ erDiagram
 
     CLINIC_SLOT {
         uuid id PK
-        uuid courseId FK
         uuid teacherMemberId FK
         uuid creatorMemberId FK
         uuid branchId FK
@@ -257,6 +256,8 @@ erDiagram
         string sessionType
         uuid creatorMemberId FK %% nullable
         date date
+        time startTime
+        time endTime
         int capacity
         boolean isCanceled
         datetime createdAt
@@ -343,7 +344,6 @@ erDiagram
 - Member(TEACHER) → Course
 - Member(ASSISTANT) → StudentCourseRecord
 - Course → CourseProgress (CASCADE)
-- Course → ClinicSlot
 - StudentCourseRecord → PersonalProgress
 - Member(TEACHER) → ClinicSlot (teacherMemberId)
 - Member → ClinicSlot (creatorMemberId)
@@ -360,6 +360,10 @@ erDiagram
 - Member(TEACHER) ↔ Branch via TeacherBranchAssignment
 - Member(TEACHER) ↔ Member(ASSISTANT) via TeacherAssistantAssignment
 - Member(STUDENT) ↔ Course via StudentCourseEnrollment
+
+### 논리 관계
+
+- Course ↔ ClinicSlot: teacherMemberId + branchId가 동일할 때 연결
 
 ### 복합 관계
 
@@ -406,7 +410,6 @@ erDiagram
 - `course_progress.date` on (date)
 - `personal_progress.student_course_record_id` on (studentCourseRecordId)
 - `personal_progress.date` on (date)
-- `clinic_slot.course_id` on (courseId)
 - `clinic_slot.teacher_member_id` on (teacherMemberId)
 - `clinic_slot.creator_member_id` on (creatorMemberId)
 - `clinic_slot.branch_id` on (branchId)

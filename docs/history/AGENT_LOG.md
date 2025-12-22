@@ -3486,3 +3486,60 @@ DESIGN
 - 수정한 파일:
   - `docs/refactor/improvment-backlog.md`
 - 다음 단계: 모바일 대응 범위를 구체화해 별도 PLAN으로 분리.
+
+## [2025-12-22 00:16] Clinic 슬롯-코스 M:N 설계 갱신
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot ↔ Course M:N 구조에 맞춰 ERD/엔티티 스펙을 갱신했다.
+- ClinicSlotCourse 조인 엔티티와 연결/검증 규칙을 정의했다.
+- 관계 요약 및 인덱스, 삭제 규칙을 업데이트했다.
+
+### Details
+- 작업 사유: 슬롯 하나에 여러 반 학생이 합산 정원으로 참여하는 구조 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/design/full-erd.md`
+  - `docs/design/final-entity-spec.md`
+- 다음 단계: 검증 후 `docs/requirement/v1.4.md`, `docs/spec/v1.4.md` 업데이트.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 00:25] Clinic 슬롯-코스 M:N 요구사항/스펙 갱신
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlotCourse 기반 M:N 요구사항을 v1.4로 반영했다.
+- ClinicSlot 연결/정원 규칙과 Student 기본 슬롯 검증을 스펙에 추가했다.
+- ClinicSlot API 설명을 슬롯-반 연결 구조에 맞게 수정했다.
+
+### Details
+- 작업 사유: 슬롯 하나에 여러 반을 연결하는 클리닉 운영 규칙 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: TODO 및 PLAN 업데이트 필요 시 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 11:25] Clinic 설계에서 Slot-코스 연결 제거
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlotCourse 엔티티/관계를 제거하고 teacher+branch 기반 논리 연결로 정리했다.
+- ClinicSession에 startTime/endTime 필드를 추가해 긴급 세션 시간을 명시했다.
+- defaultClinicSlotId 검증 규칙(동일 teacher/branch, 중복/시간 겹침 금지)을 명시했다.
+
+### Details
+- 작업 사유: 슬롯 목록을 선생님 기준으로 통합하고 긴급 세션 시간 지정 요구 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/design/full-erd.md`
+  - `docs/design/final-entity-spec.md`
+- 다음 단계: 사용자 검증 후 v1.4 requirement/spec 갱신.
+- MCP: 사용하지 않음.

@@ -280,6 +280,9 @@ enum BranchRole {
 
 - "선생님이 관리하는 반별 학생 기록" 의미
 - defaultClinicSlotId가 설정되어 있으면 해당 Slot 기반 ClinicSession 생성 시 자동으로 ClinicAttendance가 만들어짐
+- defaultClinicSlotId 저장/변경 시 slot.teacherMemberId/branchId가 course와 동일한지 검증한다.
+- 같은 학생은 동일 Slot을 여러 Course에 중복 선택할 수 없다.
+- 같은 학생의 defaultClinicSlotId는 요일/시간이 겹치면 설정할 수 없다.
 - assistantMemberId는 TeacherAssistantAssignment로 연결된 ASSISTANT만 지정할 수 있으며, Course 담당 Teacher가 관리 범위를 위임한 조교를 명시한다. Nullable이라 조교 미배정 상태도 허용한다.
 
 ---
@@ -333,7 +336,6 @@ private Course course;
 
 ### CLINIC_SLOT
 
-- courseId (UUID, FK → Course, not null)
 - teacherMemberId (UUID, FK → Member, not null)
 - creatorMemberId (UUID, FK → Member, not null)
 - branchId (UUID, FK → Branch, not null)
@@ -344,16 +346,17 @@ private Course course;
 
 **인덱스:**
 
-- `idx_clinic_slot_course` on (courseId)
 - `idx_clinic_slot_teacher` on (teacherMemberId)
 - `idx_clinic_slot_creator` on (creatorMemberId)
 - `idx_clinic_slot_branch` on (branchId)
 
 **비고:**
 
+- ClinicSlot은 teacherMemberId + branchId 기준 시간표이며, 동일 teacher/branch의 Course 학생들이 조회/선택한다.
+- Slot 목록은 동일 teacher/branch의 Course에서 동일하게 보인다.
 - teacherMemberId: 해당 클리닉을 담당하는 선생님 (조회/통계 기준)
 - creatorMemberId: 실제로 이 Slot을 생성한 사람 (Teacher 또는 Assistant 가능)
-- defaultCapacity: Session 생성 시 기본 정원으로 사용됨 (Session별 개별 조정 가능)
+- defaultCapacity: Session 생성 시 기본 정원으로 사용됨 (Session별 개별 조정 가능, 정원은 슬롯 기준 합산)
 
 ### CLINIC_SESSION
 
@@ -361,6 +364,8 @@ private Course course;
 - sessionType (SessionType, not null)
 - creatorMemberId (UUID, FK → Member, nullable)
 - date (LocalDate, not null)
+- startTime (LocalTime, not null)
+- endTime (LocalTime, not null)
 - capacity (Integer, not null)
 - isCanceled (Boolean, not null, default: false)
 
@@ -392,11 +397,13 @@ enum SessionType {
 
    - slotId: NOT NULL (어떤 Slot에서 생성되었는지)
    - creatorMemberId: NULL (시스템 자동 생성)
+   - startTime/endTime: Slot 시간 상속
    - capacity: Slot.defaultCapacity 상속 (생성 후 Teacher가 개별 조정 가능)
 
 2. **EMERGENCY (긴급 세션 - Teacher/Assistant 수동 생성)**
    - slotId: NULL (Slot 없이 독립적으로 생성)
    - creatorMemberId: NOT NULL (생성한 Teacher 또는 Assistant)
+   - startTime/endTime: 생성 시 직접 설정
    - capacity: 생성 시 직접 설정
 
 **유즈케이스:**
@@ -558,7 +565,6 @@ enum FeedbackStatus {
 - Member(TEACHER) → Course
 - Member(ASSISTANT) → StudentCourseRecord (담당 조교 지정)
 - Course → CourseProgress (CASCADE)
-- Course → ClinicSlot
 - StudentCourseRecord → PersonalProgress
 - Member(TEACHER) → ClinicSlot (teacherMemberId)
 - Member → ClinicSlot (creatorMemberId)
@@ -575,6 +581,10 @@ enum FeedbackStatus {
 - Member(TEACHER) ↔ Branch via TeacherBranchAssignment
 - Member(TEACHER) ↔ Member(ASSISTANT) via TeacherAssistantAssignment
 - Member(STUDENT) ↔ Course via StudentCourseEnrollment
+
+### 논리 관계
+
+- Course ↔ ClinicSlot: teacherMemberId + branchId가 동일할 때 연결
 
 ### 복합 관계
 
