@@ -6,10 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import com.classhub.domain.assignment.model.BranchRole;
-import com.classhub.domain.assignment.model.TeacherBranchAssignment;
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
-import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.session.dto.request.ClinicSessionEmergencyCreateRequest;
 import com.classhub.domain.clinic.session.model.ClinicSession;
 import com.classhub.domain.clinic.session.model.ClinicSessionType;
@@ -21,7 +18,6 @@ import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.model.VerifiedStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
-import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.DayOfWeek;
@@ -44,13 +40,9 @@ class ClinicSessionServiceTest {
     @Mock
     private ClinicSlotRepository clinicSlotRepository;
     @Mock
-    private TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
-    @Mock
-    private TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
+    private ClinicPermissionValidator clinicPermissionValidator;
     @Mock
     private BranchRepository branchRepository;
-    @Mock
-    private StudentCourseRecordRepository studentCourseRecordRepository;
 
     @InjectMocks
     private ClinicSessionService clinicSessionService;
@@ -112,11 +104,8 @@ class ClinicSessionServiceTest {
                 6
         );
         Branch branch = createBranch(branchId, VerifiedStatus.VERIFIED);
-        TeacherBranchAssignment assignment = TeacherBranchAssignment.create(teacherId, branchId, BranchRole.OWNER);
 
         given(branchRepository.findById(branchId)).willReturn(Optional.of(branch));
-        given(teacherBranchAssignmentRepository.findByTeacherMemberIdAndBranchId(teacherId, branchId))
-                .willReturn(Optional.of(assignment));
         given(clinicSessionRepository.save(any(ClinicSession.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 

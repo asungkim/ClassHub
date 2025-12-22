@@ -8,7 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.attendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
 import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceDetailProjection;
@@ -49,7 +49,7 @@ class ClinicAttendanceServiceTest {
     @Mock
     private CourseRepository courseRepository;
     @Mock
-    private TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
+    private ClinicPermissionValidator clinicPermissionValidator;
 
     @InjectMocks
     private ClinicAttendanceService clinicAttendanceService;

@@ -7,7 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.attendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
 import com.classhub.domain.clinic.record.dto.request.ClinicRecordCreateRequest;
@@ -46,7 +46,7 @@ class ClinicRecordServiceTest {
     @Mock
     private CourseRepository courseRepository;
     @Mock
-    private TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
+    private ClinicPermissionValidator clinicPermissionValidator;
 
     @InjectMocks
     private ClinicRecordService clinicRecordService;
@@ -135,9 +135,9 @@ class ClinicRecordServiceTest {
         given(studentCourseRecordRepository.findById(attendance.getStudentCourseRecordId()))
                 .willReturn(Optional.of(record));
         given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
-        given(teacherAssistantAssignmentRepository
-                .findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(teacherId, assistantId))
-                .willReturn(Optional.empty());
+        org.mockito.BDDMockito.willThrow(new BusinessException(RsCode.FORBIDDEN))
+                .given(clinicPermissionValidator)
+                .ensureStaffAccess(principal, teacherId);
 
         assertThatThrownBy(() -> clinicRecordService.createRecord(principal, request))
                 .isInstanceOf(BusinessException.class)
@@ -170,6 +170,9 @@ class ClinicRecordServiceTest {
         given(studentCourseRecordRepository.findById(attendance.getStudentCourseRecordId()))
                 .willReturn(Optional.of(studentCourseRecord));
         given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
+        org.mockito.BDDMockito.willThrow(new BusinessException(RsCode.FORBIDDEN))
+                .given(clinicPermissionValidator)
+                .ensureStaffAccess(principal, teacherId);
 
         assertThatThrownBy(() -> clinicRecordService.getRecord(principal, attendanceId))
                 .isInstanceOf(BusinessException.class)

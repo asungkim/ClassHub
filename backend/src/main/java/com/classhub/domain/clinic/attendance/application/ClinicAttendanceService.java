@@ -1,6 +1,6 @@
 package com.classhub.domain.clinic.attendance.application;
 
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.attendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
 import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceDetailProjection;
@@ -40,7 +40,7 @@ public class ClinicAttendanceService {
     private final ClinicSessionRepository clinicSessionRepository;
     private final StudentCourseRecordRepository studentCourseRecordRepository;
     private final CourseRepository courseRepository;
-    private final TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
+    private final ClinicPermissionValidator clinicPermissionValidator;
 
     @Transactional(readOnly = true)
     public List<ClinicAttendanceDetailResponse> getAttendanceDetails(MemberPrincipal principal, UUID sessionId) {
@@ -216,25 +216,7 @@ public class ClinicAttendanceService {
     }
 
     private void ensureStaffAccess(MemberPrincipal principal, ClinicSession session) {
-        if (principal.role() == MemberRole.TEACHER) {
-            if (!Objects.equals(principal.id(), session.getTeacherMemberId())) {
-                throw new BusinessException(RsCode.FORBIDDEN);
-            }
-            return;
-        }
-        if (principal.role() == MemberRole.ASSISTANT) {
-            boolean assigned = teacherAssistantAssignmentRepository
-                    .findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(
-                            session.getTeacherMemberId(),
-                            principal.id()
-                    )
-                    .isPresent();
-            if (!assigned) {
-                throw new BusinessException(RsCode.FORBIDDEN);
-            }
-            return;
-        }
-        throw new BusinessException(RsCode.FORBIDDEN);
+        clinicPermissionValidator.ensureStaffAccess(principal, session.getTeacherMemberId());
     }
 
     private void ensureStudentRole(MemberPrincipal principal) {

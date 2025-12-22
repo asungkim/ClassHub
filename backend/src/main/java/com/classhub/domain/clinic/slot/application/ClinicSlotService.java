@@ -1,8 +1,6 @@
 package com.classhub.domain.clinic.slot.application;
 
-import com.classhub.domain.assignment.model.TeacherBranchAssignment;
-import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.batch.application.ClinicBatchService;
 import com.classhub.domain.clinic.slot.dto.request.ClinicSlotCreateRequest;
 import com.classhub.domain.clinic.slot.dto.request.ClinicSlotUpdateRequest;
@@ -36,16 +34,15 @@ public class ClinicSlotService {
 
     private final ClinicSlotRepository clinicSlotRepository;
     private final StudentCourseRecordRepository studentCourseRecordRepository;
-    private final TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
-    private final TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
     private final BranchRepository branchRepository;
     private final CourseRepository courseRepository;
     private final ClinicBatchService clinicBatchService;
+    private final ClinicPermissionValidator clinicPermissionValidator;
 
     public ClinicSlot createSlot(UUID teacherId, ClinicSlotCreateRequest request) {
         validateCreateRequest(request);
         Branch branch = requireVerifiedBranch(request.branchId());
-        ensureTeacherAssignment(teacherId, branch.getId());
+        clinicPermissionValidator.ensureTeacherAssignment(teacherId, branch.getId());
 
         ClinicSlot slot = ClinicSlot.builder()
                 .teacherMemberId(teacherId)
@@ -85,7 +82,7 @@ public class ClinicSlotService {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
         Branch branch = requireVerifiedBranch(branchId);
-        ensureTeacherAssignment(teacherId, branch.getId());
+        clinicPermissionValidator.ensureTeacherAssignment(teacherId, branch.getId());
         return clinicSlotRepository.findByTeacherMemberIdAndBranchIdAndDeletedAtIsNull(teacherId, branchId);
     }
 
@@ -94,7 +91,7 @@ public class ClinicSlotService {
         if (teacherId == null || branchId == null) {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
-        ensureAssistantAssignment(assistantId, teacherId);
+        clinicPermissionValidator.ensureAssistantAssignment(assistantId, teacherId);
         return clinicSlotRepository.findByTeacherMemberIdAndBranchIdAndDeletedAtIsNull(teacherId, branchId);
     }
 
@@ -205,24 +202,6 @@ public class ClinicSlotService {
             throw new BusinessException(RsCode.FORBIDDEN);
         }
         return branch;
-    }
-
-    private void ensureTeacherAssignment(UUID teacherId, UUID branchId) {
-        TeacherBranchAssignment assignment = teacherBranchAssignmentRepository
-                .findByTeacherMemberIdAndBranchId(teacherId, branchId)
-                .orElseThrow(() -> new BusinessException(RsCode.FORBIDDEN));
-        if (!assignment.isActive()) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
-    }
-
-    private void ensureAssistantAssignment(UUID assistantId, UUID teacherId) {
-        boolean assigned = teacherAssistantAssignmentRepository
-                .findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(teacherId, assistantId)
-                .isPresent();
-        if (!assigned) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
     }
 
     private boolean isScheduleChanged(

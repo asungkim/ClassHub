@@ -1,8 +1,6 @@
 package com.classhub.domain.clinic.session.application;
 
-import com.classhub.domain.assignment.model.TeacherBranchAssignment;
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
-import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.session.dto.request.ClinicSessionEmergencyCreateRequest;
 import com.classhub.domain.clinic.session.dto.response.ClinicSessionResponse;
 import com.classhub.domain.clinic.session.model.ClinicSession;
@@ -15,7 +13,6 @@ import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.model.VerifiedStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
-import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
@@ -35,10 +32,8 @@ public class ClinicSessionService {
 
     private final ClinicSessionRepository clinicSessionRepository;
     private final ClinicSlotRepository clinicSlotRepository;
-    private final TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
-    private final TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
     private final BranchRepository branchRepository;
-    private final StudentCourseRecordRepository studentCourseRecordRepository;
+    private final ClinicPermissionValidator clinicPermissionValidator;
 
     public ClinicSession createRegularSession(UUID teacherId, UUID slotId, LocalDate date) {
         if (slotId == null || date == null) {
@@ -98,7 +93,7 @@ public class ClinicSessionService {
     ) {
         validateDateRange(branchId, startDate, endDate);
         Branch branch = requireVerifiedBranch(branchId);
-        ensureTeacherAssignment(teacherId, branch.getId());
+        clinicPermissionValidator.ensureTeacherAssignment(teacherId, branch.getId());
         return clinicSessionRepository.findByTeacherMemberIdAndBranchIdAndDateRange(
                 teacherId,
                 branch.getId(),
@@ -120,8 +115,8 @@ public class ClinicSessionService {
         }
         validateDateRange(branchId, startDate, endDate);
         Branch branch = requireVerifiedBranch(branchId);
-        ensureTeacherAssignment(teacherId, branch.getId());
-        ensureAssistantAssignment(assistantId, teacherId);
+        clinicPermissionValidator.ensureTeacherAssignment(teacherId, branch.getId());
+        clinicPermissionValidator.ensureAssistantAssignment(assistantId, teacherId);
         return clinicSessionRepository.findByTeacherMemberIdAndBranchIdAndDateRange(
                 teacherId,
                 branch.getId(),
@@ -142,14 +137,7 @@ public class ClinicSessionService {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
         validateDateRange(branchId, startDate, endDate);
-        long count = studentCourseRecordRepository.countActiveByStudentAndTeacherAndBranch(
-                studentId,
-                teacherId,
-                branchId
-        );
-        if (count == 0L) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
+        clinicPermissionValidator.ensureStudentAccess(studentId, teacherId, branchId);
         return clinicSessionRepository.findByTeacherMemberIdAndBranchIdAndDateRange(
                 teacherId,
                 branchId,
@@ -162,9 +150,9 @@ public class ClinicSessionService {
         validateEmergencyRequest(request);
         UUID teacherId = resolveTeacherId(principal, request.teacherId());
         Branch branch = requireVerifiedBranch(request.branchId());
-        ensureTeacherAssignment(teacherId, branch.getId());
+        clinicPermissionValidator.ensureTeacherAssignment(teacherId, branch.getId());
         if (principal.role() == MemberRole.ASSISTANT) {
-            ensureAssistantAssignment(principal.id(), teacherId);
+            clinicPermissionValidator.ensureAssistantAssignment(principal.id(), teacherId);
         }
 
         ClinicSession session = ClinicSession.builder()
@@ -251,24 +239,6 @@ public class ClinicSessionService {
         return branch;
     }
 
-    private void ensureTeacherAssignment(UUID teacherId, UUID branchId) {
-        TeacherBranchAssignment assignment = teacherBranchAssignmentRepository
-                .findByTeacherMemberIdAndBranchId(teacherId, branchId)
-                .orElseThrow(() -> new BusinessException(RsCode.FORBIDDEN));
-        if (!assignment.isActive()) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
-    }
-
-    private void ensureAssistantAssignment(UUID assistantId, UUID teacherId) {
-        boolean assigned = teacherAssistantAssignmentRepository
-                .findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(teacherId, assistantId)
-                .isPresent();
-        if (!assigned) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
-    }
-
     private void ensureCancelPermission(MemberPrincipal principal, ClinicSession session) {
         if (principal.role() == MemberRole.TEACHER) {
             if (!Objects.equals(principal.id(), session.getTeacherMemberId())) {
@@ -277,7 +247,7 @@ public class ClinicSessionService {
             return;
         }
         if (principal.role() == MemberRole.ASSISTANT) {
-            ensureAssistantAssignment(principal.id(), session.getTeacherMemberId());
+            clinicPermissionValidator.ensureAssistantAssignment(principal.id(), session.getTeacherMemberId());
             return;
         }
         throw new BusinessException(RsCode.FORBIDDEN);

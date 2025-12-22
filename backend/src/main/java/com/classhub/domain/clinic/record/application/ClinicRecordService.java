@@ -1,6 +1,6 @@
 package com.classhub.domain.clinic.record.application;
 
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.attendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
 import com.classhub.domain.clinic.record.dto.request.ClinicRecordCreateRequest;
@@ -10,12 +10,10 @@ import com.classhub.domain.clinic.record.repository.ClinicRecordRepository;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
-import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +28,7 @@ public class ClinicRecordService {
     private final ClinicAttendanceRepository clinicAttendanceRepository;
     private final StudentCourseRecordRepository studentCourseRecordRepository;
     private final CourseRepository courseRepository;
-    private final TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
+    private final ClinicPermissionValidator clinicPermissionValidator;
 
     public ClinicRecord createRecord(MemberPrincipal principal, ClinicRecordCreateRequest request) {
         if (request == null || request.clinicAttendanceId() == null
@@ -111,24 +109,6 @@ public class ClinicRecordService {
     }
 
     private void ensureWriterPermission(MemberPrincipal principal, Course course) {
-        if (principal.role() == MemberRole.TEACHER) {
-            if (!Objects.equals(course.getTeacherMemberId(), principal.id())) {
-                throw new BusinessException(RsCode.FORBIDDEN);
-            }
-            return;
-        }
-        if (principal.role() == MemberRole.ASSISTANT) {
-            boolean assigned = teacherAssistantAssignmentRepository
-                    .findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(
-                            course.getTeacherMemberId(),
-                            principal.id()
-                    )
-                    .isPresent();
-            if (!assigned) {
-                throw new BusinessException(RsCode.FORBIDDEN);
-            }
-            return;
-        }
-        throw new BusinessException(RsCode.FORBIDDEN);
+        clinicPermissionValidator.ensureStaffAccess(principal, course.getTeacherMemberId());
     }
 }

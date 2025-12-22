@@ -4477,3 +4477,34 @@ STRUCTURAL
   - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
 - 다음 단계: Phase 6 권한/정책 정리.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 01:46] 클리닉 권한 검증 로직 통합
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicPermissionValidator를 추가해 권한 검증 로직을 중앙화했다.
+- 슬롯/세션/출석/기록 서비스가 공통 validator를 사용하도록 정리했다.
+
+### Details
+- 작업 사유: Phase 6 권한/정책 정리 준비.
+- 영향받은 테스트:
+  - `ClinicPermissionValidatorTest`
+  - `ClinicSlotServiceTest`
+  - `ClinicSessionServiceTest`
+  - `ClinicAttendanceServiceTest`
+  - `ClinicRecordServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/permission/application/ClinicPermissionValidator.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/record/application/ClinicRecordService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/permission/application/ClinicPermissionValidatorTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/application/ClinicSessionServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/record/application/ClinicRecordServiceTest.java`
+- 다음 단계: 권한 RsCode 매핑 정리 및 통합 테스트 점검.
+- MCP: 사용하지 않음.

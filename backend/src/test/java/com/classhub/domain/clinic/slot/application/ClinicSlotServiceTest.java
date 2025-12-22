@@ -7,11 +7,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.classhub.domain.assignment.model.BranchRole;
-import com.classhub.domain.assignment.model.TeacherBranchAssignment;
-import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
-import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.clinic.batch.application.ClinicBatchService;
+import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.slot.dto.request.ClinicSlotCreateRequest;
 import com.classhub.domain.clinic.slot.dto.request.ClinicSlotUpdateRequest;
 import com.classhub.domain.clinic.slot.model.ClinicSlot;
@@ -44,9 +41,7 @@ class ClinicSlotServiceTest {
     @Mock
     private StudentCourseRecordRepository studentCourseRecordRepository;
     @Mock
-    private TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
-    @Mock
-    private TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
+    private ClinicPermissionValidator clinicPermissionValidator;
     @Mock
     private BranchRepository branchRepository;
     @Mock
@@ -70,11 +65,7 @@ class ClinicSlotServiceTest {
                 10
         );
         Branch branch = createBranch(branchId, VerifiedStatus.VERIFIED);
-        TeacherBranchAssignment assignment = TeacherBranchAssignment.create(teacherId, branchId, BranchRole.OWNER);
-
         given(branchRepository.findById(branchId)).willReturn(Optional.of(branch));
-        given(teacherBranchAssignmentRepository.findByTeacherMemberIdAndBranchId(teacherId, branchId))
-                .willReturn(Optional.of(assignment));
         given(clinicSlotRepository.save(any(ClinicSlot.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
         given(clinicBatchService.generateRemainingSessionsForSlot(any(ClinicSlot.class), any(LocalDateTime.class)))
@@ -89,6 +80,7 @@ class ClinicSlotServiceTest {
         assertThat(slot.getStartTime()).isEqualTo(LocalTime.of(18, 0));
         assertThat(slot.getEndTime()).isEqualTo(LocalTime.of(19, 0));
         assertThat(slot.getDefaultCapacity()).isEqualTo(10);
+        verify(clinicPermissionValidator).ensureTeacherAssignment(teacherId, branchId);
         verify(clinicBatchService)
                 .generateRemainingSessionsForSlot(any(ClinicSlot.class), any(LocalDateTime.class));
     }
@@ -124,8 +116,9 @@ class ClinicSlotServiceTest {
         Branch branch = createBranch(branchId, VerifiedStatus.VERIFIED);
 
         given(branchRepository.findById(branchId)).willReturn(Optional.of(branch));
-        given(teacherBranchAssignmentRepository.findByTeacherMemberIdAndBranchId(teacherId, branchId))
-                .willReturn(Optional.empty());
+        org.mockito.BDDMockito.willThrow(new BusinessException(RsCode.FORBIDDEN))
+                .given(clinicPermissionValidator)
+                .ensureTeacherAssignment(teacherId, branchId);
 
         assertThatThrownBy(() -> clinicSlotService.createSlot(teacherId, request))
                 .isInstanceOf(BusinessException.class)
