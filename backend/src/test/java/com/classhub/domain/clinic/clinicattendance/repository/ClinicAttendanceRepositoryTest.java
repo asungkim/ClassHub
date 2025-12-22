@@ -142,9 +142,11 @@ class ClinicAttendanceRepositoryTest {
                 .build();
     }
 
-    private ClinicSession createSession(UUID slotId, LocalDate date) {
+    private ClinicSession createSession(UUID slotId, LocalDate date, UUID teacherId, UUID branchId) {
         return ClinicSession.builder()
                 .slotId(slotId)
+                .teacherMemberId(teacherId)
+                .branchId(branchId)
                 .sessionType(ClinicSessionType.REGULAR)
                 .creatorMemberId(null)
                 .date(date)

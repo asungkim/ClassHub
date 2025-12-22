@@ -3862,3 +3862,24 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
 - 다음 단계: ClinicSlot API 후속 권한/검증 보강 및 다른 Clinic 도메인 진행.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 16:52] ClinicSession 리포지토리 쿼리 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSession에 teacherMemberId/branchId 필드를 추가하고 조회 인덱스를 확장했다.
+- Slot+date 중복 조회 및 teacher/branch 날짜 범위 조회 리포지토리/테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 2-1 세션 조회/중복 확인을 위한 데이터 접근 준비.
+- 영향받은 테스트:
+  - `ClinicSessionRepositoryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryTest.java`
+- 다음 단계: ClinicSession 서비스/검증 로직 구현.
+- MCP: 사용하지 않음.

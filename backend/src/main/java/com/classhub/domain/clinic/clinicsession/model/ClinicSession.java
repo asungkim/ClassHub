@@ -24,7 +24,9 @@ import lombok.NoArgsConstructor;
                 @Index(name = "idx_clinic_session_slot", columnList = "slot_id"),
                 @Index(name = "idx_clinic_session_date", columnList = "session_date"),
                 @Index(name = "idx_clinic_session_type", columnList = "session_type"),
-                @Index(name = "idx_clinic_session_creator", columnList = "creator_member_id")
+                @Index(name = "idx_clinic_session_creator", columnList = "creator_member_id"),
+                @Index(name = "idx_clinic_session_teacher", columnList = "teacher_member_id"),
+                @Index(name = "idx_clinic_session_branch", columnList = "branch_id")
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -32,6 +34,12 @@ public class ClinicSession extends BaseEntity {
 
     @Column(name = "slot_id", columnDefinition = "BINARY(16)")
     private UUID slotId;
+
+    @Column(name = "teacher_member_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID teacherMemberId;
+
+    @Column(name = "branch_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID branchId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "session_type", nullable = false, length = 20)
@@ -57,6 +65,8 @@ public class ClinicSession extends BaseEntity {
 
     @Builder
     private ClinicSession(UUID slotId,
+                          UUID teacherMemberId,
+                          UUID branchId,
                           ClinicSessionType sessionType,
                           UUID creatorMemberId,
                           LocalDate date,
@@ -65,6 +75,8 @@ public class ClinicSession extends BaseEntity {
                           Integer capacity,
                           boolean canceled) {
         this.slotId = slotId;
+        this.teacherMemberId = Objects.requireNonNull(teacherMemberId, "teacherMemberId must not be null");
+        this.branchId = Objects.requireNonNull(branchId, "branchId must not be null");
         this.sessionType = Objects.requireNonNull(sessionType, "sessionType must not be null");
         this.creatorMemberId = creatorMemberId;
         this.date = Objects.requireNonNull(date, "date must not be null");
