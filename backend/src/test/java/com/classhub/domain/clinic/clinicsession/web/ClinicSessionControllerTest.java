@@ -2,6 +2,7 @@ package com.classhub.domain.clinic.clinicsession.web;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -68,7 +69,7 @@ class ClinicSessionControllerTest {
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.REGULAR);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
-        given(clinicSessionService.getSessionsForTeacher(teacherId, branchId, start, end))
+        given(clinicSessionService.getSessions(any(MemberPrincipal.class), isNull(), eq(branchId), eq(start), eq(end)))
                 .willReturn(List.of(session));
 
         mockMvc.perform(get("/api/v1/clinic-sessions")
@@ -79,7 +80,7 @@ class ClinicSessionControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data[0].sessionId").value(session.getId().toString()));
 
-        verify(clinicSessionService).getSessionsForTeacher(teacherId, branchId, start, end);
+        verify(clinicSessionService).getSessions(any(MemberPrincipal.class), isNull(), eq(branchId), eq(start), eq(end));
     }
 
     @Test
@@ -90,7 +91,7 @@ class ClinicSessionControllerTest {
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.EMERGENCY);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
-        given(clinicSessionService.getSessionsForAssistant(assistantId, teacherId, branchId, start, end))
+        given(clinicSessionService.getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end)))
                 .willReturn(List.of(session));
 
         mockMvc.perform(get("/api/v1/clinic-sessions")
@@ -102,7 +103,7 @@ class ClinicSessionControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data[0].sessionId").value(session.getId().toString()));
 
-        verify(clinicSessionService).getSessionsForAssistant(assistantId, teacherId, branchId, start, end);
+        verify(clinicSessionService).getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end));
     }
 
     @Test
@@ -113,7 +114,7 @@ class ClinicSessionControllerTest {
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.REGULAR);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
-        given(clinicSessionService.getSessionsForStudent(studentId, teacherId, branchId, start, end))
+        given(clinicSessionService.getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end)))
                 .willReturn(List.of(session));
 
         mockMvc.perform(get("/api/v1/clinic-sessions")
@@ -125,7 +126,7 @@ class ClinicSessionControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data[0].sessionId").value(session.getId().toString()));
 
-        verify(clinicSessionService).getSessionsForStudent(studentId, teacherId, branchId, start, end);
+        verify(clinicSessionService).getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end));
     }
 
     @Test

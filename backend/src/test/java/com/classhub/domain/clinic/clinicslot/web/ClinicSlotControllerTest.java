@@ -2,6 +2,7 @@ package com.classhub.domain.clinic.clinicslot.web;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -92,7 +93,7 @@ class ClinicSlotControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSlot slot = createSlot(UUID.randomUUID(), teacherId, branchId);
-        given(clinicSlotService.getSlotsForTeacher(teacherId, branchId))
+        given(clinicSlotService.getSlots(any(MemberPrincipal.class), eq(branchId), isNull(), isNull()))
                 .willReturn(List.of(slot));
 
         mockMvc.perform(get("/api/v1/clinic-slots")
@@ -102,7 +103,7 @@ class ClinicSlotControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()));
 
-        verify(clinicSlotService).getSlotsForTeacher(teacherId, branchId);
+        verify(clinicSlotService).getSlots(any(MemberPrincipal.class), eq(branchId), isNull(), isNull());
     }
 
     @Test
@@ -111,7 +112,7 @@ class ClinicSlotControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSlot slot = createSlot(UUID.randomUUID(), teacherId, branchId);
-        given(clinicSlotService.getSlotsForAssistant(assistantId, teacherId, branchId))
+        given(clinicSlotService.getSlots(any(MemberPrincipal.class), eq(branchId), eq(teacherId), isNull()))
                 .willReturn(List.of(slot));
 
         mockMvc.perform(get("/api/v1/clinic-slots")
@@ -122,7 +123,7 @@ class ClinicSlotControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()));
 
-        verify(clinicSlotService).getSlotsForAssistant(assistantId, teacherId, branchId);
+        verify(clinicSlotService).getSlots(any(MemberPrincipal.class), eq(branchId), eq(teacherId), isNull());
     }
 
     @Test
@@ -130,7 +131,7 @@ class ClinicSlotControllerTest {
         UUID studentId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
         ClinicSlot slot = createSlot(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-        given(clinicSlotService.getSlotsForStudent(studentId, courseId))
+        given(clinicSlotService.getSlots(any(MemberPrincipal.class), isNull(), isNull(), eq(courseId)))
                 .willReturn(List.of(slot));
 
         mockMvc.perform(get("/api/v1/clinic-slots")
@@ -140,7 +141,7 @@ class ClinicSlotControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()));
 
-        verify(clinicSlotService).getSlotsForStudent(studentId, courseId);
+        verify(clinicSlotService).getSlots(any(MemberPrincipal.class), isNull(), isNull(), eq(courseId));
     }
 
     @Test

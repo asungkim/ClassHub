@@ -68,6 +68,24 @@ public class ClinicSessionService {
     }
 
     @Transactional(readOnly = true)
+    public List<ClinicSession> getSessions(MemberPrincipal principal,
+                                           UUID teacherId,
+                                           UUID branchId,
+                                           LocalDate startDate,
+                                           LocalDate endDate) {
+        if (principal.role() == MemberRole.TEACHER) {
+            return getSessionsForTeacher(principal.id(), branchId, startDate, endDate);
+        }
+        if (principal.role() == MemberRole.ASSISTANT) {
+            return getSessionsForAssistant(principal.id(), teacherId, branchId, startDate, endDate);
+        }
+        if (principal.role() == MemberRole.STUDENT) {
+            return getSessionsForStudent(principal.id(), teacherId, branchId, startDate, endDate);
+        }
+        throw new BusinessException(RsCode.FORBIDDEN);
+    }
+
+    @Transactional(readOnly = true)
     public List<ClinicSession> getSessionsForTeacher(
             UUID teacherId,
             UUID branchId,

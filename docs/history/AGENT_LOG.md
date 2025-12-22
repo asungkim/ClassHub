@@ -3929,3 +3929,28 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionServiceTest.java`
 - 다음 단계: ClinicSession 배치/스케줄러 설계 확정 후 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 17:57] Clinic 컨트롤러 역할 분기 리팩터링
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSlot/ClinicSession 컨트롤러의 역할 분기와 dateRange 파싱을 서비스/유틸로 이동했다.
+- 공통 dateRange 파서를 global util로 추가했다.
+
+### Details
+- 작업 사유: 컨트롤러에서 비즈니스 분기/파싱 로직 제거.
+- 영향받은 테스트:
+  - `ClinicSlotControllerTest`
+  - `ClinicSessionControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionController.java`
+  - `backend/src/main/java/com/classhub/global/util/DateRangeParser.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionControllerTest.java`
+- 다음 단계: ClinicSession 배치/스케줄러 설계 확정 후 구현.
+- MCP: 사용하지 않음.

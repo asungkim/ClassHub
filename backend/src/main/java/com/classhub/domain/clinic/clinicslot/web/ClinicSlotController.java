@@ -6,8 +6,6 @@ import com.classhub.domain.clinic.clinicslot.dto.request.ClinicSlotUpdateRequest
 import com.classhub.domain.clinic.clinicslot.dto.response.ClinicSlotResponse;
 import com.classhub.domain.clinic.clinicslot.model.ClinicSlot;
 import com.classhub.domain.member.dto.MemberPrincipal;
-import com.classhub.domain.member.model.MemberRole;
-import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +43,7 @@ public class ClinicSlotController {
             @RequestParam(name = "teacherId", required = false) UUID teacherId,
             @RequestParam(name = "courseId", required = false) UUID courseId
     ) {
-        List<ClinicSlot> slots = resolveSlotsByRole(principal, branchId, teacherId, courseId);
+        List<ClinicSlot> slots = clinicSlotService.getSlots(principal, branchId, teacherId, courseId);
         List<ClinicSlotResponse> response = slots.stream()
                 .map(ClinicSlotResponse::from)
                 .toList();
@@ -84,24 +82,5 @@ public class ClinicSlotController {
     ) {
         clinicSlotService.deleteSlot(principal.id(), slotId);
         return RsData.from(RsCode.SUCCESS, null);
-    }
-
-    private List<ClinicSlot> resolveSlotsByRole(
-            MemberPrincipal principal,
-            UUID branchId,
-            UUID teacherId,
-            UUID courseId
-    ) {
-        MemberRole role = principal.role();
-        if (role == MemberRole.TEACHER) {
-            return clinicSlotService.getSlotsForTeacher(principal.id(), branchId);
-        }
-        if (role == MemberRole.ASSISTANT) {
-            return clinicSlotService.getSlotsForAssistant(principal.id(), teacherId, branchId);
-        }
-        if (role == MemberRole.STUDENT) {
-            return clinicSlotService.getSlotsForStudent(principal.id(), courseId);
-        }
-        throw new BusinessException(RsCode.FORBIDDEN);
     }
 }

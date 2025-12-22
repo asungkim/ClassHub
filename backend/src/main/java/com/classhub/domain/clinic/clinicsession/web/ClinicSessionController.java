@@ -6,15 +6,13 @@ import com.classhub.domain.clinic.clinicsession.dto.request.ClinicSessionRegular
 import com.classhub.domain.clinic.clinicsession.dto.response.ClinicSessionResponse;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
 import com.classhub.domain.member.dto.MemberPrincipal;
-import com.classhub.domain.member.model.MemberRole;
-import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
+import com.classhub.global.util.DateRangeParser;
+import com.classhub.global.util.DateRangeParser.DateRange;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -46,8 +44,14 @@ public class ClinicSessionController {
             @RequestParam("branchId") UUID branchId,
             @RequestParam(value = "teacherId", required = false) UUID teacherId
     ) {
-        DateRange range = parseDateRange(dateRange);
-        List<ClinicSession> sessions = resolveSessionsByRole(principal, teacherId, branchId, range);
+        DateRange range = DateRangeParser.parse(dateRange);
+        List<ClinicSession> sessions = clinicSessionService.getSessions(
+                principal,
+                teacherId,
+                branchId,
+                range.startDate(),
+                range.endDate()
+        );
         List<ClinicSessionResponse> response = sessions.stream()
                 .map(ClinicSessionResponse::from)
                 .toList();
@@ -86,48 +90,5 @@ public class ClinicSessionController {
     ) {
         clinicSessionService.cancelSession(principal, sessionId);
         return RsData.from(RsCode.SUCCESS, null);
-    }
-
-    private List<ClinicSession> resolveSessionsByRole(
-            MemberPrincipal principal,
-            UUID teacherId,
-            UUID branchId,
-            DateRange range
-    ) {
-        if (principal.role() == MemberRole.TEACHER) {
-            return clinicSessionService.getSessionsForTeacher(principal.id(), branchId, range.startDate(), range.endDate());
-        }
-        if (principal.role() == MemberRole.ASSISTANT) {
-            return clinicSessionService.getSessionsForAssistant(principal.id(), teacherId, branchId,
-                    range.startDate(), range.endDate());
-        }
-        if (principal.role() == MemberRole.STUDENT) {
-            return clinicSessionService.getSessionsForStudent(principal.id(), teacherId, branchId,
-                    range.startDate(), range.endDate());
-        }
-        throw new BusinessException(RsCode.FORBIDDEN);
-    }
-
-    private DateRange parseDateRange(String dateRange) {
-        if (dateRange == null || dateRange.isBlank()) {
-            throw new BusinessException(RsCode.BAD_REQUEST);
-        }
-        String[] parts = dateRange.split(",");
-        if (parts.length != 2) {
-            throw new BusinessException(RsCode.BAD_REQUEST);
-        }
-        try {
-            LocalDate start = LocalDate.parse(parts[0].trim());
-            LocalDate end = LocalDate.parse(parts[1].trim());
-            if (start.isAfter(end)) {
-                throw new BusinessException(RsCode.BAD_REQUEST);
-            }
-            return new DateRange(start, end);
-        } catch (DateTimeParseException ex) {
-            throw new BusinessException(RsCode.BAD_REQUEST);
-        }
-    }
-
-    private record DateRange(LocalDate startDate, LocalDate endDate) {
     }
 }

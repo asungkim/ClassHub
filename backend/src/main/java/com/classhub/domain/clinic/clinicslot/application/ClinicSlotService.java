@@ -12,6 +12,8 @@ import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.model.VerifiedStatus;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
+import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
@@ -53,6 +55,23 @@ public class ClinicSlotService {
                 .build();
 
         return clinicSlotRepository.save(slot);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClinicSlot> getSlots(MemberPrincipal principal,
+                                     UUID branchId,
+                                     UUID teacherId,
+                                     UUID courseId) {
+        if (principal.role() == MemberRole.TEACHER) {
+            return getSlotsForTeacher(principal.id(), branchId);
+        }
+        if (principal.role() == MemberRole.ASSISTANT) {
+            return getSlotsForAssistant(principal.id(), teacherId, branchId);
+        }
+        if (principal.role() == MemberRole.STUDENT) {
+            return getSlotsForStudent(principal.id(), courseId);
+        }
+        throw new BusinessException(RsCode.FORBIDDEN);
     }
 
     @Transactional(readOnly = true)
