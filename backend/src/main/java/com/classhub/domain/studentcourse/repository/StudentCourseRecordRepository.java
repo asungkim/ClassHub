@@ -6,12 +6,21 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface StudentCourseRecordRepository extends JpaRepository<StudentCourseRecord, UUID> {
 
     long countByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE StudentCourseRecord scr
+            SET scr.defaultClinicSlotId = null
+            WHERE scr.defaultClinicSlotId = :slotId
+            """)
+    int clearDefaultClinicSlotId(@Param("slotId") UUID slotId);
 
     @Query("""
             SELECT scr

@@ -3814,3 +3814,26 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepositoryTest.java`
 - 다음 단계: ClinicSlot 서비스/검증 로직 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 16:33] ClinicSlot 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSlot 생성/수정/삭제 서비스와 DTO를 추가했다.
+- 일정 변경 시 기본 슬롯 해제 및 정원 감소 검증 로직을 구현했다.
+
+### Details
+- 작업 사유: Phase 1-2 ClinicSlot 서비스 로직을 TDD로 구현.
+- 영향받은 테스트:
+  - `ClinicSlotServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/dto/request/ClinicSlotCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/dto/request/ClinicSlotUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+- 다음 단계: ClinicSlot API/Controller 구현.
+- MCP: 사용하지 않음.

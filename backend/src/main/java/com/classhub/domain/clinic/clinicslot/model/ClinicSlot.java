@@ -64,4 +64,14 @@ public class ClinicSlot extends BaseEntity {
         this.endTime = Objects.requireNonNull(endTime, "endTime must not be null");
         this.defaultCapacity = Objects.requireNonNull(defaultCapacity, "defaultCapacity must not be null");
     }
+
+    public void updateSchedule(DayOfWeek dayOfWeek,
+                               LocalTime startTime,
+                               LocalTime endTime,
+                               Integer defaultCapacity) {
+        this.dayOfWeek = Objects.requireNonNull(dayOfWeek, "dayOfWeek must not be null");
+        this.startTime = Objects.requireNonNull(startTime, "startTime must not be null");
+        this.endTime = Objects.requireNonNull(endTime, "endTime must not be null");
+        this.defaultCapacity = Objects.requireNonNull(defaultCapacity, "defaultCapacity must not be null");
+    }
 }
