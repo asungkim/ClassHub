@@ -4129,3 +4129,22 @@ DESIGN
   - `docs/plan/backend/season2/clinic-management_plan.md`
 - 다음 단계: ClinicRecord 구현 착수.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 19:04] ClinicRecord 리포지토리 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicRecord 조회/중복 확인을 위한 Repository 메서드를 추가했다.
+- ClinicRecordRepository 테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 4-1 ClinicRecord 조회/검증 기반 준비.
+- 영향받은 테스트:
+  - `ClinicRecordRepositoryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/repository/ClinicRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/repository/ClinicRecordRepositoryTest.java`
+- 다음 단계: ClinicRecord 서비스 로직 구현.
+- MCP: 사용하지 않음.
