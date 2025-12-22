@@ -17,9 +17,9 @@ import com.classhub.domain.clinic.clinicattendance.application.ClinicAttendanceS
 import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceCreateRequest;
 import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceMoveRequest;
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
-import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
+import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceListResponse;
+import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceResponse;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSessionType;
-import com.classhub.domain.clinic.clinicsession.repository.ClinicSessionRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.response.RsCode;
@@ -55,8 +55,6 @@ class ClinicAttendanceControllerTest {
 
     @MockitoBean
     private ClinicAttendanceService clinicAttendanceService;
-    @MockitoBean
-    private ClinicSessionRepository clinicSessionRepository;
 
     private MockMvc mockMvc;
 
@@ -145,11 +143,19 @@ class ClinicAttendanceControllerTest {
         UUID studentId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
         ClinicAttendance attendance = createAttendance(sessionId);
-        ClinicSession session = createSession(sessionId);
-        given(clinicAttendanceService.getStudentAttendances(any(MemberPrincipal.class), any(), any()))
-                .willReturn(List.of(attendance));
-        given(clinicSessionRepository.findByIdAndDeletedAtIsNull(sessionId))
-                .willReturn(Optional.of(session));
+        StudentClinicAttendanceResponse item = new StudentClinicAttendanceResponse(
+                attendance.getId(),
+                sessionId,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                LocalDate.of(2024, 3, 4),
+                LocalTime.of(18, 0),
+                LocalTime.of(19, 0),
+                ClinicSessionType.REGULAR,
+                false
+        );
+        given(clinicAttendanceService.getStudentAttendanceResponses(any(MemberPrincipal.class), any(), any()))
+                .willReturn(new StudentClinicAttendanceListResponse(List.of(item)));
 
         mockMvc.perform(get("/api/v1/students/me/clinic-attendances")
                         .param("dateRange", "2024-03-01,2024-03-31")
@@ -158,7 +164,7 @@ class ClinicAttendanceControllerTest {
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
                 .andExpect(jsonPath("$.data.items[0].clinicSessionId").value(sessionId.toString()));
 
-        verify(clinicAttendanceService).getStudentAttendances(any(MemberPrincipal.class), any(), any());
+        verify(clinicAttendanceService).getStudentAttendanceResponses(any(MemberPrincipal.class), any(), any());
     }
 
     @Test
@@ -204,20 +210,4 @@ class ClinicAttendanceControllerTest {
         return attendance;
     }
 
-    private ClinicSession createSession(UUID sessionId) {
-        ClinicSession session = ClinicSession.builder()
-                .slotId(UUID.randomUUID())
-                .teacherMemberId(UUID.randomUUID())
-                .branchId(UUID.randomUUID())
-                .sessionType(ClinicSessionType.REGULAR)
-                .creatorMemberId(null)
-                .date(LocalDate.of(2024, 3, 4))
-                .startTime(LocalTime.of(18, 0))
-                .endTime(LocalTime.of(19, 0))
-                .capacity(10)
-                .canceled(false)
-                .build();
-        ReflectionTestUtils.setField(session, "id", sessionId);
-        return session;
-    }
 }

@@ -4,6 +4,7 @@ import com.classhub.domain.assignment.model.TeacherBranchAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
 import com.classhub.domain.clinic.clinicsession.dto.request.ClinicSessionEmergencyCreateRequest;
+import com.classhub.domain.clinic.clinicsession.dto.response.ClinicSessionResponse;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSessionType;
 import com.classhub.domain.clinic.clinicsession.repository.ClinicSessionRepository;
@@ -68,21 +69,24 @@ public class ClinicSessionService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClinicSession> getSessions(MemberPrincipal principal,
-                                           UUID teacherId,
-                                           UUID branchId,
-                                           LocalDate startDate,
-                                           LocalDate endDate) {
+    public List<ClinicSessionResponse> getSessions(MemberPrincipal principal,
+                                                   UUID teacherId,
+                                                   UUID branchId,
+                                                   LocalDate startDate,
+                                                   LocalDate endDate) {
+        List<ClinicSession> sessions;
         if (principal.role() == MemberRole.TEACHER) {
-            return getSessionsForTeacher(principal.id(), branchId, startDate, endDate);
+            sessions = getSessionsForTeacher(principal.id(), branchId, startDate, endDate);
+        } else if (principal.role() == MemberRole.ASSISTANT) {
+            sessions = getSessionsForAssistant(principal.id(), teacherId, branchId, startDate, endDate);
+        } else if (principal.role() == MemberRole.STUDENT) {
+            sessions = getSessionsForStudent(principal.id(), teacherId, branchId, startDate, endDate);
+        } else {
+            throw new BusinessException(RsCode.FORBIDDEN);
         }
-        if (principal.role() == MemberRole.ASSISTANT) {
-            return getSessionsForAssistant(principal.id(), teacherId, branchId, startDate, endDate);
-        }
-        if (principal.role() == MemberRole.STUDENT) {
-            return getSessionsForStudent(principal.id(), teacherId, branchId, startDate, endDate);
-        }
-        throw new BusinessException(RsCode.FORBIDDEN);
+        return sessions.stream()
+                .map(ClinicSessionResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

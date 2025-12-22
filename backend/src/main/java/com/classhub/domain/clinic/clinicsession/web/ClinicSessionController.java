@@ -45,16 +45,13 @@ public class ClinicSessionController {
             @RequestParam(value = "teacherId", required = false) UUID teacherId
     ) {
         DateRange range = DateRangeParser.parse(dateRange);
-        List<ClinicSession> sessions = clinicSessionService.getSessions(
+        List<ClinicSessionResponse> response = clinicSessionService.getSessions(
                 principal,
                 teacherId,
                 branchId,
                 range.startDate(),
                 range.endDate()
         );
-        List<ClinicSessionResponse> response = sessions.stream()
-                .map(ClinicSessionResponse::from)
-                .toList();
         return RsData.from(RsCode.SUCCESS, response);
     }
 

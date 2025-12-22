@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.classhub.domain.clinic.clinicsession.application.ClinicSessionService;
 import com.classhub.domain.clinic.clinicsession.dto.request.ClinicSessionEmergencyCreateRequest;
 import com.classhub.domain.clinic.clinicsession.dto.request.ClinicSessionRegularCreateRequest;
+import com.classhub.domain.clinic.clinicsession.dto.response.ClinicSessionResponse;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSessionType;
 import com.classhub.domain.member.dto.MemberPrincipal;
@@ -67,10 +68,11 @@ class ClinicSessionControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.REGULAR);
+        ClinicSessionResponse response = ClinicSessionResponse.from(session);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
         given(clinicSessionService.getSessions(any(MemberPrincipal.class), isNull(), eq(branchId), eq(start), eq(end)))
-                .willReturn(List.of(session));
+                .willReturn(List.of(response));
 
         mockMvc.perform(get("/api/v1/clinic-sessions")
                         .param("dateRange", "2024-03-01,2024-03-07")
@@ -89,10 +91,11 @@ class ClinicSessionControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.EMERGENCY);
+        ClinicSessionResponse response = ClinicSessionResponse.from(session);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
         given(clinicSessionService.getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end)))
-                .willReturn(List.of(session));
+                .willReturn(List.of(response));
 
         mockMvc.perform(get("/api/v1/clinic-sessions")
                         .param("dateRange", "2024-03-01,2024-03-07")
@@ -112,10 +115,11 @@ class ClinicSessionControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.REGULAR);
+        ClinicSessionResponse response = ClinicSessionResponse.from(session);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
         given(clinicSessionService.getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end)))
-                .willReturn(List.of(session));
+                .willReturn(List.of(response));
 
         mockMvc.perform(get("/api/v1/clinic-sessions")
                         .param("dateRange", "2024-03-01,2024-03-07")

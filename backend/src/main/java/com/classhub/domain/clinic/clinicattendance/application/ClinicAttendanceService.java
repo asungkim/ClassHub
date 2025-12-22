@@ -4,6 +4,9 @@ import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepos
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceRepository;
 import com.classhub.domain.clinic.clinicattendance.support.ClinicAttendancePolicy;
+import com.classhub.domain.clinic.clinicattendance.dto.response.ClinicAttendanceResponse;
+import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceListResponse;
+import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceResponse;
 import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
 import com.classhub.domain.clinic.clinicsession.repository.ClinicSessionRepository;
 import com.classhub.domain.course.model.Course;
@@ -17,8 +20,10 @@ import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,21 +120,32 @@ public class ClinicAttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClinicAttendance> getStudentAttendances(MemberPrincipal principal,
-                                                        LocalDate startDate,
-                                                        LocalDate endDate) {
+    public StudentClinicAttendanceListResponse getStudentAttendanceResponses(MemberPrincipal principal,
+                                                                             LocalDate startDate,
+                                                                             LocalDate endDate) {
         ensureStudentRole(principal);
-        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
-            throw new BusinessException(RsCode.BAD_REQUEST);
+        List<ClinicAttendance> attendances = loadStudentAttendances(principal, startDate, endDate);
+        if (attendances.isEmpty()) {
+            return new StudentClinicAttendanceListResponse(List.of());
         }
-        List<StudentCourseRecord> records = studentCourseRecordRepository.findByStudentMemberIdAndDeletedAtIsNull(
-                principal.id()
-        );
-        List<UUID> recordIds = records.stream().map(StudentCourseRecord::getId).toList();
-        if (recordIds.isEmpty()) {
-            return List.of();
-        }
-        return clinicAttendanceRepository.findByStudentCourseRecordIdInAndDateRange(recordIds, startDate, endDate);
+        Map<UUID, ClinicSession> sessionMap = clinicSessionRepository.findAllById(
+                        attendances.stream().map(ClinicAttendance::getClinicSessionId).distinct().toList()
+                )
+                .stream()
+                .collect(Collectors.toMap(ClinicSession::getId, session -> session));
+        List<StudentClinicAttendanceResponse> items = attendances.stream()
+                .map(attendance -> {
+                    ClinicSession session = sessionMap.get(attendance.getClinicSessionId());
+                    if (session == null) {
+                        throw new BusinessException(RsCode.CLINIC_SESSION_NOT_FOUND);
+                    }
+                    return StudentClinicAttendanceResponse.from(
+                            ClinicAttendanceResponse.from(attendance),
+                            session
+                    );
+                })
+                .toList();
+        return new StudentClinicAttendanceListResponse(items);
     }
 
     private ClinicSession loadSession(UUID sessionId) {
@@ -155,6 +171,22 @@ public class ClinicAttendanceService {
     private Course loadCourse(UUID courseId) {
         return courseRepository.findById(courseId)
                 .orElseThrow(RsCode.COURSE_NOT_FOUND::toException);
+    }
+
+    private List<ClinicAttendance> loadStudentAttendances(MemberPrincipal principal,
+                                                          LocalDate startDate,
+                                                          LocalDate endDate) {
+        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        List<StudentCourseRecord> records = studentCourseRecordRepository.findByStudentMemberIdAndDeletedAtIsNull(
+                principal.id()
+        );
+        List<UUID> recordIds = records.stream().map(StudentCourseRecord::getId).toList();
+        if (recordIds.isEmpty()) {
+            return List.of();
+        }
+        return clinicAttendanceRepository.findByStudentCourseRecordIdInAndDateRange(recordIds, startDate, endDate);
     }
 
     private void ensureStaffAccess(MemberPrincipal principal, ClinicSession session) {

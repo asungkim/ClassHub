@@ -4039,3 +4039,27 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
 - 다음 단계: ClinicRecord API 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 18:29] Clinic 세션/출석 응답 매핑 리팩터링
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSession/ClinicAttendance 컨트롤러의 응답 매핑을 서비스로 이동했다.
+- 학생 출석 응답을 서비스에서 조합하도록 정리했다.
+
+### Details
+- 작업 사유: 컨트롤러에서 응답/조인 로직 제거.
+- 영향받은 테스트:
+  - `ClinicSessionControllerTest`
+  - `ClinicAttendanceControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.

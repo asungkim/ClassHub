@@ -5,12 +5,8 @@ import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceC
 import com.classhub.domain.clinic.clinicattendance.dto.request.ClinicAttendanceMoveRequest;
 import com.classhub.domain.clinic.clinicattendance.dto.response.ClinicAttendanceResponse;
 import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceListResponse;
-import com.classhub.domain.clinic.clinicattendance.dto.response.StudentClinicAttendanceResponse;
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
-import com.classhub.domain.clinic.clinicsession.model.ClinicSession;
-import com.classhub.domain.clinic.clinicsession.repository.ClinicSessionRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
-import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
 import com.classhub.global.util.DateRangeParser;
@@ -40,7 +36,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClinicAttendanceController {
 
     private final ClinicAttendanceService clinicAttendanceService;
-    private final ClinicSessionRepository clinicSessionRepository;
 
     @GetMapping("/clinic-attendances")
     @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
@@ -101,20 +96,12 @@ public class ClinicAttendanceController {
             @RequestParam("dateRange") String dateRange
     ) {
         DateRange range = DateRangeParser.parse(dateRange);
-        List<ClinicAttendance> attendances = clinicAttendanceService.getStudentAttendances(
+        StudentClinicAttendanceListResponse response = clinicAttendanceService.getStudentAttendanceResponses(
                 principal,
                 range.startDate(),
                 range.endDate()
         );
-        List<StudentClinicAttendanceResponse> items = attendances.stream()
-                .map(attendance -> {
-                    ClinicSession session = clinicSessionRepository
-                            .findByIdAndDeletedAtIsNull(attendance.getClinicSessionId())
-                            .orElseThrow(RsCode.CLINIC_SESSION_NOT_FOUND::toException);
-                    return StudentClinicAttendanceResponse.from(ClinicAttendanceResponse.from(attendance), session);
-                })
-                .toList();
-        return RsData.from(RsCode.SUCCESS, new StudentClinicAttendanceListResponse(items));
+        return RsData.from(RsCode.SUCCESS, response);
     }
 
     @PatchMapping("/students/me/clinic-attendances")
