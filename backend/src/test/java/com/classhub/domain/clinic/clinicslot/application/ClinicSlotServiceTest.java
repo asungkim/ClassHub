@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import com.classhub.domain.assignment.model.BranchRole;
 import com.classhub.domain.assignment.model.TeacherBranchAssignment;
 import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
+import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.clinic.clinicslot.dto.request.ClinicSlotCreateRequest;
 import com.classhub.domain.clinic.clinicslot.dto.request.ClinicSlotUpdateRequest;
 import com.classhub.domain.clinic.clinicslot.model.ClinicSlot;
@@ -17,6 +18,7 @@ import com.classhub.domain.clinic.clinicslot.repository.ClinicSlotRepository;
 import com.classhub.domain.company.branch.model.Branch;
 import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.model.VerifiedStatus;
+import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
@@ -41,7 +43,11 @@ class ClinicSlotServiceTest {
     @Mock
     private TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
     @Mock
+    private TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
+    @Mock
     private BranchRepository branchRepository;
+    @Mock
+    private CourseRepository courseRepository;
 
     @InjectMocks
     private ClinicSlotService clinicSlotService;

@@ -2,6 +2,7 @@ package com.classhub.domain.studentcourse.repository;
 
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,4 +82,7 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
             """)
     List<StudentCourseRecord> findActiveByStudentIdAndTeacherIds(@Param("studentId") UUID studentId,
                                                                  @Param("teacherIds") List<UUID> teacherIds);
+
+    Optional<StudentCourseRecord> findByStudentMemberIdAndCourseIdAndDeletedAtIsNull(UUID studentMemberId,
+                                                                                      UUID courseId);
 }
