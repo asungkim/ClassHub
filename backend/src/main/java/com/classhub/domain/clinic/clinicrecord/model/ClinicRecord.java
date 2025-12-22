@@ -50,4 +50,16 @@ public class ClinicRecord extends BaseEntity {
         this.content = Objects.requireNonNull(content, "content must not be null");
         this.homeworkProgress = homeworkProgress;
     }
+
+    public void update(String title, String content, String homeworkProgress) {
+        if (title != null) {
+            this.title = title.trim();
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (homeworkProgress != null) {
+            this.homeworkProgress = homeworkProgress;
+        }
+    }
 }

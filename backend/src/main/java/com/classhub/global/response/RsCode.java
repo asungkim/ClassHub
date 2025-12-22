@@ -66,6 +66,8 @@ public enum RsCode {
     CLINIC_ATTENDANCE_TIME_OVERLAP(RsConstant.CONFLICT, "클리닉 시간이 겹칩니다."),
     CLINIC_ATTENDANCE_LOCKED(RsConstant.CONFLICT, "클리닉 출석을 변경할 수 없습니다."),
     CLINIC_ATTENDANCE_MOVE_FORBIDDEN(RsConstant.CONFLICT, "클리닉 이동이 불가능합니다."),
+    CLINIC_RECORD_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 기록을 찾을 수 없습니다."),
+    CLINIC_RECORD_ALREADY_EXISTS(RsConstant.CONFLICT, "클리닉 기록이 이미 존재합니다."),
 
     // ===== Enrollment =====
     STUDENT_ENROLLMENT_REQUEST_NOT_FOUND(RsConstant.NOT_FOUND, "수업 신청을 찾을 수 없습니다."),

@@ -4148,3 +4148,45 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/repository/ClinicRecordRepositoryTest.java`
 - 다음 단계: ClinicRecord 서비스 로직 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 19:10] ClinicRecord 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicRecord 생성/조회 서비스 로직과 권한 검증을 추가했다.
+- ClinicRecord 관련 RsCode와 요청 DTO를 추가했다.
+
+### Details
+- 작업 사유: Phase 4-2 ClinicRecord 서비스 구현.
+- 영향받은 테스트:
+  - `ClinicRecordServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/dto/request/ClinicRecordCreateRequest.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordServiceTest.java`
+- 다음 단계: ClinicRecord API/Controller 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:22] ClinicRecord 수정/삭제 서비스 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicRecord 수정/삭제 서비스 로직과 DTO를 추가했다.
+- ClinicRecord 엔티티에 update 메서드를 추가했다.
+
+### Details
+- 작업 사유: ClinicRecord CRUD 완성.
+- 영향받은 테스트:
+  - `ClinicRecordServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/dto/request/ClinicRecordUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/model/ClinicRecord.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordServiceTest.java`
+- 다음 단계: ClinicRecord API/Controller 구현.
+- MCP: 사용하지 않음.
