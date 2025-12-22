@@ -14,11 +14,13 @@ import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.model.VerifiedStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
+import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class ClinicSessionService {
     private final TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
     private final TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
     private final BranchRepository branchRepository;
+    private final StudentCourseRecordRepository studentCourseRecordRepository;
 
     public ClinicSession createRegularSession(UUID teacherId, UUID slotId, LocalDate date) {
         if (slotId == null || date == null) {
@@ -62,6 +65,75 @@ public class ClinicSessionService {
                 .canceled(false)
                 .build();
         return clinicSessionRepository.save(session);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClinicSession> getSessionsForTeacher(
+            UUID teacherId,
+            UUID branchId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        validateDateRange(branchId, startDate, endDate);
+        Branch branch = requireVerifiedBranch(branchId);
+        ensureTeacherAssignment(teacherId, branch.getId());
+        return clinicSessionRepository.findByTeacherMemberIdAndBranchIdAndDateRange(
+                teacherId,
+                branch.getId(),
+                startDate,
+                endDate
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClinicSession> getSessionsForAssistant(
+            UUID assistantId,
+            UUID teacherId,
+            UUID branchId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        if (teacherId == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        validateDateRange(branchId, startDate, endDate);
+        Branch branch = requireVerifiedBranch(branchId);
+        ensureTeacherAssignment(teacherId, branch.getId());
+        ensureAssistantAssignment(assistantId, teacherId);
+        return clinicSessionRepository.findByTeacherMemberIdAndBranchIdAndDateRange(
+                teacherId,
+                branch.getId(),
+                startDate,
+                endDate
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClinicSession> getSessionsForStudent(
+            UUID studentId,
+            UUID teacherId,
+            UUID branchId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        if (teacherId == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        validateDateRange(branchId, startDate, endDate);
+        long count = studentCourseRecordRepository.countActiveByStudentAndTeacherAndBranch(
+                studentId,
+                teacherId,
+                branchId
+        );
+        if (count == 0L) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+        return clinicSessionRepository.findByTeacherMemberIdAndBranchIdAndDateRange(
+                teacherId,
+                branchId,
+                startDate,
+                endDate
+        );
     }
 
     public ClinicSession createEmergencySession(MemberPrincipal principal, ClinicSessionEmergencyCreateRequest request) {
@@ -112,6 +184,15 @@ public class ClinicSessionService {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
         validateTimeRange(request.startTime(), request.endTime(), request.capacity());
+    }
+
+    private void validateDateRange(UUID branchId, LocalDate startDate, LocalDate endDate) {
+        if (branchId == null || startDate == null || endDate == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
     }
 
     private void validateTimeRange(LocalTime startTime, LocalTime endTime, Integer capacity) {

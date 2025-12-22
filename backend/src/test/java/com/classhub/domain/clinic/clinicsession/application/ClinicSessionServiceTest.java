@@ -21,6 +21,7 @@ import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.model.VerifiedStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
+import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.DayOfWeek;
@@ -48,6 +49,8 @@ class ClinicSessionServiceTest {
     private TeacherAssistantAssignmentRepository teacherAssistantAssignmentRepository;
     @Mock
     private BranchRepository branchRepository;
+    @Mock
+    private StudentCourseRecordRepository studentCourseRecordRepository;
 
     @InjectMocks
     private ClinicSessionService clinicSessionService;

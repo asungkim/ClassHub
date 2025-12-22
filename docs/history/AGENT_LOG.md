@@ -3905,3 +3905,27 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionServiceTest.java`
 - 다음 단계: ClinicSession API/Controller 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 17:44] ClinicSession API 컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSession 조회/정규 생성/긴급 생성/취소 API를 추가했다.
+- 역할별 세션 조회 서비스 메서드와 관련 DTO를 보강했다.
+
+### Details
+- 작업 사유: Phase 2-3 컨트롤러/API 구현.
+- 영향받은 테스트:
+  - `ClinicSessionControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/dto/request/ClinicSessionRegularCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/dto/response/ClinicSessionResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionServiceTest.java`
+- 다음 단계: ClinicSession 배치/스케줄러 설계 확정 후 구현.
+- MCP: 사용하지 않음.
