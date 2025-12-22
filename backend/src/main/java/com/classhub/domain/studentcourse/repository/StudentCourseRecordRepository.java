@@ -15,6 +15,8 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
 
     long countByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
 
+    List<StudentCourseRecord> findByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE StudentCourseRecord scr

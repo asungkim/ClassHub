@@ -117,6 +117,24 @@
 - **로그/모니터링**
   - 배치 실행 시 생성/스킵/정원 초과 스킵을 구조화 로그로 기록 (slotId, branchId, teacherId, sessionDate)
 
+#### 2.9 Batch Exception Policy (Draft)
+- **Slot 단계 (Slot → Session 대상 선정)**
+  - `deletedAt != null` 슬롯은 스킵
+  - `defaultCapacity < 1`, 시간 역전 등 비정상 슬롯은 스킵 + 로그
+  - 주중 생성 시 이미 지난 요일/시간은 해당 날짜만 스킵
+- **Session 단계 (Session 생성)**
+  - `(slotId, date)` 중복 존재 시 스킵 (idempotent)
+  - 낙관적 락/unique 충돌 발생 시 스킵 + 로그 (배치 중단 없음)
+  - slot 삭제/상태 변경 감지 시 스킵 + 로그
+- **Attendance 단계 (defaultClinicSlotId 매칭)**
+  - Session 취소 상태면 Attendance 생성 스킵
+  - StudentCourseRecord가 비활성(soft delete)면 스킵
+  - Attendance 중복 존재 시 스킵
+  - capacity 초과, 시간 겹침, 낙관적 락 충돌은 스킵 + 로그
+  - 위 예외는 전체 배치 실패로 전파하지 않음
+- **트랜잭션 범위**
+  - 세션 단위 또는 슬롯 단위 트랜잭션으로 분리해 부분 실패가 전체 배치에 영향 주지 않도록 한다.
+
 ### Non-functional
 - 모든 쓰기 요청은 DTO `@Valid` 검증, 존재 여부 검증, 권한 검증을 순차로 수행한다.
 - `RsData`/`RsCode` 표준 응답 포맷을 유지한다.
@@ -285,6 +303,10 @@
    - 주간 배치 생성: slot 순회 + session 생성 idempotent 검증.
    - mid-week slot 생성 시 남은 날짜 session 생성 확인.
    - 정원 초과 시 Attendance 생성 스킵 + 로그 기록 확인.
+   - 삭제/비정상 슬롯 스킵 및 세션 생성 미발생 확인.
+   - Session 중복/낙관적 락 충돌 시 배치 계속 진행 확인.
+   - Record 삭제/Session 취소/Attendance 중복 시 스킵 확인.
+   - capacity 초과/시간 겹침 발생 시 Attendance 생성 미발생 확인.
 7. **ClinicAttendanceService Tests**
    - auto 생성 시 capacity/중복 방지 검증.
    - teacher/assistant 추가/삭제 + 10분 lock 규칙.

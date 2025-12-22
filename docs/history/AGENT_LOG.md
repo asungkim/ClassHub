@@ -4296,3 +4296,59 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
 - 다음 단계: 배치/스케줄러(Phase 5) 준비.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 22:46] Phase 5 배치 예외 정책 설계 보강
+
+### Type
+DESIGN
+
+### Summary
+- Batch/Scheduler 단계의 슬롯/세션/출석 예외 처리 정책을 상세화했다.
+- ClinicBatchService 테스트 범위를 예외 케이스 중심으로 보강했다.
+
+### Details
+- 작업 사유: 배치 시스템의 예외 상황을 체계적으로 커버하기 위한 설계 정리.
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: Phase 5 배치 구현 전 승인 및 TDD 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 22:50] Phase 5-1 주간 세션 배치 코어 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 ClinicSession 자동 생성 배치 코어를 추가했다.
+- 활성 슬롯 기반 idempotent 세션 생성과 기본 검증을 구현했다.
+
+### Details
+- 작업 사유: Phase 5-1 주간 세션 생성 로직 구현.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+- 다음 단계: Phase 5-2 Attendance 자동 생성 로직 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 23:07] Phase 5-2 출석 자동 생성 로직 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 배치에서 defaultClinicSlotId 기반 출석 자동 생성을 추가했다.
+- 정원 초과/중복/시간 겹침 스킵 로직을 포함했다.
+
+### Details
+- 작업 사유: Phase 5-2 Attendance 자동 생성 구현.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+- 다음 단계: Phase 5-3 스케줄러/주중 슬롯 처리.
+- MCP: 사용하지 않음.

@@ -14,6 +14,8 @@ public interface ClinicSlotRepository extends JpaRepository<ClinicSlot, UUID> {
 
     List<ClinicSlot> findByTeacherMemberIdAndBranchIdAndDeletedAtIsNull(UUID teacherMemberId, UUID branchId);
 
+    List<ClinicSlot> findByDeletedAtIsNull();
+
     List<ClinicSlot> findByIdInAndDeletedAtIsNull(List<UUID> slotIds);
 
     @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
