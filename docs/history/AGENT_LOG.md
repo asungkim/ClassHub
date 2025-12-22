@@ -3883,3 +3883,25 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryTest.java`
 - 다음 단계: ClinicSession 서비스/검증 로직 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 17:12] ClinicSession 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSession 생성/긴급 생성/취소 서비스 로직을 추가했다.
+- Emergency 요청 DTO 및 세션 관련 RsCode를 확장했다.
+
+### Details
+- 작업 사유: Phase 2-2 서비스 로직과 검증 규칙 구현.
+- 영향받은 테스트:
+  - `ClinicSessionServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/dto/request/ClinicSessionEmergencyCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionServiceTest.java`
+- 다음 단계: ClinicSession API/Controller 구현.
+- MCP: 사용하지 않음.

@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface ClinicSessionRepository extends JpaRepository<ClinicSession, UUID> {
 
+    Optional<ClinicSession> findByIdAndDeletedAtIsNull(UUID id);
+
     Optional<ClinicSession> findBySlotIdAndDateAndDeletedAtIsNull(UUID slotId, LocalDate date);
 
     @Query("""
