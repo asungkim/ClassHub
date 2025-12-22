@@ -59,6 +59,13 @@ public enum RsCode {
     CLINIC_SESSION_ALREADY_EXISTS(RsConstant.CONFLICT, "이미 생성된 클리닉 세션입니다."),
     CLINIC_SESSION_TIME_INVALID(RsConstant.BAD_REQUEST, "클리닉 세션 시간이 올바르지 않습니다."),
     CLINIC_SESSION_CANCEL_FORBIDDEN(RsConstant.CONFLICT, "클리닉 세션을 취소할 수 없습니다."),
+    CLINIC_SESSION_CANCELED(RsConstant.CONFLICT, "취소된 클리닉 세션입니다."),
+    CLINIC_SESSION_FULL(RsConstant.CONFLICT, "클리닉 세션 정원이 초과되었습니다."),
+    CLINIC_ATTENDANCE_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 출석 정보를 찾을 수 없습니다."),
+    CLINIC_ATTENDANCE_DUPLICATED(RsConstant.CONFLICT, "이미 등록된 클리닉 출석입니다."),
+    CLINIC_ATTENDANCE_TIME_OVERLAP(RsConstant.CONFLICT, "클리닉 시간이 겹칩니다."),
+    CLINIC_ATTENDANCE_LOCKED(RsConstant.CONFLICT, "클리닉 출석을 변경할 수 없습니다."),
+    CLINIC_ATTENDANCE_MOVE_FORBIDDEN(RsConstant.CONFLICT, "클리닉 이동이 불가능합니다."),
 
     // ===== Enrollment =====
     STUDENT_ENROLLMENT_REQUEST_NOT_FOUND(RsConstant.NOT_FOUND, "수업 신청을 찾을 수 없습니다."),

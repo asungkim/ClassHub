@@ -3971,3 +3971,44 @@ DESIGN
   - `docs/plan/backend/season2/clinic-management_plan.md`
 - 다음 단계: Phase 3 완료 후 배치 구현 착수.
 - MCP: 사용하지 않음.
+
+## [2025-12-22 18:09] ClinicAttendance 조회/정책 기반 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicAttendance 조회/겹침 검사용 Repository 쿼리를 추가했다.
+- Attendance 시간 정책 유틸(락/이동/주차 계산)을 추가했다.
+
+### Details
+- 작업 사유: Phase 3-1 Attendance 검증 기반 준비.
+- 영향받은 테스트:
+  - `ClinicAttendanceRepositoryQueryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/support/ClinicAttendancePolicy.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryQueryTest.java`
+- 다음 단계: Attendance 서비스 로직 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 18:16] ClinicAttendance 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicAttendance 생성/학생 신청/이동 서비스 로직을 추가했다.
+- 출석 중복/정원/시간 겹침 검증을 포함했다.
+
+### Details
+- 작업 사유: Phase 3-2 서비스 로직 구현.
+- 영향받은 테스트:
+  - `ClinicAttendanceServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+- 다음 단계: Attendance API/Controller 구현.
+- MCP: 사용하지 않음.

@@ -2,13 +2,24 @@ package com.classhub.domain.clinic.clinicattendance.repository;
 
 import com.classhub.domain.clinic.clinicattendance.model.ClinicAttendance;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendance, UUID> {
+
+    boolean existsByClinicSessionIdAndStudentCourseRecordId(UUID clinicSessionId, UUID studentCourseRecordId);
+
+    long countByClinicSessionId(UUID clinicSessionId);
+
+    List<ClinicAttendance> findByClinicSessionId(UUID clinicSessionId);
+
+    Optional<ClinicAttendance> findByClinicSessionIdAndStudentCourseRecordIdIn(UUID clinicSessionId,
+                                                                               List<UUID> recordIds);
 
     @Query("""
             SELECT
@@ -37,4 +48,18 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query("""
+            SELECT COUNT(ca)
+            FROM ClinicAttendance ca
+            JOIN ClinicSession cs ON cs.id = ca.clinicSessionId
+            WHERE ca.studentCourseRecordId = :recordId
+              AND cs.date = :date
+              AND cs.startTime < :endTime
+              AND cs.endTime > :startTime
+            """)
+    long countOverlappingAttendances(@Param("recordId") UUID recordId,
+                                     @Param("date") LocalDate date,
+                                     @Param("startTime") LocalTime startTime,
+                                     @Param("endTime") LocalTime endTime);
 }
