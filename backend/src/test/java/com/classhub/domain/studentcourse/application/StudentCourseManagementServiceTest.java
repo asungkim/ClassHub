@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.course.application.CourseViewAssembler;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
@@ -70,6 +71,9 @@ class StudentCourseManagementServiceTest {
 
     @Mock
     private CourseViewAssembler courseViewAssembler;
+
+    @Mock
+    private ClinicDefaultSlotService clinicDefaultSlotService;
 
     @InjectMocks
     private StudentCourseManagementService managementService;
@@ -286,6 +290,9 @@ class StudentCourseManagementServiceTest {
                 "새 메모"
         );
 
+        when(clinicDefaultSlotService.applyDefaultSlot(record, course, request.defaultClinicSlotId()))
+                .thenReturn(record);
+
         StudentCourseDetailResponse response = managementService.updateStudentCourseRecord(
                 teacherId,
                 record.getId(),
@@ -294,6 +301,7 @@ class StudentCourseManagementServiceTest {
 
         assertThat(response.teacherNotes()).isEqualTo("새 메모");
         assertThat(response.assistantMemberId()).isEqualTo(assistantId);
+        verify(clinicDefaultSlotService).applyDefaultSlot(record, course, request.defaultClinicSlotId());
     }
 
     @Test

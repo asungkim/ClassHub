@@ -85,6 +85,7 @@ class StudentCalendarControllerTest {
                 UUID.randomUUID(),
                 "클리닉",
                 "클리닉 내용",
+                "숙제",
                 MemberRole.TEACHER
         );
         ClinicEvent clinicEvent = new ClinicEvent(

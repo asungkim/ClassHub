@@ -59,6 +59,11 @@
 - 목적: Course/Personal Progress에 숙제(homework) 같은 요약 필드를 추가해 향후 학생이 본인 숙제만 조회할 수 있도록 확장.
 - 작업 범위: CourseProgress/PersonalProgress 엔티티 및 DTO에 homework 필드 추가, Teacher만 작성/수정, 학생 전용 읽기 API 설계 및 권한/캘린더 반영. 구현은 Progress CRUD 안정화 후 진행.
 
+### #11 클리닉 슬롯 변경 알림
+- 우선순위: 🟡 Medium
+- 목적: Slot 요일/시간 변경으로 defaultClinicSlotId가 해제된 학생에게 재신청 안내를 제공.
+- 작업 범위: Slot 변경 시 대상 학생 목록 집계, 알림(Notification) 이벤트 발행, 학생 앱에서 재신청 CTA 노출. (Notification 기능 도입 시 구현)
+
 ---
 
 ## 📱 UI/UX

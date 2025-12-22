@@ -7,8 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import com.classhub.domain.calendar.mapper.StudentCalendarMapper;
-import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceEventProjection;
-import com.classhub.domain.clinic.clinicattendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceEventProjection;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
@@ -115,7 +115,8 @@ class StudentCalendarServiceTest {
                 UUID.randomUUID(),
                 "Clinic",
                 assistantId,
-                "clinic memo"
+                "clinic memo",
+                "homework"
         );
 
         given(courseProgressRepository.findByCourseIdsAndDateRange(any(), any(), any()))
@@ -147,6 +148,7 @@ class StudentCalendarServiceTest {
         assertThat(response.personalProgress().get(0).content()).isEqualTo("memo");
         assertThat(response.clinicEvents()).hasSize(1);
         assertThat(response.clinicEvents().get(0).recordSummary().content()).isEqualTo("clinic memo");
+        assertThat(response.clinicEvents().get(0).recordSummary().homeworkProgress()).isEqualTo("homework");
         assertThat(response.clinicEvents().get(0).recordSummary().writerRole())
                 .isEqualTo(MemberRole.ASSISTANT);
     }
@@ -209,7 +211,8 @@ class StudentCalendarServiceTest {
             UUID recordId,
             String recordTitle,
             UUID recordWriterId,
-            String recordContent
+            String recordContent,
+            String recordHomeworkProgress
     ) implements ClinicAttendanceEventProjection {
         @Override
         public UUID getClinicSessionId() {
@@ -269,6 +272,11 @@ class StudentCalendarServiceTest {
         @Override
         public String getRecordContent() {
             return recordContent;
+        }
+
+        @Override
+        public String getRecordHomeworkProgress() {
+            return recordHomeworkProgress;
         }
     }
 }

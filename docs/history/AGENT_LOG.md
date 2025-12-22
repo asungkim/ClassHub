@@ -3486,3 +3486,1061 @@ DESIGN
 - 수정한 파일:
   - `docs/refactor/improvment-backlog.md`
 - 다음 단계: 모바일 대응 범위를 구체화해 별도 PLAN으로 분리.
+
+## [2025-12-22 00:16] Clinic 슬롯-코스 M:N 설계 갱신
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot ↔ Course M:N 구조에 맞춰 ERD/엔티티 스펙을 갱신했다.
+- ClinicSlotCourse 조인 엔티티와 연결/검증 규칙을 정의했다.
+- 관계 요약 및 인덱스, 삭제 규칙을 업데이트했다.
+
+### Details
+- 작업 사유: 슬롯 하나에 여러 반 학생이 합산 정원으로 참여하는 구조 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/design/full-erd.md`
+  - `docs/design/final-entity-spec.md`
+- 다음 단계: 검증 후 `docs/requirement/v1.4.md`, `docs/spec/v1.4.md` 업데이트.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 00:25] Clinic 슬롯-코스 M:N 요구사항/스펙 갱신
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlotCourse 기반 M:N 요구사항을 v1.4로 반영했다.
+- ClinicSlot 연결/정원 규칙과 Student 기본 슬롯 검증을 스펙에 추가했다.
+- ClinicSlot API 설명을 슬롯-반 연결 구조에 맞게 수정했다.
+
+### Details
+- 작업 사유: 슬롯 하나에 여러 반을 연결하는 클리닉 운영 규칙 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: TODO 및 PLAN 업데이트 필요 시 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 11:25] Clinic 설계에서 Slot-코스 연결 제거
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlotCourse 엔티티/관계를 제거하고 teacher+branch 기반 논리 연결로 정리했다.
+- ClinicSession에 startTime/endTime 필드를 추가해 긴급 세션 시간을 명시했다.
+- defaultClinicSlotId 검증 규칙(동일 teacher/branch, 중복/시간 겹침 금지)을 명시했다.
+
+### Details
+- 작업 사유: 슬롯 목록을 선생님 기준으로 통합하고 긴급 세션 시간 지정 요구 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/design/full-erd.md`
+  - `docs/design/final-entity-spec.md`
+- 다음 단계: 사용자 검증 후 v1.4 requirement/spec 갱신.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 11:38] Requirement/Spec v1.4 문서 재작성
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot teacher/branch 기준 규칙과 defaultClinicSlotId 검증을 v1.4 요구사항에 반영했다.
+- ClinicSession startTime/endTime 및 긴급 세션 시간 입력 규칙을 스펙에 추가했다.
+- v1.4 requirement/spec 문서를 v1.3 기반으로 새로 정리했다.
+
+### Details
+- 작업 사유: ClinicSlotCourse 제거 및 클리닉 시간표 규칙 변경 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 사용자 검토 후 TODO/PLAN 갱신.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 11:57] Clinic 자동 생성 흐름 명확화
+
+### Type
+DESIGN
+
+### Summary
+- 주간 ClinicSession 생성 후 Attendance 생성 순서를 스펙에 명시했다.
+- ClinicAttendance 자동 생성 흐름을 섹션 2.3.2와 4.8.3에 추가했다.
+
+### Details
+- 작업 사유: ClinicSession → ClinicAttendance 자동 생성 규칙을 명확히 문서화.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 12:07] 학생 추가 참석 신청 API 명시
+
+### Type
+DESIGN
+
+### Summary
+- 학생 전용 ClinicAttendance 추가 신청 API를 스펙에 추가했다.
+- requirement에 학생 직접 신청 문구를 보강했다.
+
+### Details
+- 작업 사유: 추가 참석 신청을 학생 API로 분리하라는 요구 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 12:45] Clinic 운영 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot 생성/변경 시 세션 생성 시점과 기본 슬롯 적용 시점을 스펙에 명시했다.
+- 세션 취소 처리와 학생 참석 목록 조회 정의를 추가했다.
+- 학생 추가 신청/이동의 검증 규칙을 구체화했다.
+
+### Details
+- 작업 사유: 운영 규칙 확정(주간 생성, 다음 주 적용, 취소 정책) 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 사용자 확인 후 API 설계 확정.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 12:54] ClinicSession 수정 제거
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSession 수정 없이 취소 후 재생성하도록 requirement를 정리했다.
+- 조교 세션 관리 문구에서 수정 항목을 제거했다.
+
+### Details
+- 작업 사유: 세션 수정 API 없이 취소/재생성 정책 확정.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 14:18] Clinic API 역할별 정리 반영
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot/Session API를 teacher/assistant/student 역할에 맞게 분리했다.
+- branchId/teacherId 파라미터 구분과 student courseId 조회 규칙을 명시했다.
+
+### Details
+- 작업 사유: 역할별 API 호출 방식 확정.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/spec/v1.4.md`
+- 다음 단계: 프런트 화면 설계 문서 작성.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 14:56] ClinicSlot 정원 제한 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- defaultClinicSlotId 지정 인원이 slot.defaultCapacity를 초과할 수 없음을 엔티티 스펙에 추가했다.
+
+### Details
+- 작업 사유: 슬롯 정원 초과 방지 규칙을 설계 문서에 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/design/final-entity-spec.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:04] 학생 세션 조회/그룹핑 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생의 teacher/branch 기준 슬롯 그룹핑과 세션 조회 규칙을 명시했다.
+- 학생 추가 신청/이동을 위한 ClinicSessions 조회 권한을 추가했다.
+
+### Details
+- 작업 사유: 학생 UI 흐름(추가/이동)을 API와 연결.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:05] Clinic API 역할별 스펙 보강
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot/ClinicSession/ClinicAttendance API 설명을 역할별 요청 파라미터에 맞춰 보강했다.
+- 긴급 세션 생성 시 Assistant의 teacherId 전달 규칙을 명시했다.
+
+### Details
+- 작업 사유: 역할별 API 목록을 스펙에 일치시키기 위해 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/spec/v1.4.md`
+- 다음 단계: 없음.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:32] Clinic 백엔드 PLAN 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- Clinic 도메인(슬롯/세션/출석/기록) 백엔드 PLAN을 v1.4 스펙 기준으로 상세 작성했다.
+- 배치/권한/검증/테스트 계획을 단계별로 정리했다.
+
+### Details
+- 작업 사유: Season2 Clinic 백엔드 구현을 위한 상세 설계 확보.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: PLAN 리뷰 및 승인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:58] Clinic PLAN 기본 슬롯 정책 보완
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot 수정 시 defaultClinicSlotId 자동 해제 규칙을 명시했다.
+- 학생의 defaultClinicSlotId 최초 지정 API와 1회 제한 규칙을 추가했다.
+
+### Details
+- 작업 사유: Slot 수정/학생 지정 동작을 명확히 하기 위해 PLAN을 보완.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: PLAN 피드백 반영 후 승인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 15:59] Clinic PLAN 학생 기본 슬롯 변경 허용
+
+### Type
+DESIGN
+
+### Summary
+- 학생이 defaultClinicSlotId를 반복 변경할 수 있도록 PLAN을 수정했다.
+- 최초 1회 제한 관련 요구/테스트/설계 문구를 제거했다.
+
+### Details
+- 작업 사유: 학생 변경 제한이 불필요하다는 피드백 반영.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: 요구사항/스펙 문서와 정합성 확인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 16:03] Clinic SLOT 수정 규칙 및 개선 백로그 추가
+
+### Type
+DESIGN
+
+### Summary
+- Slot 요일/시간 변경 시 defaultClinicSlotId 해제, 정원 변경은 해제 없이 검증하도록 PLAN을 수정했다.
+- Slot 변경 알림 기능을 개선 백로그에 추가했다.
+
+### Details
+- 작업 사유: Slot 변경 정책과 후속 알림을 명확히 하기 위해 문서를 보완.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+  - `docs/refactor/improvment-backlog.md`
+- 다음 단계: PLAN 피드백 반영 후 승인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 16:12] Clinic Phase0 엔티티 스키마 반영
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSlot에서 courseId를 제거하고 teacher/branch 중심 필드만 남겼다.
+- ClinicSession에 startTime/endTime 필드를 추가하고 출석 집계 쿼리를 갱신했다.
+
+### Details
+- 작업 사유: v1.4 스펙의 슬롯 공유 및 세션 시간 필드 반영을 위한 스키마 정리.
+- 영향받은 테스트: `ClinicAttendanceRepositoryTest` 헬퍼 업데이트.
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryTest.java`
+- 다음 단계: Phase0 추가 엔티티 변경 여부 확인.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 16:21] ClinicSlot 기반 리포지토리/코드 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSlot 조회용 리포지토리 메서드와 테스트를 추가했다.
+- defaultClinicSlotId 인원 집계를 위한 StudentCourseRecord 카운트 메서드를 추가했다.
+- ClinicSlot 검증용 RsCode를 확장했다.
+
+### Details
+- 작업 사유: Phase 1-1 기초 계약/검증 준비.
+- 영향받은 테스트:
+  - `ClinicSlotRepositoryTest`
+  - `StudentCourseRecordRepositoryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepositoryTest.java`
+- 다음 단계: ClinicSlot 서비스/검증 로직 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 16:33] ClinicSlot 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSlot 생성/수정/삭제 서비스와 DTO를 추가했다.
+- 일정 변경 시 기본 슬롯 해제 및 정원 감소 검증 로직을 구현했다.
+
+### Details
+- 작업 사유: Phase 1-2 ClinicSlot 서비스 로직을 TDD로 구현.
+- 영향받은 테스트:
+  - `ClinicSlotServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/dto/request/ClinicSlotCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/dto/request/ClinicSlotUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+- 다음 단계: ClinicSlot API/Controller 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 16:39] ClinicSlot API 컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSlot 조회/생성/수정/삭제 API와 응답 DTO를 추가했다.
+- Teacher/Assistant/Student 역할별 슬롯 조회 라우팅을 구현했다.
+
+### Details
+- 작업 사유: Phase 1-3 ClinicSlot API 구현.
+- 영향받은 테스트:
+  - `ClinicSlotControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/dto/response/ClinicSlotResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/dto/request/ClinicSlotCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/dto/request/ClinicSlotUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+- 다음 단계: ClinicSlot API 후속 권한/검증 보강 및 다른 Clinic 도메인 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 16:52] ClinicSession 리포지토리 쿼리 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSession에 teacherMemberId/branchId 필드를 추가하고 조회 인덱스를 확장했다.
+- Slot+date 중복 조회 및 teacher/branch 날짜 범위 조회 리포지토리/테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 2-1 세션 조회/중복 확인을 위한 데이터 접근 준비.
+- 영향받은 테스트:
+  - `ClinicSessionRepositoryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryTest.java`
+- 다음 단계: ClinicSession 서비스/검증 로직 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 17:12] ClinicSession 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSession 생성/긴급 생성/취소 서비스 로직을 추가했다.
+- Emergency 요청 DTO 및 세션 관련 RsCode를 확장했다.
+
+### Details
+- 작업 사유: Phase 2-2 서비스 로직과 검증 규칙 구현.
+- 영향받은 테스트:
+  - `ClinicSessionServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/dto/request/ClinicSessionEmergencyCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionServiceTest.java`
+- 다음 단계: ClinicSession API/Controller 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 17:44] ClinicSession API 컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSession 조회/정규 생성/긴급 생성/취소 API를 추가했다.
+- 역할별 세션 조회 서비스 메서드와 관련 DTO를 보강했다.
+
+### Details
+- 작업 사유: Phase 2-3 컨트롤러/API 구현.
+- 영향받은 테스트:
+  - `ClinicSessionControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/dto/request/ClinicSessionRegularCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/dto/response/ClinicSessionResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionServiceTest.java`
+- 다음 단계: ClinicSession 배치/스케줄러 설계 확정 후 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 17:57] Clinic 컨트롤러 역할 분기 리팩터링
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSlot/ClinicSession 컨트롤러의 역할 분기와 dateRange 파싱을 서비스/유틸로 이동했다.
+- 공통 dateRange 파서를 global util로 추가했다.
+
+### Details
+- 작업 사유: 컨트롤러에서 비즈니스 분기/파싱 로직 제거.
+- 영향받은 테스트:
+  - `ClinicSlotControllerTest`
+  - `ClinicSessionControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionController.java`
+  - `backend/src/main/java/com/classhub/global/util/DateRangeParser.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/web/ClinicSlotControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionControllerTest.java`
+- 다음 단계: ClinicSession 배치/스케줄러 설계 확정 후 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 18:01] Clinic 배치/스케줄러 계획 상세화
+
+### Type
+DESIGN
+
+### Summary
+- 배치/스케줄러 동작 규칙과 예외 처리 방식을 PLAN에 상세히 추가했다.
+- 구현 단계에서 배치가 Phase 3 이후로 이동하도록 로드맵을 조정했다.
+
+### Details
+- 작업 사유: 배치/자동 생성의 기준과 예외 케이스를 명확히 하기 위해 계획을 보강.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: Phase 3 완료 후 배치 구현 착수.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 18:09] ClinicAttendance 조회/정책 기반 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicAttendance 조회/겹침 검사용 Repository 쿼리를 추가했다.
+- Attendance 시간 정책 유틸(락/이동/주차 계산)을 추가했다.
+
+### Details
+- 작업 사유: Phase 3-1 Attendance 검증 기반 준비.
+- 영향받은 테스트:
+  - `ClinicAttendanceRepositoryQueryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/support/ClinicAttendancePolicy.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepositoryQueryTest.java`
+- 다음 단계: Attendance 서비스 로직 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 18:16] ClinicAttendance 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicAttendance 생성/학생 신청/이동 서비스 로직을 추가했다.
+- 출석 중복/정원/시간 겹침 검증을 포함했다.
+
+### Details
+- 작업 사유: Phase 3-2 서비스 로직 구현.
+- 영향받은 테스트:
+  - `ClinicAttendanceServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+- 다음 단계: Attendance API/Controller 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 18:22] ClinicAttendance API 컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicAttendance CRUD/학생 신청/이동 API를 추가했다.
+- 학생 출석 목록 조회 응답 DTO를 추가했다.
+
+### Details
+- 작업 사유: Phase 3-3 컨트롤러/API 구현.
+- 영향받은 테스트:
+  - `ClinicAttendanceControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/request/ClinicAttendanceCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/request/ClinicAttendanceMoveRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/ClinicAttendanceResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/StudentClinicAttendanceResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/StudentClinicAttendanceListResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 18:29] Clinic 세션/출석 응답 매핑 리팩터링
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicSession/ClinicAttendance 컨트롤러의 응답 매핑을 서비스로 이동했다.
+- 학생 출석 응답을 서비스에서 조합하도록 정리했다.
+
+### Details
+- 작업 사유: 컨트롤러에서 응답/조인 로직 제거.
+- 영향받은 테스트:
+  - `ClinicSessionControllerTest`
+  - `ClinicAttendanceControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/web/ClinicSessionControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 18:45] 클리닉 출석부 학생 정보 확장
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석부 API 응답에 학생 기본 정보와 나이를 포함하도록 확장했다.
+- 출석부 조회용 projection 쿼리와 서비스 매핑을 추가했다.
+
+### Details
+- 작업 사유: 출석부 화면에 학생 정보(이름/연락처/학교/학년/보호자/나이) 제공.
+- 영향받은 테스트:
+  - `ClinicAttendanceControllerTest`
+  - `ClinicAttendanceServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/ClinicAttendanceDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceDetailProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:01] 클리닉 출석부 recordId/나이 응답 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석부 응답에 `recordId`를 포함해 작성/수정 버튼 분기 근거를 제공했다.
+- 출석 상세 projection 및 서비스 매핑을 갱신했다.
+
+### Details
+- 작업 사유: 출석부에서 기록 작성 여부를 판별하기 위한 식별자 제공.
+- 영향받은 테스트:
+  - `ClinicAttendanceControllerTest`
+  - `ClinicAttendanceServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/dto/response/ClinicAttendanceDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceDetailProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: ClinicRecord API 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:02] ClinicRecord PLAN 상세 보강
+
+### Type
+DESIGN
+
+### Summary
+- ClinicRecord 생성/조회/수정 흐름과 출석부 연동 규칙을 상세화했다.
+- Assistant 권한 조건 및 학생 조회 차단 규칙을 명시했다.
+
+### Details
+- 작업 사유: ClinicRecord 구현 범위와 검증 규칙을 명확히 하기 위해 PLAN 보강.
+- 영향받은 테스트: 없음 (문서 변경).
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: ClinicRecord 구현 착수.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:04] ClinicRecord 리포지토리 준비
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicRecord 조회/중복 확인을 위한 Repository 메서드를 추가했다.
+- ClinicRecordRepository 테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 4-1 ClinicRecord 조회/검증 기반 준비.
+- 영향받은 테스트:
+  - `ClinicRecordRepositoryTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/repository/ClinicRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/repository/ClinicRecordRepositoryTest.java`
+- 다음 단계: ClinicRecord 서비스 로직 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:10] ClinicRecord 서비스 TDD 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicRecord 생성/조회 서비스 로직과 권한 검증을 추가했다.
+- ClinicRecord 관련 RsCode와 요청 DTO를 추가했다.
+
+### Details
+- 작업 사유: Phase 4-2 ClinicRecord 서비스 구현.
+- 영향받은 테스트:
+  - `ClinicRecordServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/dto/request/ClinicRecordCreateRequest.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordServiceTest.java`
+- 다음 단계: ClinicRecord API/Controller 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:22] ClinicRecord 수정/삭제 서비스 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicRecord 수정/삭제 서비스 로직과 DTO를 추가했다.
+- ClinicRecord 엔티티에 update 메서드를 추가했다.
+
+### Details
+- 작업 사유: ClinicRecord CRUD 완성.
+- 영향받은 테스트:
+  - `ClinicRecordServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/dto/request/ClinicRecordUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/model/ClinicRecord.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/application/ClinicRecordServiceTest.java`
+- 다음 단계: ClinicRecord API/Controller 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:25] ClinicRecord API 컨트롤러 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicRecord CRUD API와 응답 DTO를 추가했다.
+- Controller/MockMvc 테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 4-3 ClinicRecord API 구현.
+- 영향받은 테스트:
+  - `ClinicRecordControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/web/ClinicRecordController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicrecord/dto/response/ClinicRecordResponse.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicrecord/web/ClinicRecordControllerTest.java`
+- 다음 단계: Permission/Policy 정리 및 배치 단계 준비.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 19:29] 학생 캘린더 ClinicRecord 숙제 필드 반영
+
+### Type
+DESIGN
+
+### Summary
+- StudentCalendar의 ClinicRecord 응답에 homeworkProgress 필드를 추가했다.
+
+### Details
+- 작업 사유: 캘린더에 숙제 진행 상태를 노출하기 위한 스펙 반영.
+- 영향받은 테스트:
+  - `StudentCalendarServiceTest`
+  - `StudentCalendarControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceEventProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/StudentCalendarResponse.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+  - `docs/spec/v1.4.md`
+- 다음 단계: Permission/Policy 정리 및 배치 단계 준비.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 20:45] 학생 기본 클리닉 슬롯 설정 API 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 기본 클리닉 슬롯 변경 서비스와 검증 로직을 추가했다.
+- 기본 슬롯 지정 API와 관련 DTO/테스트를 확장했다.
+
+### Details
+- 작업 사유: Phase 4.5 학생 기본 슬롯 설정 및 검증 구현.
+- 영향받은 테스트:
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicSessionRepositoryTest`
+  - `StudentCourseControllerTest`
+  - `StudentCourseManagementServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/request/StudentDefaultClinicSlotRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentDefaultClinicSlotResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+- 다음 단계: 배치/스케줄러(Phase 5) 구현 준비.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 22:39] 클리닉 동시성 충돌 처리(낙관적 락)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 슬롯/세션/학생 기록에 낙관적 락 버전을 추가했다.
+- 동시성 충돌을 새 RsCode로 매핑하고 서비스가 락 조회를 사용하도록 수정했다.
+
+### Details
+- 작업 사유: defaultClinicSlot 지정 및 Attendance 신청/이동 시 동시성 충돌 방지.
+- 영향받은 테스트:
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicAttendanceServiceTest`
+  - `StudentCourseControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/model/ClinicSlot.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/model/ClinicSession.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseRecord.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicsession/repository/ClinicSessionRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/global/exception/GlobalExceptionHandler.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicdefaultslot/application/ClinicDefaultSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicattendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+- 다음 단계: 배치/스케줄러(Phase 5) 준비.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 22:46] Phase 5 배치 예외 정책 설계 보강
+
+### Type
+DESIGN
+
+### Summary
+- Batch/Scheduler 단계의 슬롯/세션/출석 예외 처리 정책을 상세화했다.
+- ClinicBatchService 테스트 범위를 예외 케이스 중심으로 보강했다.
+
+### Details
+- 작업 사유: 배치 시스템의 예외 상황을 체계적으로 커버하기 위한 설계 정리.
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-management_plan.md`
+- 다음 단계: Phase 5 배치 구현 전 승인 및 TDD 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 22:50] Phase 5-1 주간 세션 배치 코어 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 ClinicSession 자동 생성 배치 코어를 추가했다.
+- 활성 슬롯 기반 idempotent 세션 생성과 기본 검증을 구현했다.
+
+### Details
+- 작업 사유: Phase 5-1 주간 세션 생성 로직 구현.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/repository/ClinicSlotRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+- 다음 단계: Phase 5-2 Attendance 자동 생성 로직 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-22 23:07] Phase 5-2 출석 자동 생성 로직 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 배치에서 defaultClinicSlotId 기반 출석 자동 생성을 추가했다.
+- 정원 초과/중복/시간 겹침 스킵 로직을 포함했다.
+
+### Details
+- 작업 사유: Phase 5-2 Attendance 자동 생성 구현.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+- 다음 단계: Phase 5-3 스케줄러/주중 슬롯 처리.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:09] Phase 5-3 스케줄러 및 주중 슬롯 처리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 배치 스케줄러를 추가하고 주중 슬롯 생성 시 잔여 세션/출석 자동 생성을 연결했다.
+- ClinicBatchService에 잔여 세션 생성 및 출석 생성 로직을 확장했다.
+
+### Details
+- 작업 사유: Phase 5-3 스케줄러/주중 슬롯 처리 구현.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+  - `ClinicBatchSchedulerTest`
+  - `ClinicSlotServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchScheduler.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/global/config/SchedulingConfig.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchSchedulerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 배치 예외 케이스 확대 및 모니터링 로그 추가.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:15] 배치 예외 스킵 로직 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 배치 세션/출석 생성 중 동시성·중복 예외를 스킵하도록 보강했다.
+- 예외 케이스 테스트를 추가해 배치가 중단되지 않도록 검증했다.
+
+### Details
+- 작업 사유: 배치 예외 상황을 스킵+로그로 처리하도록 강화.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicbatch/application/ClinicBatchServiceTest.java`
+- 다음 단계: 배치 요약 로그/모니터링 추가 여부 검토.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:21] 배치/기본 슬롯 패키지 구조 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- clinicbatch 패키지를 clinic/batch로 이동하고 scheduler 분리 구조로 정리했다.
+- ClinicDefaultSlotService를 clinicslot/application로 이동했다.
+
+### Details
+- 작업 사유: 패키지 구조 개선 및 역할 분리.
+- 영향받은 테스트:
+  - `ClinicBatchServiceTest`
+  - `ClinicBatchSchedulerTest`
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicSlotServiceTest`
+  - `StudentCourseControllerTest`
+  - `StudentCourseManagementServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/batch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/batch/scheduler/ClinicBatchScheduler.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/batch/application/ClinicBatchServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/batch/scheduler/ClinicBatchSchedulerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicDefaultSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/clinicslot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+- 다음 단계: Phase 6 권한/정책 정리 준비.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:35] 클리닉 하위 패키지 네이밍 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- clinic 하위 패키지명을 attendance/session/slot/record로 일괄 변경했다.
+- 관련 테스트 패키지와 import 경로를 모두 정리했다.
+
+### Details
+- 작업 사유: 패키지 명명 일관성 개선.
+- 영향받은 테스트:
+  - `ClinicAttendanceServiceTest`
+  - `ClinicAttendanceControllerTest`
+  - `ClinicAttendanceRepositoryTest`
+  - `ClinicAttendanceRepositoryQueryTest`
+  - `ClinicSessionServiceTest`
+  - `ClinicSessionRepositoryTest`
+  - `ClinicSessionControllerTest`
+  - `ClinicSlotServiceTest`
+  - `ClinicSlotRepositoryTest`
+  - `ClinicSlotControllerTest`
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicRecordServiceTest`
+  - `ClinicRecordRepositoryTest`
+  - `ClinicRecordControllerTest`
+  - `ClinicBatchServiceTest`
+  - `ClinicBatchSchedulerTest`
+  - `StudentCalendarServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/record/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/**`
+  - `backend/src/test/java/com/classhub/domain/clinic/record/**`
+  - `backend/src/main/java/com/classhub/domain/clinic/batch/application/ClinicBatchService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/batch/application/ClinicBatchServiceTest.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/application/StudentCalendarService.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
+- 다음 단계: Phase 6 권한/정책 정리.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:46] 클리닉 권한 검증 로직 통합
+
+### Type
+STRUCTURAL
+
+### Summary
+- ClinicPermissionValidator를 추가해 권한 검증 로직을 중앙화했다.
+- 슬롯/세션/출석/기록 서비스가 공통 validator를 사용하도록 정리했다.
+
+### Details
+- 작업 사유: Phase 6 권한/정책 정리 준비.
+- 영향받은 테스트:
+  - `ClinicPermissionValidatorTest`
+  - `ClinicSlotServiceTest`
+  - `ClinicSessionServiceTest`
+  - `ClinicAttendanceServiceTest`
+  - `ClinicRecordServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/permission/application/ClinicPermissionValidator.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/record/application/ClinicRecordService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/permission/application/ClinicPermissionValidatorTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/application/ClinicSessionServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/record/application/ClinicRecordServiceTest.java`
+- 다음 단계: 권한 RsCode 매핑 정리 및 통합 테스트 점검.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:50] defaultClinicSlotId RsCode 매핑 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 기본 슬롯의 teacher/branch 불일치 시 RsCode를 CLINIC_SLOT_NOT_FOUND로 통일했다.
+- 해당 매핑을 검증하는 테스트를 추가했다.
+
+### Details
+- 작업 사유: Phase 6 RsCode 매핑 정리.
+- 영향받은 테스트:
+  - `ClinicDefaultSlotServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotServiceTest.java`
+- 다음 단계: 권한/정책 정리 이어서 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 01:54] Phase 7 클리닉 통합 시나리오 테스트
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 배치 생성, 학생 이동, 세션 취소 시나리오를 통합 테스트로 검증했다.
+
+### Details
+- 작업 사유: Phase 7 시나리오 통합 테스트 보강.
+- 영향받은 테스트:
+  - `ClinicScenarioIntegrationTest`
+- 수정한 파일:
+  - `backend/src/test/java/com/classhub/domain/clinic/scenario/ClinicScenarioIntegrationTest.java`
+- 다음 단계: Phase 6 RsCode 정리 마무리 또는 추가 시나리오 확장 검토.
+- MCP: 사용하지 않음.

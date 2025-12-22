@@ -5,24 +5,31 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.studentcourse.application.StudentCourseQueryService;
+import com.classhub.domain.studentcourse.dto.request.StudentDefaultClinicSlotRequest;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseResponse;
+import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,6 +37,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -44,8 +52,14 @@ class StudentCourseControllerTest {
     @Autowired
     private WebApplicationContext context;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private StudentCourseQueryService queryService;
+
+    @MockitoBean
+    private ClinicDefaultSlotService clinicDefaultSlotService;
 
     private MemberPrincipal studentPrincipal;
 
@@ -103,6 +117,52 @@ class StudentCourseControllerTest {
                 .andExpect(jsonPath("$.data.content[0].course.name").value("중3 수학"));
 
         verify(queryService).getMyCourses(studentPrincipal.id(), "수학", 0, 10);
+    }
+
+    @Test
+    void updateDefaultClinicSlot_shouldReturnUpdatedSlot() throws Exception {
+        UUID courseId = UUID.randomUUID();
+        UUID slotId = UUID.randomUUID();
+        StudentDefaultClinicSlotRequest request = new StudentDefaultClinicSlotRequest(slotId);
+        StudentCourseRecord record = StudentCourseRecord.create(studentPrincipal.id(), courseId, null, slotId, null);
+        ReflectionTestUtils.setField(record, "id", UUID.randomUUID());
+
+        given(clinicDefaultSlotService.updateDefaultSlotForStudent(studentPrincipal.id(), courseId, slotId))
+                .willReturn(record);
+
+        mockMvc.perform(patch("/api/v1/students/me/courses/{courseId}/clinic-slot", courseId)
+                        .with(auth())
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
+                .andExpect(jsonPath("$.data.studentCourseRecordId").value(record.getId().toString()))
+                .andExpect(jsonPath("$.data.defaultClinicSlotId").value(slotId.toString()));
+
+        verify(clinicDefaultSlotService).updateDefaultSlotForStudent(studentPrincipal.id(), courseId, slotId);
+    }
+
+    @Test
+    void updateDefaultClinicSlot_shouldReturnConflict_whenOptimisticLockFails() throws Exception {
+        UUID courseId = UUID.randomUUID();
+        UUID slotId = UUID.randomUUID();
+        StudentDefaultClinicSlotRequest request = new StudentDefaultClinicSlotRequest(slotId);
+        ObjectOptimisticLockingFailureException exception = new ObjectOptimisticLockingFailureException(
+                StudentCourseRecord.class,
+                UUID.randomUUID()
+        );
+
+        given(clinicDefaultSlotService.updateDefaultSlotForStudent(studentPrincipal.id(), courseId, slotId))
+                .willThrow(exception);
+
+        mockMvc.perform(patch("/api/v1/students/me/courses/{courseId}/clinic-slot", courseId)
+                        .with(auth())
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(RsCode.CONCURRENT_UPDATE.getCode()));
+
+        verify(clinicDefaultSlotService).updateDefaultSlotForStudent(studentPrincipal.id(), courseId, slotId);
     }
 
     private RequestPostProcessor auth() {

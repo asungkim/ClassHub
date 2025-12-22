@@ -22,6 +22,7 @@ public enum RsCode {
     UNAUTHORIZED(RsConstant.FORBIDDEN, "접근 권한이 없습니다."),
     MEMBER_NOT_FOUND(RsConstant.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
     DUPLICATE_EMAIL(RsConstant.CONFLICT, "이미 사용 중인 이메일입니다."),
+    CONCURRENT_UPDATE(RsConstant.CONFLICT, "동시 요청으로 작업을 처리할 수 없습니다."),
     MEMBER_INACTIVE(RsConstant.UNAUTHORIZED, "비활성화된 계정입니다."),
 
     // ===== Invitation =====
@@ -50,6 +51,24 @@ public enum RsCode {
     SHARED_LESSON_NOT_FOUND(RsConstant.NOT_FOUND, "공통 진도 기록을 찾을 수 없습니다."),
     CLINIC_SLOT_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 슬롯을 찾을 수 없습니다."),
     CLINIC_SLOT_CONFLICT(RsConstant.CONFLICT, "다른 클리닉 슬롯과 시간이 겹칩니다."),
+    CLINIC_SLOT_TIME_INVALID(RsConstant.BAD_REQUEST, "클리닉 슬롯 시간이 올바르지 않습니다."),
+    CLINIC_SLOT_TIME_OVERLAP(RsConstant.CONFLICT, "클리닉 슬롯 시간이 겹칩니다."),
+    CLINIC_SLOT_CAPACITY_CONFLICT(RsConstant.CONFLICT, "클리닉 슬롯 정원이 현재 배정 인원보다 작습니다."),
+    CLINIC_SLOT_CAPACITY_EXCEEDED(RsConstant.CONFLICT, "클리닉 슬롯 정원이 초과되었습니다."),
+    CLINIC_SLOT_DUPLICATED(RsConstant.CONFLICT, "이미 선택된 클리닉 슬롯입니다."),
+    CLINIC_SESSION_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 세션을 찾을 수 없습니다."),
+    CLINIC_SESSION_ALREADY_EXISTS(RsConstant.CONFLICT, "이미 생성된 클리닉 세션입니다."),
+    CLINIC_SESSION_TIME_INVALID(RsConstant.BAD_REQUEST, "클리닉 세션 시간이 올바르지 않습니다."),
+    CLINIC_SESSION_CANCEL_FORBIDDEN(RsConstant.CONFLICT, "클리닉 세션을 취소할 수 없습니다."),
+    CLINIC_SESSION_CANCELED(RsConstant.CONFLICT, "취소된 클리닉 세션입니다."),
+    CLINIC_SESSION_FULL(RsConstant.CONFLICT, "클리닉 세션 정원이 초과되었습니다."),
+    CLINIC_ATTENDANCE_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 출석 정보를 찾을 수 없습니다."),
+    CLINIC_ATTENDANCE_DUPLICATED(RsConstant.CONFLICT, "이미 등록된 클리닉 출석입니다."),
+    CLINIC_ATTENDANCE_TIME_OVERLAP(RsConstant.CONFLICT, "클리닉 시간이 겹칩니다."),
+    CLINIC_ATTENDANCE_LOCKED(RsConstant.CONFLICT, "클리닉 출석을 변경할 수 없습니다."),
+    CLINIC_ATTENDANCE_MOVE_FORBIDDEN(RsConstant.CONFLICT, "클리닉 이동이 불가능합니다."),
+    CLINIC_RECORD_NOT_FOUND(RsConstant.NOT_FOUND, "클리닉 기록을 찾을 수 없습니다."),
+    CLINIC_RECORD_ALREADY_EXISTS(RsConstant.CONFLICT, "클리닉 기록이 이미 존재합니다."),
 
     // ===== Enrollment =====
     STUDENT_ENROLLMENT_REQUEST_NOT_FOUND(RsConstant.NOT_FOUND, "수업 신청을 찾을 수 없습니다."),

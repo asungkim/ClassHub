@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -38,6 +39,10 @@ public class StudentCourseRecord extends BaseEntity {
 
     @Column(name = "teacher_notes", columnDefinition = "TEXT")
     private String teacherNotes;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     @Builder
     private StudentCourseRecord(UUID studentMemberId,
