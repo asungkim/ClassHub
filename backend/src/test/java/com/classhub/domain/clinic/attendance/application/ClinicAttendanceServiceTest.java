@@ -93,7 +93,6 @@ class ClinicAttendanceServiceTest {
     void requestAttendance_shouldThrow_whenSessionCanceled() {
         UUID teacherId = UUID.randomUUID();
         UUID studentId = UUID.randomUUID();
-        UUID recordId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
@@ -104,7 +103,7 @@ class ClinicAttendanceServiceTest {
         given(clinicSessionRepository.findByIdAndDeletedAtIsNullForUpdate(sessionId))
                 .willReturn(Optional.of(session));
 
-        assertThatThrownBy(() -> clinicAttendanceService.requestAttendance(principal, sessionId, recordId))
+        assertThatThrownBy(() -> clinicAttendanceService.requestAttendance(principal, sessionId, courseId))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SESSION_CANCELED);
     }

@@ -87,15 +87,17 @@ public class ClinicAttendanceService {
         clinicAttendanceRepository.delete(attendance);
     }
 
-    public ClinicAttendance requestAttendance(MemberPrincipal principal, UUID sessionId, UUID recordId) {
+    public ClinicAttendance requestAttendance(MemberPrincipal principal, UUID sessionId, UUID courseId) {
         ensureStudentRole(principal);
+        if (courseId == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
         ClinicSession session = loadSessionForUpdate(sessionId);
         ensureSessionActive(session);
         ensureSessionNotLocked(session);
-        StudentCourseRecord record = loadActiveRecord(recordId);
-        if (!Objects.equals(record.getStudentMemberId(), principal.id())) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
+        StudentCourseRecord record = studentCourseRecordRepository
+                .findByStudentMemberIdAndCourseIdAndDeletedAtIsNull(principal.id(), courseId)
+                .orElseThrow(RsCode.STUDENT_COURSE_RECORD_NOT_FOUND::toException);
         Course course = loadCourse(record.getCourseId());
         ensureRecordMatchesSession(course, session);
         ensureAttendanceCreatable(session, record.getId());

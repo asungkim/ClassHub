@@ -4581,3 +4581,34 @@ DESIGN
   - `docs/plan/backend/season2/clinic-student-context_plan.md`
 - 다음 단계: 계획 리뷰/승인 후 백엔드 API 변경 설계 확정 및 구현 착수.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 12:57] 학생 클리닉 컨텍스트 API 및 참석 요청 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 컨텍스트 조회 API를 추가해 teacher/branch 기반 UI 구성이 가능해졌다.
+- 학생 추가 참석 요청을 courseId 기반으로 단순화했다.
+- 관련 서비스/컨트롤러와 테스트를 업데이트했다.
+
+### Details
+- 작업 사유: 학생 시간표 중심 UX에 필요한 컨텍스트 제공 및 요청 파라미터 단순화.
+- 영향받은 테스트:
+  - `StudentClinicContextQueryServiceTest`
+  - `StudentClinicContextControllerTest`
+  - `ClinicAttendanceServiceTest`
+  - `ClinicAttendanceControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentClinicContextQueryService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentClinicContextController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentClinicContextResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/dto/request/StudentClinicAttendanceRequest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentClinicContextQueryServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentClinicContextControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: 프론트 API 연동 및 학생 시간표 UI 구현.
+- MCP: 사용하지 않음.

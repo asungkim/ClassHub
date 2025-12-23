@@ -3,6 +3,7 @@ package com.classhub.domain.clinic.attendance.web;
 import com.classhub.domain.clinic.attendance.application.ClinicAttendanceService;
 import com.classhub.domain.clinic.attendance.dto.request.ClinicAttendanceCreateRequest;
 import com.classhub.domain.clinic.attendance.dto.request.ClinicAttendanceMoveRequest;
+import com.classhub.domain.clinic.attendance.dto.request.StudentClinicAttendanceRequest;
 import com.classhub.domain.clinic.attendance.dto.response.ClinicAttendanceDetailResponse;
 import com.classhub.domain.clinic.attendance.dto.response.ClinicAttendanceResponse;
 import com.classhub.domain.clinic.attendance.dto.response.StudentClinicAttendanceListResponse;
@@ -79,11 +80,10 @@ public class ClinicAttendanceController {
     @Operation(summary = "학생 클리닉 참석 신청")
     public RsData<ClinicAttendanceResponse> requestAttendance(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @RequestParam("clinicSessionId") UUID clinicSessionId,
-            @RequestParam("studentCourseRecordId") UUID studentCourseRecordId
+            @Valid @RequestBody StudentClinicAttendanceRequest request
     ) {
         ClinicAttendance attendance = clinicAttendanceService
-                .requestAttendance(principal, clinicSessionId, studentCourseRecordId);
+                .requestAttendance(principal, request.clinicSessionId(), request.courseId());
         return RsData.from(RsCode.CREATED, ClinicAttendanceResponse.from(attendance));
     }
 

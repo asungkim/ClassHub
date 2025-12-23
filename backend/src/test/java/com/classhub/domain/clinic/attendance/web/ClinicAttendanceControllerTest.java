@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.classhub.domain.clinic.attendance.application.ClinicAttendanceService;
 import com.classhub.domain.clinic.attendance.dto.request.ClinicAttendanceCreateRequest;
 import com.classhub.domain.clinic.attendance.dto.request.ClinicAttendanceMoveRequest;
+import com.classhub.domain.clinic.attendance.dto.request.StudentClinicAttendanceRequest;
 import com.classhub.domain.clinic.attendance.dto.response.ClinicAttendanceDetailResponse;
 import com.classhub.domain.clinic.attendance.model.ClinicAttendance;
 import com.classhub.domain.clinic.attendance.dto.response.StudentClinicAttendanceListResponse;
@@ -136,21 +137,23 @@ class ClinicAttendanceControllerTest {
     void requestAttendance_shouldReturnCreated() throws Exception {
         UUID studentId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
         UUID recordId = UUID.randomUUID();
         ClinicAttendance attendance = createAttendance(sessionId, recordId);
-        given(clinicAttendanceService.requestAttendance(any(MemberPrincipal.class), eq(sessionId), eq(recordId)))
+        StudentClinicAttendanceRequest request = new StudentClinicAttendanceRequest(sessionId, courseId);
+        given(clinicAttendanceService.requestAttendance(any(MemberPrincipal.class), eq(sessionId), eq(courseId)))
                 .willReturn(attendance);
 
         mockMvc.perform(post("/api/v1/students/me/clinic-attendances")
-                        .param("clinicSessionId", sessionId.toString())
-                        .param("studentCourseRecordId", recordId.toString())
-                        .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(studentId, MemberRole.STUDENT))))
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(studentId, MemberRole.STUDENT)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(RsCode.CREATED.getCode()))
                 .andExpect(jsonPath("$.data.attendanceId").value(attendance.getId().toString()));
 
         verify(clinicAttendanceService)
-                .requestAttendance(any(MemberPrincipal.class), eq(sessionId), eq(recordId));
+                .requestAttendance(any(MemberPrincipal.class), eq(sessionId), eq(courseId));
     }
 
     @Test
