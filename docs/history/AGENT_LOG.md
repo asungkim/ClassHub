@@ -4930,3 +4930,59 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
 - 다음 단계: Phase 5 출석부/기록 UI 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 14:51] 교사/조교 출석부 기본 흐름 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사/조교 출석부 페이지에 오늘 세션 선택 및 출석 명단 조회 흐름을 연결했다.
+- 세션 선택 → 출석 명단 로딩/빈 상태 표시를 구성했다.
+
+### Details
+- 작업 사유: Phase 5-1 출석부 기본 흐름 구현.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- 다음 단계: Phase 5-2 출석 예외 추가/삭제.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:51] 교사/조교 출석 예외 추가/삭제 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석 추가 모달에서 반/학생 선택 후 출석 추가 요청을 연결했다.
+- 출석 삭제 확인 다이얼로그와 10분 전 잠금 안내를 반영했다.
+
+### Details
+- 작업 사유: Phase 5-2 출석 예외 추가/삭제 구현.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- 다음 단계: Phase 5-3 기록 CRUD.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:51] 교사/조교 클리닉 기록 CRUD 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석 명단에서 기록 모달을 열어 조회/작성/수정/삭제 흐름을 연결했다.
+- 저장/삭제 후 출석 명단을 갱신하도록 했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 5-3 기록 CRUD 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- 다음 단계: Phase 5 검증 및 QA.
+- MCP: 사용하지 않음.
