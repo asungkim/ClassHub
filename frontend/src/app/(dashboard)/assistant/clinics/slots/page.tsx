@@ -4,13 +4,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useClinicSlots } from "@/hooks/clinic/use-clinic-slots";
 import { fetchAssistantCourses } from "@/lib/dashboard-api";
+import { api } from "@/lib/api";
+import { getApiErrorMessage, getFetchError } from "@/lib/api-error";
+import { useToast } from "@/components/ui/toast";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { InlineError } from "@/components/ui/inline-error";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { TextField } from "@/components/ui/text-field";
+import { TimeSelect } from "@/components/ui/time-select";
 import { EmptyState } from "@/components/shared/empty-state";
+import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
 
 const DAY_OPTIONS = [
@@ -24,10 +30,30 @@ const DAY_OPTIONS = [
 ] as const;
 
 const TIME_PLACEHOLDER = "--:--";
+const GRID_START_HOUR = 6;
+const GRID_END_HOUR = 22;
+const GRID_HOUR_HEIGHT = 56;
+
+const GRID_DAYS = DAY_OPTIONS.map((day) => ({ key: day.value, label: day.label }));
 
 const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : TIME_PLACEHOLDER);
 
 type ClinicSlotResponse = components["schemas"]["ClinicSlotResponse"];
+type ClinicSlotCreateRequest = components["schemas"]["ClinicSlotCreateRequest"];
+
+type SlotFormState = {
+  dayOfWeek: ClinicSlotCreateRequest["dayOfWeek"];
+  startTime: string;
+  endTime: string;
+  defaultCapacity: string;
+};
+
+const DEFAULT_FORM_STATE: SlotFormState = {
+  dayOfWeek: "MONDAY",
+  startTime: "09:00",
+  endTime: "10:00",
+  defaultCapacity: "6"
+};
 
 type AssistantContextOption = {
   key: string;
@@ -40,10 +66,15 @@ type AssistantContextOption = {
 
 export default function AssistantClinicSlotsPage() {
   const { canRender, fallback } = useRoleGuard("ASSISTANT");
+  const { showToast } = useToast();
   const [contexts, setContexts] = useState<AssistantContextOption[]>([]);
   const [contextLoading, setContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formState, setFormState] = useState<SlotFormState>(DEFAULT_FORM_STATE);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadContexts = useCallback(async () => {
     setContextLoading(true);
@@ -110,21 +141,95 @@ export default function AssistantClinicSlotsPage() {
   );
 
   const slotsByDay = useMemo(() => {
-    const map = new Map<string, ClinicSlotResponse[]>();
-    DAY_OPTIONS.forEach((day) => map.set(day.value, []));
+    const base: Record<string, ClinicSlotResponse[]> = {};
+    DAY_OPTIONS.forEach((day) => {
+      base[day.value] = [];
+    });
     slots.forEach((slot) => {
       if (!slot.dayOfWeek) {
         return;
       }
-      const list = map.get(slot.dayOfWeek) ?? [];
-      list.push(slot);
-      map.set(slot.dayOfWeek, list);
+      base[slot.dayOfWeek] = [...(base[slot.dayOfWeek] ?? []), slot];
     });
-    map.forEach((list) => {
+    Object.values(base).forEach((list) => {
       list.sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""));
     });
-    return map;
+    return base;
   }, [slots]);
+
+  const openCreateModal = (preset?: Partial<SlotFormState>) => {
+    setFormState({ ...DEFAULT_FORM_STATE, ...preset });
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (isSubmitting) {
+      return;
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleSelectRange = (range: { dayKey: string; startTime: string; endTime: string }) => {
+    if (!selectedContext) {
+      showToast("error", "선생님/지점을 먼저 선택해 주세요.");
+      return;
+    }
+    openCreateModal({
+      dayOfWeek: range.dayKey as SlotFormState["dayOfWeek"],
+      startTime: range.startTime,
+      endTime: range.endTime
+    });
+  };
+
+  const submitSlot = async () => {
+    if (!selectedContext) {
+      showToast("error", "선생님/지점을 먼저 선택해 주세요.");
+      return;
+    }
+    const capacity = Number(formState.defaultCapacity);
+    if (!formState.dayOfWeek || !formState.startTime || !formState.endTime) {
+      setFormError("요일과 시간을 모두 입력해주세요.");
+      return;
+    }
+    if (!Number.isFinite(capacity) || capacity < 1) {
+      setFormError("정원은 1명 이상이어야 합니다.");
+      return;
+    }
+    if (formState.startTime >= formState.endTime) {
+      setFormError("종료 시간이 시작 시간보다 늦어야 합니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError(null);
+    try {
+      const body: ClinicSlotCreateRequest = {
+        branchId: selectedContext.branchId,
+        dayOfWeek: formState.dayOfWeek,
+        startTime: formState.startTime,
+        endTime: formState.endTime,
+        defaultCapacity: capacity
+      };
+      const response = await api.POST("/api/v1/clinic-slots", { body });
+      const fetchError = getFetchError(response);
+      if (fetchError) {
+        throw new Error(getApiErrorMessage(fetchError, "슬롯을 생성하지 못했습니다."));
+      }
+      if (!response.data?.data) {
+        throw new Error("슬롯을 생성하지 못했습니다.");
+      }
+      showToast("success", "슬롯이 생성되었습니다.");
+      setIsModalOpen(false);
+      await refreshSlots();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "슬롯 저장에 실패했습니다.";
+      setFormError(message);
+      showToast("error", message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!canRender) {
     return fallback;
@@ -186,10 +291,9 @@ export default function AssistantClinicSlotsPage() {
           )}
 
           {slotsLoading && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_OPTIONS.slice(0, 3).map((day) => (
-                <Skeleton key={day.value} className="h-40 w-full" />
-              ))}
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-[640px] w-full" />
             </div>
           )}
 
@@ -197,41 +301,93 @@ export default function AssistantClinicSlotsPage() {
             <EmptyState message="선생님/지점을 먼저 선택해 주세요." description="선택 후 슬롯이 표시됩니다." />
           )}
 
-          {!slotsLoading && selectedContext && slots.length === 0 && !slotsError && (
-            <EmptyState message="등록된 슬롯이 없습니다." description="선생님이 슬롯을 등록하면 이곳에 표시됩니다." />
-          )}
-
-          {!slotsLoading && selectedContext && slots.length > 0 && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_OPTIONS.map((day) => {
-                const daySlots = slotsByDay.get(day.value) ?? [];
-                return (
-                  <div key={day.value} className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900">{day.label}</p>
-                      <Badge variant="secondary">{daySlots.length}개</Badge>
-                    </div>
-                    {daySlots.length === 0 && (
-                      <p className="mt-3 text-xs text-slate-400">등록된 슬롯이 없습니다.</p>
-                    )}
-                    {daySlots.map((slot) => (
-                      <div
-                        key={slot.slotId ?? `${day.value}-${slot.startTime}-${slot.endTime}`}
-                        className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2"
-                      >
-                        <p className="text-sm font-semibold text-slate-800">
-                          {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                        </p>
-                        <p className="text-xs text-slate-500">정원 {slot.defaultCapacity ?? "-"}</p>
-                      </div>
-                    ))}
+          {!slotsLoading && selectedContext && !slotsError && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm text-slate-500">
+                  셀을 드래그/롱프레스하면 슬롯 생성이 시작됩니다.
+                </p>
+                {slots.length === 0 && (
+                  <p className="text-sm font-semibold text-slate-700">등록된 슬롯이 없습니다.</p>
+                )}
+              </div>
+              <WeeklyTimeGrid
+                days={GRID_DAYS}
+                itemsByDay={slotsByDay}
+                startHour={GRID_START_HOUR}
+                endHour={GRID_END_HOUR}
+                hourHeight={GRID_HOUR_HEIGHT}
+                showDateHeader={false}
+                selectionEnabled={Boolean(selectedContext)}
+                onSelectRange={handleSelectRange}
+                getItemRange={(slot) => ({
+                  startTime: slot.startTime,
+                  endTime: slot.endTime
+                })}
+                getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
+                renderItem={({ item, style }) => (
+                  <div
+                    className="absolute left-1 right-1 rounded-2xl border border-slate-200 bg-white p-2 text-xs text-slate-700 shadow-sm"
+                    style={style}
+                  >
+                    <p className="truncate text-sm font-semibold text-slate-900">
+                      {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                    </p>
+                    <p className="text-[11px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
                   </div>
-                );
-              })}
+                )}
+              />
             </div>
           )}
         </div>
       </Card>
+
+      <Modal open={isModalOpen} onClose={closeModal} title="슬롯 추가" size="sm">
+        <div className="space-y-4">
+          <Select
+            label="요일"
+            value={formState.dayOfWeek}
+            onChange={(event) => setFormState((prev) => ({ ...prev, dayOfWeek: event.target.value as SlotFormState["dayOfWeek"] }))}
+          >
+            {DAY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+
+          <TimeSelect
+            label="시작 시간"
+            value={formState.startTime}
+            onChange={(value) => setFormState((prev) => ({ ...prev, startTime: value }))}
+          />
+
+          <TimeSelect
+            label="종료 시간"
+            value={formState.endTime}
+            onChange={(value) => setFormState((prev) => ({ ...prev, endTime: value }))}
+          />
+
+          <TextField
+            label="기본 정원"
+            type="number"
+            min={1}
+            value={formState.defaultCapacity}
+            onChange={(event) => setFormState((prev) => ({ ...prev, defaultCapacity: event.target.value }))}
+          />
+
+          {formError && <InlineError message={formError} />}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={closeModal} disabled={isSubmitting}>
+              취소
+            </Button>
+            <Button onClick={() => void submitSlot()} disabled={isSubmitting}>
+              {isSubmitting ? "저장 중..." : "저장"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

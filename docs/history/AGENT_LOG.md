@@ -4986,3 +4986,93 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
 - 다음 단계: Phase 5 검증 및 QA.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 18:38] 슬롯/세션 시간표 UI 개선 계획 보강
+
+### Type
+DESIGN
+
+### Summary
+- 슬롯 시간표를 월~일 x 06~24시 고정 그리드로 개선하는 요구사항을 반영했다.
+- 주간 세션 시간표를 캘린더 형태로 통일하고 드래그/롱프레스 생성 흐름을 명시했다.
+
+### Details
+- 작업 사유: 슬롯/세션 시간표 UX 개선 요구사항 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 개선된 시간표 UI 설계를 기반으로 구현 범위 조정.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 18:40] 클리닉 시간표 구현 참고 기준 명시
+
+### Type
+DESIGN
+
+### Summary
+- 슬롯/세션 시간표 구현 시 `/teacher/courses` 캘린더 뷰를 참고하도록 명시했다.
+
+### Details
+- 작업 사유: 구현 기준을 명확히 하기 위한 추가 문서화.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 개선된 시간표 UI 설계를 기반으로 구현 범위 조정.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 19:10] 클리닉 시간표 UX 계획 범위 보정
+
+### Type
+DESIGN
+
+### Summary
+- 슬롯/세션 시간표의 시간 범위를 06:00~22:00로 명확히 반영했다.
+- 조교 슬롯 패널에서 생성/조회만 제공하는 범위를 문서에 반영했다.
+
+### Details
+- 작업 사유: 시간표 개선 요구사항 변경 및 권한 범위 재정의.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 공통 시간표 컴포넌트화 및 클리닉 페이지 적용.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 19:11] 주간 시간표 공통 컴포넌트 추출
+
+### Type
+STRUCTURAL
+
+### Summary
+- 주간 시간표 렌더링을 `WeeklyTimeGrid`로 공통화했다.
+- `/teacher/courses` 캘린더 뷰를 공통 컴포넌트로 교체했다.
+
+### Details
+- 작업 사유: 클리닉/코스 화면에서 동일한 시간표 UI 재사용을 위해 구조 개선.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/components/shared/weekly-time-grid.tsx`
+  - `frontend/src/app/(dashboard)/teacher/courses/page.tsx`
+- 다음 단계: 클리닉 슬롯/세션 페이지에 공통 시간표 적용.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 19:12] 클리닉 슬롯/세션 시간표 그리드 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 슬롯/세션 화면을 주간 시간표 그리드로 전환했다.
+- 드래그/롱프레스로 슬롯/긴급 세션 생성 흐름을 연결했다.
+- 주간 이동 네비게이션을 추가해 세션 범위를 조정할 수 있게 했다.
+
+### Details
+- 작업 사유: 클리닉 시간표 UX 개선 요구사항 반영.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: 드래그 생성 및 주간 이동 동작 수동 검증.
+- MCP: 사용하지 않음.

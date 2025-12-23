@@ -13,12 +13,12 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/inline-error";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/text-field";
 import { TimeSelect } from "@/components/ui/time-select";
 import { EmptyState } from "@/components/shared/empty-state";
+import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
 import type { TeacherBranchAssignment } from "@/types/dashboard";
 
@@ -37,11 +37,13 @@ const DAY_KEYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDA
 type DayKey = (typeof DAY_KEYS)[number];
 
 const TIME_PLACEHOLDER = "--:--";
+const GRID_START_HOUR = 6;
+const GRID_END_HOUR = 22;
+const GRID_HOUR_HEIGHT = 56;
+
+const GRID_DAYS = DAY_OPTIONS.map((day) => ({ key: day.value, label: day.label }));
 
 const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : TIME_PLACEHOLDER);
-
-const getDayLabel = (value?: DayKey | null) =>
-  DAY_OPTIONS.find((day) => day.value === value)?.label ?? value ?? "";
 
 const getDayKeyFromDate = (date?: string): DayKey | null => {
   if (!date) return null;
@@ -53,6 +55,7 @@ const getDayKeyFromDate = (date?: string): DayKey | null => {
 
 type ClinicSessionResponse = components["schemas"]["ClinicSessionResponse"];
 type ClinicSessionEmergencyCreateRequest = components["schemas"]["ClinicSessionEmergencyCreateRequest"];
+type WeekRange = { start: Date; end: Date };
 
 type EmergencyFormState = {
   date: string;
@@ -117,7 +120,7 @@ export default function TeacherClinicSessionsPage() {
     [branches, selectedBranchId]
   );
 
-  const weekRange = useMemo(() => getCurrentWeekRange(), []);
+  const [weekRange, setWeekRange] = useState<WeekRange>(() => getCurrentWeekRange());
   const weekRangeLabel = useMemo(() => formatWeekRange(weekRange.start, weekRange.end), [weekRange]);
   const dateRangeValue = useMemo(() => formatDateRange(weekRange.start, weekRange.end), [weekRange]);
 
@@ -132,23 +135,39 @@ export default function TeacherClinicSessionsPage() {
   );
 
   const sessionsByDay = useMemo(() => {
-    const map = new Map<string, ClinicSessionResponse[]>();
-    DAY_OPTIONS.forEach((day) => map.set(day.value, []));
+    const base: Record<string, ClinicSessionResponse[]> = {};
+    DAY_OPTIONS.forEach((day) => {
+      base[day.value] = [];
+    });
     sessions.forEach((session) => {
       const dayKey = getDayKeyFromDate(session.date);
       if (!dayKey) return;
-      const list = map.get(dayKey) ?? [];
-      list.push(session);
-      map.set(dayKey, list);
+      base[dayKey] = [...(base[dayKey] ?? []), session];
     });
-    map.forEach((list) => {
+    Object.values(base).forEach((list) => {
       list.sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""));
     });
-    return map;
+    return base;
   }, [sessions]);
 
-  const openEmergencyModal = () => {
-    setEmergencyForm({ ...DEFAULT_EMERGENCY_FORM, date: formatDate(new Date()) });
+  const handlePrevWeek = () => {
+    setWeekRange((prev) => getCurrentWeekRange(addDays(prev.start, -7)));
+  };
+
+  const handleNextWeek = () => {
+    setWeekRange((prev) => getCurrentWeekRange(addDays(prev.start, 7)));
+  };
+
+  const handleResetWeek = () => {
+    setWeekRange(getCurrentWeekRange());
+  };
+
+  const openEmergencyModal = (preset?: Partial<EmergencyFormState>) => {
+    setEmergencyForm({
+      ...DEFAULT_EMERGENCY_FORM,
+      date: formatDate(new Date()),
+      ...preset
+    });
     setEmergencyError(null);
     setIsEmergencyOpen(true);
   };
@@ -209,6 +228,22 @@ export default function TeacherClinicSessionsPage() {
     }
   };
 
+  const handleSelectRange = (range: { date?: Date; startTime: string; endTime: string }) => {
+    if (!selectedBranchId) {
+      showToast("error", "지점을 먼저 선택해 주세요.");
+      return;
+    }
+    if (!range.date) {
+      openEmergencyModal();
+      return;
+    }
+    openEmergencyModal({
+      date: formatDate(range.date),
+      startTime: range.startTime,
+      endTime: range.endTime
+    });
+  };
+
   const confirmCancel = (session: ClinicSessionResponse) => {
     setCancelTarget(session);
   };
@@ -245,7 +280,7 @@ export default function TeacherClinicSessionsPage() {
     <div className="space-y-6 lg:space-y-8">
       <Card
         title="주차별 클리닉 (세션)"
-        description={`이번 주 ${weekRangeLabel} 기준으로 세션을 표시합니다.`}
+        description={`${weekRangeLabel} 기준으로 세션을 표시합니다.`}
       >
         <div className="space-y-6">
           <div>
@@ -283,7 +318,7 @@ export default function TeacherClinicSessionsPage() {
                 ))}
               </Select>
 
-              <Button onClick={openEmergencyModal} disabled={!selectedBranchId}>
+              <Button onClick={() => openEmergencyModal()} disabled={!selectedBranchId}>
                 긴급 세션 생성
               </Button>
             </div>
@@ -293,6 +328,33 @@ export default function TeacherClinicSessionsPage() {
 
       <Card title="주간 세션 시간표" description="선택한 지점 기준 주간 세션을 표시합니다.">
         <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-slate-700">{weekRangeLabel}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handlePrevWeek}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                ◀
+              </button>
+              <button
+                type="button"
+                onClick={handleResetWeek}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                이번 주
+              </button>
+              <button
+                type="button"
+                onClick={handleNextWeek}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                ▶
+              </button>
+            </div>
+          </div>
+
           {sessionsError && (
             <div className="space-y-3">
               <InlineError message={sessionsError} />
@@ -303,10 +365,9 @@ export default function TeacherClinicSessionsPage() {
           )}
 
           {sessionsLoading && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_OPTIONS.slice(0, 3).map((day) => (
-                <Skeleton key={day.value} className="h-40 w-full" />
-              ))}
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-[640px] w-full" />
             </div>
           )}
 
@@ -314,60 +375,69 @@ export default function TeacherClinicSessionsPage() {
             <EmptyState message="지점을 먼저 선택해 주세요." description="지점 선택 후 세션이 표시됩니다." />
           )}
 
-          {!sessionsLoading && selectedBranchId && sessions.length === 0 && !sessionsError && (
-            <EmptyState message="이번 주 세션이 없습니다." description="긴급 세션 생성으로 일정을 추가할 수 있습니다." />
-          )}
-
-          {!sessionsLoading && selectedBranchId && sessions.length > 0 && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_OPTIONS.map((day) => {
-                const daySessions = sessionsByDay.get(day.value) ?? [];
-                return (
-                  <div key={day.value} className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900">{day.label}</p>
-                      <Badge variant="secondary">{daySessions.length}개</Badge>
-                    </div>
-                    {daySessions.length === 0 && (
-                      <p className="mt-3 text-xs text-slate-400">등록된 세션이 없습니다.</p>
-                    )}
-                    {daySessions.map((session) => {
-                      const isCanceled = Boolean(session.isCanceled);
-                      return (
-                        <div
-                          key={session.sessionId ?? `${day.value}-${session.startTime}-${session.endTime}`}
-                          className={clsx(
-                            "mt-3 rounded-xl border px-3 py-2",
-                            isCanceled ? "border-slate-200 bg-slate-50" : "border-slate-200 bg-white"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-slate-800">
-                              {formatTime(session.startTime)} - {formatTime(session.endTime)}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <Badge variant={session.sessionType === "EMERGENCY" ? "destructive" : "secondary"}>
-                                {session.sessionType === "EMERGENCY" ? "긴급" : "정규"}
-                              </Badge>
-                              {isCanceled && <Badge variant="secondary">취소됨</Badge>}
-                            </div>
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {getDayLabel(getDayKeyFromDate(session.date))} · 정원 {session.capacity ?? "-"}
+          {!sessionsLoading && selectedBranchId && !sessionsError && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm text-slate-500">
+                  셀을 드래그/롱프레스하면 긴급 세션 생성이 시작됩니다.
+                </p>
+                {sessions.length === 0 && (
+                  <p className="text-sm font-semibold text-slate-700">이번 주 세션이 없습니다.</p>
+                )}
+              </div>
+              <WeeklyTimeGrid
+                days={GRID_DAYS}
+                itemsByDay={sessionsByDay}
+                startHour={GRID_START_HOUR}
+                endHour={GRID_END_HOUR}
+                hourHeight={GRID_HOUR_HEIGHT}
+                rangeStart={weekRange.start}
+                showDateHeader
+                selectionEnabled={Boolean(selectedBranchId)}
+                onSelectRange={handleSelectRange}
+                getItemRange={(session) => ({
+                  startTime: session.startTime,
+                  endTime: session.endTime
+                })}
+                getItemKey={(session, index) => session.sessionId ?? `${session.date}-${session.startTime}-${index}`}
+                renderItem={({ item, style }) => {
+                  const isCanceled = Boolean(item.isCanceled);
+                  const isEmergency = item.sessionType === "EMERGENCY";
+                  return (
+                    <div
+                      className={clsx(
+                        "absolute left-1 right-1 rounded-2xl border p-2 text-xs shadow-sm",
+                        isCanceled
+                          ? "border-slate-200 bg-slate-50 text-slate-400"
+                          : isEmergency
+                            ? "border-rose-200 bg-rose-50 text-rose-700"
+                            : "border-blue-200 bg-blue-50 text-slate-700"
+                      )}
+                      style={style}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">
+                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
                           </p>
-                          <div className="mt-2 flex justify-end">
-                            {!isCanceled && (
-                              <Button variant="ghost" onClick={() => confirmCancel(session)}>
-                                취소
-                              </Button>
-                            )}
-                          </div>
+                          <p className="text-[11px]">
+                            {isEmergency ? "긴급" : "정규"} · 정원 {item.capacity ?? "-"}
+                          </p>
                         </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+                        {!isCanceled && (
+                          <button
+                            type="button"
+                            className="shrink-0 text-[11px] font-semibold text-slate-500 hover:text-slate-700"
+                            onClick={() => confirmCancel(item)}
+                          >
+                            취소
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }}
+              />
             </div>
           )}
         </div>
@@ -455,4 +525,10 @@ function formatDate(date: Date) {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
 }

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InlineError } from "@/components/ui/inline-error";
 import { EmptyState } from "@/components/shared/empty-state";
+import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -768,144 +769,51 @@ function CourseCalendarSection({
       ) : error ? (
         <InlineError message={error} />
       ) : (
-        <CalendarGrid
-          calendarItems={calendarItems}
-          courseColorMap={courseColorMap}
+        <WeeklyTimeGrid
+          days={calendarDays}
+          itemsByDay={calendarItems}
+          startHour={calendarStartHour}
+          endHour={calendarEndHour}
+          hourHeight={calendarHourHeight}
           rangeStart={rangeStart}
-          onCourseSelect={onCourseSelect}
+          showDateHeader
+          getItemRange={(item) => ({
+            startTime: item.schedule.startTime,
+            endTime: item.schedule.endTime
+          })}
+          getItemKey={(item, index) =>
+            `${item.course.courseId ?? item.course.name}-${item.schedule.dayOfWeek}-${item.schedule.startTime}-${index}`
+          }
+          renderItem={({ item, style }) => {
+            const colorKey = getCourseColorKey(item.course);
+            const colorClass = courseColorMap[colorKey] ?? "bg-blue-400";
+            return (
+              <div
+                className={clsx(
+                  "absolute left-1 right-1 cursor-pointer rounded-2xl border border-white/70 p-2 text-xs font-semibold text-white shadow-lg transition hover:scale-[1.01]",
+                  colorClass
+                )}
+                style={style}
+                role="button"
+                tabIndex={0}
+                onClick={() => onCourseSelect(item.course)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onCourseSelect(item.course);
+                  }
+                }}
+                title={`${item.course.name ?? "이름 미지정"} • ${item.course.companyName ?? "-"} ${item.course.branchName ?? ""}`.trim()}
+              >
+                <p className="truncate text-sm">{item.course.name ?? "이름 미지정"}</p>
+                <p className="text-[11px] font-normal opacity-90">
+                  {item.course.companyName ?? "-"} · {item.course.branchName ?? "-"}
+                </p>
+              </div>
+            );
+          }}
         />
       )}
-    </div>
-  );
-}
-
-type CalendarGridProps = {
-  calendarItems: Record<string, CalendarItem[]>;
-  courseColorMap: Record<string, string>;
-  rangeStart: Date;
-  onCourseSelect: (course: CourseResponse) => void;
-};
-
-function CalendarGrid({ calendarItems, courseColorMap, rangeStart, onCourseSelect }: CalendarGridProps) {
-  const templateColumns = `80px repeat(${calendarDays.length}, minmax(0, 1fr))`;
-  const totalHours = calendarEndHour - calendarStartHour;
-  const columnHeight = totalHours * calendarHourHeight;
-
-  return (
-    <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-inner">
-      <div className="min-w-[960px]">
-        <div className="grid border-b border-slate-200" style={{ gridTemplateColumns: templateColumns }}>
-          <div className="flex h-14 items-center justify-center border-r border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
-            시간
-          </div>
-          {calendarDays.map((day, index) => (
-            <div
-              key={day.key}
-              className="flex h-14 flex-col items-center justify-center border-r border-slate-200 text-sm font-semibold text-slate-900"
-            >
-              <span>{day.label}</span>
-              <span className="text-xs font-normal text-slate-500">{formatHeaderDate(addDays(rangeStart, index))}</span>
-            </div>
-          ))}
-        </div>
-        <div className="grid" style={{ gridTemplateColumns: templateColumns }}>
-          <CalendarTimeColumn columnHeight={columnHeight} />
-          {calendarDays.map((day) => (
-            <CalendarDayColumn
-              key={day.key}
-              items={calendarItems[day.key] ?? []}
-              columnHeight={columnHeight}
-              courseColorMap={courseColorMap}
-              onCourseSelect={onCourseSelect}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CalendarTimeColumn({ columnHeight }: { columnHeight: number }) {
-  const hours = Array.from({ length: calendarEndHour - calendarStartHour + 1 }, (_, index) => calendarStartHour + index);
-  return (
-    <div className="border-r border-slate-200 bg-slate-50" style={{ height: columnHeight }}>
-      {hours.map((hour, index) => (
-        <div
-          key={hour}
-          className="relative flex items-start justify-end pr-3"
-          style={{ height: index === hours.length - 1 ? calendarHourHeight / 2 : calendarHourHeight }}
-        >
-          <span className="text-[11px] font-semibold text-slate-500">{formatHourLabel(hour)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CalendarDayColumn({
-  items,
-  columnHeight,
-  courseColorMap,
-  onCourseSelect
-}: {
-  items: CalendarItem[];
-  columnHeight: number;
-  courseColorMap: Record<string, string>;
-  onCourseSelect: (course: CourseResponse) => void;
-}) {
-  const hourLines = Array.from({ length: calendarEndHour - calendarStartHour }, (_, index) => index + 1);
-  return (
-    <div className="relative border-r border-slate-200" style={{ height: columnHeight }}>
-      {hourLines.map((line) => (
-        <div
-          key={line}
-          className="absolute left-0 right-0 border-b border-slate-100"
-          style={{ top: line * calendarHourHeight, height: 0 }}
-        />
-      ))}
-      {items.length === 0 ? (
-        <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-slate-200">-</p>
-      ) : null}
-      {items.map(({ course, schedule }, index) => {
-        const colorKey = getCourseColorKey(course);
-        const colorClass = courseColorMap[colorKey] ?? "bg-blue-400";
-        const startHour = timeStringToHours(schedule.startTime) ?? calendarStartHour;
-        const endHour = timeStringToHours(schedule.endTime) ?? Math.min(startHour + 1, calendarEndHour);
-        const clampedStart = Math.max(calendarStartHour, Math.min(startHour, calendarEndHour));
-        const clampedEnd = Math.max(clampedStart + 0.5, Math.min(endHour, calendarEndHour));
-        const blockTop = (clampedStart - calendarStartHour) * calendarHourHeight;
-        const blockHeight = Math.max((clampedEnd - clampedStart) * calendarHourHeight, calendarHourHeight * 0.6);
-
-        return (
-          <div
-            key={`${course.courseId ?? course.name}-${schedule.dayOfWeek}-${schedule.startTime}-${index}`}
-            className={clsx(
-              "absolute left-1 right-1 cursor-pointer rounded-2xl border border-white/70 p-2 text-xs font-semibold text-white shadow-lg transition hover:scale-[1.01]",
-              colorClass
-            )}
-            style={{
-              top: blockTop,
-              height: blockHeight,
-              minHeight: calendarHourHeight * 0.6
-            }}
-            role="button"
-            tabIndex={0}
-            onClick={() => onCourseSelect(course)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onCourseSelect(course);
-              }
-            }}
-            title={`${course.name ?? "이름 미지정"} • ${course.companyName ?? "-"} ${course.branchName ?? ""}`.trim()}
-          >
-            <p className="truncate text-sm">{course.name ?? "이름 미지정"}</p>
-            <p className="text-[11px] font-normal opacity-90">
-              {course.companyName ?? "-"} · {course.branchName ?? "-"}
-            </p>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -1267,14 +1175,6 @@ const dayLabelMap: Record<string, string> = calendarDays.reduce(
   {} as Record<string, string>
 );
 
-function formatHeaderDate(date: Date) {
-  return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-function formatHourLabel(hour: number) {
-  return `${String(hour).padStart(2, "0")}:00`;
-}
-
 function timeStringToMinutes(value?: string | null) {
   if (!value) {
     return null;
@@ -1286,11 +1186,6 @@ function timeStringToMinutes(value?: string | null) {
     return null;
   }
   return hour * 60 + minute;
-}
-
-function timeStringToHours(value?: string | null) {
-  const minutes = timeStringToMinutes(value);
-  return minutes === null ? null : minutes / 60;
 }
 
 function generateTimeSlots(minMinutes: number, maxMinutes: number, stepMinutes: number) {
