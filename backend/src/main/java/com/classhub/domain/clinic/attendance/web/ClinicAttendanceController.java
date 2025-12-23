@@ -114,4 +114,15 @@ public class ClinicAttendanceController {
                 .moveAttendance(principal, request.fromSessionId(), request.toSessionId());
         return RsData.from(RsCode.SUCCESS, ClinicAttendanceResponse.from(attendance));
     }
+
+    @DeleteMapping("/students/me/clinic-attendances/{attendanceId}")
+    @PreAuthorize("hasAuthority('STUDENT')")
+    @Operation(summary = "학생 클리닉 참석 취소")
+    public RsData<Void> cancelAttendance(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID attendanceId
+    ) {
+        clinicAttendanceService.cancelStudentAttendance(principal, attendanceId);
+        return RsData.from(RsCode.SUCCESS, null);
+    }
 }

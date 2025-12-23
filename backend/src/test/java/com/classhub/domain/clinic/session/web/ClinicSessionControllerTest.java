@@ -68,7 +68,7 @@ class ClinicSessionControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.REGULAR);
-        ClinicSessionResponse response = ClinicSessionResponse.from(session);
+        ClinicSessionResponse response = ClinicSessionResponse.from(session, 0);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
         given(clinicSessionService.getSessions(any(MemberPrincipal.class), isNull(), eq(branchId), eq(start), eq(end)))
@@ -91,7 +91,7 @@ class ClinicSessionControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.EMERGENCY);
-        ClinicSessionResponse response = ClinicSessionResponse.from(session);
+        ClinicSessionResponse response = ClinicSessionResponse.from(session, 0);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
         given(clinicSessionService.getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end)))
@@ -115,7 +115,7 @@ class ClinicSessionControllerTest {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
         ClinicSession session = createSession(UUID.randomUUID(), teacherId, branchId, ClinicSessionType.REGULAR);
-        ClinicSessionResponse response = ClinicSessionResponse.from(session);
+        ClinicSessionResponse response = ClinicSessionResponse.from(session, 0);
         LocalDate start = LocalDate.of(2024, 3, 1);
         LocalDate end = LocalDate.of(2024, 3, 7);
         given(clinicSessionService.getSessions(any(MemberPrincipal.class), eq(teacherId), eq(branchId), eq(start), eq(end)))

@@ -206,6 +206,19 @@ class ClinicAttendanceControllerTest {
         verify(clinicAttendanceService).moveAttendance(any(MemberPrincipal.class), eq(fromSessionId), eq(toSessionId));
     }
 
+    @Test
+    void deleteStudentAttendance_shouldReturnSuccess() throws Exception {
+        UUID studentId = UUID.randomUUID();
+        UUID attendanceId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/v1/students/me/clinic-attendances/{attendanceId}", attendanceId)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(studentId, MemberRole.STUDENT))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()));
+
+        verify(clinicAttendanceService).cancelStudentAttendance(any(MemberPrincipal.class), eq(attendanceId));
+    }
+
     private UsernamePasswordAuthenticationToken authToken(UUID memberId, MemberRole role) {
         MemberPrincipal principal = new MemberPrincipal(memberId, role);
         return new UsernamePasswordAuthenticationToken(

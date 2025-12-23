@@ -17,6 +17,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -87,6 +88,56 @@ class ClinicAttendanceRepositoryQueryTest {
         );
 
         assertThat(count).isEqualTo(1L);
+    }
+
+    @Test
+    void findAttendanceCountsByClinicSessionIds_shouldReturnCounts() {
+        UUID teacherId = UUID.randomUUID();
+        Course course = courseRepository.save(createCourse(teacherId));
+        StudentCourseRecord recordOne = studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), course.getId(), null, null, null)
+        );
+        StudentCourseRecord recordTwo = studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), course.getId(), null, null, null)
+        );
+        ClinicSlot slot = clinicSlotRepository.save(createSlot(teacherId));
+        ClinicSession sessionOne = clinicSessionRepository.save(createSession(slot, teacherId, slot.getBranchId()));
+        ClinicSession sessionTwo = clinicSessionRepository.save(createSession(slot, teacherId, slot.getBranchId()));
+        clinicAttendanceRepository.save(
+                ClinicAttendance.builder()
+                        .clinicSessionId(sessionOne.getId())
+                        .studentCourseRecordId(recordOne.getId())
+                        .build()
+        );
+        clinicAttendanceRepository.save(
+                ClinicAttendance.builder()
+                        .clinicSessionId(sessionOne.getId())
+                        .studentCourseRecordId(recordTwo.getId())
+                        .build()
+        );
+        clinicAttendanceRepository.save(
+                ClinicAttendance.builder()
+                        .clinicSessionId(sessionTwo.getId())
+                        .studentCourseRecordId(recordOne.getId())
+                        .build()
+        );
+
+        var results = clinicAttendanceRepository.findAttendanceCountsByClinicSessionIds(
+                List.of(sessionOne.getId(), sessionTwo.getId())
+        );
+
+        assertThat(results)
+                .hasSize(2)
+                .anySatisfy(result -> {
+                    if (result.getClinicSessionId().equals(sessionOne.getId())) {
+                        assertThat(result.getAttendanceCount()).isEqualTo(2L);
+                    }
+                })
+                .anySatisfy(result -> {
+                    if (result.getClinicSessionId().equals(sessionTwo.getId())) {
+                        assertThat(result.getAttendanceCount()).isEqualTo(1L);
+                    }
+                });
     }
 
     private Course createCourse(UUID teacherId) {

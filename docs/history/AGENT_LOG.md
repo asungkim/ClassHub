@@ -5076,3 +5076,216 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
 - 다음 단계: 드래그 생성 및 주간 이동 동작 수동 검증.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 22:48] 주간 세션 시간표 주차 이동 제거 계획 반영
+
+### Type
+DESIGN
+
+### Summary
+- 주차별 클리닉 시간표를 이번 주 고정으로 정의했다.
+- 주간 범위 라벨을 시간표 상단 중앙 배치로 명시했다.
+
+### Details
+- 작업 사유: 주간 이동이 의미 없다는 판단에 따른 UX 정리.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Teacher/Assistant 주간 세션 시간표 UI에서 이동 버튼 제거.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 22:49] 주간 세션 시간표 주차 이동 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사/조교 주간 세션 시간표에서 주차 이동 버튼을 제거했다.
+- 주간 범위 라벨을 시간표 상단 중앙에 배치했다.
+
+### Details
+- 작업 사유: 주간 이동이 불필요한 UX로 판단됨.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: 시간표 중앙 라벨/세션 생성 흐름 수동 확인.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 22:53] 학생 클리닉 시간표 그리드 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 기본 슬롯/이번 주 세션 화면을 주간 시간표 그리드로 전환했다.
+- 참석/취소/이동 상태를 시간표 블록 색상과 배지로 구분했다.
+
+### Details
+- 작업 사유: 학생 화면도 교사/조교와 동일한 시간표 UX로 통일하기 위해.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: 학생 시간표에서 기본 슬롯/추가 참석/이동 모드 동작 수동 확인.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 22:57] 학생 시간표 카드 UI 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 시간표 카드 내부 레이아웃을 간결하게 정리했다.
+- 상태 배지를 컴팩트한 라벨로 변경해 작은 슬롯 높이에서도 읽기 쉽게 했다.
+
+### Details
+- 작업 사유: 시간표 카드 내부 UI가 눌리거나 과밀해 보이는 문제 개선.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: 학생 시간표 카드의 텍스트/상태 표시 수동 검증.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:07] 학생 참석 현황/취소 및 변경 UX 계획 반영
+
+### Type
+DESIGN
+
+### Summary
+- 학생 기본 슬롯/세션에 참석 현황 표시 요구를 반영했다.
+- 학생 세션 변경 UX를 모달 기반으로 개선하도록 계획을 업데이트했다.
+- 학생 참석 취소 API 추가를 백엔드 계획에 명시했다.
+
+### Details
+- 작업 사유: 참석 현황 표시 및 취소/변경 UX 개선 요구 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+  - `docs/plan/backend/season2/clinic-student-context_plan.md`
+- 다음 단계: 요구사항/스펙/TODO 갱신 여부 확인 후 구현 승인 요청.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:20] 학생 클리닉 참석 현황/취소 요구사항 반영
+
+### Type
+DESIGN
+
+### Summary
+- 학생 클리닉 참석 현황 표시와 참석 취소 요구를 요구사항/스펙에 반영했다.
+- 학생 기본 슬롯 변경 가능 범위를 최신 흐름에 맞게 정리했다.
+
+### Details
+- 작업 사유: 참석 현황 표시 및 취소 API 추가 결정 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: TODO 갱신 및 백엔드 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:21] Clinic 시스템 TODO 갱신
+
+### Type
+TODO_UPDATE
+
+### Summary
+- ClinicSession 응답의 attendanceCount 제공 작업을 추가했다.
+- 학생 참석 취소 API 작업을 TODO에 반영했다.
+
+### Details
+- 작업 사유: 신규 요구사항/스펙 반영을 위한 TODO 구조 갱신.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/todo/v1.10.md`
+- 다음 단계: 백엔드 구현 및 테스트.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:22] 세션 참석 수 응답 및 학생 참석 취소 API 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSession 조회 응답에 attendanceCount를 포함했다.
+- 학생 참석 취소 전용 API를 추가하고 30분 제한을 적용했다.
+- 관련 테스트를 추가/수정했다.
+
+### Details
+- 작업 사유: 참석 현황 표시 및 취소 기능 제공.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.session.application.ClinicSessionServiceTest" --tests "com.classhub.domain.clinic.attendance.application.ClinicAttendanceServiceTest" --tests "com.classhub.domain.clinic.attendance.web.ClinicAttendanceControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceCountProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/dto/response/ClinicSessionResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/web/ClinicSessionController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/application/ClinicSessionServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/web/ClinicSessionControllerTest.java`
+- 다음 단계: OpenAPI 스키마 및 프론트 타입 갱신.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:22] 세션 참석 수 집계 쿼리 테스트 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 세션별 attendanceCount 집계 쿼리의 동작을 검증하는 테스트를 추가했다.
+
+### Details
+- 작업 사유: 새 집계 쿼리의 정확도 보장.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepositoryQueryTest"`
+- 수정한 파일:
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceRepositoryQueryTest.java`
+- 다음 단계: OpenAPI 스키마 및 프론트 타입 갱신.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:23] Clinic 시스템 TODO 상태 갱신
+
+### Type
+TODO_UPDATE
+
+### Summary
+- attendanceCount 제공 및 학생 참석 취소 API 작업을 완료로 표시했다.
+
+### Details
+- 작업 사유: 기능 구현 및 테스트 완료 후 TODO 상태 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/todo/v1.10.md`
+- 다음 단계: 프론트 타입/오픈API 동기화.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:26] 기본 슬롯 출석 취소 제한 반영
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 기본 슬롯에서 자동 생성된 출석은 학생이 취소할 수 없도록 제한했다.
+- 관련 요구사항/스펙/플랜에 제한 조건을 명시했다.
+
+### Details
+- 작업 사유: 기본 슬롯 참석 취소 제한 요구 반영.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.attendance.application.ClinicAttendanceServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+  - `docs/plan/backend/season2/clinic-student-context_plan.md`
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 학생 UI에서 기본 슬롯 참석 취소 비활성 처리.
+- MCP: 사용하지 않음.

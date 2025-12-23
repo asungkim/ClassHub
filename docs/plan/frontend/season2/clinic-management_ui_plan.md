@@ -96,7 +96,8 @@
   - **왜 필요한지**: 주차별 세션 조회/생성을 한 시야에서 관리하기 위함.
   - **어떻게 동작**:
     - `/teacher/courses`의 **캘린더 뷰**와 동일한 주간 시간표 UI를 사용한다.
-    - 주간 범위를 이동할 수 있으며, 날짜가 포함된 시간표로 세션을 표시한다.
+    - 주간 범위는 이동하지 않으며, 이번 주 날짜가 포함된 시간표로 세션을 표시한다.
+    - 주간 범위 라벨(예: 12.22 ~ 12.28)은 시간표 상단 중앙에 배치한다.
     - 시간 축은 06:00~22:00 범위로 고정한다.
     - 셀 드래그/롱프레스 → 날짜+시간이 포함된 세션 생성 모달을 호출한다.
     - 기존 세션은 블록으로 표시하고 취소 액션을 제공한다.
@@ -123,16 +124,29 @@
   - **어디에 붙는지**: `/student/clinics`의 두 탭 상단.
 - `StudentClinicSlotTimetable`
   - **왜 필요한지**: 기본 슬롯 선택을 시간표 형태로 제공해 직관적으로 선택할 수 있다.
-  - **어떻게 동작**: `GET /api/v1/clinic-slots?courseId=...` 결과를 시간표 그리드에 배치하고 `defaultClinicSlotId`로 강조 표시한다.
+  - **어떻게 동작**:
+    - `GET /api/v1/clinic-slots?courseId=...` 결과를 시간표 그리드에 배치하고 `defaultClinicSlotId`로 강조 표시한다.
+    - 같은 teacher+branch 기준 이번 주 세션을 함께 조회해(`GET /api/v1/clinic-sessions?dateRange=...&branchId=...&teacherId=...`) 슬롯별 이번 주 세션 현황(정원/참석)을 표시한다.
   - **어디에 붙는지**: `/student/clinics`의 “클리닉 시간표” 탭.
 - `StudentClinicWeekTimetable`
   - **왜 필요한지**: 이번 주 참석/비참석 세션을 한 눈에 파악하고 즉시 액션을 이어가야 한다.
-  - **어떻게 동작**: 내 attendance와 주간 세션 목록을 합쳐 시간표로 렌더링하고, 셀 클릭으로 추가/이동 흐름을 분기한다.
+  - **어떻게 동작**:
+    - 내 attendance와 주간 세션 목록을 합쳐 시간표로 렌더링한다.
+    - 세션 블록에 `attendanceCount/정원`을 표시해 수용 가능 여부를 확인한다.
+    - 셀 클릭 시 상세 패널에서 추가/변경/취소 흐름을 제공한다.
   - **어디에 붙는지**: `/student/clinics`의 “이번 주 클리닉” 탭.
 - `StudentClinicSessionDetailPanel`
   - **왜 필요한지**: 시간표 셀 클릭 후 추가/이동/정보 확인을 한 곳에서 처리해야 한다.
-  - **어떻게 동작**: 비참석 세션이면 “추가 참석” 버튼, 참석 중 세션이면 “변경 모드” 진입 버튼을 표시한다.
+  - **어떻게 동작**:
+    - 비참석 세션이면 “추가 참석” 버튼을 노출한다.
+    - 참석 중 세션이면 “다른 시간으로 변경”과 “참석 취소” 버튼을 제공한다.
+    - “다른 시간으로 변경” 클릭 시 변경 모달을 열고, 가능한 세션만 선택하도록 한다.
+    - 기본 슬롯에서 자동 생성된 참석은 “참석 취소” 버튼을 비활성화하고 안내 문구를 표시한다.
   - **어디에 붙는지**: `/student/clinics`의 “이번 주 클리닉” 탭 우측/하단.
+- `StudentClinicSessionChangeModal`
+  - **왜 필요한지**: 참석 중 세션에서 자연스럽게 변경 가능한 세션을 선택하게 하기 위함이다.
+  - **어떻게 동작**: 주간 시간표를 모달로 재사용해 이동 가능한 세션만 활성화하고, 선택 후 확인 버튼으로 이동 요청을 제출한다.
+  - **어디에 붙는지**: `/student/clinics`의 “이번 주 클리닉” 탭.
 
 > 공통 UI는 `Card`, `Table`, `Tabs`, `Select`, `Modal`, `Button`, `TextField`, `Badge` 등 기존 컴포넌트를 우선 사용한다.  
 > 새 공통 컴포넌트가 필요하면 사용자 승인 후 추가한다.
@@ -151,6 +165,7 @@
   - `DELETE /api/v1/clinic-slots/{slotId}`
 - ClinicSession
   - `GET /api/v1/clinic-sessions?dateRange=YYYY-MM-DD,YYYY-MM-DD&branchId=...(&teacherId=...)`
+  - 응답에 `attendanceCount`를 포함해 정원 대비 참석 수를 표시한다.
   - `POST /api/v1/clinic-sessions/emergency`
   - `PATCH /api/v1/clinic-sessions/{sessionId}/cancel`
   - (선택) `POST /api/v1/clinic-slots/{slotId}/sessions` 정규 세션 수동 생성
@@ -162,6 +177,7 @@
   - `GET /api/v1/students/me/clinic-attendances?dateRange=...`
   - `POST /api/v1/students/me/clinic-attendances` (body: `{ clinicSessionId, courseId }`)
   - `PATCH /api/v1/students/me/clinic-attendances`
+  - `DELETE /api/v1/students/me/clinic-attendances/{attendanceId}`
 - ClinicRecord
   - `POST /api/v1/clinic-records`
   - `GET /api/v1/clinic-records?clinicAttendanceId=...`
@@ -203,8 +219,9 @@
   - 세션 시작 10분 전이면 추가/삭제 버튼 비활성화 + 안내 툴팁.
 - 학생 화면:
   - 기본 슬롯 선택 시 성공/실패 토스트 표시.
-  - 시간표에서 **비참석 세션 클릭 → 추가 참석**, **참석 세션 클릭 → 변경 모드**로 분기한다.
-  - 변경 모드에서는 이동 가능한 세션만 강조하고, 나머지는 비활성 처리한다.
+  - 시간표에서 **비참석 세션 클릭 → 추가 참석**, **참석 세션 클릭 → 상세 패널**로 분기한다.
+  - 상세 패널에서 “다른 시간으로 변경”을 누르면 변경 모달이 열리고, 이동 가능한 세션만 활성화한다.
+  - 참석 중 세션에는 “참석 취소” 버튼을 추가하고, 제한 시간 이후 비활성 처리한다.
   - 참석 이동은 세션 시작 30분 전까지만 가능하므로, 시간 경과 시 버튼 비활성화.
   - 추가 참석 시 세션 시간 겹침/정원 초과 에러를 명확히 안내한다.
 - 로딩 상태는 Skeleton/Spinner로 처리하고, 빈 상태는 EmptyState 컴포넌트를 사용한다.
@@ -218,7 +235,8 @@
   3. Teacher: 오늘의 출석부에서 출석 추가/삭제/기록 작성 확인.
   4. Assistant: teacher/branch 선택 후 슬롯 조회 + 세션/출석/기록 동작 확인.
   5. Student: 기본 슬롯 시간표에서 선택/변경 성공 및 에러 케이스 확인.
-  6. Student: 이번 주 시간표에서 추가 참석/이동 모드 분기 및 제한(30분 전) 확인.
+  6. Student: 기본 슬롯에 이번 주 세션 현황(정원/참석) 표시 확인.
+  7. Student: 이번 주 시간표에서 추가 참석/변경/취소 흐름 및 제한(30분 전) 확인.
   7. 모든 역할에서 잠금 시간(10분 전) 이후 버튼 비활성화 확인.
 
 ---
@@ -260,6 +278,7 @@
   - `StudentClinicSlotTimetable` 구현
   - `useClinicSlots(courseId)` 연결
   - 기본 슬롯/미선택 슬롯 스타일 구분
+  - 이번 주 세션 현황(정원/참석) 표시
 - 완료 기준: 선택한 course 기준 슬롯 시간표가 표시되고 기본 슬롯이 강조됨
 
 #### Phase 2-3 — 기본 슬롯 변경 액션
@@ -271,9 +290,9 @@
 - 완료 기준: 기본 슬롯 변경 성공/실패가 즉시 UI에 반영됨
 
 ### Phase 3 — 학생: 이번 주 세션 시간표
-- 목표: 추가 참석/이동 흐름을 시간표 셀 클릭으로 연결한다.
+- 목표: 추가 참석/변경/취소 흐름을 시간표 셀 클릭으로 연결한다.
 - 범위: 3-1 ~ 3-3 단계 순차 적용.
-- 완료 기준: 참석/비참석 셀 클릭 분기 + 추가/이동 성공/실패 처리
+- 완료 기준: 참석/비참석 셀 클릭 분기 + 추가/변경/취소 성공/실패 처리
 
 #### Phase 3-1 — 주간 시간표 데이터 결합
 - 목표: 주간 세션 + 내 참석 목록을 한 시간표에서 볼 수 있게 한다.
@@ -282,6 +301,7 @@
   - `useClinicContexts`, `useClinicSessions`, `useStudentAttendances` 연결
   - 주간 범위(dateRange) 선택/고정 상태 구성
   - 참석/비참석 세션 스타일 구분
+  - 정원/참석 수 표시
 - 완료 기준: 선택한 context 기준으로 주간 시간표가 표시됨
 
 #### Phase 3-2 — 세션 상세 패널/추가 참석 흐름
@@ -292,14 +312,15 @@
   - `POST /api/v1/students/me/clinic-attendances` 연결
 - 완료 기준: 비참석 세션에서 추가 참석이 성공/실패로 처리됨
 
-#### Phase 3-3 — 변경 모드/이동 흐름
-- 목표: 참석 중 세션 클릭 시 변경 모드로 전환한다.
+#### Phase 3-3 — 변경/취소 흐름
+- 목표: 참석 중 세션의 변경/취소 액션을 자연스럽게 제공한다.
 - 범위:
-  - 참석 중 세션 클릭 → 변경 모드 활성화
-  - 이동 가능 세션 강조/비활성 처리
+  - `StudentClinicSessionChangeModal` 구현
+  - 변경 모달에서 이동 가능 세션만 활성화
   - `PATCH /api/v1/students/me/clinic-attendances` 연결
+  - `DELETE /api/v1/students/me/clinic-attendances/{attendanceId}` 연결
   - 30분 제한 사전 비활성 + 서버 에러 메시지 처리
-- 완료 기준: 이동 요청 성공/실패가 즉시 UI에 반영됨
+- 완료 기준: 변경/취소 요청 성공/실패가 즉시 UI에 반영됨
 
 ### Phase 4 — Teacher/Assistant: 슬롯/세션
 - 목표: Teacher/Assistant 슬롯/세션 관리 UI를 완성한다.

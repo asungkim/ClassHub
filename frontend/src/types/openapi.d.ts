@@ -1044,6 +1044,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/students/me/clinic-attendances/{attendanceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 학생 클리닉 참석 취소 */
+        delete: operations["cancelAttendance"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/clinic-attendances/{attendanceId}": {
         parameters: {
             query?: never;
@@ -1438,6 +1455,8 @@ export interface components {
             endTime?: string;
             /** Format: int32 */
             capacity?: number;
+            /** Format: int32 */
+            attendanceCount?: number;
             isCanceled?: boolean;
         };
         RsDataClinicSessionResponse: {
@@ -3947,6 +3966,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataCompanyResponse"];
+                };
+            };
+        };
+    };
+    cancelAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
                 };
             };
         };
