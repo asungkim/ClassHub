@@ -11,8 +11,12 @@ import { InlineError } from "@/components/ui/inline-error";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/shared/empty-state";
 import type { components } from "@/types/openapi";
+import { api } from "@/lib/api";
+import { getApiErrorMessage, getFetchError } from "@/lib/api-error";
 
 type ClinicContextCourse = {
   courseId: string;
@@ -32,6 +36,7 @@ type ClinicContextGroup = {
 };
 
 type ClinicSlotResponse = components["schemas"]["ClinicSlotResponse"];
+type StudentDefaultClinicSlotRequest = components["schemas"]["StudentDefaultClinicSlotRequest"];
 
 const DAY_ORDER = [
   { value: "MONDAY", label: "월" },
@@ -46,12 +51,18 @@ const DAY_ORDER = [
 const TIME_PLACEHOLDER = "--:--";
 
 const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : TIME_PLACEHOLDER);
+const getDayLabel = (value?: ClinicSlotResponse["dayOfWeek"]) =>
+  DAY_ORDER.find((day) => day.value === value)?.label ?? value ?? "";
 
 export default function StudentClinicSchedulePage() {
   const { canRender, fallback } = useRoleGuard("STUDENT");
   const { contexts, isLoading, error, refresh } = useClinicContexts();
+  const { showToast } = useToast();
   const [selectedContextKey, setSelectedContextKey] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [pendingSlot, setPendingSlot] = useState<ClinicSlotResponse | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const contextGroups = useMemo<ClinicContextGroup[]>(() => {
     const map = new Map<string, ClinicContextGroup>();
@@ -131,6 +142,11 @@ export default function StudentClinicSchedulePage() {
     void refresh();
   }, [refresh]);
 
+  const closeConfirm = useCallback(() => {
+    setConfirmOpen(false);
+    setPendingSlot(null);
+  }, []);
+
   const selectedCourseContext = useMemo(
     () => contexts.find((context) => context.courseId === selectedCourseId) ?? null,
     [contexts, selectedCourseId]
@@ -164,6 +180,50 @@ export default function StudentClinicSchedulePage() {
 
     return map;
   }, [slots]);
+
+  const handleSlotSelect = useCallback(
+    (slot: ClinicSlotResponse) => {
+      if (!slot.slotId || !selectedCourseId || isUpdating) {
+        return;
+      }
+      if (slot.slotId === selectedCourseContext?.defaultClinicSlotId) {
+        showToast("info", "이미 기본 슬롯으로 설정되어 있습니다.");
+        return;
+      }
+      setPendingSlot(slot);
+      setConfirmOpen(true);
+    },
+    [isUpdating, selectedCourseContext?.defaultClinicSlotId, selectedCourseId, showToast]
+  );
+
+  const handleConfirmDefaultSlot = useCallback(async () => {
+    if (!pendingSlot?.slotId || !selectedCourseId) {
+      return;
+    }
+    setIsUpdating(true);
+    try {
+      const body: StudentDefaultClinicSlotRequest = { defaultClinicSlotId: pendingSlot.slotId };
+      const response = await api.PATCH("/api/v1/students/me/courses/{courseId}/clinic-slot", {
+        params: { path: { courseId: selectedCourseId } },
+        body
+      });
+      const fetchError = getFetchError(response);
+      if (fetchError) {
+        throw new Error(getApiErrorMessage(fetchError, "기본 슬롯을 변경하지 못했습니다."));
+      }
+      if (!response.data?.data) {
+        throw new Error("기본 슬롯을 변경하지 못했습니다.");
+      }
+      showToast("success", "기본 슬롯이 변경되었습니다.");
+      closeConfirm();
+      await refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "기본 슬롯을 변경하지 못했습니다.";
+      showToast("error", message);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [closeConfirm, pendingSlot?.slotId, refresh, selectedCourseId, showToast]);
 
   if (!canRender) {
     return fallback;
@@ -296,45 +356,87 @@ export default function StudentClinicSchedulePage() {
           )}
 
           {selectedCourseId && !slotsLoading && slots.length > 0 && !slotsError && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_ORDER.map((day) => {
-                const daySlots = slotsByDay.get(day.value) ?? [];
-                return (
-                  <div key={day.value} className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900">{day.label}</p>
-                      <Badge variant="secondary">{daySlots.length}개</Badge>
+            <div className="space-y-3">
+              <p className="text-xs text-slate-500">슬롯을 클릭하면 기본 슬롯으로 설정할 수 있습니다.</p>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {DAY_ORDER.map((day) => {
+                  const daySlots = slotsByDay.get(day.value) ?? [];
+                  return (
+                    <div key={day.value} className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-slate-900">{day.label}</p>
+                        <Badge variant="secondary">{daySlots.length}개</Badge>
+                      </div>
+                      {daySlots.length === 0 && (
+                        <p className="mt-3 text-xs text-slate-400">등록된 슬롯이 없습니다.</p>
+                      )}
+                      {daySlots.map((slot) => {
+                        const isDefault = slot.slotId && slot.slotId === selectedCourseContext?.defaultClinicSlotId;
+                        return (
+                          <button
+                            key={slot.slotId ?? `${day.value}-${slot.startTime}-${slot.endTime}`}
+                            type="button"
+                            onClick={() => handleSlotSelect(slot)}
+                            disabled={isDefault || isUpdating}
+                            className={clsx(
+                              "mt-3 w-full rounded-xl border px-3 py-2 text-left transition",
+                              "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+                              isDefault
+                                ? "cursor-default border-blue-200 bg-blue-50/70"
+                                : "border-slate-200 bg-white hover:border-slate-300",
+                              isUpdating && "opacity-60"
+                            )}
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-semibold text-slate-800">
+                                {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                              </p>
+                              {isDefault && <Badge>기본</Badge>}
+                            </div>
+                            <p className="text-xs text-slate-500">정원 {slot.defaultCapacity ?? "-"}</p>
+                          </button>
+                        );
+                      })}
                     </div>
-                    {daySlots.length === 0 && (
-                      <p className="mt-3 text-xs text-slate-400">등록된 슬롯이 없습니다.</p>
-                    )}
-                    {daySlots.map((slot) => {
-                      const isDefault = slot.slotId && slot.slotId === selectedCourseContext?.defaultClinicSlotId;
-                      return (
-                        <div
-                          key={slot.slotId ?? `${day.value}-${slot.startTime}-${slot.endTime}`}
-                          className={clsx(
-                            "mt-3 rounded-xl border px-3 py-2",
-                            isDefault ? "border-blue-200 bg-blue-50/70" : "border-slate-200 bg-white"
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-slate-800">
-                              {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                            </p>
-                            {isDefault && <Badge>기본</Badge>}
-                          </div>
-                          <p className="text-xs text-slate-500">정원 {slot.defaultCapacity ?? "-"}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
       </Card>
+
+      <Modal
+        open={confirmOpen}
+        onClose={closeConfirm}
+        title={selectedCourseContext?.defaultClinicSlotId ? "기본 슬롯을 변경할까요?" : "기본 슬롯을 설정할까요?"}
+        size="sm"
+      >
+        <div className="space-y-4 text-sm text-slate-600">
+          <p>
+            {selectedCourseContext?.defaultClinicSlotId
+              ? "기존 기본 슬롯이 변경됩니다. 선택한 슬롯으로 기본 참석 기준이 바뀝니다."
+              : "선택한 슬롯이 기본 참석 기준으로 설정됩니다."}
+          </p>
+          {pendingSlot ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
+              <p className="text-xs text-slate-500">선택한 슬롯</p>
+              <p className="font-semibold">
+                {getDayLabel(pendingSlot.dayOfWeek)} {formatTime(pendingSlot.startTime)} -{" "}
+                {formatTime(pendingSlot.endTime)}
+              </p>
+            </div>
+          ) : null}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={closeConfirm} disabled={isUpdating}>
+              취소
+            </Button>
+            <Button onClick={() => void handleConfirmDefaultSlot()} disabled={isUpdating}>
+              {isUpdating ? "변경 중..." : "확인"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

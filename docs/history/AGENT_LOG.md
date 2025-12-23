@@ -4795,3 +4795,22 @@ BUGFIX
   - `frontend/src/hooks/clinic/use-clinic-sessions.ts`
 - 다음 단계: Phase 2-3 기본 슬롯 변경 액션.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 14:21] 학생 기본 슬롯 변경 액션 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 기본 슬롯 시간표에서 슬롯 선택 시 변경 확인 모달을 표시하도록 연결했다.
+- 기본 슬롯 변경 API 호출 후 컨텍스트를 갱신하고 토스트로 결과를 안내했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 2-3 기본 슬롯 변경 액션 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+- 다음 단계: Phase 3-1 주간 시간표 데이터 결합.
+- MCP: 사용하지 않음.
