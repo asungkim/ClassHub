@@ -4814,3 +4814,60 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
 - 다음 단계: Phase 3-1 주간 시간표 데이터 결합.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 14:25] 학생 주간 세션 시간표 데이터 결합
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 주간 시간표 화면에 컨텍스트/세션/참석 데이터를 연결했다.
+- 요일별 세션을 분류하고 참석 중 세션을 강조 표시했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 3-1 주간 시간표 데이터 결합 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Phase 3-2 세션 상세 패널/추가 참석 흐름.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:30] 학생 주간 세션 추가 참석/이동 흐름 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 시간표에서 세션 선택 상세 패널을 추가하고, 추가 참석 신청 흐름을 연결했다.
+- 참석 중 세션에서 변경 모드로 전환해 이동 가능한 세션을 강조 표시하고 이동 요청을 연결했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 3-2, Phase 3-3 플로우를 통합 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Teacher/Assistant 슬롯/세션 UI(Phase 4-1) 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:32] 학생 세션 이동 30분 제한 UI 반영
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 세션 시작 30분 전 이동 제한을 UI에 반영하고 잠금 상태를 비활성 처리했다.
+- 이동 모드에서 잠금된 세션에 대한 안내 배지를 추가했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 3-3 이동 제한 정책을 UI에 반영하기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Teacher/Assistant 슬롯/세션 UI(Phase 4-1) 구현.
+- MCP: 사용하지 않음.
