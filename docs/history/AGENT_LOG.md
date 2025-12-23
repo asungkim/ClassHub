@@ -4544,3 +4544,40 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/scenario/ClinicScenarioIntegrationTest.java`
 - 다음 단계: Phase 6 RsCode 정리 마무리 또는 추가 시나리오 확장 검토.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 10:03] 클리닉 프론트엔드 UI 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant/Student 클리닉 UI 플로우와 API 매핑을 정리한 설계 문서를 작성했다.
+- 역할별 페이지 구조, 컴포넌트 설계, 상태/데이터 흐름을 상세화했다.
+- 학생 화면에서 필요한 추가 API 항목(RecordId, 기본 슬롯 조회)을 확인 필요로 명시했다.
+
+### Details
+- 작업 사유: Clinic 백엔드 구현 완료에 맞춰 프론트 UI 계획 수립.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 설계 리뷰/승인 및 API 보완 필요 여부 확정.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 12:46] 클리닉 학생 UI/API 계획 업데이트
+
+### Type
+DESIGN
+
+### Summary
+- 학생 클리닉 시간표 UX를 슬롯/세션 모두 시간표 기반 흐름으로 구체화했다.
+- 학생 클리닉 컨텍스트 신규 API와 추가 참석 요청 단순화 계획을 정리했다.
+- 프론트/백엔드 설계 문서를 각각 업데이트/추가했다.
+
+### Details
+- 작업 사유: 학생 시간표 중심 UX 확정 및 이에 맞춘 API 변경 계획 수립.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+  - `docs/plan/backend/season2/clinic-student-context_plan.md`
+- 다음 단계: 계획 리뷰/승인 후 백엔드 API 변경 설계 확정 및 구현 착수.
+- MCP: 사용하지 않음.
