@@ -232,31 +232,123 @@
 
 ### Phase 2 — 학생: 기본 슬롯 시간표
 - 목표: 기본 슬롯 선택/변경 흐름을 시간표 기반으로 완성한다.
-- 범위:
-  - `StudentClinicContextCards`, `StudentClinicSlotTimetable` 구현
-  - 첫 선택/변경 확인 모달 및 토스트 처리
+- 범위: 2-1 ~ 2-3 단계 순차 적용.
 - 완료 기준: 기본 슬롯 설정/변경 성공/실패가 UI에 반영
+
+#### Phase 2-1 — 컨텍스트/반 선택 UI
+- 목표: teacher+branch 카드와 반 선택 흐름을 고정한다.
+- 범위:
+  - `StudentClinicContextCards` 구현
+  - `useClinicContexts`로 컨텍스트 카드 렌더
+  - 동일 teacher+branch에 Course가 여러 개면 반 드롭다운 노출
+  - `selectedContextKey`, `selectedCourseId` 상태 확정
+- 완료 기준: 컨텍스트/반 선택이 정상적으로 변경되고, 선택 상태가 유지됨
+
+#### Phase 2-2 — 기본 슬롯 시간표 표시
+- 목표: 슬롯 시간표를 렌더링하고 기본 슬롯을 강조한다.
+- 범위:
+  - `StudentClinicSlotTimetable` 구현
+  - `useClinicSlots(courseId)` 연결
+  - 기본 슬롯/미선택 슬롯 스타일 구분
+- 완료 기준: 선택한 course 기준 슬롯 시간표가 표시되고 기본 슬롯이 강조됨
+
+#### Phase 2-3 — 기본 슬롯 변경 액션
+- 목표: 기본 슬롯 변경을 API와 연결한다.
+- 범위:
+  - `PATCH /api/v1/students/me/courses/{courseId}/clinic-slot` 연결
+  - 첫 선택/변경 확인 모달 + 토스트 처리
+  - 변경 후 슬롯 재조회/상태 갱신
+- 완료 기준: 기본 슬롯 변경 성공/실패가 즉시 UI에 반영됨
 
 ### Phase 3 — 학생: 이번 주 세션 시간표
 - 목표: 추가 참석/이동 흐름을 시간표 셀 클릭으로 연결한다.
-- 범위:
-  - `StudentClinicWeekTimetable`, `StudentClinicSessionDetailPanel` 구현
-  - 변경 모드(이동 가능 세션 강조/비활성)
+- 범위: 3-1 ~ 3-3 단계 순차 적용.
 - 완료 기준: 참석/비참석 셀 클릭 분기 + 추가/이동 성공/실패 처리
+
+#### Phase 3-1 — 주간 시간표 데이터 결합
+- 목표: 주간 세션 + 내 참석 목록을 한 시간표에서 볼 수 있게 한다.
+- 범위:
+  - `StudentClinicWeekTimetable` 기본 구조 구성
+  - `useClinicContexts`, `useClinicSessions`, `useStudentAttendances` 연결
+  - 주간 범위(dateRange) 선택/고정 상태 구성
+  - 참석/비참석 세션 스타일 구분
+- 완료 기준: 선택한 context 기준으로 주간 시간표가 표시됨
+
+#### Phase 3-2 — 세션 상세 패널/추가 참석 흐름
+- 목표: 시간표 셀 클릭 시 상세 패널을 열고 추가 참석을 연결한다.
+- 범위:
+  - `StudentClinicSessionDetailPanel` 구현
+  - 비참석 세션 클릭 → 상세 패널에서 “추가 참석” 버튼 표시
+  - `POST /api/v1/students/me/clinic-attendances` 연결
+- 완료 기준: 비참석 세션에서 추가 참석이 성공/실패로 처리됨
+
+#### Phase 3-3 — 변경 모드/이동 흐름
+- 목표: 참석 중 세션 클릭 시 변경 모드로 전환한다.
+- 범위:
+  - 참석 중 세션 클릭 → 변경 모드 활성화
+  - 이동 가능 세션 강조/비활성 처리
+  - `PATCH /api/v1/students/me/clinic-attendances` 연결
+  - 30분 제한 사전 비활성 + 서버 에러 메시지 처리
+- 완료 기준: 이동 요청 성공/실패가 즉시 UI에 반영됨
 
 ### Phase 4 — Teacher/Assistant: 슬롯/세션
 - 목표: Teacher/Assistant 슬롯/세션 관리 UI를 완성한다.
-- 범위:
-  - `ClinicContextSelector`, `ClinicSlotPanel`, `ClinicSessionWeekPanel` 구현
-  - 긴급 세션 생성 모달 + 취소 처리
+- 범위: 4-1 ~ 4-3 단계 순차 적용.
 - 완료 기준: 슬롯/세션 조회 + CRUD/취소 흐름 정상 동작
+
+#### Phase 4-1 — 컨텍스트 선택기
+- 목표: Teacher/Assistant의 branch/teacher 선택 맥락을 고정한다.
+- 범위:
+  - `ClinicContextSelector` 기본 구조 구현
+  - Teacher: `/api/v1/teachers/me/branches` 연결
+  - Assistant: `/api/v1/assistants/me/courses`에서 teacher/branch 조합 추출
+- 완료 기준: 선택된 teacher/branch가 다른 섹션에 전달됨
+
+#### Phase 4-2 — 슬롯 패널
+- 목표: 슬롯 목록과 CRUD 흐름을 완성한다.
+- 범위:
+  - `ClinicSlotPanel`, `ClinicSlotFormModal` 구현
+  - Teacher: 슬롯 생성/수정/삭제 연결
+  - Assistant: 조회 전용 모드 적용
+- 완료 기준: 슬롯 목록 표시 + CRUD 동작 정상 처리
+
+#### Phase 4-3 — 주차별 세션 패널
+- 목표: 주간 세션 조회/긴급 생성/취소를 연결한다.
+- 범위:
+  - `ClinicSessionWeekPanel`, `ClinicEmergencySessionModal` 구현
+  - `GET /api/v1/clinic-sessions` 연결
+  - `POST /api/v1/clinic-sessions/emergency` + `PATCH /api/v1/clinic-sessions/{sessionId}/cancel` 연결
+- 완료 기준: 세션 조회/생성/취소 동작 정상 처리
 
 ### Phase 5 — Teacher/Assistant: 오늘의 출석부/기록
 - 목표: 출석부 → 기록 작성/수정/삭제 흐름을 완성한다.
-- 범위:
-  - `ClinicAttendanceBoard`, `ClinicAttendanceAddModal`, `ClinicRecordFormModal` 구현
-  - 잠금 시간 UI 반영
+- 범위: 5-1 ~ 5-3 단계 순차 적용.
 - 완료 기준: 출석/기록 CRUD + 잠금 시간 제한 UI 반영
+
+#### Phase 5-1 — 출석부 기본 흐름
+- 목표: 세션 목록 선택 → 출석 명단 표시 흐름을 완성한다.
+- 범위:
+  - `ClinicAttendanceBoard` 기본 구조 구현
+  - 오늘 세션 목록 조회 + 선택 UI
+  - `GET /api/v1/clinic-attendances` 연결
+- 완료 기준: 세션 선택 시 출석 명단이 표시됨
+
+#### Phase 5-2 — 출석 예외 추가/삭제
+- 목표: 출석 예외(추가/삭제) 플로우를 연결한다.
+- 범위:
+  - `ClinicAttendanceAddModal` 구현
+  - `POST /api/v1/clinic-sessions/{sessionId}/attendances` 연결
+  - `DELETE /api/v1/clinic-attendances/{attendanceId}` 연결
+  - 잠금 시간(10분 전) 비활성화 처리
+- 완료 기준: 출석 예외 추가/삭제가 성공/실패로 처리됨
+
+#### Phase 5-3 — 클리닉 기록 CRUD
+- 목표: 출석부에서 기록 작성/수정/삭제를 마무리한다.
+- 범위:
+  - `ClinicRecordFormModal` 구현
+  - `POST/GET/PATCH/DELETE /api/v1/clinic-records` 연결
+  - 저장 후 출석부 재조회
+- 완료 기준: 기록 CRUD 동작과 화면 반영이 일치함
 
 ### 확인 필요 사항
 - 신규 `GET /api/v1/students/me/clinic-contexts` 응답에 `teacherName`, `branchName`, `companyName`까지 포함하도록 백엔드 스펙 정리 필요.

@@ -4720,3 +4720,20 @@ BEHAVIORAL
   - `frontend/src/hooks/clinic/use-attendance-mutations.ts`
 - 다음 단계: Phase 1 학생 시간표 UI에서 훅 연결 및 상태 구성.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 14:01] 클리닉 UI Phase 2~5 세부 단계화
+
+### Type
+DESIGN
+
+### Summary
+- Phase 2(학생 기본 슬롯), Phase 3(학생 주간 시간표), Phase 4(교사/조교 슬롯·세션), Phase 5(출석부/기록)를 3단계로 세분화했다.
+- 각 단계별 목표/범위/완료 기준을 명확히 정리했다.
+
+### Details
+- 작업 사유: 구현 단위를 더 작게 나눠 순차 진행하기 위함.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Phase 2-1부터 순차 구현.
+- MCP: 사용하지 않음.
