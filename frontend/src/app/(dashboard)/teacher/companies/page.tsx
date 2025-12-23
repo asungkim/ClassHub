@@ -136,7 +136,7 @@ function TeacherBranchAssignmentsContent() {
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Academy Management</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900">학원 관리</h1>
             <p className="mt-2 text-sm text-slate-500">
-              출강하는 학원을 등록하고, 더 이상 나가지 않는 지점은 비활성화하세요.
+              출강 나가는 학원을 등록하고, 더 이상 나가지 않는 지점은 비활성화하세요.
             </p>
           </div>
           <Button className="w-full md:w-auto" onClick={() => setIsModalOpen(true)}>
@@ -236,14 +236,10 @@ function AssignmentList({
                 <Badge variant={assignment.companyType === "INDIVIDUAL" ? "secondary" : "default"}>
                   {assignment.companyType === "INDIVIDUAL" ? "개인" : "회사"}
                 </Badge>
-                <Badge variant={verified ? "success" : "secondary"}>
-                  {verified ? "VERIFIED" : "UNVERIFIED"}
-                </Badge>
-                <Badge variant="secondary">{assignment.role === "OWNER" ? "대표" : "프리랜서"}</Badge>
+                <Badge variant="secondary">{assignment.role === "OWNER" ? "대표" : "출강 강사"}</Badge>
               </div>
               <p className="text-sm font-medium text-slate-700">{assignment.branchName ?? "지점명 미입력"}</p>
               <div className="text-xs text-slate-500">
-                <span>등록일 {formatDate(assignment.createdAt)}</span>
                 {!isActive && assignment.deletedAt ? (
                   <span className="ml-3 text-rose-500">비활성화 {formatDate(assignment.deletedAt)}</span>
                 ) : null}
