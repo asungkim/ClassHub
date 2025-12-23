@@ -4871,3 +4871,62 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
 - 다음 단계: Teacher/Assistant 슬롯/세션 UI(Phase 4-1) 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 14:43] 교사/조교 클리닉 컨텍스트 선택 UI 구성
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사: 지점 선택 드롭다운을 통해 슬롯/세션 페이지에서 컨텍스트를 고정했다.
+- 조교: 담당 선생님/지점 조합을 추출해 컨텍스트 선택 드롭다운을 구성했다.
+
+### Details
+- 작업 사유: Phase 4-1 컨텍스트 선택기 구현.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: Phase 4-2 슬롯 패널 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:43] 교사/조교 슬롯 시간표 패널 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사 슬롯 CRUD 모달과 삭제 확인 다이얼로그를 연결했다.
+- 조교는 읽기 전용 슬롯 시간표로 표시하도록 구성했다.
+
+### Details
+- 작업 사유: Phase 4-2 슬롯 패널 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+- 다음 단계: Phase 4-3 주차별 세션 패널 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:43] 교사/조교 주차별 세션 패널 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 세션 시간표에 긴급 세션 생성/취소 흐름을 연결했다.
+- 교사/조교 각각의 컨텍스트 기준으로 세션을 조회하도록 구성했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 4-3 주차별 세션 패널 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: Phase 5 출석부/기록 UI 구현.
+- MCP: 사용하지 않음.
