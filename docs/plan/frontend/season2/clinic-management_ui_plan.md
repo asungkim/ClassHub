@@ -8,43 +8,43 @@
 
 ## 2. User Flows & Use Cases
 ### Teacher
-1. 사이드바 → `/teacher/clinics` 진입.
+1. 사이드바 → 클리닉 관리 아코디언에서 하위 메뉴 선택.
 2. 상단에서 **출강 지점 선택** (`GET /api/v1/teachers/me/branches`).
-3. **지점별 클리닉(슬롯 관리)** 섹션:
+3. **지점별 클리닉(슬롯 관리)** (`/teacher/clinics/slots`):
    - 선택된 지점 기준 슬롯 목록 조회 (`GET /api/v1/clinic-slots?branchId=...`).
    - 신규 슬롯 생성 (`POST /api/v1/clinic-slots`).
    - 슬롯 수정/삭제 (`PATCH /api/v1/clinic-slots/{slotId}`, `DELETE /api/v1/clinic-slots/{slotId}`).
-4. **주차별 클리닉(세션)** 섹션:
+4. **주차별 클리닉(세션)** (`/teacher/clinics/sessions`):
    - 선택된 지점 + 주차 범위로 세션 조회 (`GET /api/v1/clinic-sessions?dateRange=...&branchId=...`).
    - 긴급 세션 생성 (`POST /api/v1/clinic-sessions/emergency`).
    - 세션 취소 (`PATCH /api/v1/clinic-sessions/{sessionId}/cancel`).
-5. **오늘의 출석부** 섹션:
+5. **오늘의 출석부** (`/teacher/clinics/attendance`):
    - 오늘 날짜 세션 목록 조회 → 세션 선택.
    - 출석 명단 조회 (`GET /api/v1/clinic-attendances?clinicSessionId=...`).
    - 예외 추가/삭제 (`POST /api/v1/clinic-sessions/{sessionId}/attendances`, `DELETE /api/v1/clinic-attendances/{attendanceId}`).
    - 학생 클릭 → 기록 작성/수정/삭제 (`/api/v1/clinic-records` CRUD).
 
 ### Assistant
-1. 사이드바 → `/assistant/clinics` 진입.
+1. 사이드바 → 클리닉 일정 아코디언에서 하위 메뉴 선택.
 2. 상단에서 **Teacher + Branch 선택**:
    - `GET /api/v1/assistants/me/courses`로 teacher/branch 조합을 구성.
-3. **선생님별 클리닉(슬롯 조회)**:
+3. **선생님별 클리닉(슬롯 조회)** (`/assistant/clinics/slots`):
    - `GET /api/v1/clinic-slots?branchId=...&teacherId=...`.
-4. **주차별 클리닉(세션)**:
+4. **주차별 클리닉(세션)** (`/assistant/clinics/sessions`):
    - `GET /api/v1/clinic-sessions?dateRange=...&branchId=...&teacherId=...`.
    - 긴급 세션 생성 (`POST /api/v1/clinic-sessions/emergency`, body에 teacherId 포함).
    - 세션 취소.
-5. **오늘의 출석부**:
+5. **오늘의 출석부** (`/assistant/clinics/attendance`):
    - 출석 명단 조회 + 예외 추가/삭제 + 기록 작성/수정/삭제.
 
 ### Student
-1. 사이드바 → `/student/clinics` 진입.
-2. **클리닉 시간표(기본 슬롯 선택)**:
+1. 사이드바 → 클리닉 아코디언에서 하위 메뉴 선택.
+2. **클리닉 시간표(기본 슬롯 선택)** (`/student/clinics/schedule`):
    - 학생 컨텍스트 조회 (`GET /api/v1/students/me/clinic-contexts`).
    - 선생님+지점 카드 선택 → (동일 teacher+branch에 Course가 여러 개면) 반 선택 드롭다운 노출.
    - 선택된 Course 기준 슬롯 시간표 조회 (`GET /api/v1/clinic-slots?courseId=...`).
    - 기본 슬롯 선택/변경 (`PATCH /api/v1/students/me/courses/{courseId}/clinic-slot`).
-3. **이번 주 클리닉 시간표**:
+3. **이번 주 클리닉 시간표** (`/student/clinics/week`):
    - 학생 컨텍스트 조회 (`GET /api/v1/students/me/clinic-contexts`).
    - 본인 참석 목록 조회 (`GET /api/v1/students/me/clinic-attendances?dateRange=...`).
    - 선택한 teacher+branch의 주간 세션 조회 (`GET /api/v1/clinic-sessions?dateRange=...&branchId=...&teacherId=...`).
@@ -54,24 +54,25 @@
 
 ## 3. Page & Layout Structure
 ### Teacher `/teacher/clinics`
-- 상단: **지점 선택 드롭다운** + 선택한 지점 정보 카드.
-- 본문: 아코디언 3개
-  - **지점별 클리닉**: 슬롯 리스트 + “슬롯 추가” 버튼.
-  - **주차별 클리닉**: 주차 선택(이번 주 기본) + 세션 리스트 + “긴급 세션 생성”.
-  - **오늘의 출석부**: 오늘 세션 리스트(좌측) + 선택 세션 출석부(우측).
-- 모바일: 아코디언 단일 열, 출석부는 세션 선택 후 하단 패널로 전환.
+- 라우트 구조:
+  - `/teacher/clinics/slots` 지점별 클리닉(슬롯)
+  - `/teacher/clinics/sessions` 주차별 클리닉(세션)
+  - `/teacher/clinics/attendance` 오늘의 출석부
+- 사이드바 아코디언에서 하위 메뉴로 이동한다.
 
 ### Assistant `/assistant/clinics`
-- 상단: **Teacher 선택 → Branch 선택** (Teacher/Branch 조합 필터).
-- 본문 구조는 Teacher와 동일하되, 슬롯은 읽기 전용.
+- 라우트 구조:
+  - `/assistant/clinics/slots` 선생님별 클리닉(슬롯)
+  - `/assistant/clinics/sessions` 주차별 클리닉(세션)
+  - `/assistant/clinics/attendance` 오늘의 출석부
+- 사이드바 아코디언에서 하위 메뉴로 이동한다.
 
 ### Student `/student/clinics`
-- 상단: 설명 카드 + “이번 주” 날짜 범위 표시.
-- 본문: 탭 또는 아코디언 2개
-  - **클리닉 시간표**: teacher+branch 카드 → 반 선택(필요 시) → 슬롯 시간표 + “기본 슬롯 설정”.
-  - **이번 주 클리닉**: teacher+branch 카드 → 반 선택(필요 시) → 주간 세션 시간표.
-- 시간표 셀 클릭으로 추가/이동 흐름을 시작하며, 선택된 세션 상세 패널을 표시한다.
-- 모바일: 카드 → 시간표 → 상세 패널을 단일 컬럼으로 쌓고, 상세는 Bottom Sheet로 제공한다.
+- 라우트 구조:
+  - `/student/clinics/schedule` 클리닉 시간표(기본 슬롯)
+  - `/student/clinics/week` 이번 주 클리닉
+- 사이드바 아코디언에서 하위 메뉴로 이동한다.
+- 각 화면은 teacher+branch 카드 → 반 선택(필요 시) → 시간표 흐름을 따른다.
 
 ## 4. Component Breakdown
 - `ClinicContextSelector`

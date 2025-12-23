@@ -4629,3 +4629,71 @@ DESIGN
   - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
 - 다음 단계: Phase 0부터 순차 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 13:12] 클리닉 UI Phase 0 스캐폴딩 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/Assistant/Student 클리닉 페이지 스캐폴딩을 추가했다.
+- 기본 레이아웃과 탭/섹션 자리만 구성하고 상세 기능은 Phase 1 이후로 이관했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 0 스캐폴딩 수행.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/page.tsx`
+- 다음 단계: Phase 1 데이터 훅/타입 레이어 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 13:17] 클리닉 메뉴 아코디언/서브페이지 스캐폴딩
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 메뉴를 사이드바 아코디언 구조로 변경했다.
+- Teacher/Assistant/Student 클리닉 서브 페이지 스캐폴딩을 추가했다.
+- 페이지별 기본 레이아웃을 분리하고 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: 클리닉 화면을 아코디언 메뉴 기반 서브 라우트 구조로 전환.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/sidebar.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Phase 1 데이터 훅/타입 레이어 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 13:17] 클리닉 화면 라우트 구조 설계 반영
+
+### Type
+DESIGN
+
+### Summary
+- 클리닉 화면을 사이드바 아코디언 기반 서브 라우트 구조로 문서화했다.
+- 학생/교사/조교 페이지 흐름을 서브 페이지 기준으로 재정리했다.
+
+### Details
+- 작업 사유: 실제 네비게이션 구조 변경을 설계 문서에 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Phase 1 구현 시 문서 기준으로 진행.
+- MCP: 사용하지 않음.

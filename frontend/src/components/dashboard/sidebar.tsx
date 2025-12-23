@@ -35,14 +35,30 @@ const menuByRole: Record<Role, MenuItem[]> = {
         { href: "/teacher/progress/personal", label: "개인 진도", icon: "🧑‍🎓" }
       ]
     },
-    { href: "/teacher/clinics", label: "클리닉 관리", icon: "🩺" },
+    {
+      label: "클리닉 관리",
+      icon: "🩺",
+      children: [
+        { href: "/teacher/clinics/slots", label: "지점별 클리닉", icon: "🧩" },
+        { href: "/teacher/clinics/sessions", label: "주차별 클리닉", icon: "🗓️" },
+        { href: "/teacher/clinics/attendance", label: "오늘의 출석부", icon: "🧾" }
+      ]
+    },
     { href: "/teacher/calendar", label: "학생별 캘린더", icon: "🗓️" }
   ],
   ASSISTANT: [
     { href: "/assistant", label: "대시보드", icon: "📊" },
     { href: "/assistant/courses", label: "반 목록", icon: "📚" },
     { href: "/assistant/students", label: "학생 관리", icon: "👨‍🎓" },
-    { href: "/assistant/clinics", label: "클리닉 일정", icon: "🩺" },
+    {
+      label: "클리닉 일정",
+      icon: "🩺",
+      children: [
+        { href: "/assistant/clinics/slots", label: "선생님별 클리닉", icon: "🧩" },
+        { href: "/assistant/clinics/sessions", label: "주차별 클리닉", icon: "🗓️" },
+        { href: "/assistant/clinics/attendance", label: "오늘의 출석부", icon: "🧾" }
+      ]
+    },
     { href: "/assistant/worklogs", label: "근무 일지", icon: "📝" },
     {
       label: "진도 관리",
@@ -59,7 +75,14 @@ const menuByRole: Record<Role, MenuItem[]> = {
     { href: "/student/my-courses", label: "내 수업", icon: "🎓" },
     { href: "/student/course/search", label: "반 검색", icon: "🔍" },
     { href: "/student/calendar", label: "일정", icon: "📅" },
-    { href: "/student/clinics", label: "클리닉", icon: "🩺" },
+    {
+      label: "클리닉",
+      icon: "🩺",
+      children: [
+        { href: "/student/clinics/schedule", label: "클리닉 시간표", icon: "🧭" },
+        { href: "/student/clinics/week", label: "이번 주 클리닉", icon: "🗓️" }
+      ]
+    }
   ],
   SUPER_ADMIN: [
     { href: "/admin", label: "대시보드", icon: "📊" },
