@@ -212,5 +212,50 @@
 
 ---
 
+## 8. Implementation Phases
+### Phase 0 — 스캐폴딩/공통 준비
+- 목표: 역할별 페이지 뼈대와 기본 레이아웃을 고정한다.
+- 범위:
+  - `/teacher/clinics`, `/assistant/clinics`, `/student/clinics` 라우트 생성
+  - 상단 설명 카드/탭/아코디언 자리잡기
+  - 이번 주 `dateRange` 유틸 준비
+- 완료 기준: 각 페이지 진입 가능 + 기본 레이아웃 표시
+
+### Phase 1 — 데이터 훅/타입 레이어
+- 목표: API 호출과 상태 처리를 훅 단위로 분리해 UI 복잡도를 낮춘다.
+- 범위:
+  - OpenAPI 타입 alias 정리
+  - `useClinicContexts`, `useClinicSlots`, `useClinicSessions`, `useStudentAttendances`, `useAttendanceMutations` 설계
+  - 에러 처리 `getApiErrorMessage`/`getFetchError` 통합
+- 완료 기준: 각 훅이 로딩/성공/에러 상태를 구분해 반환
+
+### Phase 2 — 학생: 기본 슬롯 시간표
+- 목표: 기본 슬롯 선택/변경 흐름을 시간표 기반으로 완성한다.
+- 범위:
+  - `StudentClinicContextCards`, `StudentClinicSlotTimetable` 구현
+  - 첫 선택/변경 확인 모달 및 토스트 처리
+- 완료 기준: 기본 슬롯 설정/변경 성공/실패가 UI에 반영
+
+### Phase 3 — 학생: 이번 주 세션 시간표
+- 목표: 추가 참석/이동 흐름을 시간표 셀 클릭으로 연결한다.
+- 범위:
+  - `StudentClinicWeekTimetable`, `StudentClinicSessionDetailPanel` 구현
+  - 변경 모드(이동 가능 세션 강조/비활성)
+- 완료 기준: 참석/비참석 셀 클릭 분기 + 추가/이동 성공/실패 처리
+
+### Phase 4 — Teacher/Assistant: 슬롯/세션
+- 목표: Teacher/Assistant 슬롯/세션 관리 UI를 완성한다.
+- 범위:
+  - `ClinicContextSelector`, `ClinicSlotPanel`, `ClinicSessionWeekPanel` 구현
+  - 긴급 세션 생성 모달 + 취소 처리
+- 완료 기준: 슬롯/세션 조회 + CRUD/취소 흐름 정상 동작
+
+### Phase 5 — Teacher/Assistant: 오늘의 출석부/기록
+- 목표: 출석부 → 기록 작성/수정/삭제 흐름을 완성한다.
+- 범위:
+  - `ClinicAttendanceBoard`, `ClinicAttendanceAddModal`, `ClinicRecordFormModal` 구현
+  - 잠금 시간 UI 반영
+- 완료 기준: 출석/기록 CRUD + 잠금 시간 제한 UI 반영
+
 ### 확인 필요 사항
 - 신규 `GET /api/v1/students/me/clinic-contexts` 응답에 `teacherName`, `branchName`, `companyName`까지 포함하도록 백엔드 스펙 정리 필요.

@@ -4612,3 +4612,20 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceControllerTest.java`
 - 다음 단계: 프론트 API 연동 및 학생 시간표 UI 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 13:08] 클리닉 프론트 구현 단계(Phase) 정리
+
+### Type
+DESIGN
+
+### Summary
+- 클리닉 프론트 구현을 Phase 0~5로 나눠 단계별 목표와 완료 기준을 정리했다.
+- 학생 시간표 → 교사/조교 관리 UI 순서로 작업 흐름을 명확히 했다.
+
+### Details
+- 작업 사유: 프론트 구현 순서를 명확히 하기 위한 단계화.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Phase 0부터 순차 구현.
+- MCP: 사용하지 않음.
