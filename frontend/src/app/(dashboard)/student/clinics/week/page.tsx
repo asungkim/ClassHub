@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/shared/empty-state";
+import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
 
 type ClinicContextCourse = {
@@ -44,6 +45,10 @@ const DAY_ORDER = [
   { value: "SATURDAY", label: "토" },
   { value: "SUNDAY", label: "일" }
 ];
+const GRID_START_HOUR = 6;
+const GRID_END_HOUR = 22;
+const GRID_HOUR_HEIGHT = 56;
+const GRID_DAYS = DAY_ORDER.map((day) => ({ key: day.value, label: day.label }));
 const DAY_KEYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"] as const;
 type DayKey = (typeof DAY_KEYS)[number];
 const MOVE_LOCK_MINUTES = 30;
@@ -216,19 +221,19 @@ export default function StudentClinicWeekPage() {
   }, [attendanceSessionIds, isMoveMode, moveSourceSessionId]);
 
   const sessionsByDay = useMemo(() => {
-    const map = new Map<string, ClinicSessionResponse[]>();
-    DAY_ORDER.forEach((day) => map.set(day.value, []));
+    const base: Record<string, ClinicSessionResponse[]> = {};
+    DAY_ORDER.forEach((day) => {
+      base[day.value] = [];
+    });
     sessions.forEach((session) => {
       const dayKey = getDayKeyFromDate(session.date);
       if (!dayKey) return;
-      const list = map.get(dayKey) ?? [];
-      list.push(session);
-      map.set(dayKey, list);
+      base[dayKey] = [...(base[dayKey] ?? []), session];
     });
-    map.forEach((list) => {
+    Object.values(base).forEach((list) => {
       list.sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""));
     });
-    return map;
+    return base;
   }, [sessions]);
 
   const isSelectedAttending = Boolean(selectedSession?.sessionId && attendanceSessionIds.has(selectedSession.sessionId));
@@ -456,10 +461,9 @@ export default function StudentClinicWeekPage() {
           )}
 
           {isLoading && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_ORDER.slice(0, 3).map((day) => (
-                <Skeleton key={day.value} className="h-40 w-full" />
-              ))}
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-[640px] w-full" />
             </div>
           )}
 
@@ -472,59 +476,84 @@ export default function StudentClinicWeekPage() {
           )}
 
           {!isLoading && selectedContextGroup && sessions.length > 0 && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_ORDER.map((day) => {
-                const daySessions = sessionsByDay.get(day.value) ?? [];
-                return (
-                  <div key={day.value} className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900">{day.label}</p>
-                      <Badge variant="secondary">{daySessions.length}개</Badge>
-                    </div>
-                    {daySessions.length === 0 && (
-                      <p className="mt-3 text-xs text-slate-400">등록된 세션이 없습니다.</p>
-                    )}
-                    {daySessions.map((session) => {
-                      const isAttending = session.sessionId ? attendanceSessionIds.has(session.sessionId) : false;
-                      const isLocked = isMoveMode && isMoveLocked(session);
-                      const isMoveSource = isMoveMode && session.sessionId === moveSourceSessionId;
-                      const isMoveCandidate = isMoveMode && !isAttending && !session.isCanceled && !isLocked;
-                      const isMoveDisabled = isMoveMode && !isMoveSource && !isMoveCandidate;
-                      return (
-                        <button
-                          key={session.sessionId ?? `${day.value}-${session.startTime}-${session.endTime}`}
-                          type="button"
-                          onClick={() => handleSessionClick(session)}
-                          disabled={isMoveMode && isMoveDisabled}
-                          className={clsx(
-                            "mt-3 w-full rounded-xl border px-3 py-2 text-left transition",
-                            "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
-                            isAttending ? "border-blue-200 bg-blue-50/70" : "border-slate-200 bg-white",
-                            isMoveCandidate && "border-emerald-200 bg-emerald-50/70",
-                            isMoveSource && "border-indigo-200 bg-indigo-50/70",
-                            isMoveDisabled && "cursor-not-allowed opacity-60"
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-slate-800">
-                              {formatTime(session.startTime)} - {formatTime(session.endTime)}
-                            </p>
-                            {isMoveSource && <Badge>변경 대상</Badge>}
-                            {!isMoveSource && isAttending && <Badge>참석 중</Badge>}
-                            {!isAttending && session.isCanceled && <Badge variant="destructive">취소</Badge>}
-                            {!isAttending && !session.isCanceled && isLocked && (
-                              <Badge variant="secondary">잠금</Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {getDayLabel(getDayKeyFromDate(session.date))} · 정원 {session.capacity ?? "-"}
+            <div className="space-y-3">
+              <p className="text-xs text-slate-500">
+                세션을 클릭하면 상세 동작(추가 참석/변경)을 진행할 수 있습니다.
+              </p>
+              <WeeklyTimeGrid
+                days={GRID_DAYS}
+                itemsByDay={sessionsByDay}
+                startHour={GRID_START_HOUR}
+                endHour={GRID_END_HOUR}
+                hourHeight={GRID_HOUR_HEIGHT}
+                rangeStart={weekRange.start}
+                showDateHeader
+                getItemRange={(session) => ({
+                  startTime: session.startTime,
+                  endTime: session.endTime
+                })}
+                getItemKey={(session, index) => session.sessionId ?? `${session.date}-${session.startTime}-${index}`}
+                renderItem={({ item, style }) => {
+                  const isAttending = item.sessionId ? attendanceSessionIds.has(item.sessionId) : false;
+                  const isLocked = isMoveMode && isMoveLocked(item);
+                  const isMoveSource = isMoveMode && item.sessionId === moveSourceSessionId;
+                  const isMoveCandidate = isMoveMode && !isAttending && !item.isCanceled && !isLocked;
+                  const isMoveDisabled = isMoveMode && !isMoveSource && !isMoveCandidate;
+                  const isCanceled = Boolean(item.isCanceled);
+
+                  const statusLabel = isCanceled
+                    ? { text: "취소", className: "bg-slate-100 text-slate-500" }
+                    : isMoveSource
+                      ? { text: "변경", className: "bg-indigo-100 text-indigo-700" }
+                      : isAttending
+                        ? { text: "참석", className: "bg-blue-100 text-blue-700" }
+                        : isLocked
+                          ? { text: "잠금", className: "bg-slate-100 text-slate-500" }
+                          : null;
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => handleSessionClick(item)}
+                      disabled={isMoveMode && isMoveDisabled}
+                      className={clsx(
+                        "absolute left-1 right-1 rounded-2xl border px-2.5 py-2 text-left text-xs shadow-sm transition",
+                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+                        isCanceled
+                          ? "border-slate-200 bg-slate-50 text-slate-400"
+                          : isMoveSource
+                            ? "border-indigo-200 bg-indigo-50 text-slate-700"
+                            : isMoveCandidate
+                              ? "border-emerald-200 bg-emerald-50 text-slate-700"
+                              : isAttending
+                                ? "border-blue-200 bg-blue-50 text-slate-700"
+                                : "border-slate-200 bg-white text-slate-700",
+                        isMoveDisabled && "cursor-not-allowed opacity-60"
+                      )}
+                      style={style}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold leading-tight">
+                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
                           </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+                          <p className="text-[11px] text-slate-500">정원 {item.capacity ?? "-"}</p>
+                        </div>
+                        {statusLabel && (
+                          <span
+                            className={clsx(
+                              "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                              statusLabel.className
+                            )}
+                          >
+                            {statusLabel.text}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                }}
+              />
             </div>
           )}
 

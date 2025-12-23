@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/shared/empty-state";
+import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
 import { api } from "@/lib/api";
 import { getApiErrorMessage, getFetchError } from "@/lib/api-error";
@@ -47,6 +48,10 @@ const DAY_ORDER = [
   { value: "SATURDAY", label: "토" },
   { value: "SUNDAY", label: "일" }
 ];
+const GRID_START_HOUR = 6;
+const GRID_END_HOUR = 22;
+const GRID_HOUR_HEIGHT = 56;
+const GRID_DAYS = DAY_ORDER.map((day) => ({ key: day.value, label: day.label }));
 
 const TIME_PLACEHOLDER = "--:--";
 
@@ -160,25 +165,23 @@ export default function StudentClinicSchedulePage() {
   } = useClinicSlots({ courseId: selectedCourseId ?? undefined }, Boolean(selectedCourseId));
 
   const slotsByDay = useMemo(() => {
-    const map = new Map<string, ClinicSlotResponse[]>();
+    const base: Record<string, ClinicSlotResponse[]> = {};
     DAY_ORDER.forEach((day) => {
-      map.set(day.value, []);
+      base[day.value] = [];
     });
 
     slots.forEach((slot) => {
       if (!slot.dayOfWeek) {
         return;
       }
-      const list = map.get(slot.dayOfWeek) ?? [];
-      list.push(slot);
-      map.set(slot.dayOfWeek, list);
+      base[slot.dayOfWeek] = [...(base[slot.dayOfWeek] ?? []), slot];
     });
 
-    map.forEach((list) => {
+    Object.values(base).forEach((list) => {
       list.sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""));
     });
 
-    return map;
+    return base;
   }, [slots]);
 
   const handleSlotSelect = useCallback(
@@ -344,10 +347,9 @@ export default function StudentClinicSchedulePage() {
           )}
 
           {selectedCourseId && slotsLoading && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DAY_ORDER.slice(0, 3).map((day) => (
-                <Skeleton key={day.value} className="h-40 w-full" />
-              ))}
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-[640px] w-full" />
             </div>
           )}
 
@@ -358,49 +360,53 @@ export default function StudentClinicSchedulePage() {
           {selectedCourseId && !slotsLoading && slots.length > 0 && !slotsError && (
             <div className="space-y-3">
               <p className="text-xs text-slate-500">슬롯을 클릭하면 기본 슬롯으로 설정할 수 있습니다.</p>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {DAY_ORDER.map((day) => {
-                  const daySlots = slotsByDay.get(day.value) ?? [];
-                  return (
-                    <div key={day.value} className="rounded-2xl border border-slate-200 bg-white p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-slate-900">{day.label}</p>
-                        <Badge variant="secondary">{daySlots.length}개</Badge>
-                      </div>
-                      {daySlots.length === 0 && (
-                        <p className="mt-3 text-xs text-slate-400">등록된 슬롯이 없습니다.</p>
-                      )}
-                      {daySlots.map((slot) => {
-                        const isDefault = slot.slotId && slot.slotId === selectedCourseContext?.defaultClinicSlotId;
-                        return (
-                          <button
-                            key={slot.slotId ?? `${day.value}-${slot.startTime}-${slot.endTime}`}
-                            type="button"
-                            onClick={() => handleSlotSelect(slot)}
-                            disabled={isDefault || isUpdating}
-                            className={clsx(
-                              "mt-3 w-full rounded-xl border px-3 py-2 text-left transition",
-                              "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
-                              isDefault
-                                ? "cursor-default border-blue-200 bg-blue-50/70"
-                                : "border-slate-200 bg-white hover:border-slate-300",
-                              isUpdating && "opacity-60"
-                            )}
-                          >
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-semibold text-slate-800">
-                                {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                              </p>
-                              {isDefault && <Badge>기본</Badge>}
-                            </div>
-                            <p className="text-xs text-slate-500">정원 {slot.defaultCapacity ?? "-"}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  );
+              <WeeklyTimeGrid
+                days={GRID_DAYS}
+                itemsByDay={slotsByDay}
+                startHour={GRID_START_HOUR}
+                endHour={GRID_END_HOUR}
+                hourHeight={GRID_HOUR_HEIGHT}
+                showDateHeader={false}
+                getItemRange={(slot) => ({
+                  startTime: slot.startTime,
+                  endTime: slot.endTime
                 })}
-              </div>
+                getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
+                renderItem={({ item, style }) => {
+                  const isDefault = item.slotId && item.slotId === selectedCourseContext?.defaultClinicSlotId;
+                  const isDisabled = isDefault || isUpdating;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => handleSlotSelect(item)}
+                      disabled={isDisabled}
+                      className={clsx(
+                        "absolute left-1 right-1 rounded-2xl border px-2.5 py-2 text-left text-xs shadow-sm transition",
+                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+                        isDefault
+                          ? "cursor-default border-blue-200 bg-blue-50/70 text-slate-700"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                        isDisabled && "opacity-60"
+                      )}
+                      style={style}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold leading-tight">
+                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                          </p>
+                          <p className="text-[11px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
+                        </div>
+                        {isDefault && (
+                          <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                            기본
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                }}
+              />
             </div>
           )}
         </div>

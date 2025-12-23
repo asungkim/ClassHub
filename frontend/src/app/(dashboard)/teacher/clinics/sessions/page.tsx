@@ -120,7 +120,7 @@ export default function TeacherClinicSessionsPage() {
     [branches, selectedBranchId]
   );
 
-  const [weekRange, setWeekRange] = useState<WeekRange>(() => getCurrentWeekRange());
+  const weekRange = useMemo(() => getCurrentWeekRange(), []);
   const weekRangeLabel = useMemo(() => formatWeekRange(weekRange.start, weekRange.end), [weekRange]);
   const dateRangeValue = useMemo(() => formatDateRange(weekRange.start, weekRange.end), [weekRange]);
 
@@ -149,18 +149,6 @@ export default function TeacherClinicSessionsPage() {
     });
     return base;
   }, [sessions]);
-
-  const handlePrevWeek = () => {
-    setWeekRange((prev) => getCurrentWeekRange(addDays(prev.start, -7)));
-  };
-
-  const handleNextWeek = () => {
-    setWeekRange((prev) => getCurrentWeekRange(addDays(prev.start, 7)));
-  };
-
-  const handleResetWeek = () => {
-    setWeekRange(getCurrentWeekRange());
-  };
 
   const openEmergencyModal = (preset?: Partial<EmergencyFormState>) => {
     setEmergencyForm({
@@ -328,31 +316,8 @@ export default function TeacherClinicSessionsPage() {
 
       <Card title="주간 세션 시간표" description="선택한 지점 기준 주간 세션을 표시합니다.">
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex justify-center">
             <p className="text-sm font-semibold text-slate-700">{weekRangeLabel}</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handlePrevWeek}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
-              >
-                ◀
-              </button>
-              <button
-                type="button"
-                onClick={handleResetWeek}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
-              >
-                이번 주
-              </button>
-              <button
-                type="button"
-                onClick={handleNextWeek}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
-              >
-                ▶
-              </button>
-            </div>
           </div>
 
           {sessionsError && (
@@ -525,10 +490,4 @@ function formatDate(date: Date) {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
 }
