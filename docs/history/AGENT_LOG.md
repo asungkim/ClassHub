@@ -4697,3 +4697,26 @@ DESIGN
   - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
 - 다음 단계: Phase 1 구현 시 문서 기준으로 진행.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 13:47] 클리닉 데이터 훅 타입 정합성 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 컨텍스트/슬롯/세션/학생 참석 조회 훅에서 에러 처리와 응답 데이터 검증 흐름을 정리했다.
+- 필수 쿼리 파라미터가 있는 API 호출에 타입 정합성을 맞췄다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 1 데이터 훅을 기존 프론트 API 호출 패턴에 맞춰 정리.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/hooks/clinic/use-clinic-contexts.ts`
+  - `frontend/src/hooks/clinic/use-clinic-slots.ts`
+  - `frontend/src/hooks/clinic/use-clinic-sessions.ts`
+  - `frontend/src/hooks/clinic/use-student-attendances.ts`
+  - `frontend/src/hooks/clinic/use-attendance-mutations.ts`
+- 다음 단계: Phase 1 학생 시간표 UI에서 훅 연결 및 상태 구성.
+- MCP: 사용하지 않음.
