@@ -13,12 +13,17 @@ import type {
   CourseUpdateRequest,
   CourseWithTeacherResponse,
   EnrollmentStatus,
+  AssistantAssignmentResponse,
+  AssistantAssignmentPage,
   PublicCourseResponse,
+  ClinicSlotResponse,
   StudentCourseDetailResponse,
   StudentCourseListItemResponse,
   StudentCourseRecordUpdateRequest,
   StudentCourseResponse,
   StudentCourseStatusFilter,
+  StudentStudentDetailResponse,
+  StudentStudentListItemResponse,
   StudentEnrollmentRequestCreateRequest,
   StudentEnrollmentRequestResponse,
   TeacherAssignmentFilter,
@@ -453,6 +458,50 @@ export async function fetchTeacherCourses(params: {
   };
 }
 
+export async function fetchTeacherAssistants(params: {
+  status: TeacherAssignmentFilter;
+  page: number;
+  size?: number;
+}): Promise<ListResult<AssistantAssignmentResponse>> {
+  const { status, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/teachers/me/assistants", {
+    params: { query: { status, page, size } }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "조교 목록을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data as AssistantAssignmentPage;
+  return {
+    items: (pageData?.content ?? []) as AssistantAssignmentResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchClinicSlots(params: {
+  branchId?: string;
+  teacherId?: string;
+  courseId?: string;
+}): Promise<ClinicSlotResponse[]> {
+  const { branchId, teacherId, courseId } = params;
+  const response = await api.GET("/api/v1/clinic-slots", {
+    params: {
+      query: {
+        branchId: branchId || undefined,
+        teacherId: teacherId || undefined,
+        courseId: courseId || undefined
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "클리닉 슬롯을 불러오지 못했습니다."));
+  }
+
+  return (response.data.data ?? []) as ClinicSlotResponse[];
+}
+
 export async function fetchStudentCourseRecords(params: {
   courseId?: string;
   status: StudentCourseStatusFilter;
@@ -484,6 +533,35 @@ export async function fetchStudentCourseRecords(params: {
   };
 }
 
+export async function fetchStudentStudents(params: {
+  status: StudentCourseStatusFilter;
+  keyword?: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<StudentStudentListItemResponse>> {
+  const { status, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/student-courses/students", {
+    params: {
+      query: {
+        status,
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "학생 목록을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as StudentStudentListItemResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
 export async function fetchStudentCourseDetail(recordId: string) {
   const response = await api.GET("/api/v1/student-courses/{recordId}", {
     params: { path: { recordId } }
@@ -494,6 +572,18 @@ export async function fetchStudentCourseDetail(recordId: string) {
   }
 
   return response.data.data as StudentCourseDetailResponse;
+}
+
+export async function fetchStudentStudentDetail(studentId: string) {
+  const response = await api.GET("/api/v1/student-courses/students/{studentId}", {
+    params: { path: { studentId } }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "학생 상세 정보를 불러오지 못했습니다."));
+  }
+
+  return response.data.data as StudentStudentDetailResponse;
 }
 
 export async function updateStudentCourseRecord(recordId: string, payload: StudentCourseRecordUpdateRequest) {

@@ -30,14 +30,21 @@ import com.classhub.domain.studentcourse.dto.StudentCourseStatusFilter;
 import com.classhub.domain.studentcourse.dto.request.StudentCourseRecordUpdateRequest;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseDetailResponse;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseListItemResponse;
+import com.classhub.domain.studentcourse.dto.response.StudentStudentDetailResponse;
+import com.classhub.domain.studentcourse.dto.response.StudentStudentListItemResponse;
+import com.classhub.domain.studentcourse.model.StudentCourseEnrollment;
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
+import com.classhub.domain.studentcourse.repository.StudentCourseEnrollmentRepository;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
+import com.classhub.domain.studentcourse.repository.StudentActiveCourseProjection;
+import com.classhub.domain.studentcourse.repository.StudentStatusProjection;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +63,9 @@ class StudentCourseManagementServiceTest {
 
     @Mock
     private StudentCourseRecordRepository recordRepository;
+
+    @Mock
+    private StudentCourseEnrollmentRepository enrollmentRepository;
 
     @Mock
     private CourseRepository courseRepository;
@@ -87,6 +97,7 @@ class StudentCourseManagementServiceTest {
     private Member studentMember;
     private StudentInfo studentInfo;
     private CourseResponse courseResponse;
+    private StudentCourseEnrollment enrollment;
 
     @BeforeEach
     void setUp() {
@@ -121,6 +132,7 @@ class StudentCourseManagementServiceTest {
                 .birthDate(LocalDate.now().minusYears(18))
                 .parentPhone("010-1111-2222")
                 .build();
+        enrollment = StudentCourseEnrollment.create(studentId, courseId, LocalDateTime.now());
         courseResponse = new CourseResponse(
                 courseId,
                 UUID.randomUUID(),
@@ -236,6 +248,91 @@ class StudentCourseManagementServiceTest {
                 any(),
                 any()
         );
+    }
+
+    @Test
+    void shouldListStudentSummariesForTeacher() {
+        StudentStatusProjection projection = new StudentStatusProjection() {
+            @Override
+            public UUID getStudentMemberId() {
+                return studentId;
+            }
+
+            @Override
+            public boolean getActive() {
+                return true;
+            }
+        };
+        StudentActiveCourseProjection activeCourseProjection = new StudentActiveCourseProjection() {
+            @Override
+            public UUID getStudentMemberId() {
+                return studentId;
+            }
+
+            @Override
+            public UUID getCourseId() {
+                return courseId;
+            }
+
+            @Override
+            public String getCourseName() {
+                return "고2 수학";
+            }
+        };
+        Page<StudentStatusProjection> page = new PageImpl<>(List.of(projection), PageRequest.of(0, 10), 1);
+        when(enrollmentRepository.searchStudentSummariesForTeacher(
+                eq(teacherId),
+                eq(false),
+                eq(false),
+                eq(null),
+                eq(PageRequest.of(0, 10))
+        )).thenReturn(page);
+        when(enrollmentRepository.findActiveCoursesForStudents(
+                eq(List.of(teacherId)),
+                eq(List.of(studentId))
+        )).thenReturn(List.of(activeCourseProjection));
+        when(memberRepository.findAllById(anyCollection())).thenReturn(List.of(studentMember));
+        when(studentInfoRepository.findByMemberIdIn(anyCollection())).thenReturn(List.of(studentInfo));
+
+        PageResponse<StudentStudentListItemResponse> response = managementService.getStudents(
+                new MemberPrincipal(teacherId, MemberRole.TEACHER),
+                StudentCourseStatusFilter.ALL,
+                null,
+                0,
+                10
+        );
+
+        assertThat(response.content()).hasSize(1);
+        StudentStudentListItemResponse item = response.content().getFirst();
+        assertThat(item.student().name()).isEqualTo("홍길동");
+        assertThat(item.active()).isTrue();
+        assertThat(item.activeCourseNames()).containsExactly("고2 수학");
+        assertThat(item.activeCourseIds()).containsExactly(courseId);
+    }
+
+    @Test
+    void shouldReturnStudentDetailForTeacher() {
+        when(enrollmentRepository.findByStudentMemberIdAndTeacherMemberIdIn(studentId, List.of(teacherId)))
+                .thenReturn(List.of(enrollment));
+        when(recordRepository.findByStudentMemberIdAndTeacherMemberIdIn(studentId, List.of(teacherId)))
+                .thenReturn(List.of(record));
+        when(memberRepository.findById(studentId)).thenReturn(Optional.of(studentMember));
+        when(studentInfoRepository.findByMemberId(studentId)).thenReturn(Optional.of(studentInfo));
+        when(courseRepository.findAllById(anyCollection())).thenReturn(List.of(course));
+        CourseViewAssembler.CourseContext context = new CourseViewAssembler.CourseContext(Map.of(), Map.of(), Map.of());
+        when(courseViewAssembler.buildContext(anyCollection())).thenReturn(context);
+        when(courseViewAssembler.toCourseResponse(eq(course), eq(context))).thenReturn(courseResponse);
+
+        StudentStudentDetailResponse response = managementService.getStudentDetail(
+                new MemberPrincipal(teacherId, MemberRole.TEACHER),
+                studentId
+        );
+
+        assertThat(response.student().name()).isEqualTo("홍길동");
+        assertThat(response.courses()).hasSize(1);
+        assertThat(response.records()).hasSize(1);
+        assertThat(response.records().getFirst().courseId()).isEqualTo(courseId);
+        assertThat(response.records().getFirst().active()).isTrue();
     }
 
     @Test

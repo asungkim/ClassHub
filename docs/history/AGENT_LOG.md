@@ -5289,3 +5289,147 @@ BEHAVIORAL
   - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
 - 다음 단계: 학생 UI에서 기본 슬롯 참석 취소 비활성 처리.
 - MCP: 사용하지 않음.
+
+## [2025-12-24 01:23] 학생 목록/상세 조회 개선 계획 수립
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant 학생 목록을 학생 단위로 재정의하고 상태 기준을 확정했다.
+- 학생 상세 모달의 응답 구조(학생 + Course + Record)와 UI 흐름을 설계했다.
+
+### Details
+- 작업 사유: 중복 노출 및 비활성 Course 노출 문제 개선.
+- 영향받은 테스트: 없음(계획 단계).
+- 수정한 파일:
+  - `docs/plan/backend/season2/student-list-management_plan.md`
+  - `docs/plan/frontend/season2/student-list-ui_plan.md`
+- 다음 단계: 설계 승인 후 TDD/구현 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 01:35] 학생 목록/상세 조회 API 도입
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 단위 목록 조회 API와 상세 조회 API를 추가했다.
+- 학생 상태를 활성 Course 기반으로 계산하고, courseId 필터를 단순 목록 필터로 유지했다.
+
+### Details
+- 작업 사유: 학생 중복 노출 및 비활성 Course 노출 문제 개선.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.studentcourse.repository.StudentCourseEnrollmentRepositoryTest" --tests "com.classhub.domain.studentcourse.application.StudentCourseManagementServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentStatusProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseManagementController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentListItemResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseRecordSummaryResponse.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+- 다음 단계: 프론트엔드 학생 목록/상세 모달 연동.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:00] 학생 목록 응답에 활성 반 정보 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록 응답에 활성 반 이름/ID 목록을 포함했다.
+- 학생 목록 API에서 courseId 필터를 제거하고, 활성 반 기준으로만 표시하도록 정리했다.
+
+### Details
+- 작업 사유: 학생 목록에서 현재 수강 중인 반을 빠르게 확인할 수 있도록 개선.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.studentcourse.repository.StudentCourseEnrollmentRepositoryTest" --tests "com.classhub.domain.studentcourse.application.StudentCourseManagementServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentActiveCourseProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentStatusProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseManagementController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentListItemResponse.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+- 다음 단계: 프론트엔드 목록 UI에서 activeCourseNames 사용 및 상세 모달 연동.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:14] 학생 목록 UI를 학생 단위 목록으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록을 학생 단위 응답으로 전환하고 현재 수강 중인 반을 표시하도록 개선했다.
+- 학생 상세 모달을 학생+반 목록+기록 편집 흐름으로 재구성했다.
+
+### Details
+- 작업 사유: 중복 목록 제거 및 학생/반 정보를 빠르게 확인하기 위한 UI 개선.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 수동 화면 확인(teacher/assistant 학생 목록, 상세 모달 선택/편집 플로우).
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:20] 학생 상세 모달 드롭다운 설계 보완
+
+### Type
+DESIGN
+
+### Summary
+- 학생 상세 모달에서 조교/클리닉 슬롯을 드롭다운으로 선택하는 흐름을 설계에 반영했다.
+
+### Details
+- 작업 사유: UUID 직접 입력 대신 조교/슬롯 선택 UX 요구 반영.
+- 영향받은 테스트: 없음(설계 업데이트).
+- 수정한 파일:
+  - `docs/plan/frontend/season2/student-list-ui_plan.md`
+- 다음 단계: 프론트 구현 시 조교/슬롯 로딩 및 드롭다운 표시.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:21] 학생 상세 기록 수정 UI를 드롭다운으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 상세 모달에서 조교/클리닉 슬롯을 드롭다운으로 선택하도록 변경했다.
+- 반 선택 시 해당 반 기록을 편집하는 흐름을 유지했다.
+
+### Details
+- 작업 사유: UUID 직접 입력 대신 조교/슬롯 선택 UX 요구 반영.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 수동 화면 확인(teacher/assistant 학생 상세 모달에서 조교/슬롯 선택 흐름).
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:28] 학생 목록/상세 연락처 표시 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록에 학부모 연락처를 함께 표시하고, 이름/이메일 레이아웃을 정리했다.
+- 학생 상세 화면에서 UUID 표기를 제거했다.
+
+### Details
+- 작업 사유: 목록 가독성 개선 및 상세 화면에서 ID 노출 제거.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 수동 화면 확인(학생 목록 연락처/학부모 표시, 상세 UUID 제거).
+- MCP: 사용하지 않음.
