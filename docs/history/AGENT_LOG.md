@@ -4737,3 +4737,22 @@ DESIGN
   - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
 - 다음 단계: Phase 2-1부터 순차 구현.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 14:07] 학생 클리닉 컨텍스트/반 선택 UI 구성
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 시간표 화면에 선생님/지점 컨텍스트 선택 카드와 반 선택 드롭다운을 연결했다.
+- 컨텍스트 로딩/에러/빈 상태를 공통 UI로 정리했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 2-1 컨텍스트/반 선택 UI를 구현하기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+- 다음 단계: Phase 2-2 기본 슬롯 시간표 표시.
+- MCP: 사용하지 않음.
