@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useClinicContexts } from "@/hooks/clinic/use-clinic-contexts";
+import { useClinicSlots } from "@/hooks/clinic/use-clinic-slots";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/inline-error";
@@ -11,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import type { components } from "@/types/openapi";
 
 type ClinicContextCourse = {
   courseId: string;
@@ -28,6 +30,22 @@ type ClinicContextGroup = {
   companyName: string;
   courses: ClinicContextCourse[];
 };
+
+type ClinicSlotResponse = components["schemas"]["ClinicSlotResponse"];
+
+const DAY_ORDER = [
+  { value: "MONDAY", label: "월" },
+  { value: "TUESDAY", label: "화" },
+  { value: "WEDNESDAY", label: "수" },
+  { value: "THURSDAY", label: "목" },
+  { value: "FRIDAY", label: "금" },
+  { value: "SATURDAY", label: "토" },
+  { value: "SUNDAY", label: "일" }
+];
+
+const TIME_PLACEHOLDER = "--:--";
+
+const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : TIME_PLACEHOLDER);
 
 export default function StudentClinicSchedulePage() {
   const { canRender, fallback } = useRoleGuard("STUDENT");
@@ -112,6 +130,40 @@ export default function StudentClinicSchedulePage() {
   const handleRefresh = useCallback(() => {
     void refresh();
   }, [refresh]);
+
+  const selectedCourseContext = useMemo(
+    () => contexts.find((context) => context.courseId === selectedCourseId) ?? null,
+    [contexts, selectedCourseId]
+  );
+
+  const {
+    slots,
+    isLoading: slotsLoading,
+    error: slotsError,
+    refresh: refreshSlots
+  } = useClinicSlots({ courseId: selectedCourseId ?? undefined }, Boolean(selectedCourseId));
+
+  const slotsByDay = useMemo(() => {
+    const map = new Map<string, ClinicSlotResponse[]>();
+    DAY_ORDER.forEach((day) => {
+      map.set(day.value, []);
+    });
+
+    slots.forEach((slot) => {
+      if (!slot.dayOfWeek) {
+        return;
+      }
+      const list = map.get(slot.dayOfWeek) ?? [];
+      list.push(slot);
+      map.set(slot.dayOfWeek, list);
+    });
+
+    map.forEach((list) => {
+      list.sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""));
+    });
+
+    return map;
+  }, [slots]);
 
   if (!canRender) {
     return fallback;
@@ -207,7 +259,81 @@ export default function StudentClinicSchedulePage() {
         title="기본 슬롯 시간표"
         description="선택한 반 기준으로 기본 슬롯을 설정하는 시간표가 이어집니다."
       >
-        <EmptyState message="기본 슬롯 시간표 준비 중입니다." description="선생님/지점 선택 후 시간표가 표시됩니다." />
+        <div className="space-y-6">
+          {selectedCourseContext ? (
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+              <Badge variant="secondary">{selectedCourseContext.courseName ?? "선택된 반"}</Badge>
+              <span>
+                {selectedCourseContext.teacherName ?? "선생님"} · {selectedCourseContext.branchName ?? "지점"}
+              </span>
+              <span className="text-xs text-slate-400">기본 슬롯은 파란색으로 표시됩니다.</span>
+            </div>
+          ) : null}
+
+          {!selectedCourseId && (
+            <EmptyState message="반을 먼저 선택해 주세요." description="선생님/지점 선택 후 반이 정해져야 시간표가 표시됩니다." />
+          )}
+
+          {selectedCourseId && slotsError && (
+            <div className="space-y-3">
+              <InlineError message={slotsError} />
+              <Button variant="secondary" onClick={() => void refreshSlots()}>
+                다시 불러오기
+              </Button>
+            </div>
+          )}
+
+          {selectedCourseId && slotsLoading && (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {DAY_ORDER.slice(0, 3).map((day) => (
+                <Skeleton key={day.value} className="h-40 w-full" />
+              ))}
+            </div>
+          )}
+
+          {selectedCourseId && !slotsLoading && slots.length === 0 && !slotsError && (
+            <EmptyState message="등록된 슬롯이 없습니다." description="선생님이 아직 슬롯을 등록하지 않았습니다." />
+          )}
+
+          {selectedCourseId && !slotsLoading && slots.length > 0 && !slotsError && (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {DAY_ORDER.map((day) => {
+                const daySlots = slotsByDay.get(day.value) ?? [];
+                return (
+                  <div key={day.value} className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-900">{day.label}</p>
+                      <Badge variant="secondary">{daySlots.length}개</Badge>
+                    </div>
+                    {daySlots.length === 0 && (
+                      <p className="mt-3 text-xs text-slate-400">등록된 슬롯이 없습니다.</p>
+                    )}
+                    {daySlots.map((slot) => {
+                      const isDefault = slot.slotId && slot.slotId === selectedCourseContext?.defaultClinicSlotId;
+                      return (
+                        <div
+                          key={slot.slotId ?? `${day.value}-${slot.startTime}-${slot.endTime}`}
+                          className={clsx(
+                            "mt-3 rounded-xl border px-3 py-2",
+                            isDefault ? "border-blue-200 bg-blue-50/70" : "border-slate-200 bg-white"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-slate-800">
+                              {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                            </p>
+                            {isDefault && <Badge>기본</Badge>}
+                          </div>
+                          <p className="text-xs text-slate-500">정원 {slot.defaultCapacity ?? "-"}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </Card>
     </div>
   );

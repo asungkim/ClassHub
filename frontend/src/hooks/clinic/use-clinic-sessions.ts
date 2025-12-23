@@ -28,9 +28,10 @@ export function useClinicSessions(query: ClinicSessionQuery, enabled = true): Cl
   const [sessions, setSessions] = useState<ClinicSessionResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { dateRange, branchId, teacherId } = query;
 
   const fetchSessions = useCallback(async () => {
-    if (!enabled || !query.dateRange || !query.branchId) {
+    if (!enabled || !dateRange || !branchId) {
       setSessions([]);
       setIsLoading(false);
       return;
@@ -39,9 +40,9 @@ export function useClinicSessions(query: ClinicSessionQuery, enabled = true): Cl
     setError(null);
     try {
       const queryParams = {
-        dateRange: query.dateRange,
-        branchId: query.branchId,
-        teacherId: query.teacherId
+        dateRange,
+        branchId,
+        teacherId
       };
       const response = await api.GET("/api/v1/clinic-sessions" as const, {
         params: { query: queryParams }
@@ -58,7 +59,7 @@ export function useClinicSessions(query: ClinicSessionQuery, enabled = true): Cl
     } finally {
       setIsLoading(false);
     }
-  }, [enabled, query]);
+  }, [branchId, dateRange, enabled, teacherId]);
 
   useEffect(() => {
     void fetchSessions();

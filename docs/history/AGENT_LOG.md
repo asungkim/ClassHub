@@ -4756,3 +4756,42 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
 - 다음 단계: Phase 2-2 기본 슬롯 시간표 표시.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 14:15] 학생 기본 슬롯 시간표 표시 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 시간표 화면에 기본 슬롯 시간표 표시를 연결했다.
+- 선택된 반 기준으로 요일별 슬롯을 렌더링하고 기본 슬롯 강조 표시를 추가했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 2-2 기본 슬롯 시간표 표시 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+- 다음 단계: Phase 2-3 기본 슬롯 변경 액션.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:16] 클리닉 슬롯/세션 훅 무한 렌더 방지
+
+### Type
+BUGFIX
+
+### Summary
+- 클리닉 슬롯/세션 훅의 의존성에 query 객체 대신 필드 값을 사용하도록 정리했다.
+- useEffect 재호출로 인한 무한 렌더 오류를 방지했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: 슬롯 훅에서 Maximum update depth exceeded 오류가 발생.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/hooks/clinic/use-clinic-slots.ts`
+  - `frontend/src/hooks/clinic/use-clinic-sessions.ts`
+- 다음 단계: Phase 2-3 기본 슬롯 변경 액션.
+- MCP: 사용하지 않음.

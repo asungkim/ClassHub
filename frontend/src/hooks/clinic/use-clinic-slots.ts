@@ -28,9 +28,10 @@ export function useClinicSlots(query: ClinicSlotQuery, enabled = true): ClinicSl
   const [slots, setSlots] = useState<ClinicSlotResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { branchId, teacherId, courseId } = query;
 
   const fetchSlots = useCallback(async () => {
-    if (!enabled || (!query.branchId && !query.courseId)) {
+    if (!enabled || (!branchId && !courseId)) {
       setSlots([]);
       setIsLoading(false);
       return;
@@ -39,7 +40,13 @@ export function useClinicSlots(query: ClinicSlotQuery, enabled = true): ClinicSl
     setError(null);
     try {
       const response = await api.GET("/api/v1/clinic-slots" as const, {
-        params: { query }
+        params: {
+          query: {
+            branchId,
+            teacherId,
+            courseId
+          }
+        }
       });
       const fetchError = getFetchError(response);
       if (fetchError) {
@@ -53,7 +60,7 @@ export function useClinicSlots(query: ClinicSlotQuery, enabled = true): ClinicSl
     } finally {
       setIsLoading(false);
     }
-  }, [enabled, query]);
+  }, [branchId, courseId, enabled, teacherId]);
 
   useEffect(() => {
     void fetchSlots();
