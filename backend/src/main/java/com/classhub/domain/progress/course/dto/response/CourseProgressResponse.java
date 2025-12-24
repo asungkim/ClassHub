@@ -12,6 +12,7 @@ public record CourseProgressResponse(
         String title,
         String content,
         UUID writerId,
+        String writerName,
         MemberRole writerRole,
         LocalDateTime createdAt
 ) {

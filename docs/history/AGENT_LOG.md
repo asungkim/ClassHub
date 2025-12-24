@@ -5433,3 +5433,45 @@ BEHAVIORAL
   - `frontend/src/components/dashboard/student-management.tsx`
 - 다음 단계: 수동 화면 확인(학생 목록 연락처/학부모 표시, 상세 UUID 제거).
 - MCP: 사용하지 않음.
+## [2025-12-24 12:40] 프론트 날짜 포맷 KST 정렬
+
+### Type
+BEHAVIORAL
+
+### Summary
+- UTC 기반 `toISOString` 사용을 KST 날짜 포맷으로 교체
+- 수업 작성/학생 캘린더/반 캘린더 날짜 밀림 방지
+
+### Details
+- 작업 사유: UTC 변환으로 날짜가 하루씩 밀리는 문제 개선
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/utils/date.ts`, `frontend/src/components/dashboard/progress/teacher-lesson-compose-modal.tsx`, `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`, `frontend/src/app/(dashboard)/teacher/courses/page.tsx`
+- 다음 단계: 실제 화면에서 날짜 선택/캘린더 표시가 KST 기준으로 맞는지 수동 확인
+## [2025-12-24 12:52] 진도 목록 날짜 KST 포맷 통일
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 진도 목록 날짜 표시를 KST 기준 포맷으로 통일
+- date 포맷 유틸에 KST 라벨 포맷 추가
+
+### Details
+- 작업 사유: /progress/course, /progress/personal 날짜 표시가 시스템 시간대에 따라 달라지는 문제 보정
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/utils/date.ts`, `frontend/src/components/dashboard/progress/progress-card-list.tsx`
+- 다음 단계: /teacher/progress/course, /teacher/progress/personal에서 날짜 표시가 저장값과 일치하는지 수동 확인
+## [2025-12-24 13:05] 진도 카드 작성일 표시 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 진도 카드에 수업 날짜 라벨을 추가하고 작성일을 우측 하단에 표시
+- 작성일은 KST 기준 포맷으로 렌더링
+
+### Details
+- 작업 사유: 반별/개인 진도에서 수업 날짜와 작성일 구분 요구 반영
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/components/dashboard/progress/progress-card-list.tsx`, `frontend/src/utils/date.ts`
+- 다음 단계: /teacher/progress/course, /teacher/progress/personal, /assistant/progress/course, /assistant/progress/personal 화면에서 표시 위치 확인

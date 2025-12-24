@@ -276,12 +276,8 @@ export default function TeacherClinicSlotsPage() {
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      <Card title="지점별 클리닉 (슬롯)" description="출강 지점별 클리닉 슬롯을 관리합니다.">
+      <Card title="지점별 클리닉" description="출강 지점별 클리닉 시간표를 관리합니다.">
         <div className="space-y-6">
-          <div>
-            <p className="text-sm font-semibold text-slate-700">출강 지점 선택</p>
-            <p className="text-xs text-slate-500">지점을 선택하면 해당 지점의 슬롯을 확인할 수 있습니다.</p>
-          </div>
 
           {branchError && (
             <div className="space-y-3">
@@ -314,7 +310,7 @@ export default function TeacherClinicSlotsPage() {
               </Select>
 
               <Button onClick={() => openCreateModal()} disabled={!selectedBranchId}>
-                슬롯 추가
+                + 시간표 추가
               </Button>
             </div>
           )}
@@ -322,8 +318,8 @@ export default function TeacherClinicSlotsPage() {
       </Card>
 
       <Card
-        title="슬롯 시간표"
-        description={selectedBranch ? `${selectedBranch.branchName ?? "지점"} 슬롯 시간표입니다.` : ""}
+        title="클리닉 시간표"
+        description="아래 시간표를 기준으로 일요일 자정에 클리닉이 생성됩니다."
       >
         <div className="space-y-6">
           {slotsError && (
@@ -350,7 +346,7 @@ export default function TeacherClinicSlotsPage() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-slate-500">
-                  셀을 드래그/롱프레스하면 슬롯 생성이 시작됩니다.
+                  셀을 드래그하거나, 추가 버튼을 통해서 시간표를 채우세요.
                 </p>
                 {slots.length === 0 && (
                   <p className="text-sm font-semibold text-slate-700">등록된 슬롯이 없습니다.</p>
@@ -386,10 +382,7 @@ export default function TeacherClinicSlotsPage() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-900">
-                          {formatTime(item.startTime)} - {formatTime(item.endTime)}
-                        </p>
-                        <p className="text-[11px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
+                        <p className="text-[14px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
                       </div>
                       <button
                         type="button"

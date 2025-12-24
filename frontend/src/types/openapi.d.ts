@@ -748,8 +748,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 조교 이메일 검색
-         * @description 이미 가입한 조교를 이메일로 검색한다.
+         * 조교 이름 검색
+         * @description 이미 가입한 조교를 이름으로 검색한다.
          */
         get: operations["searchAssistants"];
         put?: never;
@@ -1298,6 +1298,7 @@ export interface components {
             content?: string;
             /** Format: uuid */
             writerId?: string;
+            writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
             /** Format: date-time */
@@ -1382,6 +1383,7 @@ export interface components {
             content?: string;
             /** Format: uuid */
             writerId?: string;
+            writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
             /** Format: date-time */
@@ -3646,7 +3648,7 @@ export interface operations {
     searchAssistants: {
         parameters: {
             query?: {
-                email?: string;
+                name?: string;
             };
             header?: never;
             path?: never;

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { formatDateLabelKst, formatDateTimeLabelKst } from "@/utils/date";
 import type { CourseProgressResponse, PersonalProgressResponse } from "@/types/progress";
 
 type ProgressItem = CourseProgressResponse | PersonalProgressResponse;
@@ -27,10 +28,15 @@ export function ProgressCardList({ items, emptyMessage, onLoadMore, hasMore, loa
     <div className="space-y-4">
       {items.map((item) => (
         <Card key={item.id}>
-          <div className="space-y-3">
-            <div className="flex items-start justify-between text-xs text-slate-400">
-              <p className="font-semibold">{formatDate(item.date)}</p>
-              <p>작성자: {formatRole(item.writerRole)}</p>
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-medium text-slate-400">수업 날짜</span>
+                <span className="text-sm font-semibold text-slate-700">{formatDateLabelKst(item.date)}</span>
+              </div>
+              <p className="text-xs text-slate-400">
+                작성자: {item.writerName}({formatRole(item.writerRole)})
+              </p>
             </div>
             <div className="space-y-2">
               <p className="text-base font-semibold text-slate-900">{item.title ?? "제목 없음"}</p>
@@ -38,6 +44,11 @@ export function ProgressCardList({ items, emptyMessage, onLoadMore, hasMore, loa
                 {item.content || "내용이 없습니다."}
               </p>
             </div>
+            {item.createdAt ? (
+              <div className="flex justify-end text-[11px] text-slate-400">
+                작성일 {formatDateTimeLabelKst(item.createdAt)}
+              </div>
+            ) : null}
           </div>
         </Card>
       ))}
@@ -50,21 +61,6 @@ export function ProgressCardList({ items, emptyMessage, onLoadMore, hasMore, loa
       ) : null}
     </div>
   );
-}
-
-function formatDate(value?: string | null) {
-  if (!value) {
-    return "날짜 정보 없음";
-  }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-  return parsed.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  });
 }
 
 function formatRole(role?: string | null) {

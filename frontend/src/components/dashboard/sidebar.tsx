@@ -32,7 +32,8 @@ const menuByRole: Record<Role, MenuItem[]> = {
       icon: "📈",
       children: [
         { href: "/teacher/progress/course", label: "반별 진도", icon: "📘" },
-        { href: "/teacher/progress/personal", label: "개인 진도", icon: "🧑‍🎓" }
+        { href: "/teacher/progress/personal", label: "개인 진도", icon: "🧑‍🎓" },
+        { href: "/teacher/calendar", label: "학생별 캘린더", icon: "🗓️" }
       ]
     },
     {
@@ -44,7 +45,6 @@ const menuByRole: Record<Role, MenuItem[]> = {
         { href: "/teacher/clinics/attendance", label: "오늘의 출석부", icon: "🧾" }
       ]
     },
-    { href: "/teacher/calendar", label: "학생별 캘린더", icon: "🗓️" }
   ],
   ASSISTANT: [
     { href: "/assistant", label: "대시보드", icon: "📊" },
@@ -65,10 +65,11 @@ const menuByRole: Record<Role, MenuItem[]> = {
       icon: "📈",
       children: [
         { href: "/assistant/progress/course", label: "반별 진도", icon: "📘" },
-        { href: "/assistant/progress/personal", label: "개인 진도", icon: "🧑‍🎓" }
+        { href: "/assistant/progress/personal", label: "개인 진도", icon: "🧑‍🎓" },
+        { href: "/assistant/calendar", label: "학생별 캘린더", icon: "🗓️" }
       ]
     },
-    { href: "/assistant/calendar", label: "학생별 캘린더", icon: "🗓️" }
+    
   ],
   STUDENT: [
     { href: "/student", label: "대시보드", icon: "📊" },

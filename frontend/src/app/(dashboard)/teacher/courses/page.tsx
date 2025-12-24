@@ -18,6 +18,7 @@ import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { DatePicker } from "@/components/ui/date-picker";
+import { formatDateYmdKst } from "@/utils/date";
 import {
   DASHBOARD_PAGE_SIZE,
   createCourse,
@@ -414,7 +415,7 @@ function TeacherCourseManagement() {
       <section className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-100 sm:px-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Course Management</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Class Management</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900">반 관리</h1>
             <p className="mt-2 text-sm text-slate-500">
               목록/캘린더에서 반을 확인하고 곧바로 생성·수정·비활성화를 처리할 수 있습니다.
@@ -1401,7 +1402,7 @@ function addDays(date: Date, days: number): Date {
 }
 
 function formatDateParam(date: Date) {
-  return date.toISOString().split("T")[0];
+  return formatDateYmdKst(date);
 }
 
 function formatDateForInput(value?: string | null) {

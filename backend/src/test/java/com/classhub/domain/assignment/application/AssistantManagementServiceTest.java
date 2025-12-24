@@ -195,19 +195,19 @@ class AssistantManagementServiceTest {
     }
 
     @Test
-    void searchAssistants_shouldReturnEmpty_whenEmailBlank() {
+    void searchAssistants_shouldReturnEmpty_whenNameBlank() {
         List<AssistantSearchResponse> result = assistantManagementService.searchAssistants(teacherId, "   ");
 
         assertThat(result).isEmpty();
         verify(memberRepository, never())
-                .findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(any(), any());
+                .findTop5ByRoleAndDeletedAtIsNullAndNameContainingIgnoreCaseOrderByNameAsc(any(), any());
     }
 
     @Test
     void searchAssistants_shouldMapAssignmentsToStatuses() {
         Member assistantEnabled = buildAssistantMember(UUID.randomUUID(), "Assistant Enabled");
         Member assistantDisabled = buildAssistantMember(UUID.randomUUID(), "Assistant Disabled");
-        when(memberRepository.findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(
+        when(memberRepository.findTop5ByRoleAndDeletedAtIsNullAndNameContainingIgnoreCaseOrderByNameAsc(
                 eq(MemberRole.ASSISTANT),
                 eq("assistant")
         )).thenReturn(List.of(assistantEnabled, assistantDisabled));

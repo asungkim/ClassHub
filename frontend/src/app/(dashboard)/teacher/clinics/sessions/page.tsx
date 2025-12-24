@@ -267,14 +267,10 @@ export default function TeacherClinicSessionsPage() {
   return (
     <div className="space-y-6 lg:space-y-8">
       <Card
-        title="주차별 클리닉 (세션)"
-        description={`${weekRangeLabel} 기준으로 세션을 표시합니다.`}
+        title="주차별 클리닉"
+        description={`${weekRangeLabel} 에 생성된 클리닉을 표시합니다.`}
       >
         <div className="space-y-6">
-          <div>
-            <p className="text-sm font-semibold text-slate-700">출강 지점 선택</p>
-            <p className="text-xs text-slate-500">지점을 선택하면 이번 주 세션을 확인할 수 있습니다.</p>
-          </div>
 
           {branchError && (
             <div className="space-y-3">
@@ -314,7 +310,7 @@ export default function TeacherClinicSessionsPage() {
         </div>
       </Card>
 
-      <Card title="주간 세션 시간표" description="선택한 지점 기준 주간 세션을 표시합니다.">
+      <Card title="주간 세션 시간표" description="선택한 지점 기준 이번주 클리닉을 표시합니다.">
         <div className="space-y-6">
           <div className="flex justify-center">
             <p className="text-sm font-semibold text-slate-700">{weekRangeLabel}</p>
@@ -344,7 +340,7 @@ export default function TeacherClinicSessionsPage() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-slate-500">
-                  셀을 드래그/롱프레스하면 긴급 세션 생성이 시작됩니다.
+                  셀을 드래그하거나 긴급 세션 생성 버튼을 통해 갑작스러운 상황에 대비하세요.
                 </p>
                 {sessions.length === 0 && (
                   <p className="text-sm font-semibold text-slate-700">이번 주 세션이 없습니다.</p>

@@ -40,9 +40,8 @@ class PersonalProgressServiceTest {
     private PersonalProgressRepository personalProgressRepository;
     @Mock
     private ProgressPermissionValidator permissionValidator;
-
-    @Spy
-    private PersonalProgressMapper personalProgressMapper = new PersonalProgressMapper();
+    @Mock
+    private PersonalProgressMapper personalProgressMapper;
 
     @InjectMocks
     private PersonalProgressService personalProgressService;
@@ -73,6 +72,21 @@ class PersonalProgressServiceTest {
         PersonalProgress saved = buildPersonalProgress(recordId, teacherId, request.date(), "Note");
         given(personalProgressRepository.save(any(PersonalProgress.class))).willReturn(saved);
 
+        PersonalProgressResponse mockResponse = new PersonalProgressResponse(
+                saved.getId(),
+                recordId,
+                courseId,
+                request.date(),
+                "Note",
+                "memo",
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                saved.getCreatedAt()
+        );
+        given(personalProgressMapper.toResponse(any(PersonalProgress.class), eq(courseId), any(MemberRole.class)))
+                .willReturn(mockResponse);
+
         PersonalProgressResponse response = personalProgressService.createPersonalProgress(
                 teacherPrincipal,
                 recordId,
@@ -93,6 +107,35 @@ class PersonalProgressServiceTest {
         PersonalProgress second = buildPersonalProgress(recordId, teacherId, LocalDate.of(2024, Month.MARCH, 5), "A");
         given(personalProgressRepository.findRecentByRecordId(eq(recordId), any(), any(), any(Pageable.class)))
                 .willReturn(List.of(first, second));
+
+        PersonalProgressResponse firstResponse = new PersonalProgressResponse(
+                first.getId(),
+                recordId,
+                courseId,
+                first.getDate(),
+                first.getTitle(),
+                first.getContent(),
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                first.getCreatedAt()
+        );
+        PersonalProgressResponse secondResponse = new PersonalProgressResponse(
+                second.getId(),
+                recordId,
+                courseId,
+                second.getDate(),
+                second.getTitle(),
+                second.getContent(),
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                second.getCreatedAt()
+        );
+        given(personalProgressMapper.toResponse(eq(first), eq(courseId), any(MemberRole.class)))
+                .willReturn(firstResponse);
+        given(personalProgressMapper.toResponse(eq(second), eq(courseId), any(MemberRole.class)))
+                .willReturn(secondResponse);
 
         ProgressSliceResponse<PersonalProgressResponse> response = personalProgressService.getPersonalProgresses(
                 teacherPrincipal,
@@ -122,6 +165,21 @@ class PersonalProgressServiceTest {
                 "New",
                 "updated"
         );
+
+        PersonalProgressResponse mockResponse = new PersonalProgressResponse(
+                progress.getId(),
+                recordId,
+                courseId,
+                request.date(),
+                "New",
+                "updated",
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                progress.getCreatedAt()
+        );
+        given(personalProgressMapper.toResponse(any(PersonalProgress.class), eq(courseId), any(MemberRole.class)))
+                .willReturn(mockResponse);
 
         PersonalProgressResponse response = personalProgressService.updatePersonalProgress(
                 teacherPrincipal,

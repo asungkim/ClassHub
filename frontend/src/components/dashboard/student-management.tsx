@@ -115,7 +115,7 @@ export function StudentManagementView({ role }: { role: Role }) {
   const headerMeta =
     role === "TEACHER"
       ? {
-          kicker: "Teacher · Students",
+          kicker: "Student Management",
           accent: "text-indigo-500",
           title: "학생 관리",
           description: "수업에 참여 중인 학생 정보를 확인하고, 새로 들어오는 신청을 승인하거나 거절하세요."
@@ -439,6 +439,10 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
     void loadRequests();
   }, [loadRequests]);
 
+  useEffect(() => {
+    setPage(0);
+  }, [studentName]);
+
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
   const pendingIds = useMemo(
     () =>
@@ -527,10 +531,10 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
 
   return (
     <div className="space-y-6">
-      <Card title="신청 필터" description="Course/상태/학생 이름으로 요청 대상을 좁혀보세요.">
+      <Card title="신청 필터" description="반/상태/학생 이름으로 요청 대상을 좁혀보세요.">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
           <Select
-            label="Course"
+            label="반"
             value={courseId}
             onChange={(event) => {
               setCourseId(event.target.value);
@@ -552,9 +556,7 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
               value={studentNameInput}
               onChange={(event) => {
                 setStudentNameInput(event.target.value);
-                setPage(0);
               }}
-              disabled={loading}
             />
           </Field>
           <div className="flex items-end gap-3">
@@ -686,23 +688,27 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
                       </TableCell>
                       <TableCell className="max-w-xs truncate text-sm text-slate-600">{request.studentMessage ?? "-"}</TableCell>
                       <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            className="h-9 px-3 text-xs"
-                            disabled={!isPending || loading || !request.requestId}
-                            onClick={() => openConfirm("APPROVE", request.requestId ? [request.requestId] : undefined)}
-                          >
-                            승인
-                          </Button>
-                          <Button
-                            className="h-9 px-3 text-xs"
-                            variant="ghost"
-                            disabled={!isPending || loading || !request.requestId}
-                            onClick={() => openConfirm("REJECT", request.requestId ? [request.requestId] : undefined)}
-                          >
-                            거절
-                          </Button>
-                        </div>
+                        {isPending ? (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              className="h-9 px-3 text-xs"
+                              disabled={loading || !request.requestId}
+                              onClick={() => openConfirm("APPROVE", request.requestId ? [request.requestId] : undefined)}
+                            >
+                              승인
+                            </Button>
+                            <Button
+                              className="h-9 px-3 text-xs"
+                              variant="ghost"
+                              disabled={loading || !request.requestId}
+                              onClick={() => openConfirm("REJECT", request.requestId ? [request.requestId] : undefined)}
+                            >
+                              거절
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-400">-</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -1146,7 +1152,7 @@ function RequestDetailModal({
               { label: "이름", value: request.student?.name ?? "-" },
               { label: "이메일", value: request.student?.email ?? "-" },
               { label: "연락처", value: request.student?.phoneNumber ?? "-" },
-              { label: "학교/학년", value: `${request.student?.schoolName ?? "-"} ${request.student?.grade ?? ""}`.trim() }
+              { label: "학교(학년)", value: `${request.student?.schoolName ?? "-"}(${formatStudentGrade(request.student?.grade)})`.trim() }
             ]}
           />
           <InfoCard
