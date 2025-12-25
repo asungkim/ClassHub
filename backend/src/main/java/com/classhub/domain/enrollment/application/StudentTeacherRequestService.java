@@ -1,0 +1,261 @@
+package com.classhub.domain.enrollment.application;
+
+import com.classhub.domain.assignment.model.TeacherBranchAssignment;
+import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
+import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
+import com.classhub.domain.company.branch.model.Branch;
+import com.classhub.domain.company.branch.repository.BranchRepository;
+import com.classhub.domain.company.company.model.Company;
+import com.classhub.domain.company.company.model.VerifiedStatus;
+import com.classhub.domain.company.company.repository.CompanyRepository;
+import com.classhub.domain.enrollment.dto.request.StudentTeacherRequestCreateRequest;
+import com.classhub.domain.enrollment.dto.response.StudentTeacherRequestResponse;
+import com.classhub.domain.enrollment.model.StudentTeacherRequest;
+import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
+import com.classhub.domain.enrollment.repository.StudentTeacherRequestRepository;
+import com.classhub.domain.member.dto.response.TeacherSearchResponse;
+import com.classhub.domain.member.dto.response.TeacherSearchResponse.TeacherBranchSummary;
+import com.classhub.domain.member.model.Member;
+import com.classhub.domain.member.model.MemberRole;
+import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.global.exception.BusinessException;
+import com.classhub.global.response.PageResponse;
+import com.classhub.global.response.RsCode;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class StudentTeacherRequestService {
+
+    private static final Set<TeacherStudentRequestStatus> DUPLICATE_CHECK_STATUSES =
+            EnumSet.of(TeacherStudentRequestStatus.PENDING,
+                    TeacherStudentRequestStatus.APPROVED,
+                    TeacherStudentRequestStatus.REJECTED);
+
+    private final StudentTeacherRequestRepository requestRepository;
+    private final TeacherStudentAssignmentRepository teacherStudentAssignmentRepository;
+    private final MemberRepository memberRepository;
+    private final TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
+    private final BranchRepository branchRepository;
+    private final CompanyRepository companyRepository;
+
+    @Transactional
+    public StudentTeacherRequestResponse createRequest(UUID studentId, StudentTeacherRequestCreateRequest request) {
+        UUID teacherId = Objects.requireNonNull(request.teacherId(), "teacherId must not be null");
+        Member teacher = memberRepository.findById(teacherId)
+                .orElseThrow(RsCode.MEMBER_NOT_FOUND::toException);
+        if (teacher.isDeleted()) {
+            throw new BusinessException(RsCode.MEMBER_INACTIVE);
+        }
+        if (teacher.getRole() != MemberRole.TEACHER || teacher.getId().equals(studentId)) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        boolean hasRequest = requestRepository.existsByStudentMemberIdAndTeacherMemberIdAndStatusIn(
+                studentId,
+                teacherId,
+                DUPLICATE_CHECK_STATUSES
+        );
+        if (hasRequest) {
+            throw new BusinessException(RsCode.TEACHER_STUDENT_REQUEST_CONFLICT);
+        }
+        boolean alreadyAssigned = teacherStudentAssignmentRepository
+                .existsByTeacherMemberIdAndStudentMemberIdAndDeletedAtIsNull(teacherId, studentId);
+        if (alreadyAssigned) {
+            throw new BusinessException(RsCode.TEACHER_STUDENT_ALREADY_ASSIGNED);
+        }
+        StudentTeacherRequest entity = StudentTeacherRequest.builder()
+                .studentMemberId(studentId)
+                .teacherMemberId(teacherId)
+                .status(TeacherStudentRequestStatus.PENDING)
+                .message(trimMessage(request.message()))
+                .build();
+        StudentTeacherRequest saved = requestRepository.save(entity);
+        TeacherSearchResponse teacherResponse = buildTeacherResponse(teacher);
+        return toResponse(saved, teacherResponse);
+    }
+
+    public PageResponse<StudentTeacherRequestResponse> getMyRequests(UUID studentId,
+                                                                     Set<TeacherStudentRequestStatus> statuses,
+                                                                     int page,
+                                                                     int size) {
+        Set<TeacherStudentRequestStatus> effectiveStatuses = (statuses == null || statuses.isEmpty())
+                ? EnumSet.of(TeacherStudentRequestStatus.PENDING)
+                : EnumSet.copyOf(statuses);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StudentTeacherRequest> requestPage = requestRepository
+                .findByStudentMemberIdAndStatusInOrderByCreatedAtDesc(studentId, effectiveStatuses, pageable);
+        if (requestPage.isEmpty()) {
+            return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
+        }
+        Map<UUID, TeacherSearchResponse> teacherMap = buildTeacherResponseMap(requestPage.getContent());
+        List<StudentTeacherRequestResponse> content = requestPage.stream()
+                .map(request -> {
+                    TeacherSearchResponse teacher = teacherMap.get(request.getTeacherMemberId());
+                    if (teacher == null) {
+                        throw new BusinessException(RsCode.MEMBER_NOT_FOUND);
+                    }
+                    return toResponse(request, teacher);
+                })
+                .toList();
+        Page<StudentTeacherRequestResponse> dtoPage = new PageImpl<>(content, pageable, requestPage.getTotalElements());
+        return PageResponse.from(dtoPage);
+    }
+
+    @Transactional
+    public StudentTeacherRequestResponse cancelRequest(UUID studentId, UUID requestId) {
+        StudentTeacherRequest request = requestRepository.findById(requestId)
+                .orElseThrow(RsCode.TEACHER_STUDENT_REQUEST_NOT_FOUND::toException);
+        if (!request.getStudentMemberId().equals(studentId)) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+        if (request.getStatus() != TeacherStudentRequestStatus.PENDING) {
+            throw new BusinessException(RsCode.INVALID_TEACHER_STUDENT_REQUEST_STATE);
+        }
+        request.cancel(studentId, null);
+        Member teacher = memberRepository.findById(request.getTeacherMemberId())
+                .orElseThrow(RsCode.MEMBER_NOT_FOUND::toException);
+        TeacherSearchResponse teacherResponse = buildTeacherResponse(teacher);
+        return toResponse(request, teacherResponse);
+    }
+
+    private TeacherSearchResponse buildTeacherResponse(Member teacher) {
+        List<TeacherBranchSummary> branches = loadTeacherBranchSummaries(List.of(teacher.getId()))
+                .getOrDefault(teacher.getId(), List.of());
+        return TeacherSearchResponse.from(teacher, branches);
+    }
+
+    private Map<UUID, TeacherSearchResponse> buildTeacherResponseMap(
+            List<StudentTeacherRequest> requests
+    ) {
+        List<UUID> teacherIds = requests.stream()
+                .map(StudentTeacherRequest::getTeacherMemberId)
+                .distinct()
+                .toList();
+        List<Member> teachers = memberRepository.findAllById(teacherIds);
+        if (teachers.size() < teacherIds.size()) {
+            throw new BusinessException(RsCode.MEMBER_NOT_FOUND);
+        }
+        Map<UUID, List<TeacherBranchSummary>> branchSummaryMap = loadTeacherBranchSummaries(teacherIds);
+        return teachers.stream()
+                .collect(Collectors.toMap(
+                        Member::getId,
+                        teacher -> TeacherSearchResponse.from(
+                                teacher,
+                                branchSummaryMap.getOrDefault(teacher.getId(), List.of())
+                        )
+                ));
+    }
+
+    private Map<UUID, List<TeacherBranchSummary>> loadTeacherBranchSummaries(List<UUID> teacherIds) {
+        List<TeacherBranchAssignment> assignments = teacherBranchAssignmentRepository
+                .findByTeacherMemberIdInAndDeletedAtIsNull(teacherIds);
+        if (assignments.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, List<TeacherBranchAssignment>> assignmentMap = assignments.stream()
+                .collect(Collectors.groupingBy(TeacherBranchAssignment::getTeacherMemberId));
+
+        Map<UUID, Branch> branchMap = loadBranchMap(assignments);
+        Map<UUID, Company> companyMap = loadCompanyMap(branchMap.values());
+
+        Map<UUID, List<TeacherBranchSummary>> summaries = new HashMap<>();
+        for (Map.Entry<UUID, List<TeacherBranchAssignment>> entry : assignmentMap.entrySet()) {
+            List<TeacherBranchSummary> branchSummaries = entry.getValue().stream()
+                    .map(assignment -> toBranchSummary(assignment, branchMap, companyMap))
+                    .filter(Objects::nonNull)
+                    .toList();
+            if (!branchSummaries.isEmpty()) {
+                summaries.put(entry.getKey(), branchSummaries);
+            }
+        }
+        return summaries;
+    }
+
+    private Map<UUID, Branch> loadBranchMap(List<TeacherBranchAssignment> assignments) {
+        Set<UUID> branchIds = assignments.stream()
+                .map(TeacherBranchAssignment::getBranchId)
+                .collect(Collectors.toCollection(HashSet::new));
+        if (branchIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Branch> branches = branchRepository.findAllById(branchIds);
+        Map<UUID, Branch> branchMap = new HashMap<>();
+        for (Branch branch : branches) {
+            branchMap.put(branch.getId(), branch);
+        }
+        return branchMap;
+    }
+
+    private Map<UUID, Company> loadCompanyMap(Iterable<Branch> branches) {
+        Set<UUID> companyIds = new HashSet<>();
+        for (Branch branch : branches) {
+            companyIds.add(branch.getCompanyId());
+        }
+        if (companyIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Company> companies = companyRepository.findAllById(companyIds);
+        Map<UUID, Company> companyMap = new HashMap<>();
+        for (Company company : companies) {
+            companyMap.put(company.getId(), company);
+        }
+        return companyMap;
+    }
+
+    private TeacherBranchSummary toBranchSummary(TeacherBranchAssignment assignment,
+                                                 Map<UUID, Branch> branchMap,
+                                                 Map<UUID, Company> companyMap) {
+        Branch branch = branchMap.get(assignment.getBranchId());
+        if (branch == null || branch.isDeleted() || branch.getVerifiedStatus() != VerifiedStatus.VERIFIED) {
+            return null;
+        }
+        Company company = companyMap.get(branch.getCompanyId());
+        if (company == null || company.isDeleted() || company.getVerifiedStatus() != VerifiedStatus.VERIFIED) {
+            return null;
+        }
+        return new TeacherBranchSummary(
+                company.getId(),
+                company.getName(),
+                branch.getId(),
+                branch.getName()
+        );
+    }
+
+    private StudentTeacherRequestResponse toResponse(StudentTeacherRequest request,
+                                                     TeacherSearchResponse teacher) {
+        return new StudentTeacherRequestResponse(
+                request.getId(),
+                teacher,
+                request.getStatus(),
+                request.getMessage(),
+                request.getProcessedAt(),
+                request.getProcessedByMemberId(),
+                request.getCreatedAt()
+        );
+    }
+
+    private String trimMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        String trimmed = message.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+}

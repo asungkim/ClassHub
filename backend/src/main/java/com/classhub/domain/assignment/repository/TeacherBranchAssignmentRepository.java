@@ -1,6 +1,7 @@
 package com.classhub.domain.assignment.repository;
 
 import com.classhub.domain.assignment.model.TeacherBranchAssignment;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -18,4 +19,6 @@ public interface TeacherBranchAssignmentRepository extends JpaRepository<Teacher
     Optional<TeacherBranchAssignment> findByTeacherMemberIdAndBranchId(UUID teacherMemberId, UUID branchId);
 
     Optional<TeacherBranchAssignment> findByIdAndTeacherMemberId(UUID assignmentId, UUID teacherMemberId);
+
+    List<TeacherBranchAssignment> findByTeacherMemberIdInAndDeletedAtIsNull(List<UUID> teacherMemberIds);
 }

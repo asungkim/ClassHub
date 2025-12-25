@@ -5,6 +5,8 @@ import com.classhub.domain.member.model.MemberRole;
 import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MemberRepository extends JpaRepository<Member, UUID> {
@@ -21,5 +23,11 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
     List<Member> findTop5ByRoleAndDeletedAtIsNullAndNameContainingIgnoreCaseOrderByNameAsc(
             MemberRole role,
             String nameFragment
+    );
+
+    Page<Member> findByRoleAndDeletedAtIsNullAndNameContainingIgnoreCase(
+            MemberRole role,
+            String nameFragment,
+            Pageable pageable
     );
 }

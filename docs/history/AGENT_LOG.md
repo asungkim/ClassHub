@@ -5681,3 +5681,82 @@ DESIGN
 - 수정한 파일: `docs/spec/v1.5.md`
 - 다음 단계: 필요 시 개선사항 백로그로 분리
 - MCP: 없음
+## [2025-12-26 00:40] 학생 선생님 요청 API 계획 수립
+
+### Type
+DESIGN
+
+### Summary
+- 학생 선생님 검색/요청/취소 API 설계 문서를 작성
+
+### Details
+- 작업 사유: v1.5 스펙 기반 학생 API 구현 준비
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/backend/season2/student-teacher-request_plan.md`
+- 다음 단계: 계획 승인 후 TDD 구현
+- MCP: 없음
+## [2025-12-26 00:42] 학생 요청 API 계획 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 선생님 요청 계획에 엔티티/레포지토리 생성 범위와 테스트 순서를 추가
+
+### Details
+- 작업 사유: 미정의된 엔티티/레포지토리 생성 범위를 계획에 반영
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/backend/season2/student-teacher-request_plan.md`
+- 다음 단계: 계획 승인 후 TDD 구현
+- MCP: 없음
+## [2025-12-26 00:43] 학생 요청 API 계획에 개발 순서 추가
+
+### Type
+DESIGN
+
+### Summary
+- student-teacher-request_plan에 구현 순서를 명시
+
+### Details
+- 작업 사유: 엔티티/레포지토리부터 컨트롤러까지 단계별 순서 명확화
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/backend/season2/student-teacher-request_plan.md`
+- 다음 단계: 계획 승인 후 TDD 구현
+- MCP: 없음
+## [2025-12-26 01:01] 학생 선생님 요청 API 기반 구조 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- StudentTeacherRequest/TeacherStudentAssignment 엔티티·레포지토리 추가
+- 학생 선생님 검색 및 요청/취소 서비스·컨트롤러 구현
+- 관련 단위/컨트롤러 테스트 추가
+
+### Details
+- 작업 사유: 학생 요청 흐름의 백엔드 API 구현
+- 영향받은 테스트: `StudentTeacherRequestRepositoryTest`, `TeacherStudentAssignmentRepositoryTest`, `TeacherSearchServiceTest`, `StudentTeacherRequestServiceTest`, `TeacherSearchControllerTest`, `StudentTeacherRequestControllerTest`
+- 수정한 파일: 
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentTeacherRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/TeacherStudentRequestStatus.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/request/StudentTeacherRequestCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/StudentTeacherRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentTeacherRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/model/TeacherStudentAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/member/application/TeacherSearchService.java`
+  - `backend/src/main/java/com/classhub/domain/member/dto/response/TeacherSearchResponse.java`
+  - `backend/src/main/java/com/classhub/domain/member/web/TeacherSearchController.java`
+  - `backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/member/application/TeacherSearchServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentTeacherRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/member/web/TeacherSearchControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentTeacherRequestControllerTest.java`
+- 다음 단계: 학생 요청 목록 조회/취소 API QA 및 통합 테스트
+- MCP: 없음
