@@ -5853,3 +5853,39 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentTeacherRequestServiceTest.java`
   - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentTeacherRequestControllerTest.java`
 - 다음 단계: 반 배치 처리(2단계) 설계/구현
+## [2025-12-26 02:10] 반 배치 API 및 StudentCourseAssignment 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- StudentCourseAssignment 엔티티/레포 추가 및 배치 API(반 목록/후보/배치 생성) 구현
+- TeacherStudentAssignment 검색 쿼리와 Course assignable 조회 쿼리 확장
+- 관련 서비스/컨트롤러/테스트 추가
+
+### Details
+- 작업 사유: 2단계(반 배치 처리) 기능 구현
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.repository.CourseRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseAssignmentServiceTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.web.CourseAssignmentControllerTest" --tests "com.classhub.domain.studentcourse.web.StudentCourseAssignmentControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/request/StudentCourseAssignmentCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseAssignmentResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseAssignmentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/web/CourseAssignmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/repository/CourseRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
+- 다음 단계: 학생 목록/상세 + 휴원/재원 처리(3단계)

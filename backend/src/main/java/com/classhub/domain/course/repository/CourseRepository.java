@@ -178,4 +178,45 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             @Param("onlyVerified") boolean onlyVerified,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.teacherMemberId = :teacherId
+              AND c.deletedAt IS NULL
+              AND c.endDate >= :today
+              AND (:branchId IS NULL OR c.branchId = :branchId)
+              AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """)
+    Page<Course> searchAssignableCoursesForTeacher(@Param("teacherId") UUID teacherId,
+                                                   @Param("branchId") UUID branchId,
+                                                   @Param("keyword") String keyword,
+                                                   @Param("today") LocalDate today,
+                                                   Pageable pageable);
+
+    default Page<Course> searchAssignableCoursesForTeachers(Collection<UUID> teacherIds,
+                                                            UUID branchId,
+                                                            String keyword,
+                                                            LocalDate today,
+                                                            Pageable pageable) {
+        if (teacherIds == null || teacherIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        return searchAssignableCoursesForTeachersInternal(teacherIds, branchId, keyword, today, pageable);
+    }
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.teacherMemberId IN :teacherIds
+              AND c.deletedAt IS NULL
+              AND c.endDate >= :today
+              AND (:branchId IS NULL OR c.branchId = :branchId)
+              AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """)
+    Page<Course> searchAssignableCoursesForTeachersInternal(@Param("teacherIds") Collection<UUID> teacherIds,
+                                                            @Param("branchId") UUID branchId,
+                                                            @Param("keyword") String keyword,
+                                                            @Param("today") LocalDate today,
+                                                            Pageable pageable);
 }

@@ -1,0 +1,241 @@
+package com.classhub.domain.course.application;
+
+import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
+import com.classhub.domain.assignment.model.TeacherStudentAssignment;
+import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
+import com.classhub.domain.course.dto.response.CourseResponse;
+import com.classhub.domain.course.model.Course;
+import com.classhub.domain.course.repository.CourseRepository;
+import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.dto.response.StudentSummaryResponse;
+import com.classhub.domain.member.model.Member;
+import com.classhub.domain.member.model.MemberRole;
+import com.classhub.domain.member.model.StudentInfo;
+import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.member.repository.StudentInfoRepository;
+import com.classhub.domain.studentcourse.dto.request.StudentCourseAssignmentCreateRequest;
+import com.classhub.domain.studentcourse.dto.response.StudentCourseAssignmentResponse;
+import com.classhub.domain.studentcourse.model.StudentCourseAssignment;
+import com.classhub.domain.studentcourse.model.StudentCourseRecord;
+import com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepository;
+import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
+import com.classhub.global.exception.BusinessException;
+import com.classhub.global.response.PageResponse;
+import com.classhub.global.response.RsCode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class CourseAssignmentService {
+
+    private final CourseRepository courseRepository;
+    private final TeacherAssistantAssignmentRepository assistantAssignmentRepository;
+    private final TeacherStudentAssignmentRepository teacherStudentAssignmentRepository;
+    private final StudentCourseAssignmentRepository studentCourseAssignmentRepository;
+    private final StudentCourseRecordRepository studentCourseRecordRepository;
+    private final MemberRepository memberRepository;
+    private final StudentInfoRepository studentInfoRepository;
+    private final CourseViewAssembler courseViewAssembler;
+
+    public PageResponse<CourseResponse> getAssignableCourses(MemberPrincipal principal,
+                                                             UUID branchId,
+                                                             String keyword,
+                                                             int page,
+                                                             int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        String normalizedKeyword = normalizeKeyword(keyword);
+        LocalDate today = LocalDate.now();
+        Page<Course> coursePage;
+        if (principal.role() == MemberRole.TEACHER) {
+            coursePage = courseRepository.searchAssignableCoursesForTeacher(
+                    principal.id(),
+                    branchId,
+                    normalizedKeyword,
+                    today,
+                    pageable);
+        } else if (principal.role() == MemberRole.ASSISTANT) {
+            List<TeacherAssistantAssignment> assignments = assistantAssignmentRepository
+                    .findByAssistantMemberIdAndDeletedAtIsNull(principal.id());
+            if (assignments.isEmpty()) {
+                return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
+            }
+            List<UUID> teacherIds = assignments.stream()
+                    .map(TeacherAssistantAssignment::getTeacherMemberId)
+                    .distinct()
+                    .toList();
+            coursePage = courseRepository.searchAssignableCoursesForTeachers(
+                    teacherIds,
+                    branchId,
+                    normalizedKeyword,
+                    today,
+                    pageable);
+        } else {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+        if (coursePage.isEmpty()) {
+            return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
+        }
+        CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(coursePage.getContent());
+        Page<CourseResponse> responsePage = coursePage.map(course ->
+                courseViewAssembler.toCourseResponse(course, context));
+        return PageResponse.from(responsePage);
+    }
+
+    public PageResponse<StudentSummaryResponse> getAssignmentCandidates(MemberPrincipal principal,
+                                                                        UUID courseId,
+                                                                        String keyword,
+                                                                        int page,
+                                                                        int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Course course = loadCourse(courseId);
+        ensurePermission(principal, course.getTeacherMemberId());
+
+        List<UUID> excludeIds = studentCourseAssignmentRepository.findStudentMemberIdsByCourseId(courseId);
+        List<UUID> effectiveExcludes = excludeIds.isEmpty() ? null : excludeIds;
+        Page<TeacherStudentAssignment> assignmentPage = teacherStudentAssignmentRepository
+                .searchAssignmentsForTeacher(course.getTeacherMemberId(), normalizeKeyword(keyword), effectiveExcludes, pageable);
+
+        if (assignmentPage.isEmpty()) {
+            return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
+        }
+        List<UUID> studentIds = assignmentPage.getContent().stream()
+                .map(TeacherStudentAssignment::getStudentMemberId)
+                .distinct()
+                .toList();
+        Map<UUID, Member> memberMap = loadMembers(studentIds);
+        Map<UUID, StudentInfo> infoMap = loadStudentInfos(studentIds);
+        List<StudentSummaryResponse> content = assignmentPage.getContent().stream()
+                .map(assignment -> {
+                    Member member = memberMap.get(assignment.getStudentMemberId());
+                    StudentInfo info = infoMap.get(assignment.getStudentMemberId());
+                    if (member == null || info == null) {
+                        throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
+                    }
+                    return toStudentSummary(member, info);
+                })
+                .toList();
+        Page<StudentSummaryResponse> dtoPage = new PageImpl<>(content, pageable, assignmentPage.getTotalElements());
+        return PageResponse.from(dtoPage);
+    }
+
+    @Transactional
+    public StudentCourseAssignmentResponse createAssignment(MemberPrincipal principal,
+                                                            StudentCourseAssignmentCreateRequest request) {
+        Course course = loadCourse(request.courseId());
+        ensurePermission(principal, course.getTeacherMemberId());
+        boolean linked = teacherStudentAssignmentRepository
+                .existsByTeacherMemberIdAndStudentMemberIdAndDeletedAtIsNull(course.getTeacherMemberId(), request.studentId());
+        if (!linked) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+        boolean exists = studentCourseAssignmentRepository
+                .existsByStudentMemberIdAndCourseId(request.studentId(), request.courseId());
+        if (exists) {
+            throw new BusinessException(RsCode.STUDENT_COURSE_ASSIGNMENT_ALREADY_EXISTS);
+        }
+        StudentCourseAssignment assignment = StudentCourseAssignment.create(
+                request.studentId(),
+                request.courseId(),
+                principal.id(),
+                LocalDateTime.now());
+        StudentCourseAssignment saved = studentCourseAssignmentRepository.save(assignment);
+
+        studentCourseRecordRepository
+                .findByStudentMemberIdAndCourseIdAndDeletedAtIsNull(request.studentId(), request.courseId())
+                .orElseGet(() -> studentCourseRecordRepository.save(
+                        StudentCourseRecord.create(request.studentId(), request.courseId(), null, null, null)
+                ));
+
+        return StudentCourseAssignmentResponse.from(saved);
+    }
+
+    private Course loadCourse(UUID courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new BusinessException(RsCode.COURSE_NOT_FOUND));
+        if (course.isDeleted()) {
+            throw new BusinessException(RsCode.COURSE_NOT_FOUND);
+        }
+        return course;
+    }
+
+    private void ensurePermission(MemberPrincipal principal, UUID teacherId) {
+        if (principal.role() == MemberRole.TEACHER) {
+            if (!teacherId.equals(principal.id())) {
+                throw new BusinessException(RsCode.FORBIDDEN);
+            }
+            return;
+        }
+        if (principal.role() == MemberRole.ASSISTANT) {
+            boolean allowed = assistantAssignmentRepository
+                    .findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(teacherId, principal.id())
+                    .isPresent();
+            if (!allowed) {
+                throw new BusinessException(RsCode.FORBIDDEN);
+            }
+            return;
+        }
+        throw new BusinessException(RsCode.FORBIDDEN);
+    }
+
+    private Map<UUID, Member> loadMembers(List<UUID> studentIds) {
+        Map<UUID, Member> memberMap = memberRepository.findAllById(studentIds).stream()
+                .collect(Collectors.toMap(Member::getId, member -> member));
+        if (memberMap.size() < studentIds.size()) {
+            throw new BusinessException(RsCode.MEMBER_NOT_FOUND);
+        }
+        return memberMap;
+    }
+
+    private Map<UUID, StudentInfo> loadStudentInfos(List<UUID> studentIds) {
+        Map<UUID, StudentInfo> infoMap = studentInfoRepository.findByMemberIdIn(studentIds).stream()
+                .collect(Collectors.toMap(StudentInfo::getMemberId, info -> info));
+        if (infoMap.size() < studentIds.size()) {
+            throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
+        }
+        return infoMap;
+    }
+
+    private StudentSummaryResponse toStudentSummary(Member member, StudentInfo info) {
+        return StudentSummaryResponse.builder()
+                .memberId(member.getId())
+                .name(member.getName())
+                .email(member.getEmail())
+                .phoneNumber(member.getPhoneNumber())
+                .schoolName(info.getSchoolName())
+                .grade(info.getGrade().name())
+                .birthDate(info.getBirthDate())
+                .age(calculateAge(info.getBirthDate()))
+                .parentPhone(info.getParentPhone())
+                .build();
+    }
+
+    private Integer calculateAge(LocalDate birthDate) {
+        if (birthDate == null) {
+            return null;
+        }
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null) {
+            return null;
+        }
+        String trimmed = keyword.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+}

@@ -95,6 +95,55 @@ class CourseRepositoryTest {
                 .isEqualTo("겨울 특강");
     }
 
+    @Test
+    void searchAssignableCoursesForTeacher_shouldExcludeEndedOrDeleted() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        LocalDate today = LocalDate.now();
+
+        Course active = createCourse(branchId, teacherId, "배치 가능", today.minusDays(1), today.plusDays(10));
+        Course ended = createCourse(branchId, teacherId, "종료됨", today.minusDays(10), today.minusDays(1));
+        Course deleted = createCourse(branchId, teacherId, "삭제됨", today.minusDays(1), today.plusDays(5));
+        deleted.delete();
+        courseRepository.saveAll(List.of(active, ended, deleted));
+
+        Page<Course> result = courseRepository.searchAssignableCoursesForTeacher(
+                teacherId,
+                null,
+                null,
+                today,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().getFirst().getName()).isEqualTo("배치 가능");
+    }
+
+    @Test
+    void searchAssignableCoursesForTeachers_shouldFilterByBranchAndKeyword() {
+        UUID teacherId = UUID.randomUUID();
+        UUID anotherTeacher = UUID.randomUUID();
+        UUID branchA = UUID.randomUUID();
+        UUID branchB = UUID.randomUUID();
+        LocalDate today = LocalDate.now();
+
+        Course match = createCourse(branchA, teacherId, "중3 과학", today, today.plusDays(7));
+        Course otherBranch = createCourse(branchB, teacherId, "중3 과학", today, today.plusDays(7));
+        Course otherTeacher = createCourse(branchA, anotherTeacher, "중3 과학", today, today.plusDays(7));
+        courseRepository.saveAll(List.of(match, otherBranch, otherTeacher));
+
+        Page<Course> result = courseRepository.searchAssignableCoursesForTeachers(
+                List.of(teacherId),
+                branchA,
+                "과학",
+                today,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().getFirst().getBranchId()).isEqualTo(branchA);
+    }
+
     private Course createCourse(UUID branchId,
                                 UUID teacherId,
                                 String name,
