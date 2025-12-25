@@ -9,9 +9,12 @@ import com.classhub.global.response.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,5 +37,27 @@ public class StudentCourseAssignmentController {
     ) {
         StudentCourseAssignmentResponse response = courseAssignmentService.createAssignment(principal, request);
         return RsData.from(RsCode.CREATED, response);
+    }
+
+    @PatchMapping("/{assignmentId}/activate")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
+    @Operation(summary = "학생 반 배치 활성화")
+    public RsData<StudentCourseAssignmentResponse> activateAssignment(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID assignmentId
+    ) {
+        StudentCourseAssignmentResponse response = courseAssignmentService.activateAssignment(principal, assignmentId);
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @PatchMapping("/{assignmentId}/deactivate")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
+    @Operation(summary = "학생 반 배치 비활성화")
+    public RsData<StudentCourseAssignmentResponse> deactivateAssignment(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID assignmentId
+    ) {
+        StudentCourseAssignmentResponse response = courseAssignmentService.deactivateAssignment(principal, assignmentId);
+        return RsData.from(RsCode.SUCCESS, response);
     }
 }

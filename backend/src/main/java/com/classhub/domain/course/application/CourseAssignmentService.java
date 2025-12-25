@@ -164,6 +164,32 @@ public class CourseAssignmentService {
         return StudentCourseAssignmentResponse.from(saved);
     }
 
+    @Transactional
+    public StudentCourseAssignmentResponse activateAssignment(MemberPrincipal principal, UUID assignmentId) {
+        StudentCourseAssignment assignment = loadAssignment(assignmentId);
+        Course course = loadCourse(assignment.getCourseId());
+        ensurePermission(principal, course.getTeacherMemberId());
+        ensureCourseNotEnded(course);
+        if (!assignment.isActive()) {
+            assignment.activate();
+            studentCourseAssignmentRepository.save(assignment);
+        }
+        return StudentCourseAssignmentResponse.from(assignment);
+    }
+
+    @Transactional
+    public StudentCourseAssignmentResponse deactivateAssignment(MemberPrincipal principal, UUID assignmentId) {
+        StudentCourseAssignment assignment = loadAssignment(assignmentId);
+        Course course = loadCourse(assignment.getCourseId());
+        ensurePermission(principal, course.getTeacherMemberId());
+        ensureCourseNotEnded(course);
+        if (assignment.isActive()) {
+            assignment.deactivate();
+            studentCourseAssignmentRepository.save(assignment);
+        }
+        return StudentCourseAssignmentResponse.from(assignment);
+    }
+
     private Course loadCourse(UUID courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new BusinessException(RsCode.COURSE_NOT_FOUND));
@@ -171,6 +197,17 @@ public class CourseAssignmentService {
             throw new BusinessException(RsCode.COURSE_NOT_FOUND);
         }
         return course;
+    }
+
+    private StudentCourseAssignment loadAssignment(UUID assignmentId) {
+        return studentCourseAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new BusinessException(RsCode.STUDENT_COURSE_ASSIGNMENT_NOT_FOUND));
+    }
+
+    private void ensureCourseNotEnded(Course course) {
+        if (course.getEndDate().isBefore(LocalDate.now())) {
+            throw new BusinessException(RsCode.COURSE_ENDED);
+        }
     }
 
     private void ensurePermission(MemberPrincipal principal, UUID teacherId) {

@@ -45,4 +45,22 @@ class StudentCourseAssignmentRepositoryTest {
 
         assertThat(studentIds).containsExactlyInAnyOrder(first.getStudentMemberId(), second.getStudentMemberId());
     }
+
+    @Test
+    void findByStudentMemberId_shouldReturnAssignmentsForStudent() {
+        UUID studentId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        UUID otherCourseId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        StudentCourseAssignment first = StudentCourseAssignment.create(studentId, courseId, teacherId, null);
+        StudentCourseAssignment second = StudentCourseAssignment.create(studentId, otherCourseId, teacherId, null);
+        repository.saveAll(List.of(first, second));
+
+        List<StudentCourseAssignment> assignments = repository.findByStudentMemberId(studentId);
+
+        assertThat(assignments).hasSize(2);
+        assertThat(assignments)
+                .extracting(StudentCourseAssignment::getCourseId)
+                .containsExactlyInAnyOrder(courseId, otherCourseId);
+    }
 }

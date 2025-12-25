@@ -5889,3 +5889,34 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentControllerTest.java`
   - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
 - 다음 단계: 학생 목록/상세 + 휴원/재원 처리(3단계)
+## [2025-12-26 02:35] 선생님 학생 목록/상세 및 반 배치 활성/비활성 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 선생님 학생 목록/상세 조회 API와 응답 DTO 추가
+- StudentCourseAssignment 활성/비활성 API 및 서비스 로직 추가
+- 관련 레포지토리 쿼리/테스트 확장
+
+### Details
+- 작업 사유: 3단계(학생 목록/상세 + 휴원/재원 처리) 기반 API 구현
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.assignment.*" --tests "com.classhub.domain.course.application.CourseAssignmentServiceTest" --tests "com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepositoryTest" --tests "com.classhub.domain.studentcourse.web.StudentCourseAssignmentControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/assignment/application/TeacherStudentService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/web/TeacherStudentController.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/response/TeacherStudentCourseResponse.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/response/TeacherStudentDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/application/TeacherStudentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/web/TeacherStudentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseAssignmentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepositoryTest.java`
+- 다음 단계: 학생 상세 모달의 휴원/재원 UX 연동 및 관련 프론트 작업

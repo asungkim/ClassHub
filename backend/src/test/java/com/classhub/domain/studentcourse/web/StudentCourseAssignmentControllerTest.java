@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -90,5 +91,53 @@ class StudentCourseAssignmentControllerTest {
                 .andExpect(jsonPath("$.data.assignmentId").value(assignmentId.toString()));
 
         verify(courseAssignmentService).createAssignment(eq(teacherPrincipal), any(StudentCourseAssignmentCreateRequest.class));
+    }
+
+    @Test
+    void activateAssignment_shouldReturnUpdatedAssignment() throws Exception {
+        UUID assignmentId = UUID.randomUUID();
+        StudentCourseAssignmentResponse response = new StudentCourseAssignmentResponse(
+                assignmentId,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                teacherPrincipal.id(),
+                LocalDateTime.now(),
+                true
+        );
+        given(courseAssignmentService.activateAssignment(teacherPrincipal, assignmentId))
+                .willReturn(response);
+
+        mockMvc.perform(patch("/api/v1/student-course-assignments/{assignmentId}/activate", assignmentId)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(authenticationToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
+                .andExpect(jsonPath("$.data.assignmentId").value(assignmentId.toString()))
+                .andExpect(jsonPath("$.data.active").value(true));
+
+        verify(courseAssignmentService).activateAssignment(teacherPrincipal, assignmentId);
+    }
+
+    @Test
+    void deactivateAssignment_shouldReturnUpdatedAssignment() throws Exception {
+        UUID assignmentId = UUID.randomUUID();
+        StudentCourseAssignmentResponse response = new StudentCourseAssignmentResponse(
+                assignmentId,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                teacherPrincipal.id(),
+                LocalDateTime.now(),
+                false
+        );
+        given(courseAssignmentService.deactivateAssignment(teacherPrincipal, assignmentId))
+                .willReturn(response);
+
+        mockMvc.perform(patch("/api/v1/student-course-assignments/{assignmentId}/deactivate", assignmentId)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(authenticationToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
+                .andExpect(jsonPath("$.data.assignmentId").value(assignmentId.toString()))
+                .andExpect(jsonPath("$.data.active").value(false));
+
+        verify(courseAssignmentService).deactivateAssignment(teacherPrincipal, assignmentId);
     }
 }

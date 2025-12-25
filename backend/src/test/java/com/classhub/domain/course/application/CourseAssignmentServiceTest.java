@@ -184,4 +184,70 @@ class CourseAssignmentServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
     }
+
+    @Test
+    void activateAssignment_shouldRestoreAssignment() {
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        StudentCourseAssignment assignment = StudentCourseAssignment.create(studentId, course.getId(), teacherId, null);
+        assignment.deactivate();
+        ReflectionTestUtils.setField(assignment, "id", UUID.randomUUID());
+        given(studentCourseAssignmentRepository.findById(assignment.getId()))
+                .willReturn(Optional.of(assignment));
+        given(courseRepository.findById(course.getId())).willReturn(Optional.of(course));
+        given(studentCourseAssignmentRepository.save(assignment)).willReturn(assignment);
+
+        StudentCourseAssignmentResponse response = courseAssignmentService.activateAssignment(principal, assignment.getId());
+
+        assertThat(response.assignmentId()).isEqualTo(assignment.getId());
+        assertThat(response.active()).isTrue();
+        assertThat(assignment.isActive()).isTrue();
+        verify(studentCourseAssignmentRepository).save(assignment);
+    }
+
+    @Test
+    void deactivateAssignment_shouldSoftDeleteAssignment() {
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        StudentCourseAssignment assignment = StudentCourseAssignment.create(studentId, course.getId(), teacherId, null);
+        ReflectionTestUtils.setField(assignment, "id", UUID.randomUUID());
+        given(studentCourseAssignmentRepository.findById(assignment.getId()))
+                .willReturn(Optional.of(assignment));
+        given(courseRepository.findById(course.getId())).willReturn(Optional.of(course));
+        given(studentCourseAssignmentRepository.save(assignment)).willReturn(assignment);
+
+        StudentCourseAssignmentResponse response = courseAssignmentService.deactivateAssignment(principal, assignment.getId());
+
+        assertThat(response.assignmentId()).isEqualTo(assignment.getId());
+        assertThat(response.active()).isFalse();
+        assertThat(assignment.isActive()).isFalse();
+        verify(studentCourseAssignmentRepository).save(assignment);
+    }
+
+    @Test
+    void activateAssignment_shouldThrow_whenCourseEnded() {
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        Course endedCourse = Course.create(UUID.randomUUID(), teacherId, "종료반", null,
+                LocalDate.now().minusDays(30), LocalDate.now().minusDays(1), null);
+        ReflectionTestUtils.setField(endedCourse, "id", UUID.randomUUID());
+        StudentCourseAssignment assignment = StudentCourseAssignment.create(studentId, endedCourse.getId(), teacherId, null);
+        assignment.deactivate();
+        ReflectionTestUtils.setField(assignment, "id", UUID.randomUUID());
+        given(studentCourseAssignmentRepository.findById(assignment.getId()))
+                .willReturn(Optional.of(assignment));
+        given(courseRepository.findById(endedCourse.getId())).willReturn(Optional.of(endedCourse));
+
+        assertThatThrownBy(() -> courseAssignmentService.activateAssignment(principal, assignment.getId()))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.COURSE_ENDED);
+    }
+
+    @Test
+    void deactivateAssignment_shouldThrow_whenAssignmentNotFound() {
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        UUID assignmentId = UUID.randomUUID();
+        given(studentCourseAssignmentRepository.findById(assignmentId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courseAssignmentService.deactivateAssignment(principal, assignmentId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.STUDENT_COURSE_ASSIGNMENT_NOT_FOUND);
+    }
 }

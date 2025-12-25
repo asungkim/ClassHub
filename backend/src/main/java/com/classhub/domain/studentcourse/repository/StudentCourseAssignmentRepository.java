@@ -14,6 +14,8 @@ public interface StudentCourseAssignmentRepository extends JpaRepository<Student
 
     Optional<StudentCourseAssignment> findByStudentMemberIdAndCourseId(UUID studentMemberId, UUID courseId);
 
+    List<StudentCourseAssignment> findByStudentMemberId(UUID studentMemberId);
+
     @Query("""
             SELECT sca.studentMemberId
             FROM StudentCourseAssignment sca

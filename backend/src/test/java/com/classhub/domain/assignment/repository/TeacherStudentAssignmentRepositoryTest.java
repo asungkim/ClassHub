@@ -9,6 +9,8 @@ import com.classhub.domain.member.model.StudentGrade;
 import com.classhub.domain.member.model.StudentInfo;
 import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.domain.member.repository.StudentInfoRepository;
+import com.classhub.domain.studentcourse.model.StudentCourseAssignment;
+import com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepository;
 import com.classhub.global.config.JpaConfig;
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +35,9 @@ class TeacherStudentAssignmentRepositoryTest {
 
     @Autowired
     private StudentInfoRepository studentInfoRepository;
+
+    @Autowired
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
     @Test
     void existsByTeacherMemberIdAndStudentMemberIdAndDeletedAtIsNull_shouldRespectSoftDelete() {
@@ -91,5 +96,121 @@ class TeacherStudentAssignmentRepositoryTest {
         );
 
         assertThat(excluded.getContent()).isEmpty();
+    }
+
+    @Test
+    void searchAssignmentsForTeachers_shouldReturnAssignmentsForMultipleTeachers() {
+        UUID teacherA = UUID.randomUUID();
+        UUID teacherB = UUID.randomUUID();
+        Member student = memberRepository.save(Member.builder()
+                .email("student4@classhub.com")
+                .password("encoded")
+                .name("최학생")
+                .phoneNumber("01055556666")
+                .role(MemberRole.STUDENT)
+                .build());
+        studentInfoRepository.save(StudentInfo.builder()
+                .memberId(student.getId())
+                .schoolName("서초중학교")
+                .grade(StudentGrade.MIDDLE_1)
+                .birthDate(LocalDate.of(2012, 6, 15))
+                .parentPhone("01012121212")
+                .build());
+        TeacherStudentAssignment assignmentA = repository.save(
+                TeacherStudentAssignment.create(teacherA, student.getId())
+        );
+        repository.save(TeacherStudentAssignment.create(teacherB, UUID.randomUUID()));
+
+        var page = repository.searchAssignmentsForTeachers(
+                List.of(teacherA),
+                "서초",
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().getFirst().getId()).isEqualTo(assignmentA.getId());
+    }
+
+    @Test
+    void searchAssignmentsForTeacherByCourse_shouldFilterAssignments() {
+        UUID teacherId = UUID.randomUUID();
+        UUID studentId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        UUID otherCourseId = UUID.randomUUID();
+        Member student = memberRepository.save(Member.builder()
+                .email("student5@classhub.com")
+                .password("encoded")
+                .name("한학생")
+                .phoneNumber("01010101010")
+                .role(MemberRole.STUDENT)
+                .build());
+        studentInfoRepository.save(StudentInfo.builder()
+                .memberId(student.getId())
+                .schoolName("잠실중학교")
+                .grade(StudentGrade.MIDDLE_2)
+                .birthDate(LocalDate.of(2011, 8, 11))
+                .parentPhone("01099990000")
+                .build());
+        TeacherStudentAssignment assignment = repository.save(
+                TeacherStudentAssignment.create(teacherId, student.getId())
+        );
+        studentCourseAssignmentRepository.save(
+                StudentCourseAssignment.create(student.getId(), courseId, teacherId, null)
+        );
+
+        var match = repository.searchAssignmentsForTeacherByCourse(
+                teacherId,
+                courseId,
+                null,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(match.getContent()).hasSize(1);
+        assertThat(match.getContent().getFirst().getId()).isEqualTo(assignment.getId());
+
+        var empty = repository.searchAssignmentsForTeacherByCourse(
+                teacherId,
+                otherCourseId,
+                null,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(empty.getContent()).isEmpty();
+    }
+
+    @Test
+    void searchAssignmentsForTeachersByCourse_shouldFilterAssignments() {
+        UUID teacherId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        Member student = memberRepository.save(Member.builder()
+                .email("student6@classhub.com")
+                .password("encoded")
+                .name("윤학생")
+                .phoneNumber("01030303030")
+                .role(MemberRole.STUDENT)
+                .build());
+        studentInfoRepository.save(StudentInfo.builder()
+                .memberId(student.getId())
+                .schoolName("송파중학교")
+                .grade(StudentGrade.MIDDLE_1)
+                .birthDate(LocalDate.of(2012, 3, 3))
+                .parentPhone("01012121212")
+                .build());
+        TeacherStudentAssignment assignment = repository.save(
+                TeacherStudentAssignment.create(teacherId, student.getId())
+        );
+        studentCourseAssignmentRepository.save(
+                StudentCourseAssignment.create(student.getId(), courseId, teacherId, null)
+        );
+
+        var page = repository.searchAssignmentsForTeachersByCourse(
+                List.of(teacherId),
+                courseId,
+                "윤",
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().getFirst().getId()).isEqualTo(assignment.getId());
     }
 }
