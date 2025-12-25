@@ -20,6 +20,8 @@ import {
   activateStudentCourseAssignment,
   approveTeacherStudentRequest,
   deactivateStudentCourseAssignment,
+  fetchAssignableCourses,
+  fetchAssignmentCandidates,
   fetchClinicSlots,
   fetchStudentCourseDetail,
   fetchTeacherAssistants,
@@ -28,6 +30,7 @@ import {
   fetchTeacherStudents,
   fetchStudentTeacherRequests,
   fetchAssistantCourses,
+  createStudentCourseAssignment,
   rejectTeacherStudentRequest,
   updateStudentCourseRecord
 } from "@/lib/dashboard-api";
@@ -46,7 +49,7 @@ import type {
 } from "@/types/dashboard";
 
 type Role = "TEACHER" | "ASSISTANT";
-type TabKey = "students" | "requests";
+type TabKey = "students" | "requests" | "assignments";
 
 const requestStatusOptions: { value: StudentTeacherRequestStatus; label: string }[] = [
   { value: "PENDING", label: "대기" },
@@ -97,6 +100,7 @@ export function StudentManagementView({ role }: { role: Role }) {
         <TabsList>
           <TabsTrigger value="students">학생 목록</TabsTrigger>
           <TabsTrigger value="requests">신청 처리</TabsTrigger>
+          <TabsTrigger value="assignments">반 배치</TabsTrigger>
         </TabsList>
 
         <div hidden={activeTab !== "students"}>
@@ -104,6 +108,9 @@ export function StudentManagementView({ role }: { role: Role }) {
         </div>
         <div hidden={activeTab !== "requests"}>
           <RequestsTab />
+        </div>
+        <div hidden={activeTab !== "assignments"}>
+          <BatchAssignmentTab role={role} />
         </div>
       </Tabs>
     </div>
@@ -703,6 +710,334 @@ function RequestsTab() {
   );
 }
 
+type BatchAssignmentTabProps = {
+  role: Role;
+};
+
+function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
+  const [courseKeywordInput, setCourseKeywordInput] = useState("");
+  const [courseKeyword, setCourseKeyword] = useState("");
+  const [courseOptions, setCourseOptions] = useState<CourseResponse[]>([]);
+  const [courseId, setCourseId] = useState("");
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [courseError, setCourseError] = useState<string | null>(null);
+  const [studentKeywordInput, setStudentKeywordInput] = useState("");
+  const [studentKeyword, setStudentKeyword] = useState("");
+  const [page, setPage] = useState(0);
+  const [students, setStudents] = useState<StudentSummaryResponse[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [assigning, setAssigning] = useState(false);
+  const { showToast } = useToast();
+
+  const loadCourses = useCallback(async () => {
+    setCourseLoading(true);
+    setCourseError(null);
+    try {
+      const result = await fetchAssignableCourses({
+        keyword: courseKeyword.trim() ? courseKeyword.trim() : undefined,
+        page: 0,
+        size: 100
+      });
+      setCourseOptions(result.items);
+      setCourseId((prev) => {
+        if (prev && result.items.some((course) => course.courseId === prev)) {
+          return prev;
+        }
+        return result.items[0]?.courseId ?? "";
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "배치 가능한 반을 불러오지 못했습니다.";
+      setCourseError(message);
+      showToast("error", message);
+    } finally {
+      setCourseLoading(false);
+    }
+  }, [courseKeyword, showToast]);
+
+  const loadCandidates = useCallback(async () => {
+    if (!courseId) {
+      setStudents([]);
+      setTotal(0);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchAssignmentCandidates({
+        courseId,
+        keyword: studentKeyword.trim() ? studentKeyword.trim() : undefined,
+        page,
+        size: DASHBOARD_PAGE_SIZE
+      });
+      setStudents(result.items);
+      setTotal(result.totalElements);
+      setSelectedIds((prev) => {
+        const next = new Set<string>();
+        result.items.forEach((item) => {
+          if (item.memberId && prev.has(item.memberId)) {
+            next.add(item.memberId);
+          }
+        });
+        return next;
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "배치 후보 학생을 불러오지 못했습니다.";
+      setError(message);
+      showToast("error", message);
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId, page, studentKeyword, showToast]);
+
+  useEffect(() => {
+    void loadCourses();
+  }, [loadCourses]);
+
+  useEffect(() => {
+    void loadCandidates();
+  }, [loadCandidates]);
+
+  const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
+  const selectedCount = selectedIds.size;
+  const candidateIds = useMemo(
+    () => students.map((student) => student.memberId).filter((id): id is string => Boolean(id)),
+    [students]
+  );
+  const allSelected = candidateIds.length > 0 && candidateIds.every((id) => selectedIds.has(id));
+
+  const applyCourseKeyword = () => {
+    setCourseKeyword(courseKeywordInput);
+  };
+
+  const applyStudentKeyword = () => {
+    setStudentKeyword(studentKeywordInput);
+    setPage(0);
+  };
+
+  const resetFilters = () => {
+    setCourseKeywordInput("");
+    setCourseKeyword("");
+    setStudentKeywordInput("");
+    setStudentKeyword("");
+    setPage(0);
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (allSelected) {
+        return new Set();
+      }
+      return new Set(candidateIds);
+    });
+  };
+
+  const toggleSelection = (studentId?: string) => {
+    if (!studentId) {
+      return;
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(studentId)) {
+        next.delete(studentId);
+      } else {
+        next.add(studentId);
+      }
+      return next;
+    });
+  };
+
+  const handleAssign = async () => {
+    if (!courseId) {
+      showToast("error", "반을 먼저 선택해 주세요.");
+      return;
+    }
+    if (selectedIds.size === 0) {
+      showToast("error", "배치할 학생을 선택해 주세요.");
+      return;
+    }
+    setAssigning(true);
+    const failures: string[] = [];
+    for (const studentId of selectedIds) {
+      try {
+        await createStudentCourseAssignment({ courseId, studentId });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "배치 처리에 실패했습니다.";
+        failures.push(message);
+      }
+    }
+    setAssigning(false);
+    if (failures.length === 0) {
+      showToast("success", `${selectedIds.size}명의 학생을 배치했습니다.`);
+    } else {
+      showToast("error", `${failures.length}건의 배치가 실패했습니다.`);
+    }
+    setSelectedIds(new Set());
+    await loadCandidates();
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card title="반 선택" description="배치할 반을 선택한 후 학생을 지정하세요.">
+        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+          <Select
+            label="반 목록"
+            value={courseId}
+            onChange={(event) => {
+              setCourseId(event.target.value);
+              setPage(0);
+            }}
+            className="lg:w-72"
+            disabled={courseLoading}
+          >
+            {courseOptions.length === 0 && <option value="">배치 가능한 반이 없습니다.</option>}
+            {courseOptions.map((course) => (
+              <option key={course.courseId ?? course.name} value={course.courseId ?? ""}>
+                {buildCourseLabel(course)}
+              </option>
+            ))}
+          </Select>
+
+          <Field label="반 이름 검색" className="lg:w-60">
+            <Input
+              placeholder="반 이름"
+              value={courseKeywordInput}
+              onChange={(event) => setCourseKeywordInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyCourseKeyword();
+                }
+              }}
+            />
+          </Field>
+
+          <div className="flex items-end gap-3">
+            <Button variant="secondary" onClick={resetFilters} disabled={courseLoading || loading || assigning}>
+              초기화
+            </Button>
+            <Button onClick={applyCourseKeyword} disabled={courseLoading}>
+              검색
+            </Button>
+          </div>
+        </div>
+        {courseError && <InlineError message={courseError} className="mt-4" />}
+        {role === "ASSISTANT" && (
+          <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
+            조교는 배치 가능한 반만 선택할 수 있습니다.
+          </p>
+        )}
+      </Card>
+
+      <Card title="배치 후보 학생" description="선택한 반에 아직 배치되지 않은 학생 목록입니다.">
+        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+          <Field label="학생 이름 검색" className="lg:w-60">
+            <Input
+              placeholder="학생 이름"
+              value={studentKeywordInput}
+              onChange={(event) => setStudentKeywordInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyStudentKeyword();
+                }
+              }}
+              disabled={!courseId || loading}
+            />
+          </Field>
+          <div className="flex items-end gap-3">
+            <Button onClick={applyStudentKeyword} disabled={!courseId || loading}>
+              검색
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm">
+          <div className="text-slate-600">선택 {selectedCount}건</div>
+          <Button
+            variant="secondary"
+            className="h-10 px-4 text-xs"
+            onClick={toggleSelectAll}
+            disabled={!courseId || candidateIds.length === 0}
+          >
+            {allSelected ? "선택 해제" : "전체 선택"}
+          </Button>
+          <Button
+            className="h-10 px-4 text-xs"
+            onClick={() => void handleAssign()}
+            disabled={!courseId || selectedCount === 0 || assigning}
+          >
+            {assigning ? "배치 중..." : "선택 배치"}
+          </Button>
+        </div>
+
+        {!courseId && <EmptyState message="반 선택 필요" description="상단에서 반을 선택해 주세요." />}
+        {courseId && loading && <LoadingState message="학생 목록을 불러오는 중입니다." />}
+        {courseId && !loading && error && <InlineError message={error} className="mt-4" />}
+        {courseId && !loading && students.length === 0 && (
+          <EmptyState message="배치 후보 없음" description="선택한 반에 배치 가능한 학생이 없습니다." />
+        )}
+
+        {courseId && !loading && students.length > 0 && (
+          <div className="mt-4 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">선택</TableHead>
+                  <TableHead>학생</TableHead>
+                  <TableHead>학교/학년</TableHead>
+                  <TableHead>연락처</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {students.map((student, index) => {
+                  const rowKey = student.memberId ?? `candidate-${index}`;
+                  const isSelected = student.memberId ? selectedIds.has(student.memberId) : false;
+                  return (
+                    <TableRow
+                      key={rowKey}
+                      className="cursor-pointer transition hover:bg-slate-50"
+                      onClick={() => toggleSelection(student.memberId)}
+                    >
+                      <TableCell onClick={(event) => event.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
+                          checked={isSelected}
+                          onChange={() => toggleSelection(student.memberId)}
+                          disabled={!student.memberId}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col text-sm">
+                          <span className="font-semibold text-slate-900">{student.name ?? "-"}</span>
+                          <span className="text-xs text-slate-500">{student.email ?? "-"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">
+                        {student.schoolName ?? "-"} ({formatStudentGrade(student.grade)})
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">
+                        {student.phoneNumber ?? "-"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} disabled={loading || assigning} />
+        )}
+      </Card>
+    </div>
+  );
+}
+
 function StudentDetailModal({
   role,
   open,
@@ -756,7 +1091,12 @@ function StudentDetailModal({
       setEditing(false);
       return;
     }
-    setSelectedCourseId((prev) => prev ?? courses[0]?.courseId ?? null);
+    setSelectedCourseId((prev) => {
+      if (prev && courses.some((course) => course.courseId === prev)) {
+        return prev;
+      }
+      return courses[0]?.courseId ?? null;
+    });
     setEditing(false);
   }, [detail, courses]);
 

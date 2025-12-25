@@ -51,6 +51,7 @@ export type ClinicSlotResponse = components["schemas"]["ClinicSlotResponse"];
 export type StudentCourseListItemResponse = components["schemas"]["StudentCourseListItemResponse"];
 export type StudentCourseListPage = components["schemas"]["PageResponseStudentCourseListItemResponse"];
 export type StudentCourseDetailResponse = components["schemas"]["StudentCourseDetailResponse"];
+export type StudentCourseAssignmentCreateRequest = components["schemas"]["StudentCourseAssignmentCreateRequest"];
 export type StudentCourseAssignmentResponse = components["schemas"]["StudentCourseAssignmentResponse"];
 export type StudentCourseRecordUpdateRequest = components["schemas"]["StudentCourseRecordUpdateRequest"];
 export type StudentCourseResponse = components["schemas"]["StudentCourseResponse"];

@@ -18,6 +18,7 @@ import type {
   PublicCourseResponse,
   TeacherSearchResponse,
   ClinicSlotResponse,
+  StudentCourseAssignmentCreateRequest,
   StudentCourseDetailResponse,
   StudentCourseAssignmentResponse,
   StudentCourseListItemResponse,
@@ -463,6 +464,64 @@ export async function fetchTeacherCourses(params: {
   };
 }
 
+export async function fetchAssignableCourses(params: {
+  branchId?: string;
+  keyword?: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<CourseResponse>> {
+  const { branchId, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/courses/assignable", {
+    params: {
+      query: {
+        branchId: branchId && branchId.trim().length > 0 ? branchId.trim() : undefined,
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "배치 가능한 반 목록을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as CourseResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchAssignmentCandidates(params: {
+  courseId: string;
+  keyword?: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<StudentSummaryResponse>> {
+  const { courseId, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/courses/{courseId}/assignment-candidates", {
+    params: {
+      path: { courseId },
+      query: {
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "배치 후보 학생을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as StudentSummaryResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
 export async function fetchTeacherAssistants(params: {
   status: TeacherAssignmentFilter;
   page: number;
@@ -602,6 +661,16 @@ export async function updateStudentCourseRecord(recordId: string, payload: Stude
   }
 
   return response.data.data as StudentCourseDetailResponse;
+}
+
+export async function createStudentCourseAssignment(body: StudentCourseAssignmentCreateRequest) {
+  const response = await api.POST("/api/v1/student-course-assignments", { body });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "학생을 배치하지 못했습니다."));
+  }
+
+  return response.data.data as StudentCourseAssignmentResponse;
 }
 
 export async function activateStudentCourseAssignment(assignmentId: string) {

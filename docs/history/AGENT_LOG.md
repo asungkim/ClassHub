@@ -5987,3 +5987,22 @@ BEHAVIORAL
   - `frontend/src/lib/dashboard-api.ts`
   - `frontend/src/types/dashboard.ts`
 - 다음 단계: 반 배치 탭 추가 (3단계)
+## [2025-12-26 04:20] 반 배치 탭 추가 및 단건 배치 흐름 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 배치 탭을 추가하고 배치 가능한 반/배치 후보 학생 조회 흐름을 연결
+- 체크된 학생을 단건 API로 순차 배치하도록 처리
+- 관련 API 헬퍼와 타입 확장
+
+### Details
+- 작업 사유: 3단계(반 배치 탭 추가) 구현
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 수동 QA 후 UI 미세 조정 또는 커밋
