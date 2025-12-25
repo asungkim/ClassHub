@@ -5760,3 +5760,45 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentTeacherRequestControllerTest.java`
 - 다음 단계: 학생 요청 목록 조회/취소 API QA 및 통합 테스트
 - MCP: 없음
+## [2025-12-26 01:07] 학생 선생님 검색/요청 UI 계획 수립
+
+### Type
+DESIGN
+
+### Summary
+- 학생 선생님 검색/요청 및 신청 내역 UI 플로우 계획 작성
+
+### Details
+- 작업 사유: 학생 API를 활용한 프론트 구현 준비
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/frontend/season2/student-teacher-request-ui_plan.md`
+- 다음 단계: 계획 승인 후 프론트 구현
+- MCP: 없음
+## [2025-12-26 01:24] 학생 선생님 요청 UI 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생용 선생님 관리 페이지(/student/teachers) 추가 및 검색/요청/내역 UI 구현
+- 선생님 검색/요청 API 클라이언트와 타입 추가
+- 학생 사이드바 및 내 수업 페이지 안내 문구/링크 정리
+
+### Details
+- 작업 사유: 학생-선생님 연결 요청 플로우에 맞는 UI 제공
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/types/dashboard.ts`, `frontend/src/lib/dashboard-api.ts`, `frontend/src/app/(dashboard)/student/teachers/page.tsx`, `frontend/src/components/dashboard/sidebar.tsx`, `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+- 다음 단계: 수동 QA(선생님 검색/요청 생성/취소 흐름, 모바일 레이아웃)
+## [2025-12-26 01:27] 학생 검색 입력 포커스 유지
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 검색 중 로딩 상태에서도 입력 포커스가 유지되도록 검색 인풋 비활성화를 제거
+
+### Details
+- 작업 사유: 디바운스 요청 동안 키보드 포커스가 사라지는 UX 개선
+- 영향받은 테스트: 미실행
+- 수정한 파일: `frontend/src/app/(dashboard)/student/teachers/page.tsx`, `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+- 다음 단계: 수동 QA(검색 입력 중 포커스 유지 확인)

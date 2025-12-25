@@ -33,10 +33,17 @@ export type CourseStatusUpdateRequest = components["schemas"]["CourseStatusUpdat
 export type CourseScheduleRequest = components["schemas"]["CourseScheduleRequest"];
 export type CourseWithTeacherResponse = components["schemas"]["CourseWithTeacherResponse"];
 export type PublicCourseResponse = components["schemas"]["PublicCourseResponse"];
+export type TeacherBranchSummary = components["schemas"]["TeacherBranchSummary"];
+export type TeacherSearchResponse = components["schemas"]["TeacherSearchResponse"];
+export type TeacherSearchPage = components["schemas"]["PageResponseTeacherSearchResponse"];
 
 export type TeacherEnrollmentRequestResponse = components["schemas"]["TeacherEnrollmentRequestResponse"];
 export type TeacherEnrollmentRequestPage = components["schemas"]["PageResponseTeacherEnrollmentRequestResponse"];
 export type EnrollmentStatus = NonNullable<TeacherEnrollmentRequestResponse["status"]>;
+export type StudentTeacherRequestCreateRequest = components["schemas"]["StudentTeacherRequestCreateRequest"];
+export type StudentTeacherRequestResponse = components["schemas"]["StudentTeacherRequestResponse"];
+export type StudentTeacherRequestPage = components["schemas"]["PageResponseStudentTeacherRequestResponse"];
+export type StudentTeacherRequestStatus = NonNullable<StudentTeacherRequestResponse["status"]>;
 export type AssistantAssignmentResponse = components["schemas"]["AssistantAssignmentResponse"];
 export type AssistantAssignmentPage = components["schemas"]["PageResponseAssistantAssignmentResponse"];
 export type ClinicSlotResponse = components["schemas"]["ClinicSlotResponse"];

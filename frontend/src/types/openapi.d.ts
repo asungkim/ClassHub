@@ -52,6 +52,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher-student-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 선생님 요청 목록 조회 */
+        get: operations["getMyRequests"];
+        put?: never;
+        /** 학생 선생님 요청 생성 */
+        post: operations["createRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/students/me/clinic-attendances": {
         parameters: {
             query?: never;
@@ -82,7 +100,7 @@ export interface paths {
         get: operations["getRequests"];
         put?: never;
         /** 학생 수업 등록 요청 생성 */
-        post: operations["createRequest"];
+        post: operations["createRequest_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -461,6 +479,23 @@ export interface paths {
         patch: operations["updateAssistantStatus"];
         trace?: never;
     };
+    "/api/v1/teacher-student-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 학생 선생님 요청 취소 */
+        patch: operations["cancelRequest"];
+        trace?: never;
+    };
     "/api/v1/students/me/courses/{courseId}/clinic-slot": {
         parameters: {
             query?: never;
@@ -509,7 +544,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** 학생 수업 등록 요청 취소 */
-        patch: operations["cancelRequest"];
+        patch: operations["cancelRequest_1"];
         trace?: never;
     };
     "/api/v1/student-enrollment-requests/{requestId}/approve": {
@@ -740,6 +775,23 @@ export interface paths {
         patch: operations["updateCompanyVerifiedStatus"];
         trace?: never;
     };
+    "/api/v1/teachers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 선생님 검색 */
+        get: operations["searchTeachers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teachers/me/assistants/search": {
         parameters: {
             query?: never;
@@ -836,7 +888,7 @@ export interface paths {
             cookie?: never;
         };
         /** 학생 수업 등록 요청 목록 조회 */
-        get: operations["getMyRequests"];
+        get: operations["getMyRequests_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1209,6 +1261,45 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["AssistantAssignmentResponse"];
+        };
+        StudentTeacherRequestCreateRequest: {
+            /** Format: uuid */
+            teacherId: string;
+            message?: string;
+        };
+        RsDataStudentTeacherRequestResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentTeacherRequestResponse"];
+        };
+        StudentTeacherRequestResponse: {
+            /** Format: uuid */
+            requestId?: string;
+            teacher?: components["schemas"]["TeacherSearchResponse"];
+            /** @enum {string} */
+            status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+            message?: string;
+            /** Format: date-time */
+            processedAt?: string;
+            /** Format: uuid */
+            processedByMemberId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        TeacherBranchSummary: {
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+        };
+        TeacherSearchResponse: {
+            /** Format: uuid */
+            teacherId?: string;
+            teacherName?: string;
+            branches?: components["schemas"]["TeacherBranchSummary"][];
         };
         StudentClinicAttendanceRequest: {
             /** Format: uuid */
@@ -1720,6 +1811,25 @@ export interface components {
             verified: boolean;
             enabled?: boolean;
         };
+        PageResponseTeacherSearchResponse: {
+            content?: components["schemas"]["TeacherSearchResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseTeacherSearchResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseTeacherSearchResponse"];
+        };
         PageResponseTeacherBranchAssignmentResponse: {
             content?: components["schemas"]["TeacherBranchAssignmentResponse"][];
             /** Format: int32 */
@@ -1778,6 +1888,25 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["AssistantSearchResponse"][];
+        };
+        PageResponseStudentTeacherRequestResponse: {
+            content?: components["schemas"]["StudentTeacherRequestResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseStudentTeacherRequestResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseStudentTeacherRequestResponse"];
         };
         ClinicEvent: {
             /** Format: uuid */
@@ -2377,6 +2506,54 @@ export interface operations {
             };
         };
     };
+    getMyRequests: {
+        parameters: {
+            query?: {
+                status?: ("PENDING" | "APPROVED" | "REJECTED" | "CANCELLED")[];
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
+    createRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentTeacherRequestCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
     getStudentAttendances: {
         parameters: {
             query: {
@@ -2473,7 +2650,7 @@ export interface operations {
             };
         };
     };
-    createRequest: {
+    createRequest_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3139,6 +3316,28 @@ export interface operations {
             };
         };
     };
+    cancelRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
     updateDefaultClinicSlot: {
         parameters: {
             query?: never;
@@ -3187,7 +3386,7 @@ export interface operations {
             };
         };
     };
-    cancelRequest: {
+    cancelRequest_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3645,6 +3844,32 @@ export interface operations {
             };
         };
     };
+    searchTeachers: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                companyId?: string;
+                branchId?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseTeacherSearchResponse"];
+                };
+            };
+        };
+    };
     searchAssistants: {
         parameters: {
             query?: {
@@ -3758,7 +3983,7 @@ export interface operations {
             };
         };
     };
-    getMyRequests: {
+    getMyRequests_1: {
         parameters: {
             query?: {
                 status?: ("PENDING" | "APPROVED" | "REJECTED" | "CANCELED")[];

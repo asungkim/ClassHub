@@ -16,6 +16,7 @@ import type {
   AssistantAssignmentResponse,
   AssistantAssignmentPage,
   PublicCourseResponse,
+  TeacherSearchResponse,
   ClinicSlotResponse,
   StudentCourseDetailResponse,
   StudentCourseListItemResponse,
@@ -26,6 +27,9 @@ import type {
   StudentStudentListItemResponse,
   StudentEnrollmentRequestCreateRequest,
   StudentEnrollmentRequestResponse,
+  StudentTeacherRequestCreateRequest,
+  StudentTeacherRequestResponse,
+  StudentTeacherRequestStatus,
   TeacherAssignmentFilter,
   TeacherBranchAssignment,
   TeacherBranchAssignmentCreateRequest,
@@ -624,6 +628,88 @@ export async function fetchStudentMyCourses(params: {
     items: (pageData?.content ?? []) as StudentCourseResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
+}
+
+export async function fetchTeacherSearch(params: {
+  keyword?: string;
+  companyId?: string;
+  branchId?: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<TeacherSearchResponse>> {
+  const { keyword, companyId, branchId, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/teachers", {
+    params: {
+      query: {
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
+        companyId: companyId || undefined,
+        branchId: branchId || undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "선생님 목록을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as TeacherSearchResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchStudentTeacherRequests(params: {
+  statuses?: StudentTeacherRequestStatus[];
+  page: number;
+  size?: number;
+}): Promise<ListResult<StudentTeacherRequestResponse>> {
+  const { statuses, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/teacher-student-requests", {
+    params: {
+      query: {
+        status: statuses && statuses.length > 0 ? statuses : undefined,
+        page,
+        size
+      }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "신청 내역을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as StudentTeacherRequestResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function createStudentTeacherRequest(body: StudentTeacherRequestCreateRequest) {
+  const response = await api.POST("/api/v1/teacher-student-requests", {
+    body
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "선생님 요청을 생성하지 못했습니다."));
+  }
+
+  return response.data.data as StudentTeacherRequestResponse;
+}
+
+export async function cancelStudentTeacherRequest(requestId: string) {
+  const response = await api.PATCH("/api/v1/teacher-student-requests/{requestId}/cancel", {
+    params: { path: { requestId } }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "요청을 취소하지 못했습니다."));
+  }
+
+  return response.data.data as StudentTeacherRequestResponse;
 }
 
 export async function fetchMyEnrollmentRequests(params: {
