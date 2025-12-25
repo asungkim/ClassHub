@@ -19,12 +19,13 @@ import type {
   TeacherSearchResponse,
   ClinicSlotResponse,
   StudentCourseDetailResponse,
+  StudentCourseAssignmentResponse,
   StudentCourseListItemResponse,
   StudentCourseRecordUpdateRequest,
   StudentCourseResponse,
   StudentCourseStatusFilter,
-  StudentStudentDetailResponse,
-  StudentStudentListItemResponse,
+  StudentSummaryResponse,
+  TeacherStudentDetailResponse,
   StudentEnrollmentRequestCreateRequest,
   StudentEnrollmentRequestResponse,
   StudentTeacherRequestCreateRequest,
@@ -537,17 +538,17 @@ export async function fetchStudentCourseRecords(params: {
   };
 }
 
-export async function fetchStudentStudents(params: {
-  status: StudentCourseStatusFilter;
+export async function fetchTeacherStudents(params: {
+  courseId?: string;
   keyword?: string;
   page: number;
   size?: number;
-}): Promise<ListResult<StudentStudentListItemResponse>> {
-  const { status, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
-  const response = await api.GET("/api/v1/student-courses/students", {
+}): Promise<ListResult<StudentSummaryResponse>> {
+  const { courseId, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/teacher-students", {
     params: {
       query: {
-        status,
+        courseId: courseId && courseId.trim().length > 0 ? courseId.trim() : undefined,
         keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
         page,
         size
@@ -561,7 +562,7 @@ export async function fetchStudentStudents(params: {
 
   const pageData = response.data.data;
   return {
-    items: (pageData?.content ?? []) as StudentStudentListItemResponse[],
+    items: (pageData?.content ?? []) as StudentSummaryResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
 }
@@ -578,8 +579,8 @@ export async function fetchStudentCourseDetail(recordId: string) {
   return response.data.data as StudentCourseDetailResponse;
 }
 
-export async function fetchStudentStudentDetail(studentId: string) {
-  const response = await api.GET("/api/v1/student-courses/students/{studentId}", {
+export async function fetchTeacherStudentDetail(studentId: string) {
+  const response = await api.GET("/api/v1/teacher-students/{studentId}", {
     params: { path: { studentId } }
   });
 
@@ -587,7 +588,7 @@ export async function fetchStudentStudentDetail(studentId: string) {
     throw new Error(getApiErrorMessage(response.error, "학생 상세 정보를 불러오지 못했습니다."));
   }
 
-  return response.data.data as StudentStudentDetailResponse;
+  return response.data.data as TeacherStudentDetailResponse;
 }
 
 export async function updateStudentCourseRecord(recordId: string, payload: StudentCourseRecordUpdateRequest) {
@@ -601,6 +602,30 @@ export async function updateStudentCourseRecord(recordId: string, payload: Stude
   }
 
   return response.data.data as StudentCourseDetailResponse;
+}
+
+export async function activateStudentCourseAssignment(assignmentId: string) {
+  const response = await api.PATCH("/api/v1/student-course-assignments/{assignmentId}/activate", {
+    params: { path: { assignmentId } }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "재원 처리를 하지 못했습니다."));
+  }
+
+  return response.data.data as StudentCourseAssignmentResponse;
+}
+
+export async function deactivateStudentCourseAssignment(assignmentId: string) {
+  const response = await api.PATCH("/api/v1/student-course-assignments/{assignmentId}/deactivate", {
+    params: { path: { assignmentId } }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "휴원 처리를 하지 못했습니다."));
+  }
+
+  return response.data.data as StudentCourseAssignmentResponse;
 }
 
 export async function fetchStudentMyCourses(params: {

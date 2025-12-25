@@ -17,12 +17,17 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import {
   DASHBOARD_PAGE_SIZE,
+  activateStudentCourseAssignment,
   approveTeacherStudentRequest,
+  deactivateStudentCourseAssignment,
   fetchClinicSlots,
+  fetchStudentCourseDetail,
   fetchTeacherAssistants,
-  fetchStudentStudentDetail,
-  fetchStudentStudents,
+  fetchTeacherCourses,
+  fetchTeacherStudentDetail,
+  fetchTeacherStudents,
   fetchStudentTeacherRequests,
+  fetchAssistantCourses,
   rejectTeacherStudentRequest,
   updateStudentCourseRecord
 } from "@/lib/dashboard-api";
@@ -30,21 +35,18 @@ import { formatStudentBirthDate, formatStudentGrade } from "@/utils/student";
 import type {
   AssistantAssignmentResponse,
   ClinicSlotResponse,
-  StudentCourseStatusFilter,
-  StudentStudentDetailResponse,
-  StudentStudentListItemResponse,
+  CourseResponse,
+  CourseWithTeacherResponse,
+  StudentCourseDetailResponse,
+  StudentSummaryResponse,
+  TeacherStudentCourseResponse,
+  TeacherStudentDetailResponse,
   StudentTeacherRequestResponse,
   StudentTeacherRequestStatus
 } from "@/types/dashboard";
 
 type Role = "TEACHER" | "ASSISTANT";
 type TabKey = "students" | "requests";
-
-const studentStatusOptions: { value: StudentCourseStatusFilter; label: string }[] = [
-  { value: "ACTIVE", label: "재원" },
-  { value: "INACTIVE", label: "휴원" },
-  { value: "ALL", label: "전체" }
-];
 
 const requestStatusOptions: { value: StudentTeacherRequestStatus; label: string }[] = [
   { value: "PENDING", label: "대기" },
@@ -113,27 +115,71 @@ type StudentsTabProps = {
 };
 
 function StudentsTab({ role }: StudentsTabProps) {
-  const [status, setStatus] = useState<StudentCourseStatusFilter>("ACTIVE");
+  const [courseId, setCourseId] = useState("");
+  const [courseOptions, setCourseOptions] = useState<{ value: string; label: string }[]>([]);
+  const [courseOptionsLoading, setCourseOptionsLoading] = useState(false);
   const [keywordInput, setKeywordInput] = useState("");
   const [appliedKeyword, setAppliedKeyword] = useState("");
   const [page, setPage] = useState(0);
-  const [students, setStudents] = useState<StudentStudentListItemResponse[]>([]);
+  const [students, setStudents] = useState<StudentSummaryResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<StudentStudentDetailResponse | null>(null);
+  const [detail, setDetail] = useState<TeacherStudentDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const { showToast } = useToast();
   const canViewDetail = true;
 
+  const loadCourseOptions = useCallback(async () => {
+    setCourseOptionsLoading(true);
+    try {
+      if (role === "TEACHER") {
+        const result = await fetchTeacherCourses({
+          status: "ALL",
+          page: 0,
+          size: 100
+        });
+        const options = result.items
+          .filter((course) => Boolean(course.courseId))
+          .map((course) => ({
+            value: course.courseId as string,
+            label: buildCourseLabel(course)
+          }));
+        setCourseOptions(options);
+      } else {
+        const result = await fetchAssistantCourses({
+          status: "ALL",
+          page: 0,
+          size: 100
+        });
+        const options = result.items
+          .filter((course) => Boolean(course.courseId))
+          .map((course) => ({
+            value: course.courseId as string,
+            label: buildCourseLabel(course)
+          }));
+        setCourseOptions(options);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "반 정보를 불러오지 못했습니다.";
+      showToast("error", message);
+    } finally {
+      setCourseOptionsLoading(false);
+    }
+  }, [role, showToast]);
+
+  useEffect(() => {
+    void loadCourseOptions();
+  }, [loadCourseOptions]);
+
   const loadStudents = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchStudentStudents({
-        status,
+      const result = await fetchTeacherStudents({
+        courseId: courseId || undefined,
         keyword: appliedKeyword.trim() ? appliedKeyword.trim() : undefined,
         page,
         size: DASHBOARD_PAGE_SIZE
@@ -147,7 +193,7 @@ function StudentsTab({ role }: StudentsTabProps) {
     } finally {
       setLoading(false);
     }
-  }, [appliedKeyword, status, page, showToast]);
+  }, [appliedKeyword, courseId, page, showToast]);
 
   useEffect(() => {
     void loadStudents();
@@ -160,7 +206,7 @@ function StudentsTab({ role }: StudentsTabProps) {
     setDetail(null);
     setDetailError(null);
     setDetailLoading(true);
-    fetchStudentStudentDetail(detailStudentId)
+    fetchTeacherStudentDetail(detailStudentId)
       .then((response) => {
         setDetail(response);
       })
@@ -176,15 +222,11 @@ function StudentsTab({ role }: StudentsTabProps) {
 
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
   const emptyDescription = useMemo(() => {
-    switch (status) {
-      case "ACTIVE":
-        return "현재 수강 중인 학생이 없습니다.";
-      case "INACTIVE":
-        return "비활성화된 학생 기록이 없습니다.";
-      default:
-        return "표시할 학생이 없습니다. 필터를 조정해 보세요.";
+    if (courseId) {
+      return "선택한 반에 배치된 학생이 없습니다.";
     }
-  }, [status]);
+    return "연결된 학생이 없습니다. 검색 조건을 바꿔보세요.";
+  }, [courseId]);
 
   const applyKeywordFilter = () => {
     setAppliedKeyword(keywordInput);
@@ -199,19 +241,20 @@ function StudentsTab({ role }: StudentsTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card title="학생 필터" description="상태와 검색어로 원하는 학생을 빠르게 찾으세요.">
+      <Card title="학생 필터" description="반과 검색어로 원하는 학생을 빠르게 찾으세요.">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
           <Select
-            label="상태"
-            className="lg:w-40"
-            value={status}
+            label="반"
+            className="lg:w-64"
+            value={courseId}
             onChange={(event) => {
-              setStatus(event.target.value as StudentCourseStatusFilter);
+              setCourseId(event.target.value);
               setPage(0);
             }}
-            disabled={loading}
+            disabled={loading || courseOptionsLoading}
           >
-            {studentStatusOptions.map((option) => (
+            <option value="">전체</option>
+            {courseOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -243,7 +286,7 @@ function StudentsTab({ role }: StudentsTabProps) {
         </div>
         {role === "ASSISTANT" && (
           <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
-            조교는 학생 기록을 수정할 수 없으며, 상세 정보는 조회만 가능합니다.
+            조교는 학생 기록을 수정할 수 없습니다. (조회 및 상태 확인은 가능합니다.)
           </p>
         )}
         {error && <InlineError message={error} className="mt-4" />}
@@ -258,52 +301,39 @@ function StudentsTab({ role }: StudentsTabProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>학생</TableHead>
-                  <TableHead>학생/학부모</TableHead>
                   <TableHead>학교/학년</TableHead>
                   <TableHead>나이</TableHead>
-                  <TableHead>현재 수강 반</TableHead>
-                  <TableHead>상태</TableHead>
+                  <TableHead>연락처</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {students.map((student, index) => {
-                  const memberId = student.student?.memberId ?? `student-${index}`;
-                  const active = student.active ?? false;
-                  const activeCourseNames = student.activeCourseNames ?? [];
-                  const courseSummary = activeCourseNames.length > 0 ? activeCourseNames.join(", ") : "-";
+                  const memberId = student.memberId ?? `student-${index}`;
                   return (
                     <TableRow
                       key={memberId}
                       className={clsx(canViewDetail ? "cursor-pointer hover:bg-slate-50" : "cursor-default")}
                       onClick={() => {
-                        const studentId = student.student?.memberId;
+                        const studentId = student.memberId;
                         if (!canViewDetail || !studentId) return;
                         setDetailStudentId(studentId);
                       }}
                     >
                       <TableCell>
                         <div className="flex flex-col text-sm">
-                          <span className="text-base font-semibold text-slate-900">{student.student?.name ?? "-"}</span>
-                          <span className="text-xs text-slate-500">{student.student?.email ?? "-"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-sm text-slate-600">
-                          <span>{student.student?.phoneNumber ?? "-"}</span>
-                          <span className="text-xs text-slate-400">{student.student?.parentPhone ?? "-"}</span>
+                          <span className="text-base font-semibold text-slate-900">{student.name ?? "-"}</span>
+                          <span className="text-xs text-slate-500">{student.email ?? "-"}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">
-                        {student.student?.schoolName ?? "-"}({formatStudentGrade(student.student?.grade)})
+                        {student.schoolName ?? "-"}({formatStudentGrade(student.grade)})
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">{student.student?.age ?? "-"}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{student.age ?? "-"}</TableCell>
                       <TableCell>
-                        <div className="flex flex-col text-sm">
-                          <span className="font-semibold text-slate-900">{courseSummary}</span>
+                        <div className="flex flex-col text-sm text-slate-600">
+                          <span>{student.phoneNumber ?? "-"}</span>
+                          <span className="text-xs text-slate-400">{student.parentPhone ?? "-"}</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={active ? "success" : "secondary"}>{active ? "재원" : "휴원"}</Badge>
                       </TableCell>
                     </TableRow>
                   );
@@ -686,19 +716,23 @@ function StudentDetailModal({
   role: Role;
   open: boolean;
   loading: boolean;
-  detail: StudentStudentDetailResponse | null;
+  detail: TeacherStudentDetailResponse | null;
   error: string | null;
   onClose: () => void;
-  onDetailChange: (detail: StudentStudentDetailResponse) => void;
+  onDetailChange: (detail: TeacherStudentDetailResponse) => void;
   onUpdated?: () => void;
 }) {
   const { showToast } = useToast();
-  const [editing, setEditing] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [recordDetail, setRecordDetail] = useState<StudentCourseDetailResponse | null>(null);
+  const [recordLoading, setRecordLoading] = useState(false);
+  const [recordError, setRecordError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const [assistantInput, setAssistantInput] = useState("");
   const [clinicInput, setClinicInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
   const [saving, setSaving] = useState(false);
+  const [assignmentActionId, setAssignmentActionId] = useState<string | null>(null);
   const [assistantOptions, setAssistantOptions] = useState<AssistantAssignmentResponse[]>([]);
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantError, setAssistantError] = useState<string | null>(null);
@@ -707,25 +741,23 @@ function StudentDetailModal({
   const [slotError, setSlotError] = useState<string | null>(null);
 
   const courses = detail?.courses ?? [];
-  const records = detail?.records ?? [];
   const selectedCourse = courses.find((course) => course.courseId === selectedCourseId) ?? null;
-  const selectedRecord =
-    records.find((record) => record.courseId === selectedCourseId) ?? null;
-  const activeCourseExists = courses.some((course) => Boolean(course.active));
-  const canEdit = role === "TEACHER" && Boolean(selectedRecord?.recordId);
+  const activeAssignmentExists = courses.some((course) => Boolean(course.assignmentActive));
+  const summaryLabel = courses.length === 0 ? "배치 전" : activeAssignmentExists ? "재원" : "휴원";
+  const summaryVariant = courses.length === 0 ? "secondary" : activeAssignmentExists ? "success" : "secondary";
+  const canEdit = role === "TEACHER" && Boolean(recordDetail?.recordId);
   const isTeacher = role === "TEACHER";
 
   useEffect(() => {
     if (!detail || courses.length === 0) {
       setSelectedCourseId(null);
-      setAssistantInput("");
-      setClinicInput("");
-      setNotesInput("");
+      setRecordDetail(null);
+      setRecordError(null);
       setEditing(false);
       return;
     }
-    const activeCourse = courses.find((course) => course.active);
-    setSelectedCourseId(activeCourse?.courseId ?? courses[0]?.courseId ?? null);
+    setSelectedCourseId((prev) => prev ?? courses[0]?.courseId ?? null);
+    setEditing(false);
   }, [detail, courses]);
 
   useEffect(() => {
@@ -751,13 +783,14 @@ function StudentDetailModal({
     if (!open || !isTeacher) {
       return;
     }
-    if (!selectedCourse?.branchId) {
+    const branchId = recordDetail?.course?.branchId;
+    if (!branchId) {
       setSlotOptions([]);
       return;
     }
     setSlotLoading(true);
     setSlotError(null);
-    fetchClinicSlots({ branchId: selectedCourse.branchId })
+    fetchClinicSlots({ branchId })
       .then((result) => {
         setSlotOptions(result);
       })
@@ -768,56 +801,80 @@ function StudentDetailModal({
       .finally(() => {
         setSlotLoading(false);
       });
-  }, [open, isTeacher, selectedCourse?.branchId]);
+  }, [open, isTeacher, recordDetail?.course?.branchId]);
 
   useEffect(() => {
-    if (!selectedRecord) {
-      setAssistantInput("");
-      setClinicInput("");
-      setNotesInput("");
+    if (!selectedCourse?.recordId) {
+      setRecordDetail(null);
+      setRecordError(null);
       setEditing(false);
       return;
     }
-    setAssistantInput(selectedRecord.assistantMemberId ?? "");
-    setClinicInput(selectedRecord.defaultClinicSlotId ?? "");
-    setNotesInput(selectedRecord.teacherNotes ?? "");
-    setEditing(false);
-  }, [selectedRecord]);
+    if (recordDetail?.recordId === selectedCourse.recordId) {
+      return;
+    }
+    setRecordDetail(null);
+    setRecordLoading(true);
+    setRecordError(null);
+    fetchStudentCourseDetail(selectedCourse.recordId)
+      .then((response) => {
+        setRecordDetail(response);
+      })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : "수업 기록을 불러오지 못했습니다.";
+        setRecordError(message);
+      })
+      .finally(() => {
+        setRecordLoading(false);
+      });
+  }, [recordDetail?.recordId, selectedCourse?.recordId]);
+
+  useEffect(() => {
+    if (!recordDetail) {
+      setAssistantInput("");
+      setClinicInput("");
+      setNotesInput("");
+      return;
+    }
+    setAssistantInput(recordDetail.assistantMemberId ?? "");
+    setClinicInput(recordDetail.defaultClinicSlotId ?? "");
+    setNotesInput(recordDetail.teacherNotes ?? "");
+  }, [recordDetail]);
 
   const assistantLabel = useMemo(() => {
-    if (!selectedRecord?.assistantMemberId) {
+    if (!recordDetail?.assistantMemberId) {
       return "미지정";
     }
     const assignment = assistantOptions.find(
-      (option) => option.assistant?.memberId === selectedRecord.assistantMemberId
+      (option) => option.assistant?.memberId === recordDetail.assistantMemberId
     );
     if (!assignment?.assistant) {
-      return selectedRecord.assistantMemberId;
+      return recordDetail.assistantMemberId;
     }
     const name = assignment.assistant.name ?? "이름 없음";
     const email = assignment.assistant.email ?? "이메일 없음";
     return `${name} (${email})`;
-  }, [assistantOptions, selectedRecord?.assistantMemberId]);
+  }, [assistantOptions, recordDetail?.assistantMemberId]);
 
   const clinicSlotLabel = useMemo(() => {
-    if (!selectedRecord?.defaultClinicSlotId) {
+    if (!recordDetail?.defaultClinicSlotId) {
       return "미지정";
     }
-    const slot = slotOptions.find((option) => option.slotId === selectedRecord.defaultClinicSlotId);
+    const slot = slotOptions.find((option) => option.slotId === recordDetail.defaultClinicSlotId);
     if (!slot) {
-      return selectedRecord.defaultClinicSlotId;
+      return recordDetail.defaultClinicSlotId;
     }
     return formatClinicSlotLabel(slot);
-  }, [selectedRecord?.defaultClinicSlotId, slotOptions]);
+  }, [recordDetail?.defaultClinicSlotId, slotOptions]);
 
   const resetForm = () => {
-    setAssistantInput(selectedRecord?.assistantMemberId ?? "");
-    setClinicInput(selectedRecord?.defaultClinicSlotId ?? "");
-    setNotesInput(selectedRecord?.teacherNotes ?? "");
+    setAssistantInput(recordDetail?.assistantMemberId ?? "");
+    setClinicInput(recordDetail?.defaultClinicSlotId ?? "");
+    setNotesInput(recordDetail?.teacherNotes ?? "");
   };
 
   const handleSave = async () => {
-    if (!selectedRecord?.recordId || !detail) {
+    if (!recordDetail?.recordId) {
       return;
     }
     setSaving(true);
@@ -827,20 +884,8 @@ function StudentDetailModal({
         defaultClinicSlotId: clinicInput.trim() ? clinicInput.trim() : undefined,
         teacherNotes: notesInput.trim() ? notesInput : undefined
       };
-      const updated = await updateStudentCourseRecord(selectedRecord.recordId, payload);
-      const nextRecords = detail.records?.map((record) => {
-        if (record.recordId !== updated.recordId) {
-          return record;
-        }
-        return {
-          ...record,
-          assistantMemberId: updated.assistantMemberId,
-          defaultClinicSlotId: updated.defaultClinicSlotId,
-          teacherNotes: updated.teacherNotes,
-          active: updated.active
-        };
-      }) ?? [];
-      onDetailChange({ ...detail, records: nextRecords });
+      const updated = await updateStudentCourseRecord(recordDetail.recordId, payload);
+      setRecordDetail(updated);
       onUpdated?.();
       showToast("success", "수업 기록을 수정했습니다.");
       setEditing(false);
@@ -857,6 +902,35 @@ function StudentDetailModal({
     setEditing(false);
   };
 
+  const handleToggleAssignment = async (course: TeacherStudentCourseResponse, nextActive: boolean) => {
+    if (!course.assignmentId || !detail) {
+      return;
+    }
+    setAssignmentActionId(course.assignmentId);
+    try {
+      const response = nextActive
+        ? await activateStudentCourseAssignment(course.assignmentId)
+        : await deactivateStudentCourseAssignment(course.assignmentId);
+      const nextCourses = (detail.courses ?? []).map((item) => {
+        if (item.courseId !== course.courseId) {
+          return item;
+        }
+        return {
+          ...item,
+          assignmentActive: response.active
+        };
+      });
+      onDetailChange({ ...detail, courses: nextCourses });
+      onUpdated?.();
+      showToast("success", nextActive ? "재원 처리했습니다." : "휴원 처리했습니다.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "상태를 변경하지 못했습니다.";
+      showToast("error", message);
+    } finally {
+      setAssignmentActionId(null);
+    }
+  };
+
   return (
     <Modal open={open} onClose={onClose} title="학생 상세 정보" size="lg">
       {loading && <LoadingState message="학생 정보를 불러오는 중입니다." />}
@@ -866,9 +940,7 @@ function StudentDetailModal({
           <section>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">상태</p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <Badge variant={activeCourseExists ? "success" : "secondary"}>
-                {activeCourseExists ? "재원" : "휴원"}
-              </Badge>
+              <Badge variant={summaryVariant}>{summaryLabel}</Badge>
             </div>
           </section>
 
@@ -891,47 +963,70 @@ function StudentDetailModal({
           <section className="space-y-4">
             <div>
               <p className="text-sm font-semibold text-slate-900">수강 반</p>
-              <p className="mt-1 text-xs text-slate-500">선택한 반의 기록을 아래에서 수정할 수 있습니다.</p>
+              <p className="mt-1 text-xs text-slate-500">반별 상태를 확인하고 휴원/재원 처리를 진행합니다.</p>
             </div>
             {courses.length === 0 ? (
-              <EmptyState message="수강 반 없음" description="등록된 반 정보가 없습니다." />
+              <EmptyState message="배치 전" description="아직 배치된 반이 없습니다." />
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="grid gap-3">
                 {courses.map((course, index) => {
                   const courseKey = course.courseId ?? `course-${index}`;
                   const isSelected = course.courseId === selectedCourseId;
+                  const courseActive = course.active ?? true;
+                  const assignmentActive = course.assignmentActive ?? false;
+                  const ended = isCourseEnded(course.endDate);
+                  const hasAssignment = Boolean(course.assignmentId);
+                  const toggleDisabled = !hasAssignment || !courseActive || ended || assignmentActionId === course.assignmentId;
                   return (
-                    <button
-                      key={courseKey}
-                      type="button"
-                      onClick={() => setSelectedCourseId(course.courseId ?? null)}
-                      className={clsx(
-                        "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition",
-                        isSelected
-                          ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-indigo-200"
-                      )}
-                    >
-                      <span>{course.name ?? "-"}</span>
-                      <Badge variant={course.active ? "success" : "secondary"} className="text-[10px]">
-                        {course.active ? "활성" : "비활성"}
-                      </Badge>
-                    </button>
+                    <div key={courseKey} className={clsx(isSelected && "rounded-2xl ring-2 ring-indigo-200")}>
+                      <Card
+                        title={course.name ?? "반 정보 없음"}
+                        description={formatCoursePeriod(course.startDate, course.endDate)}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          {!courseActive && <Badge variant="secondary">삭제됨</Badge>}
+                          {ended && <Badge variant="secondary">종료</Badge>}
+                          {hasAssignment ? (
+                            <Badge variant={assignmentActive ? "success" : "secondary"}>
+                              {assignmentActive ? "재원" : "휴원"}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">배치 전</Badge>
+                          )}
+                        </div>
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <Button
+                            variant={assignmentActive ? "ghost" : "secondary"}
+                            className="h-9 px-4 text-xs"
+                            onClick={() => handleToggleAssignment(course, !assignmentActive)}
+                            disabled={toggleDisabled}
+                          >
+                            {assignmentActive ? "휴원 처리" : "재원 처리"}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            className="h-9 px-4 text-xs"
+                            onClick={() => {
+                              setSelectedCourseId(course.courseId ?? null);
+                              if (course.recordId) {
+                                setEditing(true);
+                              }
+                            }}
+                            disabled={!course.recordId}
+                          >
+                            기록 수정
+                          </Button>
+                          {!hasAssignment && (
+                            <span className="text-xs text-slate-400">배치 후에만 상태 변경이 가능합니다.</span>
+                          )}
+                          {ended && <span className="text-xs text-slate-400">종료된 반은 변경할 수 없습니다.</span>}
+                          {!courseActive && <span className="text-xs text-slate-400">삭제된 반은 읽기 전용입니다.</span>}
+                        </div>
+                      </Card>
+                    </div>
                   );
                 })}
               </div>
-            )}
-
-            {selectedCourse && (
-              <InfoCard
-                title="선택한 반 정보"
-                items={[
-                  { label: "반 이름", value: selectedCourse.name ?? "-" },
-                  { label: "지점", value: selectedCourse.branchName ?? "-" },
-                  { label: "회사", value: selectedCourse.companyName ?? "-" },
-                  { label: "기간", value: formatCoursePeriod(selectedCourse.startDate, selectedCourse.endDate) }
-                ]}
-              />
             )}
           </section>
 
@@ -966,10 +1061,12 @@ function StudentDetailModal({
               )}
             </div>
 
-            {!selectedRecord && (
+            {recordLoading && <LoadingState message="수업 기록을 불러오는 중입니다." />}
+            {!recordLoading && recordError && <InlineError message={recordError} className="mt-3" />}
+            {!recordLoading && !recordError && !recordDetail && (
               <p className="mt-3 text-sm text-slate-500">선택한 반에 기록이 없습니다.</p>
             )}
-            {selectedRecord && !editing && (
+            {recordDetail && !editing && (
               <dl className="mt-3 space-y-2">
                 <div className="flex justify-between gap-4">
                   <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">담당 조교</dt>
@@ -982,12 +1079,12 @@ function StudentDetailModal({
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">노트</dt>
                   <dd className="mt-1 whitespace-pre-wrap text-right">
-                    {selectedRecord.teacherNotes ?? "등록된 노트가 없습니다."}
+                    {recordDetail.teacherNotes ?? "등록된 노트가 없습니다."}
                   </dd>
                 </div>
               </dl>
             )}
-            {selectedRecord && editing && (
+            {recordDetail && editing && (
               <div className="mt-4 space-y-3">
                 <Field label="담당 조교">
                   <Select
@@ -1224,4 +1321,24 @@ function formatClinicSlotLabel(slot: ClinicSlotResponse) {
 
 function requestStatusToLabel(status: StudentTeacherRequestStatus) {
   return requestStatusOptions.find((option) => option.value === status)?.label ?? status;
+}
+
+function buildCourseLabel(course: CourseResponse | CourseWithTeacherResponse) {
+  const academy = [course.companyName, course.branchName].filter(Boolean).join(" ");
+  const teacherPart = "teacherName" in course && course.teacherName ? ` · ${course.teacherName} 선생님` : "";
+  return `${course.name ?? "이름 없는 반"}${academy ? ` (${academy})` : ""}${teacherPart}`;
+}
+
+function isCourseEnded(endDate?: string | null) {
+  if (!endDate) {
+    return false;
+  }
+  const today = new Date();
+  const end = new Date(endDate);
+  if (Number.isNaN(end.getTime())) {
+    return false;
+  }
+  const todayKey = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const endKey = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+  return endKey < todayKey;
 }

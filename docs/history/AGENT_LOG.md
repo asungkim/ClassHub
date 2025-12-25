@@ -5968,3 +5968,22 @@ BEHAVIORAL
   - `frontend/src/lib/dashboard-api.ts`
   - `frontend/src/components/dashboard/student-management.tsx`
 - 다음 단계: 학생 목록 + 상세 모달 연동 (2단계)
+## [2025-12-26 03:55] 학생 목록/상세 UI를 선생님 연결 기반으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록을 teacher-students API로 전환하고 반 필터/검색 흐름으로 재구성
+- 학생 상세 모달을 TeacherStudentDetailResponse 기반으로 수정하고 휴원/재원 토글 연동
+- 수업 기록은 recordId 기준으로 상세 조회/수정하도록 로딩 구조 정리
+
+### Details
+- 작업 사유: 2단계(학생 목록 + 상세 모달 연동) 구현
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 반 배치 탭 추가 (3단계)
