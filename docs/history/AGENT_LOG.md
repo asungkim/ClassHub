@@ -5608,3 +5608,76 @@ TODO_UPDATE
 - 수정한 파일: `docs/todo/v1.11.md`
 - 다음 단계: v1.11 기준 PLAN 작성 및 구현
 - MCP: 없음
+## [2025-12-26 00:11] v1.5 스펙에 학생/선생님 관리 흐름 반영
+
+### Type
+DESIGN
+
+### Summary
+- 선생님 신청 처리/학생 목록/상세 모달/반 배치 흐름을 스펙에 반영
+- 학생 선생님 검색/요청 관리 흐름과 API 경로를 정리
+
+### Details
+- 작업 사유: 스펙 보강을 위한 화면/요청 흐름 및 API 정합성 반영
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: v1.5 스펙 기준 TODO/PLAN 업데이트 검토
+- MCP: 없음
+## [2025-12-26 00:18] 요청 처리 API 승인/거절 분리
+
+### Type
+DESIGN
+
+### Summary
+- TeacherStudentRequest 승인/거절/취소를 별도 API로 분리
+- 일괄 승인/거절도 분리 엔드포인트로 정리
+
+### Details
+- 작업 사유: 승인/거절 비즈니스 로직 분리 요구 반영
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: 스펙 기반 PLAN/TODO 정합성 확인
+- MCP: 없음
+## [2025-12-26 00:19] 요청 일괄 처리 제외
+
+### Type
+DESIGN
+
+### Summary
+- TeacherStudentRequest 일괄 승인/거절 API를 범위에서 제외
+- 단건 API 다중 호출로 처리하도록 스펙 명시
+
+### Details
+- 작업 사유: 초기 범위 단순화 및 개선사항 분리
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: 개선사항 backlog에 일괄 처리 추가
+- MCP: 없음
+## [2025-12-26 00:20] 신청 일괄 처리 개선사항 백로그 추가
+
+### Type
+TODO_UPDATE
+
+### Summary
+- TeacherStudentRequest 일괄 승인/거절을 개선사항으로 백로그에 추가
+
+### Details
+- 작업 사유: 초기 범위에서 제외한 일괄 처리를 추후 개선 항목으로 분리
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/refactor/improvment-backlog.md`
+- 다음 단계: 필요 시 이슈/PLAN으로 분리
+- MCP: 없음
+## [2025-12-26 00:22] 반 배치 일괄 API 제외
+
+### Type
+DESIGN
+
+### Summary
+- StudentCourseAssignment 일괄 배치 API를 스펙에서 제거
+
+### Details
+- 작업 사유: 초기 범위 단순화 및 단건 호출 방식 채택
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: 필요 시 개선사항 백로그로 분리
+- MCP: 없음
