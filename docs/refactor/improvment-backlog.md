@@ -64,6 +64,11 @@
 - 목적: Slot 요일/시간 변경으로 defaultClinicSlotId가 해제된 학생에게 재신청 안내를 제공.
 - 작업 범위: Slot 변경 시 대상 학생 목록 집계, 알림(Notification) 이벤트 발행, 학생 앱에서 재신청 CTA 노출. (Notification 기능 도입 시 구현)
 
+### #12 클리닉 배치 조건 보강
+- 우선순위: 🟡 Medium
+- 목적: Course 종료/휴원 학생에 대해 ClinicSession/Attendance가 자동 생성되지 않도록 배치 조건을 명확히 분리.
+- 작업 범위: ClinicBatchService에서 StudentCourseAssignment 활성 + Course 기간 조건을 반영해 Attendance 생성 대상 필터링. 필요 시 유효 학생이 없는 슬롯은 세션 생성도 건너뛰는 정책 추가.
+
 ---
 
 ## 📱 UI/UX
