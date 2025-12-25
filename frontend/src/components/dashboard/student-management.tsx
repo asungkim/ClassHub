@@ -15,34 +15,30 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { useDebounce } from "@/hooks/use-debounce";
 import {
   DASHBOARD_PAGE_SIZE,
-  approveEnrollmentRequest,
-  fetchAssistantCourses,
+  approveTeacherStudentRequest,
   fetchClinicSlots,
   fetchTeacherAssistants,
   fetchStudentStudentDetail,
   fetchStudentStudents,
-  fetchTeacherCourses,
-  fetchTeacherEnrollmentRequests,
-  rejectEnrollmentRequest,
+  fetchStudentTeacherRequests,
+  rejectTeacherStudentRequest,
   updateStudentCourseRecord
 } from "@/lib/dashboard-api";
 import { formatStudentBirthDate, formatStudentGrade } from "@/utils/student";
 import type {
-  EnrollmentStatus,
   AssistantAssignmentResponse,
   ClinicSlotResponse,
   StudentCourseStatusFilter,
   StudentStudentDetailResponse,
   StudentStudentListItemResponse,
-  TeacherEnrollmentRequestResponse
+  StudentTeacherRequestResponse,
+  StudentTeacherRequestStatus
 } from "@/types/dashboard";
 
 type Role = "TEACHER" | "ASSISTANT";
 type TabKey = "students" | "requests";
-type CourseOption = { value: string; label: string };
 
 const studentStatusOptions: { value: StudentCourseStatusFilter; label: string }[] = [
   { value: "ACTIVE", label: "재원" },
@@ -50,67 +46,22 @@ const studentStatusOptions: { value: StudentCourseStatusFilter; label: string }[
   { value: "ALL", label: "전체" }
 ];
 
-const enrollmentStatusOptions: { value: EnrollmentStatus; label: string }[] = [
+const requestStatusOptions: { value: StudentTeacherRequestStatus; label: string }[] = [
   { value: "PENDING", label: "대기" },
   { value: "APPROVED", label: "승인" },
   { value: "REJECTED", label: "거절" },
-  { value: "CANCELED", label: "취소" }
+  { value: "CANCELLED", label: "취소" }
 ];
 
-const enrollmentStatusBadge: Record<EnrollmentStatus, Parameters<typeof Badge>[0]["variant"]> = {
+const requestStatusBadge: Record<StudentTeacherRequestStatus, Parameters<typeof Badge>[0]["variant"]> = {
   PENDING: "secondary",
   APPROVED: "success",
   REJECTED: "destructive",
-  CANCELED: "secondary"
+  CANCELLED: "secondary"
 };
 
 export function StudentManagementView({ role }: { role: Role }) {
   const [activeTab, setActiveTab] = useState<TabKey>("students");
-  const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
-  const [courseOptionsLoading, setCourseOptionsLoading] = useState(false);
-  const { showToast } = useToast();
-
-  const loadCourseOptions = useCallback(async () => {
-    setCourseOptionsLoading(true);
-    try {
-      if (role === "TEACHER") {
-        const result = await fetchTeacherCourses({
-          status: "ALL",
-          page: 0,
-          size: 100
-        });
-        const options = result.items
-          .filter((course) => Boolean(course.courseId))
-          .map((course) => ({
-            value: course.courseId as string,
-            label: buildCourseLabel(course.name, course.companyName, course.branchName)
-          }));
-        setCourseOptions(options);
-      } else {
-        const result = await fetchAssistantCourses({
-          status: "ALL",
-          page: 0,
-          size: 100
-        });
-        const options = result.items
-          .filter((course) => Boolean(course.courseId))
-          .map((course) => ({
-            value: course.courseId as string,
-            label: buildCourseLabel(course.name, course.companyName, course.branchName, course.teacherName)
-          }));
-        setCourseOptions(options);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "반 정보를 불러오지 못했습니다.";
-      showToast("error", message);
-    } finally {
-      setCourseOptionsLoading(false);
-    }
-  }, [role, showToast]);
-
-  useEffect(() => {
-    void loadCourseOptions();
-  }, [loadCourseOptions]);
 
   const headerMeta =
     role === "TEACHER"
@@ -150,7 +101,7 @@ export function StudentManagementView({ role }: { role: Role }) {
           <StudentsTab role={role} />
         </div>
         <div hidden={activeTab !== "requests"}>
-          <RequestsTab role={role} courseOptions={courseOptions} courseOptionsLoading={courseOptionsLoading} />
+          <RequestsTab />
         </div>
       </Tabs>
     </div>
@@ -382,36 +333,28 @@ function StudentsTab({ role }: StudentsTabProps) {
   );
 }
 
-type RequestsTabProps = {
-  role: Role;
-  courseOptions: CourseOption[];
-  courseOptionsLoading: boolean;
-};
-
-function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabProps) {
-  const [courseId, setCourseId] = useState("");
-  const [statuses, setStatuses] = useState<EnrollmentStatus[]>(["PENDING"]);
-  const [studentNameInput, setStudentNameInput] = useState("");
-  const studentName = useDebounce(studentNameInput.trim(), 300);
+function RequestsTab() {
+  const [statuses, setStatuses] = useState<StudentTeacherRequestStatus[]>(["PENDING"]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [appliedKeyword, setAppliedKeyword] = useState("");
   const [page, setPage] = useState(0);
-  const [requests, setRequests] = useState<TeacherEnrollmentRequestResponse[]>([]);
+  const [requests, setRequests] = useState<StudentTeacherRequestResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmState, setConfirmState] = useState<{ type: "APPROVE" | "REJECT"; ids: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [detail, setDetail] = useState<TeacherEnrollmentRequestResponse | null>(null);
+  const [detail, setDetail] = useState<StudentTeacherRequestResponse | null>(null);
   const { showToast } = useToast();
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchTeacherEnrollmentRequests({
-        courseId: courseId || undefined,
+      const result = await fetchStudentTeacherRequests({
         statuses: statuses.length > 0 ? statuses : undefined,
-        studentName: studentName || undefined,
+        keyword: appliedKeyword.trim() ? appliedKeyword.trim() : undefined,
         page,
         size: DASHBOARD_PAGE_SIZE
       });
@@ -427,21 +370,17 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
         return next;
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "학생 신청 목록을 불러오지 못했습니다.";
+      const message = err instanceof Error ? err.message : "요청 목록을 불러오지 못했습니다.";
       setError(message);
       showToast("error", message);
     } finally {
       setLoading(false);
     }
-  }, [courseId, statuses, studentName, page, showToast]);
+  }, [appliedKeyword, statuses, page, showToast]);
 
   useEffect(() => {
     void loadRequests();
   }, [loadRequests]);
-
-  useEffect(() => {
-    setPage(0);
-  }, [studentName]);
 
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
   const pendingIds = useMemo(
@@ -454,7 +393,7 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
   const selectedCount = Array.from(selectedIds).length;
   const allPendingSelected = pendingIds.length > 0 && pendingIds.every((id) => selectedIds.has(id));
 
-  const toggleStatus = (value: EnrollmentStatus, checked: boolean) => {
+  const toggleStatus = (value: StudentTeacherRequestStatus, checked: boolean) => {
     setStatuses((prev) => {
       const set = new Set(prev);
       if (checked) {
@@ -468,9 +407,14 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
   };
 
   const resetFilters = () => {
-    setCourseId("");
     setStatuses(["PENDING"]);
-    setStudentNameInput("");
+    setKeywordInput("");
+    setAppliedKeyword("");
+    setPage(0);
+  };
+
+  const applyKeywordFilter = () => {
+    setAppliedKeyword(keywordInput);
     setPage(0);
   };
 
@@ -514,8 +458,8 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
     try {
       const actions =
         confirmState.type === "APPROVE"
-          ? confirmState.ids.map((id) => approveEnrollmentRequest(id))
-          : confirmState.ids.map((id) => rejectEnrollmentRequest(id));
+          ? confirmState.ids.map((id) => approveTeacherStudentRequest(id))
+          : confirmState.ids.map((id) => rejectTeacherStudentRequest(id));
       await Promise.all(actions);
       showToast("success", `${confirmState.ids.length}건의 신청을 ${confirmState.type === "APPROVE" ? "승인" : "거절"}했습니다.`);
       setConfirmState(null);
@@ -531,31 +475,20 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
 
   return (
     <div className="space-y-6">
-      <Card title="신청 필터" description="반/상태/학생 이름으로 요청 대상을 좁혀보세요.">
+      <Card title="신청 필터" description="상태와 학생 이름으로 요청 대상을 좁혀보세요.">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
-          <Select
-            label="반"
-            value={courseId}
-            onChange={(event) => {
-              setCourseId(event.target.value);
-              setPage(0);
-            }}
-            className="lg:w-64"
-            disabled={loading || courseOptionsLoading || courseOptions.length === 0}
-          >
-            <option value="">전체</option>
-            {courseOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
           <Field label="학생 이름" className="lg:w-60">
             <Input
               placeholder="검색어"
-              value={studentNameInput}
+              value={keywordInput}
               onChange={(event) => {
-                setStudentNameInput(event.target.value);
+                setKeywordInput(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyKeywordFilter();
+                }
               }}
             />
           </Field>
@@ -563,8 +496,8 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
             <Button variant="secondary" onClick={resetFilters} disabled={loading}>
               초기화
             </Button>
-            <Button onClick={() => void loadRequests()} disabled={loading}>
-              새로고침
+            <Button onClick={applyKeywordFilter} disabled={loading}>
+              검색
             </Button>
           </div>
         </div>
@@ -574,7 +507,7 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
             <div>
               <p className="text-sm font-semibold text-slate-700">상태 필터</p>
               <p className="text-xs text-slate-500">
-                현재 선택: {statuses.length ? statuses.map((status) => statusToLabel(status)).join(", ") : "전체"}
+                현재 선택: {statuses.length ? statuses.map((status) => requestStatusToLabel(status)).join(", ") : "전체"}
               </p>
             </div>
             <Button variant="ghost" onClick={() => setStatuses([])} disabled={loading}>
@@ -582,7 +515,7 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
             </Button>
           </div>
           <div className="mt-3 flex flex-wrap gap-4">
-            {enrollmentStatusOptions.map((option) => (
+            {requestStatusOptions.map((option) => (
               <Checkbox
                 key={option.value}
                 label={option.label}
@@ -639,9 +572,10 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
                   <TableHead className="w-10">선택</TableHead>
                   <TableHead>신청일</TableHead>
                   <TableHead>학생</TableHead>
-                  <TableHead>Course</TableHead>
+                  <TableHead>학교/학년</TableHead>
+                  <TableHead>연락처</TableHead>
+                  <TableHead>요청 메시지</TableHead>
                   <TableHead>상태</TableHead>
-                  <TableHead>메시지</TableHead>
                   <TableHead className="text-right">동작</TableHead>
                 </TableRow>
               </TableHeader>
@@ -673,20 +607,16 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
                           <span className="text-xs text-slate-500">{request.student?.email ?? request.student?.phoneNumber ?? "-"}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-sm">
-                          <span className="font-semibold text-slate-900">{request.course?.name ?? "-"}</span>
-                          <span className="text-xs text-slate-500">
-                            {request.course?.companyName ?? ""} {request.course?.branchName ?? ""}
-                          </span>
-                        </div>
+                      <TableCell className="text-sm text-slate-600">
+                        {request.student?.schoolName ?? "-"} ({formatStudentGrade(request.student?.grade)})
                       </TableCell>
+                      <TableCell className="text-sm text-slate-600">{request.student?.phoneNumber ?? "-"}</TableCell>
+                      <TableCell className="max-w-xs truncate text-sm text-slate-600">{request.message ?? "-"}</TableCell>
                       <TableCell>
-                        <Badge variant={enrollmentStatusBadge[request.status ?? "PENDING"]}>
-                          {statusToLabel(request.status ?? "PENDING")}
+                        <Badge variant={requestStatusBadge[request.status ?? "PENDING"]}>
+                          {requestStatusToLabel(request.status ?? "PENDING")}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-xs truncate text-sm text-slate-600">{request.studentMessage ?? "-"}</TableCell>
                       <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
                         {isPending ? (
                           <div className="flex justify-end gap-2">
@@ -1125,7 +1055,7 @@ function RequestDetailModal({
   onClose
 }: {
   open: boolean;
-  request: TeacherEnrollmentRequestResponse | null;
+  request: StudentTeacherRequestResponse | null;
   onClose: () => void;
 }) {
   if (!request) {
@@ -1140,7 +1070,7 @@ function RequestDetailModal({
     <Modal open={open} onClose={onClose} title="신청 상세" size="lg">
       <div className="space-y-6">
         <section className="flex flex-wrap items-center gap-3">
-          <Badge variant={enrollmentStatusBadge[status]}>{statusToLabel(status)}</Badge>
+          <Badge variant={requestStatusBadge[status]}>{requestStatusToLabel(status)}</Badge>
           <span className="text-sm text-slate-500">
             신청일 {formatDateTime(request.createdAt)} / 처리일 {formatDateTime(request.processedAt)}
           </span>
@@ -1155,19 +1085,10 @@ function RequestDetailModal({
               { label: "학교(학년)", value: `${request.student?.schoolName ?? "-"}(${formatStudentGrade(request.student?.grade)})`.trim() }
             ]}
           />
-          <InfoCard
-            title="Course 정보"
-            items={[
-              { label: "반 이름", value: request.course?.name ?? "-" },
-              { label: "지점", value: request.course?.branchName ?? "-" },
-              { label: "회사", value: request.course?.companyName ?? "-" },
-              { label: "기간", value: formatCoursePeriod(request.course?.startDate, request.course?.endDate) }
-            ]}
-          />
         </div>
         <section className="rounded-2xl border border-slate-200/60 bg-slate-50 px-4 py-4">
-          <p className="text-sm font-semibold text-slate-900">학생 메시지</p>
-          <p className="mt-2 text-sm text-slate-600">{request.studentMessage ?? "남긴 메시지가 없습니다."}</p>
+          <p className="text-sm font-semibold text-slate-900">요청 메시지</p>
+          <p className="mt-2 text-sm text-slate-600">{request.message ?? "남긴 메시지가 없습니다."}</p>
         </section>
         <div className="flex justify-end">
           <Button onClick={onClose}>닫기</Button>
@@ -1301,17 +1222,6 @@ function formatClinicSlotLabel(slot: ClinicSlotResponse) {
   return `${day} ${startTime}~${endTime}`;
 }
 
-function statusToLabel(status: EnrollmentStatus) {
-  return enrollmentStatusOptions.find((option) => option.value === status)?.label ?? status;
-}
-
-function buildCourseLabel(
-  courseName?: string | null,
-  companyName?: string | null,
-  branchName?: string | null,
-  teacherName?: string | null
-) {
-  const academy = [companyName, branchName].filter(Boolean).join(" ");
-  const teacherPart = teacherName ? ` · ${teacherName} 선생님` : "";
-  return `${courseName ?? "이름 없는 반"}${academy ? ` (${academy})` : ""}${teacherPart}`;
+function requestStatusToLabel(status: StudentTeacherRequestStatus) {
+  return requestStatusOptions.find((option) => option.value === status)?.label ?? status;
 }

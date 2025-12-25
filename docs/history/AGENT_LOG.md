@@ -5920,3 +5920,51 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentControllerTest.java`
   - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepositoryTest.java`
 - 다음 단계: 학생 상세 모달의 휴원/재원 UX 연동 및 관련 프론트 작업
+## [2025-12-26 02:46] 선생님 학생 관리 UI 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- 선생님 학생 관리(신청 처리/학생 목록/상세/반 배치) 프론트엔드 계획 수립
+- 탭 구조, 데이터 흐름, UX 규칙 및 검증 계획 정리
+
+### Details
+- 작업 사유: 신규 플로우 기반 프론트 구현 준비
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-student-management_ui_plan.md`
+- 다음 단계: 설계 승인 후 프론트 구현 착수
+## [2025-12-26 02:50] 선생님 학생 관리 UI 설계 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 기록 API 경로 수정 및 반 배치 단건 처리 방침 반영
+- 구현 단계를 3단계로 분할하여 계획 보강
+
+### Details
+- 작업 사유: 설계 명확화 및 구현 순서 정의
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-student-management_ui_plan.md`
+- 다음 단계: 설계 승인 후 프론트 구현 착수
+## [2025-12-26 03:20] 선생님 신청 처리 탭을 연결 요청 기반으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 신청 처리 탭을 수업 신청에서 선생님-학생 연결 요청 흐름으로 변경
+- 요청 필터/목록/상세 UI를 StudentTeacherRequestResponse 기반으로 재구성
+- 단건 승인/거절 API로 일괄 처리 구현
+
+### Details
+- 작업 사유: 1단계(신청 처리 탭 리워크) 구현
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 학생 목록 + 상세 모달 연동 (2단계)

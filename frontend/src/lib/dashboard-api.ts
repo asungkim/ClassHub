@@ -663,14 +663,16 @@ export async function fetchTeacherSearch(params: {
 
 export async function fetchStudentTeacherRequests(params: {
   statuses?: StudentTeacherRequestStatus[];
+  keyword?: string;
   page: number;
   size?: number;
 }): Promise<ListResult<StudentTeacherRequestResponse>> {
-  const { statuses, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const { statuses, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
   const response = await api.GET("/api/v1/teacher-student-requests", {
     params: {
       query: {
         status: statuses && statuses.length > 0 ? statuses : undefined,
+        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
         page,
         size
       }
@@ -707,6 +709,30 @@ export async function cancelStudentTeacherRequest(requestId: string) {
 
   if (response.error || !response.data?.data) {
     throw new Error(getApiErrorMessage(response.error, "요청을 취소하지 못했습니다."));
+  }
+
+  return response.data.data as StudentTeacherRequestResponse;
+}
+
+export async function approveTeacherStudentRequest(requestId: string) {
+  const response = await api.PATCH("/api/v1/teacher-student-requests/{requestId}/approve", {
+    params: { path: { requestId } }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "요청을 승인하지 못했습니다."));
+  }
+
+  return response.data.data as StudentTeacherRequestResponse;
+}
+
+export async function rejectTeacherStudentRequest(requestId: string) {
+  const response = await api.PATCH("/api/v1/teacher-student-requests/{requestId}/reject", {
+    params: { path: { requestId } }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "요청을 거절하지 못했습니다."));
   }
 
   return response.data.data as StudentTeacherRequestResponse;
