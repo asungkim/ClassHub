@@ -91,6 +91,26 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
     List<StudentCourseRecord> findByStudentMemberIdAndDeletedAtIsNull(UUID studentMemberId);
 
     @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            JOIN Course c ON c.id = scr.courseId
+            WHERE scr.studentMemberId = :studentId
+              AND c.teacherMemberId = :teacherId
+            """)
+    List<StudentCourseRecord> findByStudentMemberIdAndTeacherMemberId(@Param("studentId") UUID studentId,
+                                                                      @Param("teacherId") UUID teacherId);
+
+    @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            JOIN Course c ON c.id = scr.courseId
+            WHERE scr.studentMemberId = :studentId
+              AND c.teacherMemberId IN :teacherIds
+            """)
+    List<StudentCourseRecord> findByStudentMemberIdAndTeacherMemberIdIn(@Param("studentId") UUID studentId,
+                                                                        @Param("teacherIds") List<UUID> teacherIds);
+
+    @Query("""
             SELECT COUNT(scr)
             FROM StudentCourseRecord scr
             JOIN Course c ON c.id = scr.courseId

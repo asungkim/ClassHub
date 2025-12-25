@@ -151,6 +151,7 @@ class CourseProgressControllerTest {
                 request.title(),
                 request.content(),
                 response.writerId(),
+                response.writerName(),
                 response.writerRole(),
                 response.createdAt()
         );
@@ -185,6 +186,7 @@ class CourseProgressControllerTest {
                 "Lesson",
                 "memo",
                 teacherPrincipal.id(),
+                "테스트 선생님",
                 MemberRole.TEACHER,
                 LocalDateTime.of(2024, Month.MARCH, 5, 10, 0)
         );

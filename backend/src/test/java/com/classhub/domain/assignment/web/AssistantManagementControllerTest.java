@@ -166,7 +166,7 @@ class AssistantManagementControllerTest {
                 .willReturn(Collections.singletonList(response));
 
         mockMvc.perform(get("/api/v1/teachers/me/assistants/search")
-                        .param("email", "assistant")
+                        .param("name", "assistant")
                         .with(SecurityMockMvcRequestPostProcessors.authentication(authenticationToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))

@@ -6,8 +6,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceCountProjection;
 import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.session.dto.request.ClinicSessionEmergencyCreateRequest;
+import com.classhub.domain.clinic.session.dto.response.ClinicSessionResponse;
 import com.classhub.domain.clinic.session.model.ClinicSession;
 import com.classhub.domain.clinic.session.model.ClinicSessionType;
 import com.classhub.domain.clinic.session.repository.ClinicSessionRepository;
@@ -25,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,6 +43,8 @@ class ClinicSessionServiceTest {
     private ClinicSessionRepository clinicSessionRepository;
     @Mock
     private ClinicSlotRepository clinicSlotRepository;
+    @Mock
+    private ClinicAttendanceRepository clinicAttendanceRepository;
     @Mock
     private ClinicPermissionValidator clinicPermissionValidator;
     @Mock
@@ -139,6 +145,39 @@ class ClinicSessionServiceTest {
         verify(clinicSessionRepository).save(session);
     }
 
+    @Test
+    void getSessions_shouldIncludeAttendanceCount() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        LocalDate startDate = LocalDate.of(2024, 3, 4);
+        LocalDate endDate = LocalDate.of(2024, 3, 10);
+        ClinicSession session = createSession(sessionId, teacherId, branchId, startDate);
+        Branch branch = createBranch(branchId, VerifiedStatus.VERIFIED);
+
+        given(branchRepository.findById(branchId)).willReturn(Optional.of(branch));
+        given(clinicSessionRepository.findByTeacherMemberIdAndBranchIdAndDateRange(
+                teacherId,
+                branchId,
+                startDate,
+                endDate
+        )).willReturn(List.of(session));
+        given(clinicAttendanceRepository.findAttendanceCountsByClinicSessionIds(List.of(sessionId)))
+                .willReturn(List.of(new TestAttendanceCountProjection(sessionId, 3L)));
+
+        List<ClinicSessionResponse> responses = clinicSessionService.getSessions(
+                principal,
+                null,
+                branchId,
+                startDate,
+                endDate
+        );
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).attendanceCount()).isEqualTo(3);
+    }
+
     private ClinicSlot createSlot(UUID slotId, UUID teacherId, UUID branchId) {
         ClinicSlot slot = ClinicSlot.builder()
                 .teacherMemberId(teacherId)
@@ -166,6 +205,44 @@ class ClinicSessionServiceTest {
                 .capacity(slot.getDefaultCapacity())
                 .canceled(false)
                 .build();
+    }
+
+    private ClinicSession createSession(UUID sessionId, UUID teacherId, UUID branchId, LocalDate date) {
+        ClinicSession session = ClinicSession.builder()
+                .slotId(UUID.randomUUID())
+                .teacherMemberId(teacherId)
+                .branchId(branchId)
+                .sessionType(ClinicSessionType.REGULAR)
+                .creatorMemberId(null)
+                .date(date)
+                .startTime(LocalTime.of(18, 0))
+                .endTime(LocalTime.of(19, 0))
+                .capacity(10)
+                .canceled(false)
+                .build();
+        ReflectionTestUtils.setField(session, "id", sessionId);
+        return session;
+    }
+
+    private static class TestAttendanceCountProjection implements ClinicAttendanceCountProjection {
+
+        private final UUID clinicSessionId;
+        private final Long attendanceCount;
+
+        private TestAttendanceCountProjection(UUID clinicSessionId, Long attendanceCount) {
+            this.clinicSessionId = clinicSessionId;
+            this.attendanceCount = attendanceCount;
+        }
+
+        @Override
+        public UUID getClinicSessionId() {
+            return clinicSessionId;
+        }
+
+        @Override
+        public Long getAttendanceCount() {
+            return attendanceCount;
+        }
     }
 
     private Branch createBranch(UUID branchId, VerifiedStatus status) {

@@ -64,7 +64,7 @@ public class ClinicSessionController {
             @Valid @RequestBody ClinicSessionRegularCreateRequest request
     ) {
         ClinicSession session = clinicSessionService.createRegularSession(principal.id(), slotId, request.date());
-        return RsData.from(RsCode.CREATED, ClinicSessionResponse.from(session));
+        return RsData.from(RsCode.CREATED, ClinicSessionResponse.from(session, 0));
     }
 
     @PostMapping("/clinic-sessions/emergency")
@@ -75,7 +75,7 @@ public class ClinicSessionController {
             @Valid @RequestBody ClinicSessionEmergencyCreateRequest request
     ) {
         ClinicSession session = clinicSessionService.createEmergencySession(principal, request);
-        return RsData.from(RsCode.CREATED, ClinicSessionResponse.from(session));
+        return RsData.from(RsCode.CREATED, ClinicSessionResponse.from(session, 0));
     }
 
     @PatchMapping("/clinic-sessions/{sessionId}/cancel")

@@ -93,13 +93,13 @@ public class AssistantManagementController {
 
     @GetMapping("/assistants/search")
     @PreAuthorize("hasAuthority('TEACHER')")
-    @Operation(summary = "조교 이메일 검색", description = "이미 가입한 조교를 이메일로 검색한다.")
+    @Operation(summary = "조교 이름 검색", description = "이미 가입한 조교를 이름으로 검색한다.")
     public RsData<List<AssistantSearchResponse>> searchAssistants(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @RequestParam(name = "email", defaultValue = "") String email
+            @RequestParam(name = "name", defaultValue = "") String name
     ) {
         UUID teacherId = validateTeacher(principal);
-        List<AssistantSearchResponse> data = assistantManagementService.searchAssistants(teacherId, email);
+        List<AssistantSearchResponse> data = assistantManagementService.searchAssistants(teacherId, name);
         return RsData.from(RsCode.SUCCESS, data);
     }
 

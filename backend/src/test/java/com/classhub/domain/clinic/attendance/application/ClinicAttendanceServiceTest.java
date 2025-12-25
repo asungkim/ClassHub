@@ -93,7 +93,6 @@ class ClinicAttendanceServiceTest {
     void requestAttendance_shouldThrow_whenSessionCanceled() {
         UUID teacherId = UUID.randomUUID();
         UUID studentId = UUID.randomUUID();
-        UUID recordId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
@@ -104,7 +103,7 @@ class ClinicAttendanceServiceTest {
         given(clinicSessionRepository.findByIdAndDeletedAtIsNullForUpdate(sessionId))
                 .willReturn(Optional.of(session));
 
-        assertThatThrownBy(() -> clinicAttendanceService.requestAttendance(principal, sessionId, recordId))
+        assertThatThrownBy(() -> clinicAttendanceService.requestAttendance(principal, sessionId, courseId))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SESSION_CANCELED);
     }
@@ -175,6 +174,73 @@ class ClinicAttendanceServiceTest {
         assertThat(responses.get(0).age()).isNotNull();
     }
 
+    @Test
+    void cancelStudentAttendance_shouldDelete_whenAllowed() {
+        UUID studentId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID recordId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        UUID attendanceId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        MemberPrincipal principal = new MemberPrincipal(studentId, MemberRole.STUDENT);
+        ClinicSession session = createSession(sessionId, teacherId, branchId, LocalDate.now().plusDays(1));
+        StudentCourseRecord record = createRecord(recordId, studentId, courseId);
+        ClinicAttendance attendance = ClinicAttendance.builder()
+                .clinicSessionId(sessionId)
+                .studentCourseRecordId(recordId)
+                .build();
+        ReflectionTestUtils.setField(attendance, "id", attendanceId);
+
+        given(clinicAttendanceRepository.findById(attendanceId)).willReturn(Optional.of(attendance));
+        given(clinicSessionRepository.findByIdAndDeletedAtIsNull(sessionId)).willReturn(Optional.of(session));
+        given(studentCourseRecordRepository.findById(recordId)).willReturn(Optional.of(record));
+
+        clinicAttendanceService.cancelStudentAttendance(principal, attendanceId);
+
+        verify(clinicAttendanceRepository).delete(attendance);
+    }
+
+    @Test
+    void cancelStudentAttendance_shouldThrow_whenDefaultAttendance() {
+        UUID studentId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID recordId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        UUID attendanceId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        UUID defaultSlotId = UUID.randomUUID();
+        MemberPrincipal principal = new MemberPrincipal(studentId, MemberRole.STUDENT);
+        ClinicSession session = ClinicSession.builder()
+                .slotId(defaultSlotId)
+                .teacherMemberId(teacherId)
+                .branchId(branchId)
+                .sessionType(ClinicSessionType.REGULAR)
+                .creatorMemberId(null)
+                .date(LocalDate.now().plusDays(1))
+                .startTime(LocalTime.of(18, 0))
+                .endTime(LocalTime.of(19, 0))
+                .capacity(10)
+                .canceled(false)
+                .build();
+        ReflectionTestUtils.setField(session, "id", sessionId);
+        StudentCourseRecord record = createRecord(recordId, studentId, courseId, defaultSlotId);
+        ClinicAttendance attendance = ClinicAttendance.builder()
+                .clinicSessionId(sessionId)
+                .studentCourseRecordId(recordId)
+                .build();
+        ReflectionTestUtils.setField(attendance, "id", attendanceId);
+
+        given(clinicAttendanceRepository.findById(attendanceId)).willReturn(Optional.of(attendance));
+        given(clinicSessionRepository.findByIdAndDeletedAtIsNull(sessionId)).willReturn(Optional.of(session));
+        given(studentCourseRecordRepository.findById(recordId)).willReturn(Optional.of(record));
+
+        assertThatThrownBy(() -> clinicAttendanceService.cancelStudentAttendance(principal, attendanceId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_ATTENDANCE_CANCEL_FORBIDDEN);
+    }
+
     private ClinicSession createSession(UUID sessionId, UUID teacherId, UUID branchId, LocalDate date) {
         ClinicSession session = ClinicSession.builder()
                 .slotId(UUID.randomUUID())
@@ -194,6 +260,12 @@ class ClinicAttendanceServiceTest {
 
     private StudentCourseRecord createRecord(UUID recordId, UUID studentId, UUID courseId) {
         StudentCourseRecord record = StudentCourseRecord.create(studentId, courseId, null, null, null);
+        ReflectionTestUtils.setField(record, "id", recordId);
+        return record;
+    }
+
+    private StudentCourseRecord createRecord(UUID recordId, UUID studentId, UUID courseId, UUID defaultSlotId) {
+        StudentCourseRecord record = StudentCourseRecord.create(studentId, courseId, null, defaultSlotId, null);
         ReflectionTestUtils.setField(record, "id", recordId);
         return record;
     }

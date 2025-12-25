@@ -17,4 +17,9 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
             MemberRole role,
             String emailFragment
     );
+
+    List<Member> findTop5ByRoleAndDeletedAtIsNullAndNameContainingIgnoreCaseOrderByNameAsc(
+            MemberRole role,
+            String nameFragment
+    );
 }

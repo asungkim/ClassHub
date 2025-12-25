@@ -22,6 +22,17 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
                                                                                List<UUID> recordIds);
 
     @Query("""
+            SELECT ca.clinicSessionId AS clinicSessionId,
+                   COUNT(ca) AS attendanceCount
+            FROM ClinicAttendance ca
+            WHERE ca.clinicSessionId IN :sessionIds
+            GROUP BY ca.clinicSessionId
+            """)
+    List<ClinicAttendanceCountProjection> findAttendanceCountsByClinicSessionIds(
+            @Param("sessionIds") List<UUID> sessionIds
+    );
+
+    @Query("""
             SELECT ca
             FROM ClinicAttendance ca
             JOIN ClinicSession cs ON cs.id = ca.clinicSessionId

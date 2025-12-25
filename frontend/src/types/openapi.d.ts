@@ -52,6 +52,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/students/me/clinic-attendances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 클리닉 참석 목록 조회 */
+        get: operations["getStudentAttendances"];
+        put?: never;
+        /** 학생 클리닉 참석 신청 */
+        post: operations["requestAttendance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 학생 클리닉 이동 */
+        patch: operations["moveAttendance"];
+        trace?: never;
+    };
     "/api/v1/student-enrollment-requests": {
         parameters: {
             query?: never;
@@ -231,6 +250,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/clinic-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 클리닉 슬롯 목록 조회 */
+        get: operations["getSlots"];
+        put?: never;
+        /** 클리닉 슬롯 생성 */
+        post: operations["createSlot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clinic-slots/{slotId}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 정규 클리닉 세션 수동 생성 */
+        post: operations["createRegularSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clinic-sessions/{sessionId}/attendances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 클리닉 출석 추가 */
+        post: operations["addAttendance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clinic-sessions/emergency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 긴급 클리닉 세션 생성 */
+        post: operations["createEmergencySession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clinic-records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 클리닉 기록 조회 */
+        get: operations["getRecord"];
+        put?: never;
+        /** 클리닉 기록 생성 */
+        post: operations["createRecord"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/branches": {
         parameters: {
             query?: never;
@@ -353,6 +459,23 @@ export interface paths {
          * @description 교사가 특정 조교의 접근 권한을 켜거나 끈다.
          */
         patch: operations["updateAssistantStatus"];
+        trace?: never;
+    };
+    "/api/v1/students/me/courses/{courseId}/clinic-slot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 학생 기본 클리닉 슬롯 변경 */
+        patch: operations["updateDefaultClinicSlot"];
         trace?: never;
     };
     "/api/v1/student-enrollment-requests/{requestId}/reject": {
@@ -504,6 +627,59 @@ export interface paths {
         patch: operations["updateCourseProgress"];
         trace?: never;
     };
+    "/api/v1/clinic-slots/{slotId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 클리닉 슬롯 삭제 */
+        delete: operations["deleteSlot"];
+        options?: never;
+        head?: never;
+        /** 클리닉 슬롯 수정 */
+        patch: operations["updateSlot"];
+        trace?: never;
+    };
+    "/api/v1/clinic-sessions/{sessionId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 클리닉 세션 취소 */
+        patch: operations["cancelSession"];
+        trace?: never;
+    };
+    "/api/v1/clinic-records/{recordId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 클리닉 기록 삭제 */
+        delete: operations["deleteRecord"];
+        options?: never;
+        head?: never;
+        /** 클리닉 기록 수정 */
+        patch: operations["updateRecord"];
+        trace?: never;
+    };
     "/api/v1/branches/{branchId}": {
         parameters: {
             query?: never;
@@ -572,8 +748,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 조교 이메일 검색
-         * @description 이미 가입한 조교를 이메일로 검색한다.
+         * 조교 이름 검색
+         * @description 이미 가입한 조교를 이름으로 검색한다.
          */
         get: operations["searchAssistants"];
         put?: never;
@@ -610,6 +786,23 @@ export interface paths {
         };
         /** 학생 수업 목록 조회 */
         get: operations["getMyCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/students/me/clinic-contexts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 클리닉 컨텍스트 조회 */
+        get: operations["getClinicContexts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -669,6 +862,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/student-courses/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 목록 조회 */
+        get: operations["getStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/student-courses/students/{studentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 상세 조회 */
+        get: operations["getStudentDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/courses/schedule": {
         parameters: {
             query?: never;
@@ -698,6 +925,40 @@ export interface paths {
         };
         /** 공개 Course 검색 */
         get: operations["getPublicCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clinic-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 클리닉 세션 조회 */
+        get: operations["getSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clinic-attendances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 클리닉 출석 명단 조회 */
+        get: operations["getAttendances"];
         put?: never;
         post?: never;
         delete?: never;
@@ -817,6 +1078,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/students/me/clinic-attendances/{attendanceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 학생 클리닉 참석 취소 */
+        delete: operations["cancelAttendance"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clinic-attendances/{attendanceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 클리닉 출석 삭제 */
+        delete: operations["deleteAttendance"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/courses/{courseId}": {
         parameters: {
             query?: never;
@@ -915,6 +1210,26 @@ export interface components {
             message?: string;
             data?: components["schemas"]["AssistantAssignmentResponse"];
         };
+        StudentClinicAttendanceRequest: {
+            /** Format: uuid */
+            clinicSessionId: string;
+            /** Format: uuid */
+            courseId: string;
+        };
+        ClinicAttendanceResponse: {
+            /** Format: uuid */
+            attendanceId?: string;
+            /** Format: uuid */
+            clinicSessionId?: string;
+            /** Format: uuid */
+            studentCourseRecordId?: string;
+        };
+        RsDataClinicAttendanceResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicAttendanceResponse"];
+        };
         StudentEnrollmentRequestCreateRequest: {
             /** Format: uuid */
             courseId: string;
@@ -983,6 +1298,7 @@ export interface components {
             content?: string;
             /** Format: uuid */
             writerId?: string;
+            writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
             /** Format: date-time */
@@ -1067,6 +1383,7 @@ export interface components {
             content?: string;
             /** Format: uuid */
             writerId?: string;
+            writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
             /** Format: date-time */
@@ -1119,6 +1436,111 @@ export interface components {
             message?: string;
             data?: components["schemas"]["CompanyResponse"];
         };
+        ClinicSlotCreateRequest: {
+            /** Format: uuid */
+            branchId: string;
+            /** @enum {string} */
+            dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime: string;
+            endTime: string;
+            /** Format: int32 */
+            defaultCapacity: number;
+        };
+        ClinicSlotResponse: {
+            /** Format: uuid */
+            slotId?: string;
+            /** Format: uuid */
+            teacherMemberId?: string;
+            /** Format: uuid */
+            creatorMemberId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            /** @enum {string} */
+            dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime?: string;
+            endTime?: string;
+            /** Format: int32 */
+            defaultCapacity?: number;
+        };
+        RsDataClinicSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicSlotResponse"];
+        };
+        ClinicSessionRegularCreateRequest: {
+            /** Format: date */
+            date: string;
+        };
+        ClinicSessionResponse: {
+            /** Format: uuid */
+            sessionId?: string;
+            /** Format: uuid */
+            slotId?: string;
+            /** Format: uuid */
+            teacherMemberId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            /** @enum {string} */
+            sessionType?: "REGULAR" | "EMERGENCY";
+            /** Format: uuid */
+            creatorMemberId?: string;
+            /** Format: date */
+            date?: string;
+            startTime?: string;
+            endTime?: string;
+            /** Format: int32 */
+            capacity?: number;
+            /** Format: int32 */
+            attendanceCount?: number;
+            isCanceled?: boolean;
+        };
+        RsDataClinicSessionResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicSessionResponse"];
+        };
+        ClinicAttendanceCreateRequest: {
+            /** Format: uuid */
+            studentCourseRecordId: string;
+        };
+        ClinicSessionEmergencyCreateRequest: {
+            /** Format: uuid */
+            branchId: string;
+            /** Format: uuid */
+            teacherId?: string;
+            /** Format: date */
+            date: string;
+            startTime: string;
+            endTime: string;
+            /** Format: int32 */
+            capacity: number;
+        };
+        ClinicRecordCreateRequest: {
+            /** Format: uuid */
+            clinicAttendanceId: string;
+            title: string;
+            content: string;
+            homeworkProgress?: string;
+        };
+        ClinicRecordResponse: {
+            /** Format: uuid */
+            recordId?: string;
+            /** Format: uuid */
+            clinicAttendanceId?: string;
+            /** Format: uuid */
+            writerId?: string;
+            title?: string;
+            content?: string;
+            homeworkProgress?: string;
+        };
+        RsDataClinicRecordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicRecordResponse"];
+        };
         BranchCreateRequest: {
             /** Format: uuid */
             companyId: string;
@@ -1166,6 +1588,28 @@ export interface components {
         };
         AssistantAssignmentStatusUpdateRequest: {
             enabled: boolean;
+        };
+        StudentDefaultClinicSlotRequest: {
+            /** Format: uuid */
+            defaultClinicSlotId: string;
+        };
+        RsDataStudentDefaultClinicSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentDefaultClinicSlotResponse"];
+        };
+        StudentDefaultClinicSlotResponse: {
+            /** Format: uuid */
+            studentCourseRecordId?: string;
+            /** Format: uuid */
+            defaultClinicSlotId?: string;
+        };
+        ClinicAttendanceMoveRequest: {
+            /** Format: uuid */
+            fromSessionId: string;
+            /** Format: uuid */
+            toSessionId: string;
         };
         RsDataTeacherEnrollmentRequestResponse: {
             /** Format: int32 */
@@ -1250,6 +1694,19 @@ export interface components {
             date?: string;
             title?: string;
             content?: string;
+        };
+        ClinicSlotUpdateRequest: {
+            /** @enum {string} */
+            dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            startTime: string;
+            endTime: string;
+            /** Format: int32 */
+            defaultCapacity: number;
+        };
+        ClinicRecordUpdateRequest: {
+            title?: string;
+            content?: string;
+            homeworkProgress?: string;
         };
         BranchUpdateRequest: {
             name?: string;
@@ -1343,6 +1800,7 @@ export interface components {
             id?: string;
             title?: string;
             content?: string;
+            homeworkProgress?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
         };
@@ -1418,6 +1876,56 @@ export interface components {
             /** Format: date-time */
             enrolledAt?: string;
             course?: components["schemas"]["CourseResponse"];
+        };
+        RsDataListStudentClinicContextResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentClinicContextResponse"][];
+        };
+        StudentClinicContextResponse: {
+            /** Format: uuid */
+            courseId?: string;
+            courseName?: string;
+            /** Format: uuid */
+            recordId?: string;
+            /** Format: uuid */
+            defaultClinicSlotId?: string;
+            /** Format: uuid */
+            teacherId?: string;
+            teacherName?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+        };
+        RsDataStudentClinicAttendanceListResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentClinicAttendanceListResponse"];
+        };
+        StudentClinicAttendanceListResponse: {
+            items?: components["schemas"]["StudentClinicAttendanceResponse"][];
+        };
+        StudentClinicAttendanceResponse: {
+            /** Format: uuid */
+            attendanceId?: string;
+            /** Format: uuid */
+            clinicSessionId?: string;
+            /** Format: uuid */
+            teacherId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            /** Format: date */
+            date?: string;
+            startTime?: string;
+            endTime?: string;
+            /** @enum {string} */
+            sessionType?: "REGULAR" | "EMERGENCY";
+            isCanceled?: boolean;
         };
         PageResponseTeacherEnrollmentRequestResponse: {
             content?: components["schemas"]["TeacherEnrollmentRequestResponse"][];
@@ -1513,6 +2021,54 @@ export interface components {
             message?: string;
             data?: components["schemas"]["ProgressSliceResponsePersonalProgressResponse"];
         };
+        PageResponseStudentStudentListItemResponse: {
+            content?: components["schemas"]["StudentStudentListItemResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseStudentStudentListItemResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseStudentStudentListItemResponse"];
+        };
+        StudentStudentListItemResponse: {
+            student?: components["schemas"]["StudentSummaryResponse"];
+            active?: boolean;
+            activeCourseIds?: string[];
+            activeCourseNames?: string[];
+        };
+        RsDataStudentStudentDetailResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentStudentDetailResponse"];
+        };
+        StudentCourseRecordSummaryResponse: {
+            /** Format: uuid */
+            recordId?: string;
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            assistantMemberId?: string;
+            /** Format: uuid */
+            defaultClinicSlotId?: string;
+            teacherNotes?: string;
+            active?: boolean;
+        };
+        StudentStudentDetailResponse: {
+            student?: components["schemas"]["StudentSummaryResponse"];
+            courses?: components["schemas"]["CourseResponse"][];
+            records?: components["schemas"]["StudentCourseRecordSummaryResponse"][];
+        };
         PageResponseCourseResponse: {
             content?: components["schemas"]["CourseResponse"][];
             /** Format: int32 */
@@ -1607,6 +2163,41 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["PageResponseCompanyResponse"];
+        };
+        RsDataListClinicSlotResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicSlotResponse"][];
+        };
+        RsDataListClinicSessionResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicSessionResponse"][];
+        };
+        ClinicAttendanceDetailResponse: {
+            /** Format: uuid */
+            attendanceId?: string;
+            /** Format: uuid */
+            recordId?: string;
+            /** Format: uuid */
+            studentCourseRecordId?: string;
+            /** Format: uuid */
+            studentMemberId?: string;
+            studentName?: string;
+            phoneNumber?: string;
+            schoolName?: string;
+            grade?: string;
+            parentPhoneNumber?: string;
+            /** Format: int32 */
+            age?: number;
+        };
+        RsDataListClinicAttendanceDetailResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["ClinicAttendanceDetailResponse"][];
         };
         PageResponseBranchResponse: {
             content?: components["schemas"]["BranchResponse"][];
@@ -1782,6 +2373,76 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataAssistantAssignmentResponse"];
+                };
+            };
+        };
+    };
+    getStudentAttendances: {
+        parameters: {
+            query: {
+                dateRange: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentClinicAttendanceListResponse"];
+                };
+            };
+        };
+    };
+    requestAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentClinicAttendanceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicAttendanceResponse"];
+                };
+            };
+        };
+    };
+    moveAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicAttendanceMoveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicAttendanceResponse"];
                 };
             };
         };
@@ -2138,6 +2799,176 @@ export interface operations {
             };
         };
     };
+    getSlots: {
+        parameters: {
+            query?: {
+                branchId?: string;
+                teacherId?: string;
+                courseId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListClinicSlotResponse"];
+                };
+            };
+        };
+    };
+    createSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicSlotCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
+                };
+            };
+        };
+    };
+    createRegularSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicSessionRegularCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicSessionResponse"];
+                };
+            };
+        };
+    };
+    addAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicAttendanceCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicAttendanceResponse"];
+                };
+            };
+        };
+    };
+    createEmergencySession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicSessionEmergencyCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicSessionResponse"];
+                };
+            };
+        };
+    };
+    getRecord: {
+        parameters: {
+            query: {
+                clinicAttendanceId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicRecordResponse"];
+                };
+            };
+        };
+    };
+    createRecord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicRecordCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicRecordResponse"];
+                };
+            };
+        };
+    };
     getBranches: {
         parameters: {
             query?: {
@@ -2304,6 +3135,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataAssistantAssignmentResponse"];
+                };
+            };
+        };
+    };
+    updateDefaultClinicSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentDefaultClinicSlotRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentDefaultClinicSlotResponse"];
                 };
             };
         };
@@ -2592,6 +3449,124 @@ export interface operations {
             };
         };
     };
+    deleteSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    updateSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicSlotUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicSlotResponse"];
+                };
+            };
+        };
+    };
+    cancelSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    deleteRecord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recordId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    updateRecord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recordId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicRecordUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataClinicRecordResponse"];
+                };
+            };
+        };
+    };
     updateBranch: {
         parameters: {
             query?: never;
@@ -2673,7 +3648,7 @@ export interface operations {
     searchAssistants: {
         parameters: {
             query?: {
-                email?: string;
+                name?: string;
             };
             header?: never;
             path?: never;
@@ -2737,6 +3712,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataPageResponseStudentCourseResponse"];
+                };
+            };
+        };
+    };
+    getClinicContexts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListStudentClinicContextResponse"];
                 };
             };
         };
@@ -2813,6 +3808,53 @@ export interface operations {
             };
         };
     };
+    getStudents: {
+        parameters: {
+            query?: {
+                status?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseStudentStudentListItemResponse"];
+                };
+            };
+        };
+    };
+    getStudentDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentStudentDetailResponse"];
+                };
+            };
+        };
+    };
     getCourseSchedules: {
         parameters: {
             query: {
@@ -2860,6 +3902,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataPageResponsePublicCourseResponse"];
+                };
+            };
+        };
+    };
+    getSessions: {
+        parameters: {
+            query: {
+                dateRange: string;
+                branchId: string;
+                teacherId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListClinicSessionResponse"];
+                };
+            };
+        };
+    };
+    getAttendances: {
+        parameters: {
+            query: {
+                clinicSessionId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataListClinicAttendanceDetailResponse"];
                 };
             };
         };
@@ -3009,6 +4097,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataCompanyResponse"];
+                };
+            };
+        };
+    };
+    cancelAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
+                };
+            };
+        };
+    };
+    deleteAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataVoid"];
                 };
             };
         };

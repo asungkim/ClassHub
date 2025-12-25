@@ -87,15 +87,17 @@ public class ClinicAttendanceService {
         clinicAttendanceRepository.delete(attendance);
     }
 
-    public ClinicAttendance requestAttendance(MemberPrincipal principal, UUID sessionId, UUID recordId) {
+    public ClinicAttendance requestAttendance(MemberPrincipal principal, UUID sessionId, UUID courseId) {
         ensureStudentRole(principal);
+        if (courseId == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
         ClinicSession session = loadSessionForUpdate(sessionId);
         ensureSessionActive(session);
         ensureSessionNotLocked(session);
-        StudentCourseRecord record = loadActiveRecord(recordId);
-        if (!Objects.equals(record.getStudentMemberId(), principal.id())) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
+        StudentCourseRecord record = studentCourseRecordRepository
+                .findByStudentMemberIdAndCourseIdAndDeletedAtIsNull(principal.id(), courseId)
+                .orElseThrow(RsCode.STUDENT_COURSE_RECORD_NOT_FOUND::toException);
         Course course = loadCourse(record.getCourseId());
         ensureRecordMatchesSession(course, session);
         ensureAttendanceCreatable(session, record.getId());
@@ -135,6 +137,28 @@ public class ClinicAttendanceService {
         ensureAttendanceCreatable(toSession, record.getId());
         clinicAttendanceRepository.delete(attendance);
         return saveAttendance(toSessionId, record.getId());
+    }
+
+    public void cancelStudentAttendance(MemberPrincipal principal, UUID attendanceId) {
+        ensureStudentRole(principal);
+        if (attendanceId == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        ClinicAttendance attendance = clinicAttendanceRepository.findById(attendanceId)
+                .orElseThrow(RsCode.CLINIC_ATTENDANCE_NOT_FOUND::toException);
+        StudentCourseRecord record = loadActiveRecord(attendance.getStudentCourseRecordId());
+        if (!Objects.equals(record.getStudentMemberId(), principal.id())) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+        ClinicSession session = loadSession(attendance.getClinicSessionId());
+        ensureSessionActive(session);
+        if (isDefaultAttendance(record, session)) {
+            throw new BusinessException(RsCode.CLINIC_ATTENDANCE_CANCEL_FORBIDDEN);
+        }
+        if (!ClinicAttendancePolicy.isMoveAllowed(session, LocalDateTime.now())) {
+            throw new BusinessException(RsCode.CLINIC_ATTENDANCE_LOCKED);
+        }
+        clinicAttendanceRepository.delete(attendance);
     }
 
     @Transactional(readOnly = true)
@@ -282,6 +306,11 @@ public class ClinicAttendanceService {
                 .studentCourseRecordId(recordId)
                 .build();
         return clinicAttendanceRepository.save(attendance);
+    }
+
+    private boolean isDefaultAttendance(StudentCourseRecord record, ClinicSession session) {
+        UUID defaultSlotId = record.getDefaultClinicSlotId();
+        return defaultSlotId != null && Objects.equals(defaultSlotId, session.getSlotId());
     }
 
     private Integer calculateAge(LocalDate birthDate) {

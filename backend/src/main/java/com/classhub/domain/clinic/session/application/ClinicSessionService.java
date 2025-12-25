@@ -1,5 +1,7 @@
 package com.classhub.domain.clinic.session.application;
 
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceCountProjection;
 import com.classhub.domain.clinic.permission.application.ClinicPermissionValidator;
 import com.classhub.domain.clinic.session.dto.request.ClinicSessionEmergencyCreateRequest;
 import com.classhub.domain.clinic.session.dto.response.ClinicSessionResponse;
@@ -19,8 +21,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,7 @@ public class ClinicSessionService {
     private final ClinicSlotRepository clinicSlotRepository;
     private final BranchRepository branchRepository;
     private final ClinicPermissionValidator clinicPermissionValidator;
+    private final ClinicAttendanceRepository clinicAttendanceRepository;
 
     public ClinicSession createRegularSession(UUID teacherId, UUID slotId, LocalDate date) {
         if (slotId == null || date == null) {
@@ -79,8 +84,23 @@ public class ClinicSessionService {
         } else {
             throw new BusinessException(RsCode.FORBIDDEN);
         }
+        if (sessions.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, Integer> attendanceCounts = clinicAttendanceRepository
+                .findAttendanceCountsByClinicSessionIds(
+                        sessions.stream().map(ClinicSession::getId).toList()
+                )
+                .stream()
+                .collect(Collectors.toMap(
+                        ClinicAttendanceCountProjection::getClinicSessionId,
+                        projection -> projection.getAttendanceCount().intValue()
+                ));
         return sessions.stream()
-                .map(ClinicSessionResponse::from)
+                .map(session -> ClinicSessionResponse.from(
+                        session,
+                        attendanceCounts.getOrDefault(session.getId(), 0)
+                ))
                 .toList();
     }
 

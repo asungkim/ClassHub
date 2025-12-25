@@ -10,6 +10,7 @@ import { CalendarDayDetailModal } from "@/components/dashboard/calendar/calendar
 import { ProgressEditModal } from "@/components/dashboard/progress/progress-edit-modal";
 import { fetchStudentCourseRecords } from "@/lib/dashboard-api";
 import { deleteCourseProgress, deletePersonalProgress, fetchStudentCalendar } from "@/lib/progress-api";
+import { formatDateYmdKst } from "@/utils/date";
 import type { StudentCourseListItemResponse } from "@/types/dashboard";
 import type {
   ClinicEvent,
@@ -386,7 +387,7 @@ function buildCalendarDays(current: Date) {
 }
 
 function formatDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return formatDateYmdKst(date);
 }
 
 function formatMonthLabel(date: Date) {

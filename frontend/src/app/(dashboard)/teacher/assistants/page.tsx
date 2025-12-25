@@ -138,7 +138,7 @@ function TeacherAssistantsContent() {
     <div className="space-y-6 lg:space-y-8">
       <PageHero onOpenSearch={() => setIsSearchModalOpen(true)} />
 
-      <Card title="조교 목록" description="상태를 전환해 조교의 접근 권한을 조정합니다.">
+      <Card title="조교 목록" description="비활성화를 통해 조교의 권한을 막고, 활성화를 통해 권한을 줄 수 있습니다.">
         <Tabs
           defaultValue={assistantTabs[0].value}
           value={assistantStatus}
@@ -193,7 +193,7 @@ function PageHero({ onOpenSearch }: { onOpenSearch: () => void }) {
           <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Assistant Management</p>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">조교 관리</h1>
           <p className="mt-2 text-sm text-slate-500">
-            배정된 조교의 활성/비활성 상태를 전환하고, 이메일로 새 조교를 바로 연결할 수 있습니다.
+            배정된 조교의 활성/비활성 상태를 전환하고, 이름으로 조교를 검색해서 연결할 수 있습니다.
           </p>
         </div>
         <Button onClick={onOpenSearch} className="w-full md:w-auto">
@@ -251,9 +251,6 @@ function AssistantList({
               {assistant.assistant?.phoneNumber
                 ? formatPhoneNumber(assistant.assistant.phoneNumber)
                 : "전화번호 미등록"}
-            </p>
-            <p className="text-xs text-slate-400">
-              배정일 {assistant.assignedAt ? new Date(assistant.assignedAt).toLocaleString("ko-KR") : "알 수 없음"}
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -347,7 +344,7 @@ function AssistantSearchModal({
   useEffect(() => {
     if (!open) return;
     const trimmed = debouncedQuery.trim();
-    if (trimmed.length < 2) {
+    if (trimmed.length < 1) {
       setResults([]);
       setSearchError(null);
       return;
@@ -358,7 +355,7 @@ function AssistantSearchModal({
       setSearchError(null);
       try {
         const response = await api.GET("/api/v1/teachers/me/assistants/search", {
-          params: { query: { email: trimmed } }
+          params: { query: { name: trimmed } }
         });
         if (!response.data) {
           const apiError = (response as { error?: unknown }).error;
@@ -407,7 +404,7 @@ function AssistantSearchModal({
     }
   };
 
-  const canSearch = debouncedQuery.trim().length >= 2;
+  const canSearch = debouncedQuery.trim().length >= 1;
   const selectedStatus = selectedAssistant?.assignmentStatus;
   const registerDisabled =
     !selectedAssistant || selectedStatus !== "NOT_ASSIGNED" || isSubmitting || !selectedAssistant.assistantMemberId;
@@ -427,21 +424,21 @@ function AssistantSearchModal({
       <div className="space-y-5">
         <div>
           <label className="text-sm font-medium text-slate-700">
-            조교 이메일
+            조교 이름
             <Input
               className="mt-2"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="assistant@example.com"
+              placeholder="조교 이름 입력"
               disabled={isSubmitting}
             />
           </label>
-          <p className="mt-1 text-xs text-slate-500">두 글자 이상 입력하면 자동으로 검색을 시작합니다.</p>
+          <p className="mt-1 text-xs text-slate-500">한 글자 이상 입력하면 자동으로 검색을 시작합니다.</p>
         </div>
 
         {searchError ? <InlineError message={searchError} /> : null}
         {!canSearch && debouncedQuery.length === 0 ? (
-          <p className="text-sm text-slate-500">이메일을 입력하면 검색 결과가 표시됩니다.</p>
+          <p className="text-sm text-slate-500">이름을 입력하면 검색 결과가 표시됩니다.</p>
         ) : null}
 
         <div className="max-h-72 space-y-2 overflow-y-auto rounded-2xl border border-slate-100 p-3">

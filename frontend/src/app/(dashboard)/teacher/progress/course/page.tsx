@@ -15,7 +15,7 @@ export default function TeacherCourseProgressPage() {
       <SectionHeading
         eyebrow="Progress"
         title="반별 진도"
-        description="선택한 반의 공통 진도 기록을 최신순으로 확인합니다."
+        description="선택한 반의 진도 기록을 최신순으로 확인합니다."
       />
       <CourseProgressSection role="TEACHER" />
     </div>

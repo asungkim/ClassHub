@@ -4544,3 +4544,934 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/scenario/ClinicScenarioIntegrationTest.java`
 - 다음 단계: Phase 6 RsCode 정리 마무리 또는 추가 시나리오 확장 검토.
 - MCP: 사용하지 않음.
+
+## [2025-12-23 10:03] 클리닉 프론트엔드 UI 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant/Student 클리닉 UI 플로우와 API 매핑을 정리한 설계 문서를 작성했다.
+- 역할별 페이지 구조, 컴포넌트 설계, 상태/데이터 흐름을 상세화했다.
+- 학생 화면에서 필요한 추가 API 항목(RecordId, 기본 슬롯 조회)을 확인 필요로 명시했다.
+
+### Details
+- 작업 사유: Clinic 백엔드 구현 완료에 맞춰 프론트 UI 계획 수립.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 설계 리뷰/승인 및 API 보완 필요 여부 확정.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 12:46] 클리닉 학생 UI/API 계획 업데이트
+
+### Type
+DESIGN
+
+### Summary
+- 학생 클리닉 시간표 UX를 슬롯/세션 모두 시간표 기반 흐름으로 구체화했다.
+- 학생 클리닉 컨텍스트 신규 API와 추가 참석 요청 단순화 계획을 정리했다.
+- 프론트/백엔드 설계 문서를 각각 업데이트/추가했다.
+
+### Details
+- 작업 사유: 학생 시간표 중심 UX 확정 및 이에 맞춘 API 변경 계획 수립.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+  - `docs/plan/backend/season2/clinic-student-context_plan.md`
+- 다음 단계: 계획 리뷰/승인 후 백엔드 API 변경 설계 확정 및 구현 착수.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 12:57] 학생 클리닉 컨텍스트 API 및 참석 요청 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 컨텍스트 조회 API를 추가해 teacher/branch 기반 UI 구성이 가능해졌다.
+- 학생 추가 참석 요청을 courseId 기반으로 단순화했다.
+- 관련 서비스/컨트롤러와 테스트를 업데이트했다.
+
+### Details
+- 작업 사유: 학생 시간표 중심 UX에 필요한 컨텍스트 제공 및 요청 파라미터 단순화.
+- 영향받은 테스트:
+  - `StudentClinicContextQueryServiceTest`
+  - `StudentClinicContextControllerTest`
+  - `ClinicAttendanceServiceTest`
+  - `ClinicAttendanceControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentClinicContextQueryService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentClinicContextController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentClinicContextResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/dto/request/StudentClinicAttendanceRequest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentClinicContextQueryServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentClinicContextControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceControllerTest.java`
+- 다음 단계: 프론트 API 연동 및 학생 시간표 UI 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 13:08] 클리닉 프론트 구현 단계(Phase) 정리
+
+### Type
+DESIGN
+
+### Summary
+- 클리닉 프론트 구현을 Phase 0~5로 나눠 단계별 목표와 완료 기준을 정리했다.
+- 학생 시간표 → 교사/조교 관리 UI 순서로 작업 흐름을 명확히 했다.
+
+### Details
+- 작업 사유: 프론트 구현 순서를 명확히 하기 위한 단계화.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Phase 0부터 순차 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 13:12] 클리닉 UI Phase 0 스캐폴딩 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/Assistant/Student 클리닉 페이지 스캐폴딩을 추가했다.
+- 기본 레이아웃과 탭/섹션 자리만 구성하고 상세 기능은 Phase 1 이후로 이관했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 0 스캐폴딩 수행.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/page.tsx`
+- 다음 단계: Phase 1 데이터 훅/타입 레이어 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 13:17] 클리닉 메뉴 아코디언/서브페이지 스캐폴딩
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 메뉴를 사이드바 아코디언 구조로 변경했다.
+- Teacher/Assistant/Student 클리닉 서브 페이지 스캐폴딩을 추가했다.
+- 페이지별 기본 레이아웃을 분리하고 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: 클리닉 화면을 아코디언 메뉴 기반 서브 라우트 구조로 전환.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/sidebar.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Phase 1 데이터 훅/타입 레이어 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 13:17] 클리닉 화면 라우트 구조 설계 반영
+
+### Type
+DESIGN
+
+### Summary
+- 클리닉 화면을 사이드바 아코디언 기반 서브 라우트 구조로 문서화했다.
+- 학생/교사/조교 페이지 흐름을 서브 페이지 기준으로 재정리했다.
+
+### Details
+- 작업 사유: 실제 네비게이션 구조 변경을 설계 문서에 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Phase 1 구현 시 문서 기준으로 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 13:47] 클리닉 데이터 훅 타입 정합성 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 컨텍스트/슬롯/세션/학생 참석 조회 훅에서 에러 처리와 응답 데이터 검증 흐름을 정리했다.
+- 필수 쿼리 파라미터가 있는 API 호출에 타입 정합성을 맞췄다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 1 데이터 훅을 기존 프론트 API 호출 패턴에 맞춰 정리.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/hooks/clinic/use-clinic-contexts.ts`
+  - `frontend/src/hooks/clinic/use-clinic-slots.ts`
+  - `frontend/src/hooks/clinic/use-clinic-sessions.ts`
+  - `frontend/src/hooks/clinic/use-student-attendances.ts`
+  - `frontend/src/hooks/clinic/use-attendance-mutations.ts`
+- 다음 단계: Phase 1 학생 시간표 UI에서 훅 연결 및 상태 구성.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:01] 클리닉 UI Phase 2~5 세부 단계화
+
+### Type
+DESIGN
+
+### Summary
+- Phase 2(학생 기본 슬롯), Phase 3(학생 주간 시간표), Phase 4(교사/조교 슬롯·세션), Phase 5(출석부/기록)를 3단계로 세분화했다.
+- 각 단계별 목표/범위/완료 기준을 명확히 정리했다.
+
+### Details
+- 작업 사유: 구현 단위를 더 작게 나눠 순차 진행하기 위함.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Phase 2-1부터 순차 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:07] 학생 클리닉 컨텍스트/반 선택 UI 구성
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 시간표 화면에 선생님/지점 컨텍스트 선택 카드와 반 선택 드롭다운을 연결했다.
+- 컨텍스트 로딩/에러/빈 상태를 공통 UI로 정리했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 2-1 컨텍스트/반 선택 UI를 구현하기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+- 다음 단계: Phase 2-2 기본 슬롯 시간표 표시.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:15] 학생 기본 슬롯 시간표 표시 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 시간표 화면에 기본 슬롯 시간표 표시를 연결했다.
+- 선택된 반 기준으로 요일별 슬롯을 렌더링하고 기본 슬롯 강조 표시를 추가했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 2-2 기본 슬롯 시간표 표시 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+- 다음 단계: Phase 2-3 기본 슬롯 변경 액션.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:16] 클리닉 슬롯/세션 훅 무한 렌더 방지
+
+### Type
+BUGFIX
+
+### Summary
+- 클리닉 슬롯/세션 훅의 의존성에 query 객체 대신 필드 값을 사용하도록 정리했다.
+- useEffect 재호출로 인한 무한 렌더 오류를 방지했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: 슬롯 훅에서 Maximum update depth exceeded 오류가 발생.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/hooks/clinic/use-clinic-slots.ts`
+  - `frontend/src/hooks/clinic/use-clinic-sessions.ts`
+- 다음 단계: Phase 2-3 기본 슬롯 변경 액션.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:21] 학생 기본 슬롯 변경 액션 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 기본 슬롯 시간표에서 슬롯 선택 시 변경 확인 모달을 표시하도록 연결했다.
+- 기본 슬롯 변경 API 호출 후 컨텍스트를 갱신하고 토스트로 결과를 안내했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 2-3 기본 슬롯 변경 액션 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+- 다음 단계: Phase 3-1 주간 시간표 데이터 결합.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:25] 학생 주간 세션 시간표 데이터 결합
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 주간 시간표 화면에 컨텍스트/세션/참석 데이터를 연결했다.
+- 요일별 세션을 분류하고 참석 중 세션을 강조 표시했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 3-1 주간 시간표 데이터 결합 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Phase 3-2 세션 상세 패널/추가 참석 흐름.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:30] 학생 주간 세션 추가 참석/이동 흐름 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 시간표에서 세션 선택 상세 패널을 추가하고, 추가 참석 신청 흐름을 연결했다.
+- 참석 중 세션에서 변경 모드로 전환해 이동 가능한 세션을 강조 표시하고 이동 요청을 연결했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 3-2, Phase 3-3 플로우를 통합 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Teacher/Assistant 슬롯/세션 UI(Phase 4-1) 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:32] 학생 세션 이동 30분 제한 UI 반영
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 세션 시작 30분 전 이동 제한을 UI에 반영하고 잠금 상태를 비활성 처리했다.
+- 이동 모드에서 잠금된 세션에 대한 안내 배지를 추가했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 3-3 이동 제한 정책을 UI에 반영하기 위함.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: Teacher/Assistant 슬롯/세션 UI(Phase 4-1) 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:43] 교사/조교 클리닉 컨텍스트 선택 UI 구성
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사: 지점 선택 드롭다운을 통해 슬롯/세션 페이지에서 컨텍스트를 고정했다.
+- 조교: 담당 선생님/지점 조합을 추출해 컨텍스트 선택 드롭다운을 구성했다.
+
+### Details
+- 작업 사유: Phase 4-1 컨텍스트 선택기 구현.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: Phase 4-2 슬롯 패널 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:43] 교사/조교 슬롯 시간표 패널 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사 슬롯 CRUD 모달과 삭제 확인 다이얼로그를 연결했다.
+- 조교는 읽기 전용 슬롯 시간표로 표시하도록 구성했다.
+
+### Details
+- 작업 사유: Phase 4-2 슬롯 패널 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+- 다음 단계: Phase 4-3 주차별 세션 패널 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:43] 교사/조교 주차별 세션 패널 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 주간 세션 시간표에 긴급 세션 생성/취소 흐름을 연결했다.
+- 교사/조교 각각의 컨텍스트 기준으로 세션을 조회하도록 구성했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 4-3 주차별 세션 패널 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: Phase 5 출석부/기록 UI 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:51] 교사/조교 출석부 기본 흐름 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사/조교 출석부 페이지에 오늘 세션 선택 및 출석 명단 조회 흐름을 연결했다.
+- 세션 선택 → 출석 명단 로딩/빈 상태 표시를 구성했다.
+
+### Details
+- 작업 사유: Phase 5-1 출석부 기본 흐름 구현.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- 다음 단계: Phase 5-2 출석 예외 추가/삭제.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:51] 교사/조교 출석 예외 추가/삭제 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석 추가 모달에서 반/학생 선택 후 출석 추가 요청을 연결했다.
+- 출석 삭제 확인 다이얼로그와 10분 전 잠금 안내를 반영했다.
+
+### Details
+- 작업 사유: Phase 5-2 출석 예외 추가/삭제 구현.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- 다음 단계: Phase 5-3 기록 CRUD.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 14:51] 교사/조교 클리닉 기록 CRUD 연결
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석 명단에서 기록 모달을 열어 조회/작성/수정/삭제 흐름을 연결했다.
+- 저장/삭제 후 출석 명단을 갱신하도록 했다.
+- 프론트 빌드 검증을 완료했다.
+
+### Details
+- 작업 사유: Phase 5-3 기록 CRUD 구현.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- 다음 단계: Phase 5 검증 및 QA.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 18:38] 슬롯/세션 시간표 UI 개선 계획 보강
+
+### Type
+DESIGN
+
+### Summary
+- 슬롯 시간표를 월~일 x 06~24시 고정 그리드로 개선하는 요구사항을 반영했다.
+- 주간 세션 시간표를 캘린더 형태로 통일하고 드래그/롱프레스 생성 흐름을 명시했다.
+
+### Details
+- 작업 사유: 슬롯/세션 시간표 UX 개선 요구사항 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 개선된 시간표 UI 설계를 기반으로 구현 범위 조정.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 18:40] 클리닉 시간표 구현 참고 기준 명시
+
+### Type
+DESIGN
+
+### Summary
+- 슬롯/세션 시간표 구현 시 `/teacher/courses` 캘린더 뷰를 참고하도록 명시했다.
+
+### Details
+- 작업 사유: 구현 기준을 명확히 하기 위한 추가 문서화.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 개선된 시간표 UI 설계를 기반으로 구현 범위 조정.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 19:10] 클리닉 시간표 UX 계획 범위 보정
+
+### Type
+DESIGN
+
+### Summary
+- 슬롯/세션 시간표의 시간 범위를 06:00~22:00로 명확히 반영했다.
+- 조교 슬롯 패널에서 생성/조회만 제공하는 범위를 문서에 반영했다.
+
+### Details
+- 작업 사유: 시간표 개선 요구사항 변경 및 권한 범위 재정의.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 공통 시간표 컴포넌트화 및 클리닉 페이지 적용.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 19:11] 주간 시간표 공통 컴포넌트 추출
+
+### Type
+STRUCTURAL
+
+### Summary
+- 주간 시간표 렌더링을 `WeeklyTimeGrid`로 공통화했다.
+- `/teacher/courses` 캘린더 뷰를 공통 컴포넌트로 교체했다.
+
+### Details
+- 작업 사유: 클리닉/코스 화면에서 동일한 시간표 UI 재사용을 위해 구조 개선.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/components/shared/weekly-time-grid.tsx`
+  - `frontend/src/app/(dashboard)/teacher/courses/page.tsx`
+- 다음 단계: 클리닉 슬롯/세션 페이지에 공통 시간표 적용.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 19:12] 클리닉 슬롯/세션 시간표 그리드 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 슬롯/세션 화면을 주간 시간표 그리드로 전환했다.
+- 드래그/롱프레스로 슬롯/긴급 세션 생성 흐름을 연결했다.
+- 주간 이동 네비게이션을 추가해 세션 범위를 조정할 수 있게 했다.
+
+### Details
+- 작업 사유: 클리닉 시간표 UX 개선 요구사항 반영.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: 드래그 생성 및 주간 이동 동작 수동 검증.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 22:48] 주간 세션 시간표 주차 이동 제거 계획 반영
+
+### Type
+DESIGN
+
+### Summary
+- 주차별 클리닉 시간표를 이번 주 고정으로 정의했다.
+- 주간 범위 라벨을 시간표 상단 중앙 배치로 명시했다.
+
+### Details
+- 작업 사유: 주간 이동이 의미 없다는 판단에 따른 UX 정리.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: Teacher/Assistant 주간 세션 시간표 UI에서 이동 버튼 제거.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 22:49] 주간 세션 시간표 주차 이동 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 교사/조교 주간 세션 시간표에서 주차 이동 버튼을 제거했다.
+- 주간 범위 라벨을 시간표 상단 중앙에 배치했다.
+
+### Details
+- 작업 사유: 주간 이동이 불필요한 UX로 판단됨.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: 시간표 중앙 라벨/세션 생성 흐름 수동 확인.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 22:53] 학생 클리닉 시간표 그리드 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 기본 슬롯/이번 주 세션 화면을 주간 시간표 그리드로 전환했다.
+- 참석/취소/이동 상태를 시간표 블록 색상과 배지로 구분했다.
+
+### Details
+- 작업 사유: 학생 화면도 교사/조교와 동일한 시간표 UX로 통일하기 위해.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: 학생 시간표에서 기본 슬롯/추가 참석/이동 모드 동작 수동 확인.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 22:57] 학생 시간표 카드 UI 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 시간표 카드 내부 레이아웃을 간결하게 정리했다.
+- 상태 배지를 컴팩트한 라벨로 변경해 작은 슬롯 높이에서도 읽기 쉽게 했다.
+
+### Details
+- 작업 사유: 시간표 카드 내부 UI가 눌리거나 과밀해 보이는 문제 개선.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: 학생 시간표 카드의 텍스트/상태 표시 수동 검증.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:07] 학생 참석 현황/취소 및 변경 UX 계획 반영
+
+### Type
+DESIGN
+
+### Summary
+- 학생 기본 슬롯/세션에 참석 현황 표시 요구를 반영했다.
+- 학생 세션 변경 UX를 모달 기반으로 개선하도록 계획을 업데이트했다.
+- 학생 참석 취소 API 추가를 백엔드 계획에 명시했다.
+
+### Details
+- 작업 사유: 참석 현황 표시 및 취소/변경 UX 개선 요구 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+  - `docs/plan/backend/season2/clinic-student-context_plan.md`
+- 다음 단계: 요구사항/스펙/TODO 갱신 여부 확인 후 구현 승인 요청.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:20] 학생 클리닉 참석 현황/취소 요구사항 반영
+
+### Type
+DESIGN
+
+### Summary
+- 학생 클리닉 참석 현황 표시와 참석 취소 요구를 요구사항/스펙에 반영했다.
+- 학생 기본 슬롯 변경 가능 범위를 최신 흐름에 맞게 정리했다.
+
+### Details
+- 작업 사유: 참석 현황 표시 및 취소 API 추가 결정 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+- 다음 단계: TODO 갱신 및 백엔드 구현.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:21] Clinic 시스템 TODO 갱신
+
+### Type
+TODO_UPDATE
+
+### Summary
+- ClinicSession 응답의 attendanceCount 제공 작업을 추가했다.
+- 학생 참석 취소 API 작업을 TODO에 반영했다.
+
+### Details
+- 작업 사유: 신규 요구사항/스펙 반영을 위한 TODO 구조 갱신.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/todo/v1.10.md`
+- 다음 단계: 백엔드 구현 및 테스트.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:22] 세션 참석 수 응답 및 학생 참석 취소 API 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSession 조회 응답에 attendanceCount를 포함했다.
+- 학생 참석 취소 전용 API를 추가하고 30분 제한을 적용했다.
+- 관련 테스트를 추가/수정했다.
+
+### Details
+- 작업 사유: 참석 현황 표시 및 취소 기능 제공.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.session.application.ClinicSessionServiceTest" --tests "com.classhub.domain.clinic.attendance.application.ClinicAttendanceServiceTest" --tests "com.classhub.domain.clinic.attendance.web.ClinicAttendanceControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceCountProjection.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/dto/response/ClinicSessionResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/web/ClinicSessionController.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/web/ClinicAttendanceControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/application/ClinicSessionServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/web/ClinicSessionControllerTest.java`
+- 다음 단계: OpenAPI 스키마 및 프론트 타입 갱신.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:22] 세션 참석 수 집계 쿼리 테스트 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 세션별 attendanceCount 집계 쿼리의 동작을 검증하는 테스트를 추가했다.
+
+### Details
+- 작업 사유: 새 집계 쿼리의 정확도 보장.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepositoryQueryTest"`
+- 수정한 파일:
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceRepositoryQueryTest.java`
+- 다음 단계: OpenAPI 스키마 및 프론트 타입 갱신.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:23] Clinic 시스템 TODO 상태 갱신
+
+### Type
+TODO_UPDATE
+
+### Summary
+- attendanceCount 제공 및 학생 참석 취소 API 작업을 완료로 표시했다.
+
+### Details
+- 작업 사유: 기능 구현 및 테스트 완료 후 TODO 상태 반영.
+- 영향받은 테스트: 없음.
+- 수정한 파일:
+  - `docs/todo/v1.10.md`
+- 다음 단계: 프론트 타입/오픈API 동기화.
+- MCP: 사용하지 않음.
+
+## [2025-12-23 23:26] 기본 슬롯 출석 취소 제한 반영
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 기본 슬롯에서 자동 생성된 출석은 학생이 취소할 수 없도록 제한했다.
+- 관련 요구사항/스펙/플랜에 제한 조건을 명시했다.
+
+### Details
+- 작업 사유: 기본 슬롯 참석 취소 제한 요구 반영.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.attendance.application.ClinicAttendanceServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceServiceTest.java`
+  - `docs/requirement/v1.4.md`
+  - `docs/spec/v1.4.md`
+  - `docs/plan/backend/season2/clinic-student-context_plan.md`
+  - `docs/plan/frontend/season2/clinic-management_ui_plan.md`
+- 다음 단계: 학생 UI에서 기본 슬롯 참석 취소 비활성 처리.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 01:23] 학생 목록/상세 조회 개선 계획 수립
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant 학생 목록을 학생 단위로 재정의하고 상태 기준을 확정했다.
+- 학생 상세 모달의 응답 구조(학생 + Course + Record)와 UI 흐름을 설계했다.
+
+### Details
+- 작업 사유: 중복 노출 및 비활성 Course 노출 문제 개선.
+- 영향받은 테스트: 없음(계획 단계).
+- 수정한 파일:
+  - `docs/plan/backend/season2/student-list-management_plan.md`
+  - `docs/plan/frontend/season2/student-list-ui_plan.md`
+- 다음 단계: 설계 승인 후 TDD/구현 진행.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 01:35] 학생 목록/상세 조회 API 도입
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 단위 목록 조회 API와 상세 조회 API를 추가했다.
+- 학생 상태를 활성 Course 기반으로 계산하고, courseId 필터를 단순 목록 필터로 유지했다.
+
+### Details
+- 작업 사유: 학생 중복 노출 및 비활성 Course 노출 문제 개선.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.studentcourse.repository.StudentCourseEnrollmentRepositoryTest" --tests "com.classhub.domain.studentcourse.application.StudentCourseManagementServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentStatusProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseManagementController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentListItemResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseRecordSummaryResponse.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+- 다음 단계: 프론트엔드 학생 목록/상세 모달 연동.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:00] 학생 목록 응답에 활성 반 정보 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록 응답에 활성 반 이름/ID 목록을 포함했다.
+- 학생 목록 API에서 courseId 필터를 제거하고, 활성 반 기준으로만 표시하도록 정리했다.
+
+### Details
+- 작업 사유: 학생 목록에서 현재 수강 중인 반을 빠르게 확인할 수 있도록 개선.
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.studentcourse.repository.StudentCourseEnrollmentRepositoryTest" --tests "com.classhub.domain.studentcourse.application.StudentCourseManagementServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentActiveCourseProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentStatusProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseManagementController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentListItemResponse.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+- 다음 단계: 프론트엔드 목록 UI에서 activeCourseNames 사용 및 상세 모달 연동.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:14] 학생 목록 UI를 학생 단위 목록으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록을 학생 단위 응답으로 전환하고 현재 수강 중인 반을 표시하도록 개선했다.
+- 학생 상세 모달을 학생+반 목록+기록 편집 흐름으로 재구성했다.
+
+### Details
+- 작업 사유: 중복 목록 제거 및 학생/반 정보를 빠르게 확인하기 위한 UI 개선.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 수동 화면 확인(teacher/assistant 학생 목록, 상세 모달 선택/편집 플로우).
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:20] 학생 상세 모달 드롭다운 설계 보완
+
+### Type
+DESIGN
+
+### Summary
+- 학생 상세 모달에서 조교/클리닉 슬롯을 드롭다운으로 선택하는 흐름을 설계에 반영했다.
+
+### Details
+- 작업 사유: UUID 직접 입력 대신 조교/슬롯 선택 UX 요구 반영.
+- 영향받은 테스트: 없음(설계 업데이트).
+- 수정한 파일:
+  - `docs/plan/frontend/season2/student-list-ui_plan.md`
+- 다음 단계: 프론트 구현 시 조교/슬롯 로딩 및 드롭다운 표시.
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:21] 학생 상세 기록 수정 UI를 드롭다운으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 상세 모달에서 조교/클리닉 슬롯을 드롭다운으로 선택하도록 변경했다.
+- 반 선택 시 해당 반 기록을 편집하는 흐름을 유지했다.
+
+### Details
+- 작업 사유: UUID 직접 입력 대신 조교/슬롯 선택 UX 요구 반영.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 수동 화면 확인(teacher/assistant 학생 상세 모달에서 조교/슬롯 선택 흐름).
+- MCP: 사용하지 않음.
+
+## [2025-12-24 02:28] 학생 목록/상세 연락처 표시 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록에 학부모 연락처를 함께 표시하고, 이름/이메일 레이아웃을 정리했다.
+- 학생 상세 화면에서 UUID 표기를 제거했다.
+
+### Details
+- 작업 사유: 목록 가독성 개선 및 상세 화면에서 ID 노출 제거.
+- 영향받은 테스트:
+  - `cd frontend && npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 수동 화면 확인(학생 목록 연락처/학부모 표시, 상세 UUID 제거).
+- MCP: 사용하지 않음.
+## [2025-12-24 12:40] 프론트 날짜 포맷 KST 정렬
+
+### Type
+BEHAVIORAL
+
+### Summary
+- UTC 기반 `toISOString` 사용을 KST 날짜 포맷으로 교체
+- 수업 작성/학생 캘린더/반 캘린더 날짜 밀림 방지
+
+### Details
+- 작업 사유: UTC 변환으로 날짜가 하루씩 밀리는 문제 개선
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/utils/date.ts`, `frontend/src/components/dashboard/progress/teacher-lesson-compose-modal.tsx`, `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`, `frontend/src/app/(dashboard)/teacher/courses/page.tsx`
+- 다음 단계: 실제 화면에서 날짜 선택/캘린더 표시가 KST 기준으로 맞는지 수동 확인
+## [2025-12-24 12:52] 진도 목록 날짜 KST 포맷 통일
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 진도 목록 날짜 표시를 KST 기준 포맷으로 통일
+- date 포맷 유틸에 KST 라벨 포맷 추가
+
+### Details
+- 작업 사유: /progress/course, /progress/personal 날짜 표시가 시스템 시간대에 따라 달라지는 문제 보정
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/utils/date.ts`, `frontend/src/components/dashboard/progress/progress-card-list.tsx`
+- 다음 단계: /teacher/progress/course, /teacher/progress/personal에서 날짜 표시가 저장값과 일치하는지 수동 확인
+## [2025-12-24 13:05] 진도 카드 작성일 표시 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 진도 카드에 수업 날짜 라벨을 추가하고 작성일을 우측 하단에 표시
+- 작성일은 KST 기준 포맷으로 렌더링
+
+### Details
+- 작업 사유: 반별/개인 진도에서 수업 날짜와 작성일 구분 요구 반영
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/components/dashboard/progress/progress-card-list.tsx`, `frontend/src/utils/date.ts`
+- 다음 단계: /teacher/progress/course, /teacher/progress/personal, /assistant/progress/course, /assistant/progress/personal 화면에서 표시 위치 확인

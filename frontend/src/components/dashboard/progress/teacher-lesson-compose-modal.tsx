@@ -5,12 +5,14 @@ import clsx from "clsx";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
+import { DatePicker } from "@/components/ui/date-picker";
 import { InlineError } from "@/components/ui/inline-error";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { fetchTeacherCourses, fetchStudentCourseRecords } from "@/lib/dashboard-api";
-import { composeCourseProgress, createCourseProgress } from "@/lib/progress-api";
+import { composeCourseProgress, createCourseProgress, createPersonalProgress } from "@/lib/progress-api";
+import { formatDateYmdKst } from "@/utils/date";
 import type { CourseResponse, StudentCourseListItemResponse } from "@/types/dashboard";
 import type { CourseProgressCreateRequest, PersonalProgressComposeRequest } from "@/types/progress";
 
@@ -24,7 +26,7 @@ type TeacherLessonComposeModalProps = {
   onClose: () => void;
 };
 
-const todayString = () => new Date().toISOString().slice(0, 10);
+const todayString = () => formatDateYmdKst(new Date());
 
 export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonComposeModalProps) {
   const { showToast } = useToast();
@@ -164,41 +166,77 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
       setSubmitError("반을 먼저 선택해주세요.");
       return;
     }
-    if (!courseTitle.trim() || !courseContent.trim()) {
-      setSubmitError("공통 진도 제목과 내용을 입력해주세요.");
+
+    const hasCourseProgress = Boolean(courseTitle.trim() && courseContent.trim());
+    const hasPersonalProgress = selectedStudentIds.length > 0;
+
+    // 최소 하나는 입력되어야 함
+    if (!hasCourseProgress && !hasPersonalProgress) {
+      setSubmitError("공통 진도 또는 개인 진도 중 최소 하나를 입력해주세요.");
       return;
     }
 
-    const personalRequests: PersonalProgressComposeRequest[] = selectedStudentIds.map((recordId) => ({
-      studentCourseRecordId: recordId,
-      date: courseDate,
-      title: personalInputs[recordId]?.title?.trim() ?? "",
-      content: personalInputs[recordId]?.content?.trim() ?? ""
-    }));
-    const invalidPersonal = personalRequests.some((request) => !request.title || !request.content);
-    if (invalidPersonal) {
-      setSubmitError("선택한 학생의 제목과 내용을 모두 입력해주세요.");
-      return;
+    // 개인 진도 검증
+    if (hasPersonalProgress) {
+      const personalRequests: PersonalProgressComposeRequest[] = selectedStudentIds.map((recordId) => ({
+        studentCourseRecordId: recordId,
+        date: courseDate,
+        title: personalInputs[recordId]?.title?.trim() ?? "",
+        content: personalInputs[recordId]?.content?.trim() ?? ""
+      }));
+      const invalidPersonal = personalRequests.some((request) => !request.title || !request.content);
+      if (invalidPersonal) {
+        setSubmitError("선택한 학생의 제목과 내용을 모두 입력해주세요.");
+        return;
+      }
     }
 
     setSubmitError(null);
     setLoading(true);
     try {
-      const courseRequest: CourseProgressCreateRequest = {
-        date: courseDate,
-        title: courseTitle.trim(),
-        content: courseContent.trim()
-      };
-
-      if (personalRequests.length === 0) {
+      // Case 1: 공통 진도만 작성
+      if (hasCourseProgress && !hasPersonalProgress) {
+        const courseRequest: CourseProgressCreateRequest = {
+          date: courseDate,
+          title: courseTitle.trim(),
+          content: courseContent.trim()
+        };
         await createCourseProgress(selectedCourseId, courseRequest);
-      } else {
+        showToast("success", "공통 진도를 저장했습니다.");
+      }
+      // Case 2: 공통 진도 + 개인 진도
+      else if (hasCourseProgress && hasPersonalProgress) {
+        const courseRequest: CourseProgressCreateRequest = {
+          date: courseDate,
+          title: courseTitle.trim(),
+          content: courseContent.trim()
+        };
+        const personalRequests: PersonalProgressComposeRequest[] = selectedStudentIds.map((recordId) => ({
+          studentCourseRecordId: recordId,
+          date: courseDate,
+          title: personalInputs[recordId]?.title?.trim() ?? "",
+          content: personalInputs[recordId]?.content?.trim() ?? ""
+        }));
         await composeCourseProgress(selectedCourseId, {
           courseProgress: courseRequest,
           personalProgressList: personalRequests
         });
+        showToast("success", "공통 진도와 개인 진도를 저장했습니다.");
       }
-      showToast("success", "진도 기록을 저장했습니다.");
+      // Case 3: 개인 진도만 작성
+      else if (!hasCourseProgress && hasPersonalProgress) {
+        await Promise.all(
+          selectedStudentIds.map((recordId) =>
+            createPersonalProgress(recordId, {
+              date: courseDate,
+              title: personalInputs[recordId]?.title?.trim() ?? "",
+              content: personalInputs[recordId]?.content?.trim() ?? ""
+            })
+          )
+        );
+        showToast("success", "개인 진도를 저장했습니다.");
+      }
+
       resetState();
       onClose();
     } catch (error) {
@@ -261,19 +299,17 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
 
           <section className="space-y-4">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">공통 진도</h3>
-              <p className="text-sm text-slate-500">반 공통 진도 내용을 입력하세요.</p>
+              <h3 className="text-lg font-semibold text-slate-900">공통 진도 (선택)</h3>
+              <p className="text-sm text-slate-500">반 공통 진도 내용을 입력하세요. 개인 진도만 작성할 수도 있습니다.</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <TextField
+              <DatePicker
                 label="수업 날짜"
-                type="date"
                 value={courseDate}
-                onChange={(event) => setCourseDate(event.target.value)}
+                onChange={setCourseDate}
               />
               <TextField
                 label="제목"
-                required
                 placeholder="예: 3월 2주차 수업"
                 value={courseTitle}
                 onChange={(event) => setCourseTitle(event.target.value)}
@@ -281,7 +317,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-slate-700">
-                내용 <span className="text-rose-500">*</span>
+                내용
               </label>
               <textarea
                 rows={4}

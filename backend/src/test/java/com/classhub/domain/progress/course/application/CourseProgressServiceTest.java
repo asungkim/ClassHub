@@ -51,9 +51,8 @@ class CourseProgressServiceTest {
     private PersonalProgressRepository personalProgressRepository;
     @Mock
     private ProgressPermissionValidator permissionValidator;
-
-    @Spy
-    private CourseProgressMapper courseProgressMapper = new CourseProgressMapper();
+    @Mock
+    private CourseProgressMapper courseProgressMapper;
 
     @InjectMocks
     private CourseProgressService courseProgressService;
@@ -82,6 +81,20 @@ class CourseProgressServiceTest {
 
         CourseProgress saved = buildCourseProgress(courseId, teacherId, request.date(), "Lesson");
         given(courseProgressRepository.save(any(CourseProgress.class))).willReturn(saved);
+
+        CourseProgressResponse mockResponse = new CourseProgressResponse(
+                saved.getId(),
+                courseId,
+                request.date(),
+                "Lesson",
+                "content",
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                saved.getCreatedAt()
+        );
+        given(courseProgressMapper.toResponse(any(CourseProgress.class), any(MemberRole.class)))
+                .willReturn(mockResponse);
 
         CourseProgressResponse response = courseProgressService.createCourseProgress(
                 teacherPrincipal,
@@ -117,6 +130,20 @@ class CourseProgressServiceTest {
         CourseProgress saved = buildCourseProgress(courseId, teacherId, request.courseProgress().date(), "Shared");
         given(courseProgressRepository.save(any(CourseProgress.class))).willReturn(saved);
         given(personalProgressRepository.saveAll(any())).willAnswer(invocation -> invocation.getArgument(0));
+
+        CourseProgressResponse mockResponse = new CourseProgressResponse(
+                saved.getId(),
+                courseId,
+                request.courseProgress().date(),
+                "Shared",
+                "memo",
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                saved.getCreatedAt()
+        );
+        given(courseProgressMapper.toResponse(any(CourseProgress.class), any(MemberRole.class)))
+                .willReturn(mockResponse);
 
         CourseProgressResponse response = courseProgressService.composeCourseProgress(
                 teacherPrincipal,
@@ -160,6 +187,33 @@ class CourseProgressServiceTest {
         given(courseProgressRepository.findRecentByCourseId(eq(courseId), any(), any(), any(Pageable.class)))
                 .willReturn(List.of(first, second));
 
+        CourseProgressResponse firstResponse = new CourseProgressResponse(
+                first.getId(),
+                courseId,
+                first.getDate(),
+                first.getTitle(),
+                first.getContent(),
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                first.getCreatedAt()
+        );
+        CourseProgressResponse secondResponse = new CourseProgressResponse(
+                second.getId(),
+                courseId,
+                second.getDate(),
+                second.getTitle(),
+                second.getContent(),
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                second.getCreatedAt()
+        );
+        given(courseProgressMapper.toResponse(eq(first), any(MemberRole.class)))
+                .willReturn(firstResponse);
+        given(courseProgressMapper.toResponse(eq(second), any(MemberRole.class)))
+                .willReturn(secondResponse);
+
         ProgressSliceResponse<CourseProgressResponse> response = courseProgressService.getCourseProgresses(
                 teacherPrincipal,
                 courseId,
@@ -187,6 +241,21 @@ class CourseProgressServiceTest {
                 "New",
                 "updated"
         );
+
+        CourseProgressResponse mockResponse = new CourseProgressResponse(
+                progress.getId(),
+                courseId,
+                request.date(),
+                "New",
+                "updated",
+                teacherId,
+                "테스트 선생님",
+                MemberRole.TEACHER,
+                progress.getCreatedAt()
+        );
+        given(courseProgressMapper.toResponse(any(CourseProgress.class), any(MemberRole.class)))
+                .willReturn(mockResponse);
+
         CourseProgressResponse response = courseProgressService.updateCourseProgress(
                 teacherPrincipal,
                 progress.getId(),

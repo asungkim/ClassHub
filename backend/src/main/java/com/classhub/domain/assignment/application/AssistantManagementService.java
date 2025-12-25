@@ -59,15 +59,15 @@ public class AssistantManagementService {
     }
 
     @Transactional(readOnly = true)
-    public List<AssistantSearchResponse> searchAssistants(UUID teacherId, String rawEmail) {
-        if (rawEmail == null || rawEmail.trim().isEmpty()) {
+    public List<AssistantSearchResponse> searchAssistants(UUID teacherId, String rawName) {
+        if (rawName == null || rawName.trim().isEmpty()) {
             return List.of();
         }
 
         List<Member> assistants = memberRepository
-                .findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(
+                .findTop5ByRoleAndDeletedAtIsNullAndNameContainingIgnoreCaseOrderByNameAsc(
                         MemberRole.ASSISTANT,
-                        rawEmail.trim()
+                        rawName.trim()
                 );
         if (assistants.isEmpty()) {
             return List.of();

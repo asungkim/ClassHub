@@ -7,6 +7,8 @@ import com.classhub.domain.studentcourse.dto.StudentCourseStatusFilter;
 import com.classhub.domain.studentcourse.dto.request.StudentCourseRecordUpdateRequest;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseDetailResponse;
 import com.classhub.domain.studentcourse.dto.response.StudentCourseListItemResponse;
+import com.classhub.domain.studentcourse.dto.response.StudentStudentDetailResponse;
+import com.classhub.domain.studentcourse.dto.response.StudentStudentListItemResponse;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
@@ -55,6 +57,38 @@ public class StudentCourseManagementController {
                 page,
                 size
         );
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @GetMapping("/students")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
+    @Operation(summary = "학생 목록 조회")
+    public RsData<PageResponse<StudentStudentListItemResponse>> getStudents(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @RequestParam(name = "status", defaultValue = "ACTIVE") String rawStatus,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size
+    ) {
+        StudentCourseStatusFilter statusFilter = parseStatus(rawStatus);
+        PageResponse<StudentStudentListItemResponse> response = managementService.getStudents(
+                principal,
+                statusFilter,
+                keyword,
+                page,
+                size
+        );
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @GetMapping("/students/{studentId}")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
+    @Operation(summary = "학생 상세 조회")
+    public RsData<StudentStudentDetailResponse> getStudentDetail(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID studentId
+    ) {
+        StudentStudentDetailResponse response = managementService.getStudentDetail(principal, studentId);
         return RsData.from(RsCode.SUCCESS, response);
     }
 

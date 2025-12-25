@@ -13,6 +13,7 @@ public record PersonalProgressResponse(
         String title,
         String content,
         UUID writerId,
+        String writerName,
         MemberRole writerRole,
         LocalDateTime createdAt
 ) {

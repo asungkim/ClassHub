@@ -14,8 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InlineError } from "@/components/ui/inline-error";
 import { EmptyState } from "@/components/shared/empty-state";
+import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
+import { DatePicker } from "@/components/ui/date-picker";
+import { formatDateYmdKst } from "@/utils/date";
 import {
   DASHBOARD_PAGE_SIZE,
   createCourse,
@@ -74,39 +77,37 @@ type CalendarItem = {
 };
 
 const dayOfWeekEnum = z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"] as const);
-const DATE_INPUT_REGEX = /^\d{4}\/\d{2}\/\d{2}$/;
+const DATE_INPUT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 const courseScheduleSchema = z
   .object({
     dayOfWeek: dayOfWeekEnum,
-    startTime: z.string().min(1, "시작 시간을 입력하세요."),
-    endTime: z.string().min(1, "종료 시간을 입력하세요.")
+    startTime: z.string().min(1, "시작 시간을 입력하세요.").regex(/^\d{2}:\d{2}$/, "올바른 시간 형식이 아닙니다."),
+    endTime: z.string().min(1, "종료 시간을 입력하세요.").regex(/^\d{2}:\d{2}$/, "올바른 시간 형식이 아닙니다.")
   })
   .superRefine((value, ctx) => {
-    const startMinutes = timeStringToMinutes(value.startTime);
-    const endMinutes = timeStringToMinutes(value.endTime);
-    const minStart = calendarStartHour * 60;
-    const maxStart = calendarEndHour * 60 - TIME_SLOT_STEP_MINUTES;
-    const minEnd = minStart + TIME_SLOT_STEP_MINUTES;
-    const maxEnd = calendarEndHour * 60;
+    const [startHour, startMinute] = value.startTime.split(":").map(Number);
+    const [endHour, endMinute] = value.endTime.split(":").map(Number);
 
-    if (startMinutes === null || startMinutes < minStart || startMinutes > maxStart) {
+    if (startHour < calendarStartHour || startHour > calendarEndHour) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["startTime"],
-        message: "시작 시간은 06:00~21:30 사이에서 선택하세요."
+        message: `시작 시간은 ${calendarStartHour}:00~${calendarEndHour}:00 사이에서 선택하세요.`
       });
     }
 
-    if (endMinutes === null || endMinutes < minEnd || endMinutes > maxEnd) {
+    if (endHour < calendarStartHour || endHour > calendarEndHour) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["endTime"],
-        message: "종료 시간은 06:30~22:00 사이에서 선택하세요."
+        message: `종료 시간은 ${calendarStartHour}:00~${calendarEndHour}:00 사이에서 선택하세요.`
       });
     }
 
-    if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
+    const startTotal = startHour * 60 + startMinute;
+    const endTotal = endHour * 60 + endMinute;
+    if (startTotal >= endTotal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["endTime"],
@@ -123,11 +124,11 @@ const courseFormSchema = z
     startDate: z
       .string()
       .min(1, "반 시작일을 입력하세요.")
-      .regex(/^\d{4}\/\d{2}\/\d{2}$/, "YYYY/MM/DD 형식으로 입력하세요."),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "올바른 날짜를 선택하세요."),
     endDate: z
       .string()
       .min(1, "반 종료일을 입력하세요.")
-      .regex(/^\d{4}\/\d{2}\/\d{2}$/, "YYYY/MM/DD 형식으로 입력하세요."),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "올바른 날짜를 선택하세요."),
     schedules: z.array(courseScheduleSchema).min(1, "최소 1개의 스케줄이 필요합니다.")
   })
   .superRefine((value, ctx) => {
@@ -414,7 +415,7 @@ function TeacherCourseManagement() {
       <section className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-100 sm:px-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Course Management</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Class Management</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900">반 관리</h1>
             <p className="mt-2 text-sm text-slate-500">
               목록/캘린더에서 반을 확인하고 곧바로 생성·수정·비활성화를 처리할 수 있습니다.
@@ -440,7 +441,7 @@ function TeacherCourseManagement() {
 
       <Card
         title="반 조회"
-        description="상태·지점·검색어로 필터링하고 필요하면 캘린더 뷰로 전환하세요."
+        description="상태·학원·검색어로 필터링하고 필요하면 캘린더 뷰로 전환하세요."
         actions={
           <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)} defaultValue={viewTabs[0].value}>
             <TabsList>
@@ -561,7 +562,7 @@ function CourseListSection({
 
         <div className="grid gap-4 md:grid-cols-[280px_minmax(0,1fr)]">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">지점 선택</label>
+            <label className="text-sm font-semibold text-slate-700">학원 선택</label>
             <Select value={branchFilter} onChange={(event) => onBranchChange(event.target.value)}>
               {branchOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -663,7 +664,7 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
         <p>
           기간: {formatDateRange(course.startDate, course.endDate)}
         </p>
-        <p className="mt-1 text-slate-500">스케줄: {scheduleSummary}</p>
+        <p className="mt-1 text-slate-500">수업 시간: {scheduleSummary}</p>
       </div>
     </div>
   );
@@ -768,144 +769,51 @@ function CourseCalendarSection({
       ) : error ? (
         <InlineError message={error} />
       ) : (
-        <CalendarGrid
-          calendarItems={calendarItems}
-          courseColorMap={courseColorMap}
+        <WeeklyTimeGrid
+          days={calendarDays}
+          itemsByDay={calendarItems}
+          startHour={calendarStartHour}
+          endHour={calendarEndHour}
+          hourHeight={calendarHourHeight}
           rangeStart={rangeStart}
-          onCourseSelect={onCourseSelect}
+          showDateHeader
+          getItemRange={(item) => ({
+            startTime: item.schedule.startTime,
+            endTime: item.schedule.endTime
+          })}
+          getItemKey={(item, index) =>
+            `${item.course.courseId ?? item.course.name}-${item.schedule.dayOfWeek}-${item.schedule.startTime}-${index}`
+          }
+          renderItem={({ item, style }) => {
+            const colorKey = getCourseColorKey(item.course);
+            const colorClass = courseColorMap[colorKey] ?? "bg-blue-400";
+            return (
+              <div
+                className={clsx(
+                  "absolute left-1 right-1 cursor-pointer rounded-2xl border border-white/70 p-2 text-xs font-semibold text-white shadow-lg transition hover:scale-[1.01]",
+                  colorClass
+                )}
+                style={style}
+                role="button"
+                tabIndex={0}
+                onClick={() => onCourseSelect(item.course)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onCourseSelect(item.course);
+                  }
+                }}
+                title={`${item.course.name ?? "이름 미지정"} • ${item.course.companyName ?? "-"} ${item.course.branchName ?? ""}`.trim()}
+              >
+                <p className="truncate text-sm">{item.course.name ?? "이름 미지정"}</p>
+                <p className="text-[11px] font-normal opacity-90">
+                  {item.course.companyName ?? "-"} · {item.course.branchName ?? "-"}
+                </p>
+              </div>
+            );
+          }}
         />
       )}
-    </div>
-  );
-}
-
-type CalendarGridProps = {
-  calendarItems: Record<string, CalendarItem[]>;
-  courseColorMap: Record<string, string>;
-  rangeStart: Date;
-  onCourseSelect: (course: CourseResponse) => void;
-};
-
-function CalendarGrid({ calendarItems, courseColorMap, rangeStart, onCourseSelect }: CalendarGridProps) {
-  const templateColumns = `80px repeat(${calendarDays.length}, minmax(0, 1fr))`;
-  const totalHours = calendarEndHour - calendarStartHour;
-  const columnHeight = totalHours * calendarHourHeight;
-
-  return (
-    <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-inner">
-      <div className="min-w-[960px]">
-        <div className="grid border-b border-slate-200" style={{ gridTemplateColumns: templateColumns }}>
-          <div className="flex h-14 items-center justify-center border-r border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
-            시간
-          </div>
-          {calendarDays.map((day, index) => (
-            <div
-              key={day.key}
-              className="flex h-14 flex-col items-center justify-center border-r border-slate-200 text-sm font-semibold text-slate-900"
-            >
-              <span>{day.label}</span>
-              <span className="text-xs font-normal text-slate-500">{formatHeaderDate(addDays(rangeStart, index))}</span>
-            </div>
-          ))}
-        </div>
-        <div className="grid" style={{ gridTemplateColumns: templateColumns }}>
-          <CalendarTimeColumn columnHeight={columnHeight} />
-          {calendarDays.map((day) => (
-            <CalendarDayColumn
-              key={day.key}
-              items={calendarItems[day.key] ?? []}
-              columnHeight={columnHeight}
-              courseColorMap={courseColorMap}
-              onCourseSelect={onCourseSelect}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CalendarTimeColumn({ columnHeight }: { columnHeight: number }) {
-  const hours = Array.from({ length: calendarEndHour - calendarStartHour + 1 }, (_, index) => calendarStartHour + index);
-  return (
-    <div className="border-r border-slate-200 bg-slate-50" style={{ height: columnHeight }}>
-      {hours.map((hour, index) => (
-        <div
-          key={hour}
-          className="relative flex items-start justify-end pr-3"
-          style={{ height: index === hours.length - 1 ? calendarHourHeight / 2 : calendarHourHeight }}
-        >
-          <span className="text-[11px] font-semibold text-slate-500">{formatHourLabel(hour)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CalendarDayColumn({
-  items,
-  columnHeight,
-  courseColorMap,
-  onCourseSelect
-}: {
-  items: CalendarItem[];
-  columnHeight: number;
-  courseColorMap: Record<string, string>;
-  onCourseSelect: (course: CourseResponse) => void;
-}) {
-  const hourLines = Array.from({ length: calendarEndHour - calendarStartHour }, (_, index) => index + 1);
-  return (
-    <div className="relative border-r border-slate-200" style={{ height: columnHeight }}>
-      {hourLines.map((line) => (
-        <div
-          key={line}
-          className="absolute left-0 right-0 border-b border-slate-100"
-          style={{ top: line * calendarHourHeight, height: 0 }}
-        />
-      ))}
-      {items.length === 0 ? (
-        <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-slate-200">-</p>
-      ) : null}
-      {items.map(({ course, schedule }, index) => {
-        const colorKey = getCourseColorKey(course);
-        const colorClass = courseColorMap[colorKey] ?? "bg-blue-400";
-        const startHour = timeStringToHours(schedule.startTime) ?? calendarStartHour;
-        const endHour = timeStringToHours(schedule.endTime) ?? Math.min(startHour + 1, calendarEndHour);
-        const clampedStart = Math.max(calendarStartHour, Math.min(startHour, calendarEndHour));
-        const clampedEnd = Math.max(clampedStart + 0.5, Math.min(endHour, calendarEndHour));
-        const blockTop = (clampedStart - calendarStartHour) * calendarHourHeight;
-        const blockHeight = Math.max((clampedEnd - clampedStart) * calendarHourHeight, calendarHourHeight * 0.6);
-
-        return (
-          <div
-            key={`${course.courseId ?? course.name}-${schedule.dayOfWeek}-${schedule.startTime}-${index}`}
-            className={clsx(
-              "absolute left-1 right-1 cursor-pointer rounded-2xl border border-white/70 p-2 text-xs font-semibold text-white shadow-lg transition hover:scale-[1.01]",
-              colorClass
-            )}
-            style={{
-              top: blockTop,
-              height: blockHeight,
-              minHeight: calendarHourHeight * 0.6
-            }}
-            role="button"
-            tabIndex={0}
-            onClick={() => onCourseSelect(course)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onCourseSelect(course);
-              }
-            }}
-            title={`${course.name ?? "이름 미지정"} • ${course.companyName ?? "-"} ${course.branchName ?? ""}`.trim()}
-          >
-            <p className="truncate text-sm">{course.name ?? "이름 미지정"}</p>
-            <p className="text-[11px] font-normal opacity-90">
-              {course.companyName ?? "-"} · {course.branchName ?? "-"}
-            </p>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -921,6 +829,29 @@ type CourseFormModalProps = {
 
 function CourseFormModal({ open, mode, branchOptions, initialCourse, onClose, onSubmit }: CourseFormModalProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
+
+  // 모달이 열릴 때마다 formKey를 증가시켜서 form을 완전히 재마운트
+  useEffect(() => {
+    if (open) {
+      setFormKey((prev) => prev + 1);
+      setSubmitError(null);
+    }
+  }, [open]);
+
+  return <CourseFormModalContent key={formKey} {...{ open, mode, branchOptions, initialCourse, onClose, onSubmit, submitError, setSubmitError }} />;
+}
+
+function CourseFormModalContent({
+  open,
+  mode,
+  branchOptions,
+  initialCourse,
+  onClose,
+  onSubmit,
+  submitError,
+  setSubmitError
+}: CourseFormModalProps & { submitError: string | null; setSubmitError: (error: string | null) => void }) {
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseFormSchema),
     defaultValues: getDefaultCourseFormValues(mode, initialCourse, branchOptions)
@@ -931,21 +862,12 @@ function CourseFormModal({ open, mode, branchOptions, initialCourse, onClose, on
     control,
     watch,
     setValue,
-    formState: { errors, isSubmitting },
-    reset
+    formState: { errors, isSubmitting }
   } = form;
   const { fields, append, remove } = useFieldArray({ control, name: "schedules" });
   const scheduleErrors = Array.isArray(errors.schedules) ? errors.schedules : [];
   const scheduleListError = !Array.isArray(errors.schedules) ? errors.schedules?.message : undefined;
   const scheduleValues = watch("schedules");
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    reset(getDefaultCourseFormValues(mode, initialCourse, branchOptions));
-    setSubmitError(null);
-  }, [branchOptions, initialCourse, mode, open, reset]);
 
   const handleAddSchedule = () => {
     append(createDefaultSchedule());
@@ -1029,37 +951,43 @@ function CourseFormModal({ open, mode, branchOptions, initialCourse, onClose, on
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">
-              시작일 <span className="text-rose-500">*</span>
-            </label>
-            <Input
-              type="text"
-              inputMode="numeric"
-              placeholder="YYYY/MM/DD"
-              {...register("startDate")}
-              className={clsx(errors.startDate && "border-rose-300")}
-            />
-            {errors.startDate ? <InlineError message={errors.startDate.message ?? ""} /> : null}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">
-              종료일 <span className="text-rose-500">*</span>
-            </label>
-            <Input
-              type="text"
-              inputMode="numeric"
-              placeholder="YYYY/MM/DD"
-              {...register("endDate")}
-              className={clsx(errors.endDate && "border-rose-300")}
-            />
-            {errors.endDate ? <InlineError message={errors.endDate.message ?? ""} /> : null}
-          </div>
+          <Controller
+            control={control}
+            name="startDate"
+            render={({ field }) => (
+              <div>
+                <DatePicker
+                  label="시작일"
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={!!errors.startDate}
+                />
+                {errors.startDate ? <InlineError message={errors.startDate.message ?? ""} /> : null}
+              </div>
+            )}
+          />
+          <Controller
+            control={control}
+            name="endDate"
+            render={({ field }) => (
+              <div>
+                <DatePicker
+                  label="종료일"
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={!!errors.endDate}
+                />
+                {errors.endDate ? <InlineError message={errors.endDate.message ?? ""} /> : null}
+              </div>
+            )}
+          />
         </div>
 
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold text-slate-800">스케줄</p>
+            <p className="text-sm font-semibold text-slate-800">수업 시간</p>
             <Button type="button" variant="secondary" className="h-10 px-4 text-sm" onClick={handleAddSchedule}>
               + 요일 추가
             </Button>
@@ -1097,20 +1025,19 @@ function CourseFormModal({ open, mode, branchOptions, initialCourse, onClose, on
                     control={control}
                     name={`schedules.${index}.startTime`}
                     render={({ field }) => {
-                      const startValue = field.value ?? formatMinutesToTime(calendarStartHour * 60);
+                      const startValue = field.value || "09:00";
                       return (
-                        <TimeSlotToggle
+                        <TimeDropdownSelect
                           label="시작 시간"
                           value={startValue}
-                          minMinutes={calendarStartHour * 60}
-                          maxMinutes={calendarEndHour * 60 - TIME_SLOT_STEP_MINUTES}
-                          stepMinutes={TIME_SLOT_STEP_MINUTES}
+                          minHour={calendarStartHour}
+                          maxHour={calendarEndHour}
                           error={scheduleErrors[index]?.startTime?.message}
                           onChange={(next) => {
                             field.onChange(next);
                             const currentEnd = scheduleValues?.[index]?.endTime;
                             if (!currentEnd || !isEndAfterStart(next, currentEnd)) {
-                              const adjustedEnd = getNextSlotTime(next, TIME_SLOT_STEP_MINUTES);
+                              const adjustedEnd = getNextSlotTime(next);
                               setValue(`schedules.${index}.endTime`, adjustedEnd, {
                                 shouldValidate: true,
                                 shouldDirty: true
@@ -1125,20 +1052,16 @@ function CourseFormModal({ open, mode, branchOptions, initialCourse, onClose, on
                     control={control}
                     name={`schedules.${index}.endTime`}
                     render={({ field }) => {
-                      const startValue = scheduleValues?.[index]?.startTime ?? formatMinutesToTime(calendarStartHour * 60);
-                      const startMinutes = timeStringToMinutes(startValue) ?? calendarStartHour * 60;
-                      const minEndMinutes = Math.min(
-                        calendarEndHour * 60,
-                        Math.max(startMinutes + TIME_SLOT_STEP_MINUTES, calendarStartHour * 60 + TIME_SLOT_STEP_MINUTES)
-                      );
-                      const endValue = field.value ?? getNextSlotTime(startValue, TIME_SLOT_STEP_MINUTES);
+                      const startValue = scheduleValues?.[index]?.startTime || "09:00";
+                      const [startHour] = startValue.split(":").map(Number);
+                      const minEndHour = Math.min(calendarEndHour, startHour);
+                      const endValue = field.value || getNextSlotTime(startValue);
                       return (
-                        <TimeSlotToggle
+                        <TimeDropdownSelect
                           label="종료 시간"
                           value={endValue}
-                          minMinutes={minEndMinutes}
-                          maxMinutes={calendarEndHour * 60}
-                          stepMinutes={TIME_SLOT_STEP_MINUTES}
+                          minHour={minEndHour}
+                          maxHour={calendarEndHour}
                           error={scheduleErrors[index]?.endTime?.message}
                           onChange={field.onChange}
                         />
@@ -1167,32 +1090,47 @@ function CourseFormModal({ open, mode, branchOptions, initialCourse, onClose, on
   );
 }
 
-type TimeSlotToggleProps = {
+type TimeDropdownSelectProps = {
   label?: string;
   value: string;
   onChange: (value: string) => void;
   error?: string;
-  minMinutes?: number;
-  maxMinutes?: number;
-  stepMinutes?: number;
+  minHour?: number;
+  maxHour?: number;
 };
 
-function TimeSlotToggle({
+function TimeDropdownSelect({
   label,
   value,
   onChange,
   error,
-  minMinutes = calendarStartHour * 60,
-  maxMinutes = calendarEndHour * 60,
-  stepMinutes = TIME_SLOT_STEP_MINUTES
-}: TimeSlotToggleProps) {
-  const options = useMemo(() => {
-    const normalizedMin = Math.max(calendarStartHour * 60, minMinutes);
-    const normalizedMax = Math.min(calendarEndHour * 60, maxMinutes);
-    return generateTimeSlots(normalizedMin, normalizedMax, stepMinutes);
-  }, [minMinutes, maxMinutes, stepMinutes]);
+  minHour = calendarStartHour,
+  maxHour = calendarEndHour
+}: TimeDropdownSelectProps) {
+  // value를 시간과 분으로 분리 (HH:mm 형식)
+  const [hour, minute] = value.split(":").map((v) => v.padStart(2, "0"));
+  const currentHour = hour || "09";
+  const currentMinute = minute || "00";
 
-  const currentValue = options.includes(value) ? value : options[0];
+  // 시간 옵션 생성 (06~22)
+  const hourOptions = useMemo(() => {
+    const options: string[] = [];
+    for (let h = minHour; h <= maxHour; h++) {
+      options.push(String(h).padStart(2, "0"));
+    }
+    return options;
+  }, [minHour, maxHour]);
+
+  // 분 옵션 (00, 10, 20, 30, 40, 50)
+  const minuteOptions = ["00", "10", "20", "30", "40", "50"];
+
+  const handleHourChange = (newHour: string) => {
+    onChange(`${newHour}:${currentMinute}`);
+  };
+
+  const handleMinuteChange = (newMinute: string) => {
+    onChange(`${currentHour}:${newMinute}`);
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -1202,24 +1140,27 @@ function TimeSlotToggle({
           <span className="ml-1 text-rose-500">*</span>
         </span>
       ) : null}
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => {
-          const isActive = currentValue === option;
-          return (
-            <button
-              type="button"
-              key={option}
-              className={clsx(
-                "rounded-2xl px-3 py-2 text-sm font-semibold",
-                isActive ? "bg-blue-600 text-white shadow" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              )}
-              aria-pressed={isActive}
-              onClick={() => onChange(option)}
-            >
-              {option}
-            </button>
-          );
-        })}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-600">시</label>
+          <Select value={currentHour} onChange={(e) => handleHourChange(e.target.value)}>
+            {hourOptions.map((h) => (
+              <option key={h} value={h}>
+                {h}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-600">분</label>
+          <Select value={currentMinute} onChange={(e) => handleMinuteChange(e.target.value)}>
+            {minuteOptions.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
       {error ? <InlineError message={error} /> : null}
     </div>
@@ -1267,14 +1208,6 @@ const dayLabelMap: Record<string, string> = calendarDays.reduce(
   {} as Record<string, string>
 );
 
-function formatHeaderDate(date: Date) {
-  return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-function formatHourLabel(hour: number) {
-  return `${String(hour).padStart(2, "0")}:00`;
-}
-
 function timeStringToMinutes(value?: string | null) {
   if (!value) {
     return null;
@@ -1286,11 +1219,6 @@ function timeStringToMinutes(value?: string | null) {
     return null;
   }
   return hour * 60 + minute;
-}
-
-function timeStringToHours(value?: string | null) {
-  const minutes = timeStringToMinutes(value);
-  return minutes === null ? null : minutes / 60;
 }
 
 function generateTimeSlots(minMinutes: number, maxMinutes: number, stepMinutes: number) {
@@ -1317,18 +1245,32 @@ function formatMinutesToTime(minutes: number) {
 }
 
 function isEndAfterStart(start?: string, end?: string) {
-  const startMinutes = timeStringToMinutes(start);
-  const endMinutes = timeStringToMinutes(end);
-  if (startMinutes === null || endMinutes === null) {
+  if (!start || !end) {
     return false;
   }
-  return endMinutes > startMinutes;
+  // HH:mm 형식을 직접 비교
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  const startTotal = startHour * 60 + startMinute;
+  const endTotal = endHour * 60 + endMinute;
+  return endTotal > startTotal;
 }
 
-function getNextSlotTime(value?: string, stepMinutes = TIME_SLOT_STEP_MINUTES) {
-  const startMinutes = timeStringToMinutes(value) ?? calendarStartHour * 60;
-  const nextMinutes = Math.min(calendarEndHour * 60, startMinutes + stepMinutes);
-  return formatMinutesToTime(nextMinutes);
+function getNextSlotTime(value?: string) {
+  if (!value) {
+    return "10:00";
+  }
+  // HH:mm에서 1시간 추가 (드롭다운은 10분 단위이므로 기본 1시간 간격)
+  const [hour, minute] = value.split(":").map(Number);
+  let nextHour = hour + 1;
+  const nextMinute = minute;
+
+  // 최대 시간을 넘지 않도록
+  if (nextHour > calendarEndHour) {
+    nextHour = calendarEndHour;
+  }
+
+  return `${String(nextHour).padStart(2, "0")}:${String(nextMinute).padStart(2, "0")}`;
 }
 
 function getCourseColorKey(course: CourseResponse) {
@@ -1460,20 +1402,21 @@ function addDays(date: Date, days: number): Date {
 }
 
 function formatDateParam(date: Date) {
-  return date.toISOString().split("T")[0];
+  return formatDateYmdKst(date);
 }
 
 function formatDateForInput(value?: string | null) {
   if (!value) {
     return "";
   }
-  return value.replaceAll("-", "/");
+  // 이미 YYYY-MM-DD 형식이므로 그대로 반환
+  return value;
 }
 
 function normalizeDateInput(value: string) {
   if (!DATE_INPUT_REGEX.test(value)) {
-    throw new Error("날짜는 YYYY/MM/DD 형식으로 입력하세요.");
+    throw new Error("올바른 날짜 형식이 아닙니다.");
   }
-  const [year, month, day] = value.split("/");
-  return `${year}-${month}-${day}`;
+  // 이미 YYYY-MM-DD 형식이므로 그대로 반환
+  return value;
 }

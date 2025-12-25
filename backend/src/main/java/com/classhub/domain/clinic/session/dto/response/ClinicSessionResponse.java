@@ -17,10 +17,11 @@ public record ClinicSessionResponse(
         LocalTime startTime,
         LocalTime endTime,
         Integer capacity,
+        Integer attendanceCount,
         boolean isCanceled
 ) {
 
-    public static ClinicSessionResponse from(ClinicSession session) {
+    public static ClinicSessionResponse from(ClinicSession session, Integer attendanceCount) {
         return new ClinicSessionResponse(
                 session.getId(),
                 session.getSlotId(),
@@ -32,6 +33,7 @@ public record ClinicSessionResponse(
                 session.getStartTime(),
                 session.getEndTime(),
                 session.getCapacity(),
+                attendanceCount,
                 session.isCanceled()
         );
     }
