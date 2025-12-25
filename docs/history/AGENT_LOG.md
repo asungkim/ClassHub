@@ -5475,3 +5475,18 @@ BEHAVIORAL
 - 영향받은 테스트: `npm run build -- --webpack`
 - 수정한 파일: `frontend/src/components/dashboard/progress/progress-card-list.tsx`, `frontend/src/utils/date.ts`
 - 다음 단계: /teacher/progress/course, /teacher/progress/personal, /assistant/progress/course, /assistant/progress/personal 화면에서 표시 위치 확인
+## [2025-12-25 18:20] 학생-선생님 연결/반 배정 설계 갱신
+
+### Type
+DESIGN
+
+### Summary
+- 학생-선생님 요청/배정 흐름을 설계 문서에 반영
+- StudentCourseAssignment 기반 on/off 처리로 설계 전환
+
+### Details
+- 작업 사유: 학생 요청 기반 연결 후 선생님이 반 배치하는 새 플로우 반영
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/design/final-entity-spec.md`, `docs/design/full-erd.md`
+- 다음 단계: `docs/requirement/v1.4.md`와 `docs/spec/v1.4.md` 갱신 후 TODO 정렬
+- MCP: 없음

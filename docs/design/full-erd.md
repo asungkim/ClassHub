@@ -30,13 +30,16 @@ erDiagram
     MEMBER ||--o{ COURSE : teaches
 
     %% ========================================
-    %% 학생 등록 프로세스
+    %% 학생-선생님 연결 & 반 배정
     %% ========================================
-    MEMBER ||--o{ STUDENT_ENROLLMENT_REQUEST : requests
-    COURSE ||--o{ STUDENT_ENROLLMENT_REQUEST : receives
+    MEMBER ||--o{ STUDENT_TEACHER_REQUEST : student
+    MEMBER ||--o{ STUDENT_TEACHER_REQUEST : teacher
 
-    MEMBER }|--o{ STUDENT_COURSE_ENROLLMENT : student
-    COURSE }|--o{ STUDENT_COURSE_ENROLLMENT : course
+    MEMBER }|--o{ TEACHER_STUDENT_ASSIGNMENT : teacher
+    MEMBER }|--o{ TEACHER_STUDENT_ASSIGNMENT : student
+
+    MEMBER }|--o{ STUDENT_COURSE_ASSIGNMENT : student
+    COURSE }|--o{ STUDENT_COURSE_ASSIGNMENT : course
 
     %% ========================================
     %% 학생 기록 (반별 추가 정보)
@@ -176,26 +179,38 @@ erDiagram
         %% schedules = ElementCollection(CourseSchedule)
     }
 
-    STUDENT_ENROLLMENT_REQUEST {
+    STUDENT_TEACHER_REQUEST {
         uuid id PK
         uuid studentMemberId FK
-        uuid courseId FK
+        uuid teacherMemberId FK
         string status
         text message
         uuid processedByMemberId FK
         datetime processedAt
         datetime createdAt
         datetime updatedAt
-        %% status = PENDING,APPROVED,REJECTED
+        %% status = PENDING,APPROVED,REJECTED,CANCELED
     }
 
-    STUDENT_COURSE_ENROLLMENT {
+    TEACHER_STUDENT_ASSIGNMENT {
+        uuid id PK
+        uuid teacherMemberId FK
+        uuid studentMemberId FK
+        datetime createdAt
+        datetime updatedAt
+        datetime deletedAt
+        %% UNIQUE(teacherMemberId, studentMemberId)
+    }
+
+    STUDENT_COURSE_ASSIGNMENT {
         uuid id PK
         uuid studentMemberId FK
         uuid courseId FK
-        datetime enrolledAt
+        uuid assignedByMemberId FK
+        datetime assignedAt
         datetime createdAt
         datetime updatedAt
+        datetime deletedAt
         %% UNIQUE(studentMemberId, courseId)
     }
 
@@ -359,7 +374,8 @@ erDiagram
 
 - Member(TEACHER) ↔ Branch via TeacherBranchAssignment
 - Member(TEACHER) ↔ Member(ASSISTANT) via TeacherAssistantAssignment
-- Member(STUDENT) ↔ Course via StudentCourseEnrollment
+- Member(TEACHER) ↔ Member(STUDENT) via TeacherStudentAssignment
+- Member(STUDENT) ↔ Course via StudentCourseAssignment
 
 ### 논리 관계
 
@@ -380,7 +396,7 @@ erDiagram
 - `course.branch_id` (조회)
 - `course.teacher_member_id` (조회)
 - `student_course_record.(student_member_id, course_id)` (UK)
-- `student_course_enrollment.(student_member_id, course_id)` (UK)
+- `student_course_assignment.(student_member_id, course_id)` (UK)
 - `clinic_slot.creator_member_id` (조회)
 - `clinic_session.session_type` (조회)
 - `clinic_session.creator_member_id` (조회)
@@ -389,6 +405,7 @@ erDiagram
 - `notice_read.(notice_id, assistant_member_id)` (UK)
 - `work_log.(assistant_member_id, date)` (UK)
 - `teacher_assistant_assignment.(teacher_member_id, assistant_member_id)` (UK)
+- `teacher_student_assignment.(teacher_member_id, student_member_id)` (UK)
 
 ### 추가 인덱스
 
@@ -399,11 +416,14 @@ erDiagram
 - `teacher_branch_assignment.branch_id` on (branchId)
 - `teacher_assistant_assignment.teacher_member_id` on (teacherMemberId)
 - `teacher_assistant_assignment.assistant_member_id` on (assistantMemberId)
-- `student_enrollment_request.student_member_id` on (studentMemberId)
-- `student_enrollment_request.course_id` on (courseId)
-- `student_enrollment_request.status` on (status)
-- `student_course_enrollment.student_member_id` on (studentMemberId)
-- `student_course_enrollment.course_id` on (courseId)
+- `student_teacher_request.student_member_id` on (studentMemberId)
+- `student_teacher_request.teacher_member_id` on (teacherMemberId)
+- `student_teacher_request.status` on (status)
+- `teacher_student_assignment.teacher_member_id` on (teacherMemberId)
+- `teacher_student_assignment.student_member_id` on (studentMemberId)
+- `student_course_assignment.student_member_id` on (studentMemberId)
+- `student_course_assignment.course_id` on (courseId)
+- `student_course_assignment.assigned_by_member_id` on (assignedByMemberId)
 - `student_course_record.student_member_id` on (studentMemberId)
 - `student_course_record.course_id` on (courseId)
 - `course_progress.course_id` on (course_id)
@@ -442,10 +462,12 @@ erDiagram
 - Branch (deletedAt)
 - Member (deletedAt)
 - Course (deletedAt)
+- StudentCourseAssignment (deletedAt)
 - StudentCourseRecord (deletedAt)
 - ClinicSlot (deletedAt)
 - TeacherBranchAssignment (deletedAt)
 - TeacherAssistantAssignment (deletedAt)
+- TeacherStudentAssignment (deletedAt)
 
 **장점:**
 
@@ -464,7 +486,7 @@ erDiagram
 
 - PersonalProgress (삭제 시 실제 DELETE)
 - ClinicRecord (삭제 시 실제 DELETE)
-- StudentEnrollmentRequest (삭제 시 실제 DELETE)
+- StudentTeacherRequest (삭제 시 실제 DELETE)
 - ClinicAttendance (삭제 시 실제 DELETE)
 - Feedback (삭제 시 실제 DELETE)
 - Notice (삭제 시 실제 DELETE)

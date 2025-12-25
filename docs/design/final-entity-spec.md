@@ -221,42 +221,69 @@ enum BranchRole {
 
 ---
 
-## 5. 학생 등록 프로세스
+## 5. 학생-선생님 연결 & 반 배정
 
-### STUDENT_ENROLLMENT_REQUEST
+### STUDENT_TEACHER_REQUEST
 
 - studentMemberId (UUID, FK → Member, not null)
-- courseId (UUID, FK → Course, not null)
-- status (EnrollmentStatus, not null, default: PENDING) // PENDING, APPROVED, REJECTED
+- teacherMemberId (UUID, FK → Member, not null)
+- status (RequestStatus, not null, default: PENDING) // PENDING, APPROVED, REJECTED, CANCELED
 - message (Text, nullable)
 - processedByMemberId (UUID, FK → Member, nullable)
 - processedAt (LocalDateTime, nullable)
 
 **인덱스:**
 
-- `idx_enroll_req_student` on (studentMemberId)
-- `idx_enroll_req_course` on (courseId)
-- `idx_enroll_req_status` on (status)
+- `idx_str_student` on (studentMemberId)
+- `idx_str_teacher` on (teacherMemberId)
+- `idx_str_status` on (status)
 
 **비고:**
 
-- Course 담당 TEACHER 또는 연결된 ASSISTANT가 승인/거절 가능
-- 승인 시 StudentCourseEnrollment & StudentCourseRecord 자동 생성, 해당 요청의 processedByMemberId/processedAt 기록
+- 학생이 선생님에게 등록 요청을 생성한다.
+- 선생님이 승인하면 TeacherStudentAssignment가 생성된다.
 
-### STUDENT_COURSE_ENROLLMENT
+### TEACHER_STUDENT_ASSIGNMENT
 
+- teacherMemberId (UUID, FK → Member, not null)
 - studentMemberId (UUID, FK → Member, not null)
-- courseId (UUID, FK → Course, not null)
-- enrolledAt (LocalDateTime, not null)
 
 **제약조건:**
 
-- `uk_student_course_enrollment` unique on (studentMemberId, courseId)
+- `uk_teacher_student_assignment` unique on (teacherMemberId, studentMemberId)
 
 **인덱스:**
 
-- `idx_sce_student` on (studentMemberId)
-- `idx_sce_course` on (courseId)
+- `idx_tsa_teacher` on (teacherMemberId)
+- `idx_tsa_student` on (studentMemberId)
+
+**비고:**
+
+- Teacher-Student 연결 관계를 표현한다.
+- 활성 상태는 `deletedAt IS NULL`로 판단한다.
+
+### STUDENT_COURSE_ASSIGNMENT
+
+- studentMemberId (UUID, FK → Member, not null)
+- courseId (UUID, FK → Course, not null)
+- assignedByMemberId (UUID, FK → Member, not null) // 배치한 선생님
+- assignedAt (LocalDateTime, not null)
+
+**제약조건:**
+
+- `uk_student_course_assignment` unique on (studentMemberId, courseId)
+
+**인덱스:**
+
+- `idx_sca_student` on (studentMemberId)
+- `idx_sca_course` on (courseId)
+- `idx_sca_assigned_by` on (assignedByMemberId)
+
+**비고:**
+
+- 선생님이 학생을 반에 배치할 때 생성한다.
+- 휴원/재원은 `deletedAt`으로 on/off 한다.
+- off 상태이면 ClinicSlot 기반 ClinicAttendance 자동 생성 대상에서 제외된다.
 
 ### STUDENT_COURSE_RECORD
 
@@ -279,6 +306,7 @@ enum BranchRole {
 **비고:**
 
 - "선생님이 관리하는 반별 학생 기록" 의미
+- 활성/휴원 상태는 StudentCourseAssignment 기준이며, Record는 유지된다.
 - defaultClinicSlotId가 설정되어 있으면 해당 Slot 기반 ClinicSession 생성 시 자동으로 ClinicAttendance가 만들어짐
 - defaultClinicSlotId 저장/변경 시 slot.teacherMemberId/branchId가 course와 동일한지 검증한다.
 - 같은 학생은 동일 Slot을 여러 Course에 중복 선택할 수 없다.
@@ -581,7 +609,8 @@ enum FeedbackStatus {
 
 - Member(TEACHER) ↔ Branch via TeacherBranchAssignment
 - Member(TEACHER) ↔ Member(ASSISTANT) via TeacherAssistantAssignment
-- Member(STUDENT) ↔ Course via StudentCourseEnrollment
+- Member(TEACHER) ↔ Member(STUDENT) via TeacherStudentAssignment
+- Member(STUDENT) ↔ Course via StudentCourseAssignment
 
 ### 논리 관계
 
@@ -608,10 +637,12 @@ enum FeedbackStatus {
 - Branch (deletedAt)
 - Member (deletedAt)
 - Course (deletedAt)
+- StudentCourseAssignment (deletedAt)
 - StudentCourseRecord (deletedAt)
 - ClinicSlot (deletedAt)
 - TeacherBranchAssignment (deletedAt)
 - TeacherAssistantAssignment (deletedAt)
+- TeacherStudentAssignment (deletedAt)
 
 **장점:**
 
@@ -630,7 +661,7 @@ enum FeedbackStatus {
 
 - PersonalProgress (삭제 시 실제 DELETE)
 - ClinicRecord (삭제 시 실제 DELETE)
-- StudentEnrollmentRequest (삭제 시 실제 DELETE)
+- StudentTeacherRequest (삭제 시 실제 DELETE)
 - ClinicAttendance (삭제 시 실제 DELETE)
 - Feedback (삭제 시 실제 DELETE)
 - Notice (삭제 시 실제 DELETE)
