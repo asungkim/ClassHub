@@ -5490,3 +5490,48 @@ DESIGN
 - 수정한 파일: `docs/design/final-entity-spec.md`, `docs/design/full-erd.md`
 - 다음 단계: `docs/requirement/v1.4.md`와 `docs/spec/v1.4.md` 갱신 후 TODO 정렬
 - MCP: 없음
+## [2025-12-25 18:31] 요구사항 v1.5 문서 추가
+
+### Type
+DESIGN
+
+### Summary
+- 학생-선생님 연결 요청 및 반 배치 흐름을 Requirement v1.5에 반영
+- 학생 검색/배치/휴원 처리 기준을 요구사항으로 정리
+
+### Details
+- 작업 사유: 기존 Course 신청 기반 흐름을 Teacher 연결/배치 흐름으로 전환
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/requirement/v1.5.md`
+- 다음 단계: `docs/spec/v1.5.md` 작성 및 TODO 정렬
+- MCP: 없음
+## [2025-12-25 19:59] 스펙 v1.5 문서 추가
+
+### Type
+DESIGN
+
+### Summary
+- 학생-선생님 연결 요청/반 배치 흐름을 Spec v1.5로 구체화
+- 관련 API/권한/상태 전환을 새 엔티티 기준으로 갱신
+
+### Details
+- 작업 사유: StudentTeacherRequest/TeacherStudentAssignment/StudentCourseAssignment 도입에 따른 스펙 재정의
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: TODO v1.10 재정렬 및 구현 PLAN 작성
+- MCP: 없음
+## [2025-12-25 20:09] 스펙 v1.5 상태/폐강 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 목록 상태 정의(배치 전/재원/휴원/전체)와 폐강 처리 규칙을 보강
+- 휴원 조회/클리닉 차단 범위 규칙 추가
+
+### Details
+- 작업 사유: TeacherStudentAssignment/StudentCourseAssignment 상태 정의 명확화
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: TODO v1.10 재정렬 및 구현 PLAN 작성
+- MCP: 없음
