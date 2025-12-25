@@ -5802,3 +5802,54 @@ BEHAVIORAL
 - 영향받은 테스트: 미실행
 - 수정한 파일: `frontend/src/app/(dashboard)/student/teachers/page.tsx`, `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
 - 다음 단계: 수동 QA(검색 입력 중 포커스 유지 확인)
+## [2025-12-26 01:39] 선생님 요청/학생관리/반배치 API 설계
+
+### Type
+DESIGN
+
+### Summary
+- TeacherStudentRequest 처리, 학생 목록/상세, 반 배치, 휴원/재원 API 설계 문서 작성
+
+### Details
+- 작업 사유: Teacher/Assistant 플로우 구현을 위한 백엔드 설계 확정 필요
+- 영향받은 테스트: 미실행
+- 수정한 파일: `docs/plan/backend/season2/teacher-student-management_plan.md`
+- 다음 단계: 설계 리뷰 및 승인, 이후 TDD 구현
+## [2025-12-26 01:42] 개발 순서 3단계 분리
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant 기능 구현 순서를 UI 흐름 기반 3단계로 재정렬
+
+### Details
+- 작업 사유: 범위가 커서 단계별로 개발/검증하기 위함
+- 영향받은 테스트: 미실행
+- 수정한 파일: `docs/plan/backend/season2/teacher-student-management_plan.md`
+- 다음 단계: 단계별 설계 리뷰 및 승인
+## [2025-12-26 01:54] 선생님 요청 처리 API(목록/승인/거절) 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/Assistant 요청 목록 조회 및 승인/거절 API 추가
+- 요청 응답에 학생 요약 정보 포함
+- 요청 검색용 리포지토리 쿼리 확장
+
+### Details
+- 작업 사유: 0~1단계(요청 처리) 범위 구현
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.enrollment.repository.StudentTeacherRequestRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.enrollment.application.StudentTeacherRequestServiceTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.enrollment.web.StudentTeacherRequestControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentTeacherRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/StudentTeacherRequestResponse.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentTeacherRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentTeacherRequestControllerTest.java`
+- 다음 단계: 반 배치 처리(2단계) 설계/구현

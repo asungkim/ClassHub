@@ -5,6 +5,8 @@ import com.classhub.domain.enrollment.dto.request.StudentTeacherRequestCreateReq
 import com.classhub.domain.enrollment.dto.response.StudentTeacherRequestResponse;
 import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.model.MemberRole;
+import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
@@ -45,20 +47,21 @@ public class StudentTeacherRequestController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('STUDENT')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','TEACHER','ASSISTANT')")
     @Operation(summary = "학생 선생님 요청 목록 조회")
-    public RsData<PageResponse<StudentTeacherRequestResponse>> getMyRequests(
+    public RsData<PageResponse<StudentTeacherRequestResponse>> getRequests(
             @AuthenticationPrincipal MemberPrincipal principal,
             @RequestParam(name = "status", required = false) Set<TeacherStudentRequestStatus> statuses,
+            @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size
     ) {
-        PageResponse<StudentTeacherRequestResponse> response = requestService.getMyRequests(
-                principal.id(),
-                statuses,
-                page,
-                size
-        );
+        PageResponse<StudentTeacherRequestResponse> response = switch (principal.role()) {
+            case STUDENT -> requestService.getMyRequests(principal.id(), statuses, page, size);
+            case TEACHER -> requestService.getRequestsForTeacher(principal.id(), statuses, keyword, page, size);
+            case ASSISTANT -> requestService.getRequestsForAssistant(principal.id(), statuses, keyword, page, size);
+            default -> throw new BusinessException(RsCode.FORBIDDEN);
+        };
         return RsData.from(RsCode.SUCCESS, response);
     }
 
@@ -70,6 +73,28 @@ public class StudentTeacherRequestController {
             @PathVariable UUID requestId
     ) {
         StudentTeacherRequestResponse response = requestService.cancelRequest(principal.id(), requestId);
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @PatchMapping("/{requestId}/approve")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
+    @Operation(summary = "선생님 요청 승인")
+    public RsData<StudentTeacherRequestResponse> approveRequest(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID requestId
+    ) {
+        StudentTeacherRequestResponse response = requestService.approveRequest(principal.id(), requestId);
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @PatchMapping("/{requestId}/reject")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
+    @Operation(summary = "선생님 요청 거절")
+    public RsData<StudentTeacherRequestResponse> rejectRequest(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID requestId
+    ) {
+        StudentTeacherRequestResponse response = requestService.rejectRequest(principal.id(), requestId);
         return RsData.from(RsCode.SUCCESS, response);
     }
 }

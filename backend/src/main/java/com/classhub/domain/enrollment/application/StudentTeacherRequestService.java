@@ -1,6 +1,9 @@
 package com.classhub.domain.enrollment.application;
 
+import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.model.TeacherBranchAssignment;
+import com.classhub.domain.assignment.model.TeacherStudentAssignment;
+import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
 import com.classhub.domain.company.branch.model.Branch;
@@ -17,10 +20,16 @@ import com.classhub.domain.member.dto.response.TeacherSearchResponse;
 import com.classhub.domain.member.dto.response.TeacherSearchResponse.TeacherBranchSummary;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
+import com.classhub.domain.member.model.StudentInfo;
+import com.classhub.domain.member.repository.StudentInfoRepository;
+import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -52,6 +61,8 @@ public class StudentTeacherRequestService {
     private final StudentTeacherRequestRepository requestRepository;
     private final TeacherStudentAssignmentRepository teacherStudentAssignmentRepository;
     private final MemberRepository memberRepository;
+    private final StudentInfoRepository studentInfoRepository;
+    private final TeacherAssistantAssignmentRepository assistantAssignmentRepository;
     private final TeacherBranchAssignmentRepository teacherBranchAssignmentRepository;
     private final BranchRepository branchRepository;
     private final CompanyRepository companyRepository;
@@ -88,7 +99,8 @@ public class StudentTeacherRequestService {
                 .build();
         StudentTeacherRequest saved = requestRepository.save(entity);
         TeacherSearchResponse teacherResponse = buildTeacherResponse(teacher);
-        return toResponse(saved, teacherResponse);
+        StudentSummaryResponse studentSummary = buildStudentSummary(studentId);
+        return toResponse(saved, teacherResponse, studentSummary);
     }
 
     public PageResponse<StudentTeacherRequestResponse> getMyRequests(UUID studentId,
@@ -104,6 +116,7 @@ public class StudentTeacherRequestService {
         if (requestPage.isEmpty()) {
             return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
         }
+        StudentSummaryResponse studentSummary = buildStudentSummary(studentId);
         Map<UUID, TeacherSearchResponse> teacherMap = buildTeacherResponseMap(requestPage.getContent());
         List<StudentTeacherRequestResponse> content = requestPage.stream()
                 .map(request -> {
@@ -111,7 +124,7 @@ public class StudentTeacherRequestService {
                     if (teacher == null) {
                         throw new BusinessException(RsCode.MEMBER_NOT_FOUND);
                     }
-                    return toResponse(request, teacher);
+                    return toResponse(request, teacher, studentSummary);
                 })
                 .toList();
         Page<StudentTeacherRequestResponse> dtoPage = new PageImpl<>(content, pageable, requestPage.getTotalElements());
@@ -132,7 +145,73 @@ public class StudentTeacherRequestService {
         Member teacher = memberRepository.findById(request.getTeacherMemberId())
                 .orElseThrow(RsCode.MEMBER_NOT_FOUND::toException);
         TeacherSearchResponse teacherResponse = buildTeacherResponse(teacher);
-        return toResponse(request, teacherResponse);
+        StudentSummaryResponse studentSummary = buildStudentSummary(studentId);
+        return toResponse(request, teacherResponse, studentSummary);
+    }
+
+    public PageResponse<StudentTeacherRequestResponse> getRequestsForTeacher(UUID teacherId,
+                                                                             Set<TeacherStudentRequestStatus> statuses,
+                                                                             String keyword,
+                                                                             int page,
+                                                                             int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<StudentTeacherRequest> requestPage = requestRepository.searchRequestsForTeacher(
+                teacherId,
+                resolveStatuses(statuses),
+                normalizeKeyword(keyword),
+                pageable);
+        return toPageResponse(requestPage, pageable);
+    }
+
+    public PageResponse<StudentTeacherRequestResponse> getRequestsForAssistant(UUID assistantId,
+                                                                               Set<TeacherStudentRequestStatus> statuses,
+                                                                               String keyword,
+                                                                               int page,
+                                                                               int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        List<TeacherAssistantAssignment> assignments = assistantAssignmentRepository
+                .findByAssistantMemberIdAndDeletedAtIsNull(assistantId);
+        if (assignments.isEmpty()) {
+            return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
+        }
+        List<UUID> teacherIds = assignments.stream()
+                .map(TeacherAssistantAssignment::getTeacherMemberId)
+                .distinct()
+                .toList();
+        Page<StudentTeacherRequest> requestPage = requestRepository.searchRequestsForTeachers(
+                teacherIds,
+                resolveStatuses(statuses),
+                normalizeKeyword(keyword),
+                pageable);
+        return toPageResponse(requestPage, pageable);
+    }
+
+    @Transactional
+    public StudentTeacherRequestResponse approveRequest(UUID processorId, UUID requestId) {
+        StudentTeacherRequest request = loadRequest(requestId);
+        ensurePending(request);
+        ensurePermission(processorId, request.getTeacherMemberId());
+        boolean alreadyAssigned = teacherStudentAssignmentRepository
+                .existsByTeacherMemberIdAndStudentMemberIdAndDeletedAtIsNull(
+                        request.getTeacherMemberId(),
+                        request.getStudentMemberId()
+                );
+        if (alreadyAssigned) {
+            throw new BusinessException(RsCode.TEACHER_STUDENT_ALREADY_ASSIGNED);
+        }
+        request.approve(processorId, LocalDateTime.now());
+        teacherStudentAssignmentRepository.save(
+                TeacherStudentAssignment.create(request.getTeacherMemberId(), request.getStudentMemberId()));
+        return buildResponseWithSummary(request);
+    }
+
+    @Transactional
+    public StudentTeacherRequestResponse rejectRequest(UUID processorId, UUID requestId) {
+        StudentTeacherRequest request = loadRequest(requestId);
+        ensurePending(request);
+        ensurePermission(processorId, request.getTeacherMemberId());
+        request.reject(processorId, LocalDateTime.now());
+        return buildResponseWithSummary(request);
     }
 
     private TeacherSearchResponse buildTeacherResponse(Member teacher) {
@@ -239,16 +318,144 @@ public class StudentTeacherRequestService {
     }
 
     private StudentTeacherRequestResponse toResponse(StudentTeacherRequest request,
-                                                     TeacherSearchResponse teacher) {
+                                                     TeacherSearchResponse teacher,
+                                                     StudentSummaryResponse student) {
         return new StudentTeacherRequestResponse(
                 request.getId(),
                 teacher,
+                student,
                 request.getStatus(),
                 request.getMessage(),
                 request.getProcessedAt(),
                 request.getProcessedByMemberId(),
                 request.getCreatedAt()
         );
+    }
+
+    private PageResponse<StudentTeacherRequestResponse> toPageResponse(Page<StudentTeacherRequest> requestPage,
+                                                                       PageRequest pageable) {
+        if (requestPage.isEmpty()) {
+            Page<StudentTeacherRequestResponse> empty = new PageImpl<>(List.of(), pageable, 0);
+            return PageResponse.from(empty);
+        }
+        Map<UUID, TeacherSearchResponse> teacherMap = buildTeacherResponseMap(requestPage.getContent());
+        Map<UUID, StudentSummaryResponse> studentMap = buildStudentSummaryMap(requestPage.getContent());
+        List<StudentTeacherRequestResponse> content = requestPage.getContent().stream()
+                .map(request -> {
+                    TeacherSearchResponse teacher = teacherMap.get(request.getTeacherMemberId());
+                    StudentSummaryResponse student = studentMap.get(request.getStudentMemberId());
+                    if (teacher == null) {
+                        throw new BusinessException(RsCode.MEMBER_NOT_FOUND);
+                    }
+                    if (student == null) {
+                        throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
+                    }
+                    return toResponse(request, teacher, student);
+                })
+                .toList();
+        Page<StudentTeacherRequestResponse> dtoPage = new PageImpl<>(
+                content,
+                pageable,
+                requestPage.getTotalElements());
+        return PageResponse.from(dtoPage);
+    }
+
+    private StudentTeacherRequestResponse buildResponseWithSummary(StudentTeacherRequest request) {
+        Member teacher = memberRepository.findById(request.getTeacherMemberId())
+                .orElseThrow(RsCode.MEMBER_NOT_FOUND::toException);
+        TeacherSearchResponse teacherResponse = buildTeacherResponse(teacher);
+        StudentSummaryResponse studentSummary = buildStudentSummary(request.getStudentMemberId());
+        return toResponse(request, teacherResponse, studentSummary);
+    }
+
+    private StudentSummaryResponse buildStudentSummary(UUID studentId) {
+        Member member = memberRepository.findById(studentId)
+                .orElseThrow(RsCode.MEMBER_NOT_FOUND::toException);
+        StudentInfo info = studentInfoRepository.findByMemberId(studentId)
+                .orElseThrow(RsCode.STUDENT_PROFILE_NOT_FOUND::toException);
+        return toStudentSummary(member, info);
+    }
+
+    private Map<UUID, StudentSummaryResponse> buildStudentSummaryMap(List<StudentTeacherRequest> requests) {
+        List<UUID> studentIds = requests.stream()
+                .map(StudentTeacherRequest::getStudentMemberId)
+                .distinct()
+                .toList();
+        if (studentIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, Member> memberMap = memberRepository.findAllById(studentIds).stream()
+                .collect(Collectors.toMap(Member::getId, member -> member));
+        if (memberMap.size() < studentIds.size()) {
+            throw new BusinessException(RsCode.MEMBER_NOT_FOUND);
+        }
+        Map<UUID, StudentInfo> infoMap = studentInfoRepository.findByMemberIdIn(studentIds).stream()
+                .collect(Collectors.toMap(StudentInfo::getMemberId, info -> info));
+        if (infoMap.size() < studentIds.size()) {
+            throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
+        }
+        return studentIds.stream()
+                .collect(Collectors.toMap(
+                        studentId -> studentId,
+                        studentId -> toStudentSummary(memberMap.get(studentId), infoMap.get(studentId))));
+    }
+
+    private StudentSummaryResponse toStudentSummary(Member member, StudentInfo info) {
+        return StudentSummaryResponse.builder()
+                .memberId(member.getId())
+                .name(member.getName())
+                .email(member.getEmail())
+                .phoneNumber(member.getPhoneNumber())
+                .schoolName(info.getSchoolName())
+                .grade(info.getGrade().name())
+                .birthDate(info.getBirthDate())
+                .age(calculateAge(info.getBirthDate()))
+                .parentPhone(info.getParentPhone())
+                .build();
+    }
+
+    private Integer calculateAge(LocalDate birthDate) {
+        if (birthDate == null) {
+            return null;
+        }
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
+    private StudentTeacherRequest loadRequest(UUID requestId) {
+        return requestRepository.findById(requestId)
+                .orElseThrow(RsCode.TEACHER_STUDENT_REQUEST_NOT_FOUND::toException);
+    }
+
+    private void ensurePermission(UUID processorId, UUID teacherId) {
+        if (teacherId.equals(processorId)) {
+            return;
+        }
+        boolean allowed = assistantAssignmentRepository
+                .findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(teacherId, processorId)
+                .isPresent();
+        if (!allowed) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+    }
+
+    private void ensurePending(StudentTeacherRequest request) {
+        if (request.getStatus() != TeacherStudentRequestStatus.PENDING) {
+            throw new BusinessException(RsCode.INVALID_TEACHER_STUDENT_REQUEST_STATE);
+        }
+    }
+
+    private Set<TeacherStudentRequestStatus> resolveStatuses(Set<TeacherStudentRequestStatus> statuses) {
+        return (statuses == null || statuses.isEmpty())
+                ? EnumSet.of(TeacherStudentRequestStatus.PENDING)
+                : EnumSet.copyOf(statuses);
+    }
+
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null) {
+            return null;
+        }
+        String trimmed = keyword.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String trimMessage(String message) {
