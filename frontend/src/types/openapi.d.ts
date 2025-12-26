@@ -879,6 +879,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/students/me/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 수업 목록 조회 */
+        get: operations["getMyCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/students/me/clinic-contexts": {
         parameters: {
             query?: never;
@@ -1968,6 +1985,35 @@ export interface components {
             courseProgress?: components["schemas"]["CourseProgressEvent"][];
             personalProgress?: components["schemas"]["PersonalProgressEvent"][];
             clinicEvents?: components["schemas"]["ClinicEvent"][];
+        };
+        PageResponseStudentMyCourseResponse: {
+            content?: components["schemas"]["StudentMyCourseResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseStudentMyCourseResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseStudentMyCourseResponse"];
+        };
+        StudentMyCourseResponse: {
+            /** Format: uuid */
+            assignmentId?: string;
+            /** Format: date-time */
+            assignedAt?: string;
+            assignmentActive?: boolean;
+            /** Format: uuid */
+            recordId?: string;
+            course?: components["schemas"]["CourseResponse"];
         };
         RsDataListStudentClinicContextResponse: {
             /** Format: int32 */
@@ -3794,6 +3840,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataStudentCalendarResponse"];
+                };
+            };
+        };
+    };
+    getMyCourses: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseStudentMyCourseResponse"];
                 };
             };
         };

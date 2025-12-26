@@ -6501,3 +6501,83 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
   - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseManagementControllerTest.java`
 - 다음 단계: 필요 시 백엔드 테스트 실행
+## [2025-12-26 18:41] Student 내 수업(Assignment 기반) 설계
+
+### Type
+DESIGN
+
+### Summary
+- StudentCourseAssignment 기반으로 학생 수업 목록 API를 재설계
+
+### Details
+- 작업 사유: Enrollment 제거 이후 학생 수업 목록 재구성 필요
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `docs/plan/backend/season2/student-my-courses_plan.md`
+- 다음 단계: 설계 승인 후 TDD로 API 구현 및 프론트 갱신
+## [2025-12-26 18:50] Student 내 수업 설계 보정
+
+### Type
+DESIGN
+
+### Summary
+- 학생 수업 목록 API에서 휴원/재원 모두 반환하도록 설계 보정
+
+### Details
+- 작업 사유: 프론트에서 on/off 표시로 처리하기로 결정
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `docs/plan/backend/season2/student-my-courses_plan.md`
+- 다음 단계: 백엔드 TDD 구현 및 프론트 연동
+## [2025-12-26 19:05] Student 내 수업 목록 API 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- StudentCourseAssignment 기반 학생 내 수업 목록 조회 API 추가
+- 휴원/재원 상태와 수업 기록 연결 정보를 함께 반환
+
+### Details
+- 작업 사유: Enrollment 제거 이후 학생 내 수업 목록 재구성
+- 영향받은 테스트: `StudentCourseQueryServiceTest`, `StudentCourseControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseQueryService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentMyCourseResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseQueryServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+- 테스트: `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.studentcourse.application.StudentCourseQueryServiceTest" --tests "com.classhub.domain.studentcourse.web.StudentCourseControllerTest"`
+- 다음 단계: 프론트에서 신규 목록 API 연동
+## [2025-12-26 19:22] 학생 내 수업 화면 API 연동 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 내 수업 페이지를 StudentMyCourseResponse 기반으로 갱신
+- 검색 입력 제거하고 목록/새로고침 중심 UI로 단순화
+
+### Details
+- 작업 사유: /students/me/courses 응답 스키마 변경 반영
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 프론트 타입 빌드 및 화면 수동 확인
+## [2025-12-26 19:34] 학생 내 수업 진행 상태 표시 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 내 수업 카드에 진행 예정/진행 중/종료 배지 표시 추가
+
+### Details
+- 작업 사유: 수업 진행 상태를 재원/휴원 옆에 함께 노출
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+- 다음 단계: 프론트 빌드 및 화면 확인

@@ -55,6 +55,7 @@ export type StudentCourseAssignmentCreateRequest = components["schemas"]["Studen
 export type StudentCourseAssignmentResponse = components["schemas"]["StudentCourseAssignmentResponse"];
 export type StudentCourseRecordUpdateRequest = components["schemas"]["StudentCourseRecordUpdateRequest"];
 export type StudentCourseResponse = components["schemas"]["StudentCourseResponse"];
+export type StudentMyCourseResponse = components["schemas"]["StudentMyCourseResponse"];
 export type StudentCoursePage = components["schemas"]["PageResponseStudentCourseResponse"];
 export type StudentCourseStatusFilter = "ACTIVE" | "INACTIVE" | "ALL";
 export type StudentSummaryResponse = components["schemas"]["StudentSummaryResponse"];

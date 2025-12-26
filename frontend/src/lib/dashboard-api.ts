@@ -23,7 +23,7 @@ import type {
   StudentCourseAssignmentResponse,
   StudentCourseListItemResponse,
   StudentCourseRecordUpdateRequest,
-  StudentCourseResponse,
+  StudentMyCourseResponse,
   StudentCourseStatusFilter,
   StudentSummaryResponse,
   TeacherStudentDetailResponse,
@@ -698,15 +698,13 @@ export async function deactivateStudentCourseAssignment(assignmentId: string) {
 }
 
 export async function fetchStudentMyCourses(params: {
-  keyword?: string;
   page: number;
   size?: number;
-}): Promise<ListResult<StudentCourseResponse>> {
-  const { keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+}): Promise<ListResult<StudentMyCourseResponse>> {
+  const { page, size = DASHBOARD_PAGE_SIZE } = params;
   const response = await api.GET("/api/v1/students/me/courses", {
     params: {
       query: {
-        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
         page,
         size
       }
@@ -719,7 +717,7 @@ export async function fetchStudentMyCourses(params: {
 
   const pageData = response.data.data;
   return {
-    items: (pageData?.content ?? []) as StudentCourseResponse[],
+    items: (pageData?.content ?? []) as StudentMyCourseResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
 }

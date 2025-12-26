@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
-import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/components/ui/toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { InlineError } from "@/components/ui/inline-error";
-import type { StudentCourseResponse } from "@/types/dashboard";
+import type { StudentMyCourseResponse } from "@/types/dashboard";
 import {
   DASHBOARD_PAGE_SIZE,
   fetchStudentMyCourses
@@ -32,7 +30,7 @@ function StudentMyCoursesContent() {
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Student · My Courses</p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">내 수업</h1>
         <p className="mt-2 text-sm text-slate-500">
-          승인된 수업을 한 번에 확인할 수 있습니다. 아직 수업이 없다면 선생님 관리에서 연결 요청을 보내 주세요.
+          연결된 수업을 한 번에 확인할 수 있습니다. 아직 수업이 없다면 선생님 관리에서 연결 요청을 보내 주세요.
         </p>
       </header>
       <CoursesTab />
@@ -42,10 +40,8 @@ function StudentMyCoursesContent() {
 
 function CoursesTab() {
   const { showToast } = useToast();
-  const [keywordInput, setKeywordInput] = useState("");
-  const keyword = useDebounce(keywordInput.trim(), 300);
   const [page, setPage] = useState(0);
-  const [courses, setCourses] = useState<StudentCourseResponse[]>([]);
+  const [courses, setCourses] = useState<StudentMyCourseResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +51,6 @@ function CoursesTab() {
     setError(null);
     try {
       const result = await fetchStudentMyCourses({
-        keyword: keyword || undefined,
         page,
         size: DASHBOARD_PAGE_SIZE
       });
@@ -68,7 +63,7 @@ function CoursesTab() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, page, showToast]);
+  }, [page, showToast]);
 
   useEffect(() => {
     void loadCourses();
@@ -76,41 +71,18 @@ function CoursesTab() {
 
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
 
-  const resetFilters = () => {
-    setKeywordInput("");
-    setPage(0);
-  };
-
   return (
     <div className="space-y-6">
       <Card
-        title="수업 검색"
-        description="승인된 수업 중 이름으로 빠르게 찾을 수 있습니다. 필터가 비어 있으면 전체를 보여줍니다."
+        title="연결된 수업"
+        description="현재 연결된 Course 목록입니다. 휴원 상태도 함께 표시됩니다."
+        actions={
+          <Button variant="secondary" onClick={() => void loadCourses()} disabled={loading}>
+            새로고침
+          </Button>
+        }
       >
-        <div className="flex flex-col gap-4 md:flex-row md:items-end">
-          <Field label="반 이름 검색" className="md:flex-1">
-            <Input
-              placeholder="예: 수학 심화반"
-              value={keywordInput}
-              onChange={(event) => {
-                setKeywordInput(event.target.value);
-                setPage(0);
-              }}
-            />
-          </Field>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={resetFilters} disabled={loading}>
-              초기화
-            </Button>
-            <Button onClick={() => void loadCourses()} disabled={loading}>
-              새로고침
-            </Button>
-          </div>
-        </div>
-        {error && <InlineError className="mt-4" message={error} />}
-      </Card>
-
-      <Card title="연결된 수업" description="승인되어 수강 중인 Course 목록입니다.">
+        {error && <InlineError className="mb-4" message={error} />}
         {loading && <p className="py-12 text-center text-sm text-slate-500">수업을 불러오는 중입니다...</p>}
         {!loading && courses.length === 0 && (
           <div className="py-12">
@@ -127,9 +99,11 @@ function CoursesTab() {
         )}
         {!loading && courses.length > 0 && (
           <div className="grid gap-4 lg:grid-cols-2">
-            {courses.map((enrollment, index) => {
-              const course = enrollment.course;
-              const key = enrollment.enrollmentId ?? `course-${index}`;
+            {courses.map((assignment, index) => {
+              const course = assignment.course;
+              const assignmentActive = assignment.assignmentActive ?? true;
+              const progressStatus = getCourseProgressStatus(course?.startDate, course?.endDate);
+              const key = assignment.assignmentId ?? `course-${index}`;
               return (
                 <article
                   key={key}
@@ -142,12 +116,15 @@ function CoursesTab() {
                       </p>
                       <h3 className="mt-1 text-lg font-bold text-slate-900">{course?.name ?? "이름 없는 반"}</h3>
                       <p className="text-xs text-slate-500">
-                        등록일 {formatDate(enrollment.enrolledAt)} · ID {enrollment.enrollmentId ?? "-"}
+                        연결일 {formatDate(assignment.assignedAt)}
                       </p>
                     </div>
-                    <Badge variant={course?.active ? "success" : "secondary"}>
-                      {course?.active ? "진행 중" : "비활성"}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant={assignmentActive ? "success" : "secondary"}>
+                        {assignmentActive ? "재원" : "휴원"}
+                      </Badge>
+                      <Badge variant={progressStatus.variant}>{progressStatus.label}</Badge>
+                    </div>
                   </div>
                   <dl className="mt-4 space-y-2 text-sm text-slate-600">
                     <div className="flex gap-2">
@@ -213,21 +190,6 @@ function Pagination({
   );
 }
 
-type FieldProps = {
-  label: string;
-  className?: string;
-  children: ReactNode;
-};
-
-function Field({ label, className, children }: FieldProps) {
-  return (
-    <label className={`flex w-full flex-col gap-1 text-sm font-semibold text-slate-700 ${className ?? ""}`}>
-      <span>{label}</span>
-      {children}
-    </label>
-  );
-}
-
 function formatDate(value?: string | null) {
   if (!value) return "-";
   try {
@@ -252,19 +214,53 @@ function formatPeriod(start?: string | null, end?: string | null) {
   return `${fmt(start)} ~ ${fmt(end)}`;
 }
 
-function formatAcademyName(course?: StudentCourseResponse["course"]) {
+function getCourseProgressStatus(start?: string | null, end?: string | null) {
+  const today = startOfDay(new Date());
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end);
+
+  if (!startDate && !endDate) {
+    return { label: "일정 미정", variant: "secondary" as const };
+  }
+  if (startDate && today < startDate) {
+    return { label: "진행 예정", variant: "default" as const };
+  }
+  if (endDate && today > endDate) {
+    return { label: "종료", variant: "secondary" as const };
+  }
+  return { label: "진행 중", variant: "success" as const };
+}
+
+function parseDateOnly(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function startOfDay(date: Date) {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function formatAcademyName(course?: StudentMyCourseResponse["course"]) {
   if (!course) return "학원 미지정";
   const company = course.companyName ?? "학원";
   const branch = course.branchName ?? "";
   return `${company} ${branch}`.trim();
 }
 
-function courseScheduleSummary(course?: StudentCourseResponse["course"]) {
+function courseScheduleSummary(course?: StudentMyCourseResponse["course"]) {
   if (!course?.schedules || course.schedules.length === 0) {
     return "등록된 시간이 없습니다.";
   }
   return course.schedules
-    .map((schedule) => `${weekdayLabel(schedule.dayOfWeek)} ${schedule.startTime ?? ""}~${schedule.endTime ?? ""}`)
+    .map((schedule: { dayOfWeek?: string | null; startTime?: string | null; endTime?: string | null }) =>
+      `${weekdayLabel(schedule.dayOfWeek)} ${schedule.startTime ?? ""}~${schedule.endTime ?? ""}`
+    )
     .join(", ");
 }
 

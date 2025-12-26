@@ -17,6 +17,7 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/text-field";
 import { TimeSelect } from "@/components/ui/time-select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
@@ -440,11 +441,10 @@ export default function AssistantClinicSessionsPage() {
 
       <Modal open={isEmergencyOpen} onClose={closeEmergencyModal} title="긴급 세션 생성" size="sm">
         <div className="space-y-4">
-          <TextField
+          <DatePicker
             label="날짜"
-            type="date"
             value={emergencyForm.date}
-            onChange={(event) => setEmergencyForm((prev) => ({ ...prev, date: event.target.value }))}
+            onChange={(date) => setEmergencyForm((prev) => ({ ...prev, date }))}
           />
           <TimeSelect
             label="시작 시간"

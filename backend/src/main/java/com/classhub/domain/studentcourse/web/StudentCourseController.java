@@ -2,9 +2,12 @@ package com.classhub.domain.studentcourse.web;
 
 import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.studentcourse.application.StudentCourseQueryService;
 import com.classhub.domain.studentcourse.dto.request.StudentDefaultClinicSlotRequest;
 import com.classhub.domain.studentcourse.dto.response.StudentDefaultClinicSlotResponse;
+import com.classhub.domain.studentcourse.dto.response.StudentMyCourseResponse;
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
+import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.response.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,10 +17,12 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,7 +31,20 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Student Course API", description = "학생 기본 클리닉 슬롯 관리 API")
 public class StudentCourseController {
 
+    private final StudentCourseQueryService queryService;
     private final ClinicDefaultSlotService clinicDefaultSlotService;
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('STUDENT')")
+    @Operation(summary = "학생 수업 목록 조회")
+    public RsData<PageResponse<StudentMyCourseResponse>> getMyCourses(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size
+    ) {
+        PageResponse<StudentMyCourseResponse> response = queryService.getMyCourses(principal.id(), page, size);
+        return RsData.from(RsCode.SUCCESS, response);
+    }
 
     @PatchMapping("/{courseId}/clinic-slot")
     @PreAuthorize("hasAuthority('STUDENT')")
