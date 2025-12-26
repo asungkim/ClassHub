@@ -1,6 +1,6 @@
-package com.classhub.domain.enrollment.dto.response;
+package com.classhub.domain.assignment.dto.response;
 
-import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
+import com.classhub.domain.assignment.model.TeacherStudentRequestStatus;
 import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.member.dto.response.TeacherSearchResponse;
 import java.time.LocalDateTime;

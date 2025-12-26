@@ -1,7 +1,7 @@
-package com.classhub.domain.enrollment.repository;
+package com.classhub.domain.assignment.repository;
 
-import com.classhub.domain.enrollment.model.StudentTeacherRequest;
-import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
+import com.classhub.domain.assignment.model.StudentTeacherRequest;
+import com.classhub.domain.assignment.model.TeacherStudentRequestStatus;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

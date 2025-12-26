@@ -1,9 +1,9 @@
-package com.classhub.domain.enrollment.web;
+package com.classhub.domain.assignment.web;
 
-import com.classhub.domain.enrollment.application.StudentTeacherRequestService;
-import com.classhub.domain.enrollment.dto.request.StudentTeacherRequestCreateRequest;
-import com.classhub.domain.enrollment.dto.response.StudentTeacherRequestResponse;
-import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
+import com.classhub.domain.assignment.application.StudentTeacherRequestService;
+import com.classhub.domain.assignment.dto.request.StudentTeacherRequestCreateRequest;
+import com.classhub.domain.assignment.dto.response.StudentTeacherRequestResponse;
+import com.classhub.domain.assignment.model.TeacherStudentRequestStatus;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.exception.BusinessException;

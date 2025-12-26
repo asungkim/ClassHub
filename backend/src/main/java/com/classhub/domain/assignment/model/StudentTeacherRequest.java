@@ -1,4 +1,4 @@
-package com.classhub.domain.enrollment.model;
+package com.classhub.domain.assignment.model;
 
 import com.classhub.global.entity.BaseEntity;
 import com.classhub.global.util.KstTime;

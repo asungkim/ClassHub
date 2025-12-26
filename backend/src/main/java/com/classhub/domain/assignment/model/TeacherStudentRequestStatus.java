@@ -1,4 +1,4 @@
-package com.classhub.domain.enrollment.model;
+package com.classhub.domain.assignment.model;
 
 public enum TeacherStudentRequestStatus {
     PENDING,

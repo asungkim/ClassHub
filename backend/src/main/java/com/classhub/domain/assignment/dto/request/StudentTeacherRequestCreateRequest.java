@@ -1,4 +1,4 @@
-package com.classhub.domain.enrollment.dto.request;
+package com.classhub.domain.assignment.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

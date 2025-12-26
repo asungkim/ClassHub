@@ -1,9 +1,9 @@
-package com.classhub.domain.enrollment.repository;
+package com.classhub.domain.assignment.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.classhub.domain.enrollment.model.StudentTeacherRequest;
-import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
+import com.classhub.domain.assignment.model.StudentTeacherRequest;
+import com.classhub.domain.assignment.model.TeacherStudentRequestStatus;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.model.StudentGrade;

@@ -59,7 +59,6 @@ const menuByRole: Record<Role, MenuItem[]> = {
         { href: "/assistant/clinics/attendance", label: "오늘의 출석부", icon: "🧾" }
       ]
     },
-    { href: "/assistant/worklogs", label: "근무 일지", icon: "📝" },
     {
       label: "진도 관리",
       icon: "📈",
@@ -86,8 +85,6 @@ const menuByRole: Record<Role, MenuItem[]> = {
   ],
   SUPER_ADMIN: [
     { href: "/admin", label: "대시보드", icon: "📊" },
-    { href: "/admin/courses", label: "반 관리", icon: "📚" },
-    { href: "/admin/student-enrollment-requests", label: "학생 요청 관리", icon: "📝" },
     { href: "/admin/companies", label: "학원 검증", icon: "🏢" },
     { href: "/admin/branches", label: "지점 검증", icon: "🏪" },
   ],

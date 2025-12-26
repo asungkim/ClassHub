@@ -6319,3 +6319,185 @@ STRUCTURAL
   - `backend/src/test/java/com/classhub/global/util/ScheduleLogFormatterTest.java`
   - `backend/src/test/java/com/classhub/global/util/RequestLogUtilsTest.java`
 - 다음 단계: 필요 시 backend 테스트 실행
+## [2025-12-26 18:05] Enrollment 레거시 제거 설계
+
+### Type
+DESIGN
+
+### Summary
+- StudentEnrollmentRequest/StudentCourseEnrollment 제거 및 패키지 정리 계획 수립
+
+### Details
+- 작업 사유: v1.5 전환 이후 레거시 Enrollment 흐름 제거 필요
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `docs/plan/backend/season2/enrollment-cleanup_plan.md`
+- 다음 단계: 계획 승인 후 구조 정리 작업 착수
+## [2025-12-26 18:24] Enrollment 레거시 제거 및 패키지 정리
+
+### Type
+STRUCTURAL
+
+### Summary
+- StudentEnrollmentRequest/StudentCourseEnrollment 도메인과 관련 API/테스트 제거
+- StudentTeacherRequest를 assignment 도메인으로 이동
+- studentcourse 관리 API를 record 상세/수정으로 축소
+
+### Details
+- 작업 사유: v1.5 전환에 따라 Enrollment 기반 흐름 제거 및 패키지 정리
+- 영향받은 테스트: 실행하지 않음
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseManagementController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java`
+  - `backend/src/main/java/com/classhub/domain/member/application/TeacherSearchService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/web/StudentTeacherRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/model/StudentTeacherRequest.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/model/TeacherStudentRequestStatus.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/request/StudentTeacherRequestCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/response/StudentTeacherRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseRecord.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentClinicContextController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentClinicContextQueryService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/request/StudentCourseRecordUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/request/StudentCourseAssignmentCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseAssignmentResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentDefaultClinicSlotResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/request/StudentDefaultClinicSlotRequest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/application/StudentTeacherRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/StudentTeacherRequestRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/web/StudentTeacherRequestControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/member/application/TeacherSearchServiceTest.java`
+- 삭제한 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentEnrollmentRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentEnrollmentApprovalController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/AdminStudentEnrollmentController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/request/StudentEnrollmentRequestCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/StudentEnrollmentRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/TeacherEnrollmentRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentEnrollmentRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/EnrollmentStatus.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentEnrollmentRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseEnrollment.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseQueryService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/StudentCourseStatusFilter.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseListItemResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentListItemResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseRecordSummaryResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentActiveCourseProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentStatusProjection.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentEnrollmentRequestControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentEnrollmentApprovalControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/AdminStudentEnrollmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseManagementControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseQueryServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepositoryTest.java`
+- 다음 단계: 필요 시 백엔드 테스트 실행 및 OpenAPI 재생성
+
+## [2025-12-26 18:24] TODO v1.11 프로젝트 다듬기 완료 표시
+
+### Type
+TODO_UPDATE
+
+### Summary
+- 프로젝트 다듬기 Epic의 3개 항목을 완료 처리
+
+### Details
+- 작업 사유: Enrollment 레거시 제거 및 패키지 정리 완료
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `docs/todo/v1.11.md`
+- 다음 단계: 다음 TODO Epic 진행
+## [2025-12-26 18:25] Enrollment 정리 로그 보정
+
+### Type
+STRUCTURAL
+
+### Summary
+- 이전 로그의 파일 목록을 실제 변경/삭제 항목으로 보정
+
+### Details
+- 작업 사유: 변경 파일 목록의 정확성 보장
+- 영향받은 테스트: 미실행
+- 수정한 파일: 없음 (로그 보정)
+- 실제 변경/삭제 파일:
+  - `backend/src/main/java/com/classhub/domain/member/application/TeacherSearchService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseManagementController.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/web/StudentTeacherRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/model/StudentTeacherRequest.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/model/TeacherStudentRequestStatus.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/request/StudentTeacherRequestCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/response/StudentTeacherRequestResponse.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/application/StudentTeacherRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/StudentTeacherRequestRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/web/StudentTeacherRequestControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/member/application/TeacherSearchServiceTest.java`
+  - `docs/todo/v1.11.md`
+  - `docs/plan/backend/season2/enrollment-cleanup_plan.md`
+- 실제 삭제 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/request/StudentEnrollmentRequestCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/request/StudentTeacherRequestCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/StudentEnrollmentRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/StudentTeacherRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/TeacherEnrollmentRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/EnrollmentStatus.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentEnrollmentRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentTeacherRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/TeacherStudentRequestStatus.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentEnrollmentRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/AdminStudentEnrollmentController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentEnrollmentApprovalController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentEnrollmentRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentTeacherRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseQueryService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/StudentCourseStatusFilter.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseListItemResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseRecordSummaryResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentStudentListItemResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseEnrollment.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentActiveCourseProjection.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentStatusProjection.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentEnrollmentRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentTeacherRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/AdminStudentEnrollmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentEnrollmentApprovalControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentEnrollmentRequestControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentTeacherRequestControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseManagementServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/application/StudentCourseQueryServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseEnrollmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseManagementControllerTest.java`
+- 다음 단계: 필요 시 백엔드 테스트 실행

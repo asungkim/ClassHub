@@ -1,4 +1,4 @@
-package com.classhub.domain.enrollment.application;
+package com.classhub.domain.assignment.application;
 
 import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.model.TeacherBranchAssignment;
@@ -6,16 +6,16 @@ import com.classhub.domain.assignment.model.TeacherStudentAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
+import com.classhub.domain.assignment.dto.request.StudentTeacherRequestCreateRequest;
+import com.classhub.domain.assignment.dto.response.StudentTeacherRequestResponse;
+import com.classhub.domain.assignment.model.StudentTeacherRequest;
+import com.classhub.domain.assignment.model.TeacherStudentRequestStatus;
+import com.classhub.domain.assignment.repository.StudentTeacherRequestRepository;
 import com.classhub.domain.company.branch.model.Branch;
 import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.model.Company;
 import com.classhub.domain.company.company.model.VerifiedStatus;
 import com.classhub.domain.company.company.repository.CompanyRepository;
-import com.classhub.domain.enrollment.dto.request.StudentTeacherRequestCreateRequest;
-import com.classhub.domain.enrollment.dto.response.StudentTeacherRequestResponse;
-import com.classhub.domain.enrollment.model.StudentTeacherRequest;
-import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
-import com.classhub.domain.enrollment.repository.StudentTeacherRequestRepository;
 import com.classhub.domain.member.dto.response.TeacherSearchResponse;
 import com.classhub.domain.member.dto.response.TeacherSearchResponse.TeacherBranchSummary;
 import com.classhub.domain.member.model.Member;

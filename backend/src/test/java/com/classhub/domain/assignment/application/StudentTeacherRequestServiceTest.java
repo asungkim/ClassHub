@@ -1,4 +1,4 @@
-package com.classhub.domain.enrollment.application;
+package com.classhub.domain.assignment.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -6,16 +6,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
-import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
+import com.classhub.domain.assignment.dto.request.StudentTeacherRequestCreateRequest;
+import com.classhub.domain.assignment.dto.response.StudentTeacherRequestResponse;
+import com.classhub.domain.assignment.model.StudentTeacherRequest;
+import com.classhub.domain.assignment.model.TeacherStudentRequestStatus;
+import com.classhub.domain.assignment.repository.StudentTeacherRequestRepository;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
+import com.classhub.domain.assignment.repository.TeacherBranchAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
 import com.classhub.domain.company.branch.repository.BranchRepository;
 import com.classhub.domain.company.company.repository.CompanyRepository;
-import com.classhub.domain.enrollment.dto.request.StudentTeacherRequestCreateRequest;
-import com.classhub.domain.enrollment.dto.response.StudentTeacherRequestResponse;
-import com.classhub.domain.enrollment.model.StudentTeacherRequest;
-import com.classhub.domain.enrollment.model.TeacherStudentRequestStatus;
-import com.classhub.domain.enrollment.repository.StudentTeacherRequestRepository;
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.model.StudentGrade;
