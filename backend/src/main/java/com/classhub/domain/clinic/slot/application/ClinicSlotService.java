@@ -17,10 +17,11 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 import com.classhub.global.validator.ScheduleTimeRangeValidator;
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -64,7 +65,7 @@ public class ClinicSlotService {
                 .build();
 
         ClinicSlot saved = clinicSlotRepository.save(slot);
-        clinicBatchService.generateRemainingSessionsForSlot(saved, LocalDateTime.now());
+        clinicBatchService.generateRemainingSessionsForSlot(saved, LocalDateTime.now(KstTime.clock()));
         return saved;
     }
 
@@ -128,12 +129,14 @@ public class ClinicSlotService {
             throw new BusinessException(RsCode.FORBIDDEN);
         }
 
+        Integer previousCapacity = slot.getDefaultCapacity();
         boolean scheduleChanged = isScheduleChanged(
                 slot,
                 request.dayOfWeek(),
                 request.startTime(),
                 request.endTime()
         );
+        boolean capacityChanged = !Objects.equals(previousCapacity, request.defaultCapacity());
 
         if (scheduleChanged) {
             ensureSlotNotOverlapping(
@@ -161,7 +164,8 @@ public class ClinicSlotService {
                 request.defaultCapacity()
         );
 
-        return clinicSlotRepository.save(slot);
+        ClinicSlot saved = clinicSlotRepository.save(slot);
+        return saved;
     }
 
     public void deleteSlot(UUID teacherId, UUID slotId) {

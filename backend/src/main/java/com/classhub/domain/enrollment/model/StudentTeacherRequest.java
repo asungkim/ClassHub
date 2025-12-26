@@ -1,6 +1,7 @@
 package com.classhub.domain.enrollment.model;
 
 import com.classhub.global.entity.BaseEntity;
+import com.classhub.global.util.KstTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -65,18 +66,18 @@ public class StudentTeacherRequest extends BaseEntity {
     public void approve(UUID processorId, LocalDateTime processedAt) {
         this.status = TeacherStudentRequestStatus.APPROVED;
         this.processedByMemberId = processorId;
-        this.processedAt = processedAt == null ? LocalDateTime.now() : processedAt;
+        this.processedAt = processedAt == null ? LocalDateTime.now(KstTime.clock()) : processedAt;
     }
 
     public void reject(UUID processorId, LocalDateTime processedAt) {
         this.status = TeacherStudentRequestStatus.REJECTED;
         this.processedByMemberId = processorId;
-        this.processedAt = processedAt == null ? LocalDateTime.now() : processedAt;
+        this.processedAt = processedAt == null ? LocalDateTime.now(KstTime.clock()) : processedAt;
     }
 
     public void cancel(UUID studentId, LocalDateTime canceledAt) {
         this.status = TeacherStudentRequestStatus.CANCELLED;
         this.processedByMemberId = studentId;
-        this.processedAt = canceledAt == null ? LocalDateTime.now() : canceledAt;
+        this.processedAt = canceledAt == null ? LocalDateTime.now(KstTime.clock()) : canceledAt;
     }
 }

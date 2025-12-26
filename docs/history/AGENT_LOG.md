@@ -6188,3 +6188,134 @@ BEHAVIORAL
   - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
   - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
 - 다음 단계: 실제 슬롯 생성/수정 화면에서 겹침 차단 동작 확인
+## [2025-12-26 14:47] 반/클리닉 시간표 변경 로깅 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반/클리닉 시간표 생성·수정 시 이전/신규 스케줄을 로그로 기록하도록 추가
+- 스케줄 로그 포맷터 유틸과 단위 테스트 추가
+
+### Details
+- 작업 사유: 시간표 값이 임의로 변경되는 문제의 원인 추적을 위해 변경 이력 로그 확보
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.global.util.ScheduleLogFormatterTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/global/util/ScheduleLogFormatter.java`
+  - `backend/src/test/java/com/classhub/global/util/ScheduleLogFormatterTest.java`
+- 다음 단계: 운영 로그에서 course/clinic slot 스케줄 변경 발생 시점 및 요청 주체 확인
+## [2025-12-26 15:42] 반/클리닉 스케줄 요청 로깅 강화
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반/클리닉 스케줄 생성·수정 요청에서 사용자/요청 정보를 로그로 기록하도록 추가
+- 요청 IP/UA 추출 유틸과 테스트 추가
+
+### Details
+- 작업 사유: 스케줄 값이 변조되는 원인을 추적하기 위해 요청 단위 로그 확보
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.global.util.RequestLogUtilsTest" --tests "com.classhub.global.util.ScheduleLogFormatterTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/global/util/RequestLogUtils.java`
+  - `backend/src/test/java/com/classhub/global/util/RequestLogUtilsTest.java`
+- 다음 단계: 로그에서 요청 IP/UA/actor 기준으로 스케줄 변경 발생 경로 확인
+## [2025-12-26 16:16] KST 기준 시간 처리 통일 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- 서버/DB/프론트의 시간 기준을 KST로 통일하는 설계 문서 작성
+
+### Details
+- 작업 사유: 클리닉 세션 생성 및 시간표 표시의 UTC/KST 불일치 문제 해결
+- 수정한 파일:
+  - `docs/plan/global/timezone-kst_plan.md`
+- 다음 단계: 설계 승인 후 KST Clock 적용 및 클리닉 시간 로직 수정
+## [2025-12-26 16:38] 서버/DB 시간 기준 KST 통일
+
+### Type
+BEHAVIORAL
+
+### Summary
+- KST 기준 Clock 유틸을 추가하고 서버 내부 now() 호출을 KST 기준으로 전환
+- JDBC/Hibernate 시간대 설정을 KST로 변경
+- Docker Compose에서 서버/DB 타임존을 KST로 고정
+
+### Details
+- 작업 사유: 클리닉 세션 생성 및 시간표 표시의 UTC/KST 불일치 해결
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/util/KstTime.java`
+  - `backend/src/main/java/com/classhub/global/config/TimeConfig.java`
+  - `backend/src/main/java/com/classhub/global/config/JpaConfig.java`
+  - `backend/src/main/java/com/classhub/global/entity/BaseTimeEntity.java`
+  - `backend/src/main/java/com/classhub/domain/auth/support/RefreshTokenCookieProvider.java`
+  - `backend/src/main/java/com/classhub/domain/auth/token/InMemoryRefreshTokenStore.java`
+  - `backend/src/main/java/com/classhub/global/jwt/JwtProvider.java`
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/application/TeacherStudentService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseEnrollment.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentTeacherRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentEnrollmentRequest.java`
+  - `backend/src/main/java/com/classhub/domain/notice/model/NoticeRead.java`
+  - `backend/src/main/resources/application-local.yml`
+  - `backend/src/main/resources/application-prod.yml`
+  - `backend/src/main/resources/application-test.yml`
+  - `infra/docker/docker-compose-local.yml`
+  - `infra/docker/docker-compose.yml`
+- 다음 단계: 로컬 Docker 재기동 후 슬롯/세션 생성이 KST 기준으로 동작하는지 확인
+## [2025-12-26 16:45] 프론트 날짜/시간 표시 KST 변환 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 프론트 날짜/시간 표시 로직에서 강제 KST 변환을 제거하고 로컬 기준 출력으로 통일
+
+### Details
+- 작업 사유: 백엔드 KST 통일 이후 중복 변환으로 시간 표시가 밀리는 문제 방지
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/utils/date.ts`
+- 다음 단계: 클리닉/반 시간 표시가 KST 기준으로 정상 노출되는지 수동 확인
+## [2025-12-26 17:03] Schedule/Request 로그 제거
+
+### Type
+STRUCTURAL
+
+### Summary
+- 스케줄/요청 로깅 유틸과 관련 로그 호출을 제거
+- 관련 테스트를 삭제
+
+### Details
+- 작업 사유: 요청한 로깅 비활성화 및 코드 정리
+- 영향받은 테스트: 실행하지 않음
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/global/util/ScheduleLogFormatter.java`
+  - `backend/src/main/java/com/classhub/global/util/RequestLogUtils.java`
+  - `backend/src/test/java/com/classhub/global/util/ScheduleLogFormatterTest.java`
+  - `backend/src/test/java/com/classhub/global/util/RequestLogUtilsTest.java`
+- 다음 단계: 필요 시 backend 테스트 실행

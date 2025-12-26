@@ -13,6 +13,7 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -131,14 +132,14 @@ public class ClinicDefaultSlotService {
     }
 
     private void createAttendancesForCurrentWeek(StudentCourseRecord record, ClinicSlot slot) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(KstTime.clock());
         ClinicAttendancePolicy.WeekRange weekRange = ClinicAttendancePolicy.resolveWeek(today);
         List<ClinicSession> sessions = clinicSessionRepository.findBySlotIdAndDateRange(
                 slot.getId(),
                 weekRange.startDate(),
                 weekRange.endDate()
         );
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(KstTime.clock());
         for (ClinicSession session : sessions) {
             if (session.isCanceled()) {
                 continue;

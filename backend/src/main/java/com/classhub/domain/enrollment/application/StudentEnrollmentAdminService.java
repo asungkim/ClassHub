@@ -16,6 +16,7 @@ import com.classhub.domain.member.repository.StudentInfoRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Collection;
@@ -163,7 +164,7 @@ public class StudentEnrollmentAdminService {
         if (birthDate == null) {
             return null;
         }
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        return Period.between(birthDate, LocalDate.now(KstTime.clock())).getYears();
     }
 
     private CourseResponse fallbackCourseResponse(StudentEnrollmentRequest request) {

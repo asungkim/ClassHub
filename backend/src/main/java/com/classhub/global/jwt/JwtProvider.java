@@ -18,11 +18,11 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.classhub.global.util.KstTime;
 
 @Component
 @RequiredArgsConstructor
@@ -139,7 +139,7 @@ public class JwtProvider {
 
     public LocalDateTime getExpiration(String token) {
         Date expiration = getClaims(token).getExpiration();
-        return LocalDateTime.ofInstant(expiration.toInstant(), ZoneOffset.UTC);
+        return LocalDateTime.ofInstant(expiration.toInstant(), KstTime.ZONE_ID);
     }
 
     /**

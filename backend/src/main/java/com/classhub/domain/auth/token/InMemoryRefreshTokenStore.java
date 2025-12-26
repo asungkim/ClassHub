@@ -1,11 +1,11 @@
 package com.classhub.domain.auth.token;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
+import com.classhub.global.util.KstTime;
 
 @Component
 public class InMemoryRefreshTokenStore implements RefreshTokenStore {
@@ -25,7 +25,7 @@ public class InMemoryRefreshTokenStore implements RefreshTokenStore {
         if (expiresAt == null) {
             return false;
         }
-        if (expiresAt.isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
+        if (expiresAt.isBefore(LocalDateTime.now(KstTime.clock()))) {
             blacklist.remove(token);
             return false;
         }
@@ -42,7 +42,7 @@ public class InMemoryRefreshTokenStore implements RefreshTokenStore {
     }
 
     private void evictExpired() {
-        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime now = LocalDateTime.now(KstTime.clock());
         blacklist.entrySet().removeIf(entry -> entry.getValue().isBefore(now));
     }
 }

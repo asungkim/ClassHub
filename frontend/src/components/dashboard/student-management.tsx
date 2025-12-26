@@ -67,6 +67,7 @@ const requestStatusBadge: Record<StudentTeacherRequestStatus, Parameters<typeof 
 
 export function StudentManagementView({ role }: { role: Role }) {
   const [activeTab, setActiveTab] = useState<TabKey>("students");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const headerMeta =
     role === "TEACHER"
@@ -82,6 +83,10 @@ export function StudentManagementView({ role }: { role: Role }) {
           title: "학생 지원",
           description: "연결된 선생님의 학생 현황을 파악하고, 요청 처리 탭에서 등록 신청을 돕습니다."
         };
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((prev) => prev + 1);
+  }, []);
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -104,13 +109,13 @@ export function StudentManagementView({ role }: { role: Role }) {
         </TabsList>
 
         <div hidden={activeTab !== "students"}>
-          <StudentsTab role={role} />
+          <StudentsTab role={role} refreshKey={refreshKey} />
         </div>
         <div hidden={activeTab !== "requests"}>
-          <RequestsTab />
+          <RequestsTab onRefresh={handleRefresh} />
         </div>
         <div hidden={activeTab !== "assignments"}>
-          <BatchAssignmentTab role={role} />
+          <BatchAssignmentTab role={role} refreshKey={refreshKey} />
         </div>
       </Tabs>
     </div>
@@ -119,9 +124,10 @@ export function StudentManagementView({ role }: { role: Role }) {
 
 type StudentsTabProps = {
   role: Role;
+  refreshKey: number;
 };
 
-function StudentsTab({ role }: StudentsTabProps) {
+function StudentsTab({ role, refreshKey }: StudentsTabProps) {
   const [courseId, setCourseId] = useState("");
   const [courseOptions, setCourseOptions] = useState<{ value: string; label: string }[]>([]);
   const [courseOptionsLoading, setCourseOptionsLoading] = useState(false);
@@ -204,7 +210,7 @@ function StudentsTab({ role }: StudentsTabProps) {
 
   useEffect(() => {
     void loadStudents();
-  }, [loadStudents]);
+  }, [loadStudents, refreshKey]);
 
   useEffect(() => {
     if (!detailStudentId || !canViewDetail) {
@@ -370,7 +376,7 @@ function StudentsTab({ role }: StudentsTabProps) {
   );
 }
 
-function RequestsTab() {
+function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
   const [statuses, setStatuses] = useState<StudentTeacherRequestStatus[]>(["PENDING"]);
   const [keywordInput, setKeywordInput] = useState("");
   const [appliedKeyword, setAppliedKeyword] = useState("");
@@ -502,6 +508,7 @@ function RequestsTab() {
       setConfirmState(null);
       setSelectedIds(new Set());
       await loadRequests();
+      onRefresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "신청을 처리하지 못했습니다.";
       showToast("error", message);
@@ -697,10 +704,12 @@ function RequestsTab() {
         onClose={() => setConfirmState(null)}
         onConfirm={handleConfirm}
         isLoading={actionLoading}
-        title={confirmState?.type === "APPROVE" ? "선택 승인" : "선택 거절"}
+        title={confirmState?.type === "APPROVE" ? "학생 신청 승인" : "학생 신청 거절"}
         message={
           confirmState
-            ? `${confirmState.ids.length}건의 신청을 ${confirmState.type === "APPROVE" ? "승인" : "거절"}하시겠습니까?`
+            ? confirmState.type === "APPROVE"
+              ? `선택한 ${confirmState.ids.length}건의 학생 신청을 승인하시겠습니까?\n승인 시 해당 학생들이 학생 목록에 추가되고 반 배치가 가능해집니다.`
+              : `선택한 ${confirmState.ids.length}건의 학생 신청을 거절하시겠습니까?\n거절된 신청은 복구할 수 없습니다.`
             : ""
         }
         confirmText={confirmState?.type === "APPROVE" ? "승인" : "거절"}
@@ -712,11 +721,10 @@ function RequestsTab() {
 
 type BatchAssignmentTabProps = {
   role: Role;
+  refreshKey: number;
 };
 
-function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
-  const [courseKeywordInput, setCourseKeywordInput] = useState("");
-  const [courseKeyword, setCourseKeyword] = useState("");
+function BatchAssignmentTab({ role, refreshKey }: BatchAssignmentTabProps) {
   const [courseOptions, setCourseOptions] = useState<CourseResponse[]>([]);
   const [courseId, setCourseId] = useState("");
   const [courseLoading, setCourseLoading] = useState(false);
@@ -730,6 +738,7 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [assigning, setAssigning] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { showToast } = useToast();
 
   const loadCourses = useCallback(async () => {
@@ -737,17 +746,10 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
     setCourseError(null);
     try {
       const result = await fetchAssignableCourses({
-        keyword: courseKeyword.trim() ? courseKeyword.trim() : undefined,
         page: 0,
         size: 100
       });
       setCourseOptions(result.items);
-      setCourseId((prev) => {
-        if (prev && result.items.some((course) => course.courseId === prev)) {
-          return prev;
-        }
-        return result.items[0]?.courseId ?? "";
-      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "배치 가능한 반을 불러오지 못했습니다.";
       setCourseError(message);
@@ -755,7 +757,7 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
     } finally {
       setCourseLoading(false);
     }
-  }, [courseKeyword, showToast]);
+  }, [showToast]);
 
   const loadCandidates = useCallback(async () => {
     if (!courseId) {
@@ -798,7 +800,7 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
 
   useEffect(() => {
     void loadCandidates();
-  }, [loadCandidates]);
+  }, [loadCandidates, refreshKey]);
 
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
   const selectedCount = selectedIds.size;
@@ -807,21 +809,10 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
     [students]
   );
   const allSelected = candidateIds.length > 0 && candidateIds.every((id) => selectedIds.has(id));
-
-  const applyCourseKeyword = () => {
-    setCourseKeyword(courseKeywordInput);
-  };
+  const selectedCourse = courseOptions.find((course) => course.courseId === courseId);
 
   const applyStudentKeyword = () => {
     setStudentKeyword(studentKeywordInput);
-    setPage(0);
-  };
-
-  const resetFilters = () => {
-    setCourseKeywordInput("");
-    setCourseKeyword("");
-    setStudentKeywordInput("");
-    setStudentKeyword("");
     setPage(0);
   };
 
@@ -849,7 +840,7 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
     });
   };
 
-  const handleAssign = async () => {
+  const openAssignConfirm = () => {
     if (!courseId) {
       showToast("error", "반을 먼저 선택해 주세요.");
       return;
@@ -858,6 +849,11 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
       showToast("error", "배치할 학생을 선택해 주세요.");
       return;
     }
+    setConfirmOpen(true);
+  };
+
+  const executeAssign = async () => {
+    setConfirmOpen(false);
     setAssigning(true);
     const failures: string[] = [];
     for (const studentId of selectedIds) {
@@ -880,58 +876,72 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card title="반 선택" description="배치할 반을 선택한 후 학생을 지정하세요.">
-        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+      <Card title="반 선택" description="학생을 배치할 반을 먼저 선택해주세요.">
+        <div className="flex flex-col gap-4">
           <Select
             label="반 목록"
             value={courseId}
             onChange={(event) => {
               setCourseId(event.target.value);
               setPage(0);
+              setSelectedIds(new Set());
             }}
-            className="lg:w-72"
+            className="lg:w-96"
             disabled={courseLoading}
           >
-            {courseOptions.length === 0 && <option value="">배치 가능한 반이 없습니다.</option>}
+            <option value="">반을 선택하세요</option>
             {courseOptions.map((course) => (
               <option key={course.courseId ?? course.name} value={course.courseId ?? ""}>
                 {buildCourseLabel(course)}
               </option>
             ))}
           </Select>
-
-          <Field label="반 이름 검색" className="lg:w-60">
-            <Input
-              placeholder="반 이름"
-              value={courseKeywordInput}
-              onChange={(event) => setCourseKeywordInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  applyCourseKeyword();
-                }
-              }}
-            />
-          </Field>
-
-          <div className="flex items-end gap-3">
-            <Button variant="secondary" onClick={resetFilters} disabled={courseLoading || loading || assigning}>
-              초기화
-            </Button>
-            <Button onClick={applyCourseKeyword} disabled={courseLoading}>
-              검색
-            </Button>
-          </div>
+          {courseError && <InlineError message={courseError} />}
+          {role === "ASSISTANT" && (
+            <p className="rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
+              조교는 배치 가능한 반만 선택할 수 있습니다.
+            </p>
+          )}
         </div>
-        {courseError && <InlineError message={courseError} className="mt-4" />}
-        {role === "ASSISTANT" && (
-          <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
-            조교는 배치 가능한 반만 선택할 수 있습니다.
-          </p>
-        )}
       </Card>
 
-      <Card title="배치 후보 학생" description="선택한 반에 아직 배치되지 않은 학생 목록입니다.">
+      {!courseId && (
+        <Card>
+          <EmptyState
+            message="반을 선택해주세요"
+            description="상단 드롭다운에서 학생을 배치할 반을 먼저 선택해주세요."
+          />
+        </Card>
+      )}
+
+      {courseId && selectedCourse && (
+        <Card>
+          <div className="rounded-2xl border-2 border-indigo-200 bg-indigo-50/50 px-6 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-indigo-900">선택된 반</p>
+                <p className="mt-1 text-base font-bold text-indigo-700">{buildCourseLabel(selectedCourse)}</p>
+              </div>
+              <Button
+                variant="ghost"
+                className="h-9 px-4 text-xs"
+                onClick={() => {
+                  setCourseId("");
+                  setSelectedIds(new Set());
+                }}
+              >
+                선택 취소
+              </Button>
+            </div>
+            <p className="mt-3 text-sm text-indigo-600">
+              이 반에 학생을 배치하시겠습니까? 아래에서 배치할 학생을 선택해주세요.
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {courseId && (
+        <Card title="배치 후보 학생" description="선택한 반에 아직 배치되지 않은 학생 목록입니다.">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
           <Field label="학생 이름 검색" className="lg:w-60">
             <Input
@@ -954,86 +964,101 @@ function BatchAssignmentTab({ role }: BatchAssignmentTabProps) {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm">
-          <div className="text-slate-600">선택 {selectedCount}건</div>
-          <Button
-            variant="secondary"
-            className="h-10 px-4 text-xs"
-            onClick={toggleSelectAll}
-            disabled={!courseId || candidateIds.length === 0}
-          >
-            {allSelected ? "선택 해제" : "전체 선택"}
-          </Button>
-          <Button
-            className="h-10 px-4 text-xs"
-            onClick={() => void handleAssign()}
-            disabled={!courseId || selectedCount === 0 || assigning}
-          >
-            {assigning ? "배치 중..." : "선택 배치"}
-          </Button>
-        </div>
-
-        {!courseId && <EmptyState message="반 선택 필요" description="상단에서 반을 선택해 주세요." />}
-        {courseId && loading && <LoadingState message="학생 목록을 불러오는 중입니다." />}
-        {courseId && !loading && error && <InlineError message={error} className="mt-4" />}
-        {courseId && !loading && students.length === 0 && (
-          <EmptyState message="배치 후보 없음" description="선택한 반에 배치 가능한 학생이 없습니다." />
-        )}
-
-        {courseId && !loading && students.length > 0 && (
-          <div className="mt-4 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">선택</TableHead>
-                  <TableHead>학생</TableHead>
-                  <TableHead>학교/학년</TableHead>
-                  <TableHead>연락처</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student, index) => {
-                  const rowKey = student.memberId ?? `candidate-${index}`;
-                  const isSelected = student.memberId ? selectedIds.has(student.memberId) : false;
-                  return (
-                    <TableRow
-                      key={rowKey}
-                      className="cursor-pointer transition hover:bg-slate-50"
-                      onClick={() => toggleSelection(student.memberId)}
-                    >
-                      <TableCell onClick={(event) => event.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
-                          checked={isSelected}
-                          onChange={() => toggleSelection(student.memberId)}
-                          disabled={!student.memberId}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-sm">
-                          <span className="font-semibold text-slate-900">{student.name ?? "-"}</span>
-                          <span className="text-xs text-slate-500">{student.email ?? "-"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {student.schoolName ?? "-"} ({formatStudentGrade(student.grade)})
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {student.phoneNumber ?? "-"}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm">
+            <div className="text-slate-600">선택 {selectedCount}건</div>
+            <Button
+              variant="secondary"
+              className="h-10 px-4 text-xs"
+              onClick={toggleSelectAll}
+              disabled={candidateIds.length === 0}
+            >
+              {allSelected ? "선택 해제" : "전체 선택"}
+            </Button>
+            <Button
+              className="h-10 px-4 text-xs"
+              onClick={openAssignConfirm}
+              disabled={selectedCount === 0 || assigning}
+            >
+              {assigning ? "배치 중..." : "선택 배치"}
+            </Button>
           </div>
-        )}
 
-        {totalPages > 1 && (
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} disabled={loading || assigning} />
-        )}
-      </Card>
+          {loading && <LoadingState message="학생 목록을 불러오는 중입니다." />}
+          {!loading && error && <InlineError message={error} className="mt-4" />}
+          {!loading && students.length === 0 && (
+            <EmptyState message="배치 후보 없음" description="선택한 반에 배치 가능한 학생이 없습니다." />
+          )}
+
+          {!loading && students.length > 0 && (
+            <div className="mt-4 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">선택</TableHead>
+                    <TableHead>학생</TableHead>
+                    <TableHead>학교/학년</TableHead>
+                    <TableHead>연락처</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {students.map((student, index) => {
+                    const rowKey = student.memberId ?? `candidate-${index}`;
+                    const isSelected = student.memberId ? selectedIds.has(student.memberId) : false;
+                    return (
+                      <TableRow
+                        key={rowKey}
+                        className="cursor-pointer transition hover:bg-slate-50"
+                        onClick={() => toggleSelection(student.memberId)}
+                      >
+                        <TableCell onClick={(event) => event.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
+                            checked={isSelected}
+                            onChange={() => toggleSelection(student.memberId)}
+                            disabled={!student.memberId}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col text-sm">
+                            <span className="font-semibold text-slate-900">{student.name ?? "-"}</span>
+                            <span className="text-xs text-slate-500">{student.email ?? "-"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-600">
+                          {student.schoolName ?? "-"} ({formatStudentGrade(student.grade)})
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-600">
+                          {student.phoneNumber ?? "-"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} disabled={loading || assigning} />
+          )}
+        </Card>
+      )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={executeAssign}
+        isLoading={assigning}
+        title="학생 배치 확인"
+        message={
+          selectedCourse
+            ? `${buildCourseLabel(selectedCourse)} 반에 ${selectedCount}명의 학생을 배치하시겠습니까?`
+            : `${selectedCount}명의 학생을 배치하시겠습니까?`
+        }
+        confirmText="배치"
+        cancelText="취소"
+      />
     </div>
   );
 }
@@ -1351,209 +1376,255 @@ function StudentDetailModal({
 
           <section className="space-y-4">
             <div>
-              <p className="text-sm font-semibold text-slate-900">수강 반</p>
-              <p className="mt-1 text-xs text-slate-500">반별 상태를 확인하고 휴원/재원 처리를 진행합니다.</p>
+              <p className="text-sm font-semibold text-slate-900">수강 반 목록</p>
+              <p className="mt-1 text-xs text-slate-500">반을 클릭하여 상세 정보를 확인하고 휴원/재원 처리를 진행하세요.</p>
             </div>
             {courses.length === 0 ? (
               <EmptyState message="배치 전" description="아직 배치된 반이 없습니다." />
             ) : (
-              <div className="grid gap-3">
-                {courses.map((course, index) => {
-                  const courseKey = course.courseId ?? `course-${index}`;
-                  const isSelected = course.courseId === selectedCourseId;
-                  const courseActive = course.active ?? true;
-                  const assignmentActive = course.assignmentActive ?? false;
-                  const progressState = getCourseProgressState(course.startDate, course.endDate);
-                  const ended = progressState === "ENDED";
-                  const showAssignmentStatus = !ended;
-                  const hasAssignment = Boolean(course.assignmentId);
-                  const showToggle = showAssignmentStatus && hasAssignment && courseActive;
-                  const toggleDisabled = assignmentActionId === course.assignmentId;
-                  const recordId = course.recordId ?? null;
-                  const record = recordId ? recordCache[recordId] : null;
-                  const recordLoading = recordId ? recordLoadingIds.has(recordId) : false;
-                  const recordError = recordId ? recordErrorMap[recordId] : null;
-                  const showRecordBadge = !recordId;
-                  const isEditingTarget = Boolean(recordId && selectedCourseId === course.courseId && editing);
-                  const canShowActions = Boolean(recordId && selectedCourseId === course.courseId && canEdit);
-                  return (
-                    <div
-                      key={courseKey}
-                      className={clsx(
-                        "cursor-pointer space-y-3 rounded-3xl border border-slate-200/60 bg-slate-50/40 p-4",
-                        isSelected && "ring-2 ring-indigo-200"
-                      )}
-                      onClick={() => setSelectedCourseId(course.courseId ?? null)}
-                    >
-                      <Card
-                        title={course.name ?? "반 정보 없음"}
-                        description={formatCoursePeriod(course.startDate, course.endDate)}
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          {progressState && (
-                            <Badge variant="secondary">{courseProgressLabel(progressState)}</Badge>
-                          )}
-                          {!ended && !courseActive && <Badge variant="secondary">보관</Badge>}
-                          {showAssignmentStatus && hasAssignment && (
-                            <Badge variant={assignmentActive ? "success" : "secondary"}>
-                              {assignmentActive ? "재원" : "휴원"}
-                            </Badge>
-                          )}
-                          {showAssignmentStatus && !hasAssignment && (
-                            <Badge variant="secondary">배치 전</Badge>
-                          )}
-                          {showRecordBadge && <Badge variant="secondary">기록 없음</Badge>}
-                        </div>
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                          {showToggle && (
-                            <Button
-                              variant={assignmentActive ? "ghost" : "secondary"}
-                              className="h-9 px-4 text-xs"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleToggleAssignment(course, !assignmentActive);
-                              }}
-                              disabled={toggleDisabled}
-                            >
-                              {assignmentActive ? "휴원 처리" : "재원 처리"}
-                            </Button>
-                          )}
-                          {showAssignmentStatus && !hasAssignment && (
-                            <span className="text-xs text-slate-400">배치 후에만 상태 변경이 가능합니다.</span>
-                          )}
-                          {ended && <span className="text-xs text-slate-400">종료된 반은 상태 변경이 없습니다.</span>}
-                          {!ended && !courseActive && (
-                            <span className="text-xs text-slate-400">보관된 반은 읽기 전용입니다.</span>
-                          )}
-                        </div>
-                      </Card>
-                      <Card
-                        title="수업 기록"
-                        description={course.name ?? "선택한 반의 기록"}
-                        actions={
-                          canShowActions ? (
-                            isEditingTarget ? (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  className="h-9 px-3 text-xs"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleCancelEdit();
-                                  }}
-                                  disabled={saving}
-                                >
-                                  취소
-                                </Button>
-                                <Button
-                                  className="h-9 px-4 text-xs"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleSave();
-                                  }}
-                                  disabled={saving}
-                                >
-                                  {saving ? "저장 중..." : "저장"}
-                                </Button>
-                              </>
-                            ) : (
-                              <Button
-                                variant="secondary"
-                                className="h-9 px-4 text-xs"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setSelectedCourseId(course.courseId ?? null);
-                                  setEditing(true);
-                                }}
-                                disabled={saving}
-                              >
-                                수정
-                              </Button>
-                            )
-                          ) : null
-                        }
-                      >
-                        {!recordId && <p className="text-sm text-slate-500">해당 반에 수업 기록이 없습니다.</p>}
-                        {recordId && recordLoading && <LoadingState message="수업 기록을 불러오는 중입니다." />}
-                        {recordId && !recordLoading && recordError && <InlineError message={recordError} />}
-                        {recordId && record && !isEditingTarget && (
-                          <dl className="space-y-2 text-sm text-slate-600">
-                            <div className="flex justify-between gap-4">
-                              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                담당 조교
-                              </dt>
-                              <dd className="text-right">{getAssistantLabel(record.assistantMemberId)}</dd>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                기본 클리닉 슬롯
-                              </dt>
-                              <dd className="text-right">{getClinicSlotLabel(record.defaultClinicSlotId)}</dd>
-                            </div>
-                            <div>
-                              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">노트</dt>
-                              <dd className="mt-1 whitespace-pre-wrap text-right">
-                                {record.teacherNotes ?? "등록된 노트가 없습니다."}
-                              </dd>
-                            </div>
-                          </dl>
-                        )}
-                        {recordId && record && isEditingTarget && (
-                          <div className="space-y-3">
-                            <Field label="담당 조교">
-                              <Select
-                                value={assistantInput}
-                                onChange={(event) => setAssistantInput(event.target.value)}
-                                disabled={saving || assistantLoading || !isTeacher}
-                              >
-                                {!assistantInput && <option value="">미지정</option>}
-                                {assistantOptions.map((option, assistantIndex) => {
-                                  const assistantId = option.assistant?.memberId ?? `assistant-${assistantIndex}`;
-                                  const name = option.assistant?.name ?? "이름 없음";
-                                  const email = option.assistant?.email ?? "이메일 없음";
-                                  return (
-                                    <option key={assistantId} value={option.assistant?.memberId ?? ""}>
-                                      {name} ({email})
-                                    </option>
-                                  );
-                                })}
-                              </Select>
-                              {assistantError && <InlineError message={assistantError} className="mt-2" />}
-                            </Field>
-                            <Field label="기본 클리닉 슬롯">
-                              <Select
-                                value={clinicInput}
-                                onChange={(event) => setClinicInput(event.target.value)}
-                                disabled={saving || slotLoading || !isTeacher}
-                              >
-                                {!clinicInput && <option value="">미지정</option>}
-                                {slotOptions.map((slot, slotIndex) => {
-                                  const slotId = slot.slotId ?? `slot-${slotIndex}`;
-                                  return (
-                                    <option key={slotId} value={slot.slotId ?? ""}>
-                                      {formatClinicSlotLabel(slot)}
-                                    </option>
-                                  );
-                                })}
-                              </Select>
-                              {slotError && <InlineError message={slotError} className="mt-2" />}
-                            </Field>
-                            <Field label="Teacher Notes">
-                              <textarea
-                                className="h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="학생에게 남길 메모를 입력하세요."
-                                value={notesInput}
-                                onChange={(event) => setNotesInput(event.target.value)}
-                                disabled={saving}
-                              />
-                            </Field>
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">#</TableHead>
+                        <TableHead>반 이름</TableHead>
+                        <TableHead>기간</TableHead>
+                        <TableHead>진행 상태</TableHead>
+                        <TableHead>배치 상태</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {courses.map((course, index) => {
+                        const courseKey = course.courseId ?? `course-${index}`;
+                        const isSelected = course.courseId === selectedCourseId;
+                        const courseActive = course.active ?? true;
+                        const assignmentActive = course.assignmentActive ?? false;
+                        const progressState = getCourseProgressState(course.startDate, course.endDate);
+                        const ended = progressState === "ENDED";
+                        const hasAssignment = Boolean(course.assignmentId);
+                        return (
+                          <TableRow
+                            key={courseKey}
+                            className={clsx(
+                              "cursor-pointer transition hover:bg-slate-50",
+                              isSelected && "bg-indigo-50/50"
+                            )}
+                            onClick={() => setSelectedCourseId(course.courseId ?? null)}
+                          >
+                            <TableCell className="text-sm font-semibold text-slate-500">
+                              {index + 1}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-slate-900">{course.name ?? "-"}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-slate-600">
+                              {formatCoursePeriod(course.startDate, course.endDate)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-2">
+                                {progressState && (
+                                  <Badge variant="secondary">{courseProgressLabel(progressState)}</Badge>
+                                )}
+                                {!ended && !courseActive && <Badge variant="secondary">보관</Badge>}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {!ended && hasAssignment && (
+                                <Badge variant={assignmentActive ? "success" : "secondary"}>
+                                  {assignmentActive ? "재원" : "휴원"}
+                                </Badge>
+                              )}
+                              {!ended && !hasAssignment && <Badge variant="secondary">배치 전</Badge>}
+                              {ended && <span className="text-sm text-slate-400">-</span>}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {selectedCourse && (
+                  <Card title="선택한 반 상세 정보" description={selectedCourse.name ?? "반 정보"}>
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-slate-200/70 bg-slate-50/50 px-4 py-3">
+                        <dl className="space-y-2 text-sm">
+                          <div className="flex justify-between gap-4">
+                            <dt className="font-semibold text-slate-700">반 이름</dt>
+                            <dd className="text-slate-900">{selectedCourse.name ?? "-"}</dd>
                           </div>
-                        )}
-                      </Card>
+                          <div className="flex justify-between gap-4">
+                            <dt className="font-semibold text-slate-700">기간</dt>
+                            <dd className="text-slate-900">
+                              {formatCoursePeriod(selectedCourse.startDate, selectedCourse.endDate)}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+
+                      {(() => {
+                        const courseActive = selectedCourse.active ?? true;
+                        const assignmentActive = selectedCourse.assignmentActive ?? false;
+                        const progressState = getCourseProgressState(selectedCourse.startDate, selectedCourse.endDate);
+                        const ended = progressState === "ENDED";
+                        const hasAssignment = Boolean(selectedCourse.assignmentId);
+                        const showToggle = !ended && hasAssignment && courseActive;
+                        const toggleDisabled = assignmentActionId === selectedCourse.assignmentId;
+
+                        return (
+                          <div className="flex flex-col gap-3">
+                            {showToggle && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant={assignmentActive ? "primary" : "secondary"}
+                                  className="h-10 px-4 text-sm"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleToggleAssignment(selectedCourse, !assignmentActive);
+                                  }}
+                                  disabled={toggleDisabled}
+                                >
+                                  {assignmentActive ? "휴원 처리" : "재원 처리"}
+                                </Button>
+                              </div>
+                            )}
+                            {!ended && !hasAssignment && (
+                              <p className="text-sm text-slate-500">배치 후에만 상태 변경이 가능합니다.</p>
+                            )}
+                            {ended && <p className="text-sm text-slate-500">종료된 반은 상태 변경이 없습니다.</p>}
+                            {!ended && !courseActive && (
+                              <p className="text-sm text-slate-500">보관된 반은 읽기 전용입니다.</p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
-                  );
-                })}
-              </div>
+                  </Card>
+                )}
+
+                {selectedCourse && (
+                  <Card
+                    title="수업 기록"
+                    description={selectedCourse.name ?? "선택한 반의 기록"}
+                    actions={
+                      canEdit && selectedRecord?.recordId ? (
+                        editing ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              className="h-9 px-3 text-xs"
+                              onClick={handleCancelEdit}
+                              disabled={saving}
+                            >
+                              취소
+                            </Button>
+                            <Button
+                              className="h-9 px-4 text-xs"
+                              onClick={handleSave}
+                              disabled={saving}
+                            >
+                              {saving ? "저장 중..." : "저장"}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            className="h-9 px-4 text-xs"
+                            onClick={() => setEditing(true)}
+                            disabled={saving}
+                          >
+                            수정
+                          </Button>
+                        )
+                      ) : null
+                    }
+                  >
+                    {!selectedRecordId && <p className="text-sm text-slate-500">해당 반에 수업 기록이 없습니다.</p>}
+                    {selectedRecordId && recordLoadingIds.has(selectedRecordId) && (
+                      <LoadingState message="수업 기록을 불러오는 중입니다." />
+                    )}
+                    {selectedRecordId && recordErrorMap[selectedRecordId] && (
+                      <InlineError message={recordErrorMap[selectedRecordId]} />
+                    )}
+                    {selectedRecord && !editing && (
+                      <dl className="space-y-2 text-sm text-slate-600">
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            담당 조교
+                          </dt>
+                          <dd className="text-right">{getAssistantLabel(selectedRecord.assistantMemberId)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            기본 클리닉 슬롯
+                          </dt>
+                          <dd className="text-right">{getClinicSlotLabel(selectedRecord.defaultClinicSlotId)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">노트</dt>
+                          <dd className="mt-1 whitespace-pre-wrap text-right">
+                            {selectedRecord.teacherNotes ?? "등록된 노트가 없습니다."}
+                          </dd>
+                        </div>
+                      </dl>
+                    )}
+                    {selectedRecord && editing && (
+                      <div className="space-y-3">
+                        <Field label="담당 조교">
+                          <Select
+                            value={assistantInput}
+                            onChange={(event) => setAssistantInput(event.target.value)}
+                            disabled={saving || assistantLoading || !isTeacher}
+                          >
+                            {!assistantInput && <option value="">미지정</option>}
+                            {assistantOptions.map((option, assistantIndex) => {
+                              const assistantId = option.assistant?.memberId ?? `assistant-${assistantIndex}`;
+                              const name = option.assistant?.name ?? "이름 없음";
+                              const email = option.assistant?.email ?? "이메일 없음";
+                              return (
+                                <option key={assistantId} value={option.assistant?.memberId ?? ""}>
+                                  {name} ({email})
+                                </option>
+                              );
+                            })}
+                          </Select>
+                          {assistantError && <InlineError message={assistantError} className="mt-2" />}
+                        </Field>
+                        <Field label="기본 클리닉 슬롯">
+                          <Select
+                            value={clinicInput}
+                            onChange={(event) => setClinicInput(event.target.value)}
+                            disabled={saving || slotLoading || !isTeacher}
+                          >
+                            {!clinicInput && <option value="">미지정</option>}
+                            {slotOptions.map((slot, slotIndex) => {
+                              const slotId = slot.slotId ?? `slot-${slotIndex}`;
+                              return (
+                                <option key={slotId} value={slot.slotId ?? ""}>
+                                  {formatClinicSlotLabel(slot)}
+                                </option>
+                              );
+                            })}
+                          </Select>
+                          {slotError && <InlineError message={slotError} className="mt-2" />}
+                        </Field>
+                        <Field label="Teacher Notes">
+                          <textarea
+                            className="h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="학생에게 남길 메모를 입력하세요."
+                            value={notesInput}
+                            onChange={(event) => setNotesInput(event.target.value)}
+                            disabled={saving}
+                          />
+                        </Field>
+                      </div>
+                    )}
+                  </Card>
+                )}
+              </>
             )}
           </section>
 

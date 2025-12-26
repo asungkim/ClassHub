@@ -27,6 +27,7 @@ import com.classhub.domain.member.repository.MemberRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.LocalDateTime;
@@ -199,7 +200,7 @@ public class StudentTeacherRequestService {
         if (alreadyAssigned) {
             throw new BusinessException(RsCode.TEACHER_STUDENT_ALREADY_ASSIGNED);
         }
-        request.approve(processorId, LocalDateTime.now());
+        request.approve(processorId, LocalDateTime.now(KstTime.clock()));
         teacherStudentAssignmentRepository.save(
                 TeacherStudentAssignment.create(request.getTeacherMemberId(), request.getStudentMemberId()));
         return buildResponseWithSummary(request);
@@ -210,7 +211,7 @@ public class StudentTeacherRequestService {
         StudentTeacherRequest request = loadRequest(requestId);
         ensurePending(request);
         ensurePermission(processorId, request.getTeacherMemberId());
-        request.reject(processorId, LocalDateTime.now());
+        request.reject(processorId, LocalDateTime.now(KstTime.clock()));
         return buildResponseWithSummary(request);
     }
 
@@ -418,7 +419,7 @@ public class StudentTeacherRequestService {
         if (birthDate == null) {
             return null;
         }
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        return Period.between(birthDate, LocalDate.now(KstTime.clock())).getYears();
     }
 
     private StudentTeacherRequest loadRequest(UUID requestId) {

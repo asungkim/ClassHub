@@ -30,6 +30,7 @@ import com.classhub.domain.studentcourse.repository.StudentStatusProjection;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -415,7 +416,7 @@ public class StudentCourseManagementService {
         if (birthDate == null) {
             return null;
         }
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        return Period.between(birthDate, LocalDate.now(KstTime.clock())).getYears();
     }
 
     private Map<UUID, ActiveCourseSummary> loadActiveCourseSummary(List<UUID> teacherIds, List<UUID> studentIds) {

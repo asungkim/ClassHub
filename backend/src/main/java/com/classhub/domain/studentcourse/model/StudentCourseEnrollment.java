@@ -1,6 +1,7 @@
 package com.classhub.domain.studentcourse.model;
 
 import com.classhub.global.entity.BaseEntity;
+import com.classhub.global.util.KstTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -40,7 +41,7 @@ public class StudentCourseEnrollment extends BaseEntity {
                                     LocalDateTime enrolledAt) {
         this.studentMemberId = Objects.requireNonNull(studentMemberId, "studentMemberId must not be null");
         this.courseId = Objects.requireNonNull(courseId, "courseId must not be null");
-        this.enrolledAt = enrolledAt == null ? LocalDateTime.now() : enrolledAt;
+        this.enrolledAt = enrolledAt == null ? LocalDateTime.now(KstTime.clock()) : enrolledAt;
     }
 
     public static StudentCourseEnrollment create(UUID studentMemberId,
