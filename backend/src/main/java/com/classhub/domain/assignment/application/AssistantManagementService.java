@@ -8,6 +8,7 @@ import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepos
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
@@ -33,6 +34,7 @@ public class AssistantManagementService {
 
     private final TeacherAssistantAssignmentRepository assignmentRepository;
     private final MemberRepository memberRepository;
+    private final StudentCourseRecordRepository studentCourseRecordRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<AssistantAssignmentResponse> getAssistantAssignments(
@@ -126,6 +128,7 @@ public class AssistantManagementService {
             assignment.enable();
         } else {
             assignment.disable();
+            studentCourseRecordRepository.clearAssistantMemberId(teacherId, assignment.getAssistantMemberId());
         }
 
         TeacherAssistantAssignment saved = assignmentRepository.save(assignment);

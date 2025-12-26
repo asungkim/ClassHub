@@ -103,6 +103,33 @@ class ClinicSlotServiceTest {
     }
 
     @Test
+    void createSlot_shouldThrow_whenOutsideAllowedTimeRange() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        ClinicSlotCreateRequest earlyRequest = new ClinicSlotCreateRequest(
+                branchId,
+                DayOfWeek.MONDAY,
+                LocalTime.of(5, 59),
+                LocalTime.of(7, 0),
+                10
+        );
+        ClinicSlotCreateRequest lateRequest = new ClinicSlotCreateRequest(
+                branchId,
+                DayOfWeek.MONDAY,
+                LocalTime.of(21, 0),
+                LocalTime.of(22, 1),
+                10
+        );
+
+        assertThatThrownBy(() -> clinicSlotService.createSlot(teacherId, earlyRequest))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SLOT_TIME_INVALID);
+        assertThatThrownBy(() -> clinicSlotService.createSlot(teacherId, lateRequest))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SLOT_TIME_INVALID);
+    }
+
+    @Test
     void createSlot_shouldThrow_whenTeacherNotAssignedToBranch() {
         UUID teacherId = UUID.randomUUID();
         UUID branchId = UUID.randomUUID();
@@ -182,6 +209,7 @@ class ClinicSlotServiceTest {
         clinicSlotService.deleteSlot(teacherId, slotId);
 
         assertThat(slot.isDeleted()).isTrue();
+        verify(studentCourseRecordRepository).clearDefaultClinicSlotId(slotId);
     }
 
     private Branch createBranch(UUID branchId, VerifiedStatus status) {

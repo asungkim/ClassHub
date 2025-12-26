@@ -6006,3 +6006,96 @@ BEHAVIORAL
   - `frontend/src/lib/dashboard-api.ts`
   - `frontend/src/types/dashboard.ts`
 - 다음 단계: 수동 QA 후 UI 미세 조정 또는 커밋
+## [2025-12-26 09:55] 반 스케줄 시간 범위(06~22시) 검증 추가
+
+### Type
+BUGFIX
+
+### Summary
+- Course 스케줄 시작/종료 시간이 06:00~22:00 범위를 벗어나면 거부하도록 검증 추가
+- 경계 시간(06:00, 22:00) 포함 케이스를 테스트로 보강
+
+### Details
+- 작업 사유: 반 관리에서 시간 범위를 벗어난 스케줄이 저장되는 문제 차단
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.validator.CourseScheduleValidatorTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/validator/CourseScheduleValidator.java`
+  - `backend/src/test/java/com/classhub/domain/course/validator/CourseScheduleValidatorTest.java`
+- 다음 단계: Course 생성/수정 API에서 400 응답 확인 및 UI 경고 문구 점검
+## [2025-12-26 10:37] ClinicSlot 시간 범위(06~22시) 공통 검증 적용
+
+### Type
+BUGFIX
+
+### Summary
+- 스케줄 공통 시간 범위(06:00~22:00) 검증 유틸을 추가하고 Course/Clinic에 적용
+- ClinicSlot 생성 시 범위 이탈 요청을 차단하는 테스트를 추가
+
+### Details
+- 작업 사유: ClinicSlot도 Course와 동일하게 허용 시간 범위를 강제해 잘못된 시간 저장을 방지
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest" --tests "com.classhub.domain.course.validator.CourseScheduleValidatorTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/validator/ScheduleTimeRangeValidator.java`
+  - `backend/src/main/java/com/classhub/domain/course/validator/CourseScheduleValidator.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 기존 잘못된 슬롯 데이터가 있는지 점검 후 필요 시 정리
+## [2025-12-26 11:26] 학생 상세 모달 반별 상태/기록 표시 규칙 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 상세 모달의 요약 상태를 배치 개수 기반으로 변경하고 재원/휴원 표기를 반별로 한정
+- 반 카드에 진행 상태(진행예정/진행중/종료) + 재원/휴원 배지를 분리하고 종료 반은 상태 변경 버튼을 숨김
+- 반 선택 UX를 개선하고 기록 없음 표시/선택된 반 표시를 추가
+
+### Details
+- 작업 사유: 학생 단일 상태에 재원/휴원 표기가 섞이지 않도록 반별 상태 중심으로 UI 규칙 정리
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: `/teacher/students` 상세 모달에서 반 선택/상태 표기/버튼 노출 수동 확인
+## [2025-12-26 11:42] 학생 상세 모달을 반별 기록 카드 구조로 재구성
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 상세 모달의 수강 반을 큰 카드 레이아웃으로 전환하고 반 정보/수업 기록 카드를 분리
+- 반별로 수업 기록 카드를 렌더링하고 기록 데이터는 recordId 기준으로 사전 로딩
+- 반 선택/수정 버튼을 카드 내로 이동하고 종료/보관 상태에 맞게 버튼 노출을 정리
+
+### Details
+- 작업 사유: 반별 수업 기록을 한 화면에서 확인하도록 UI 흐름 개선
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: `/teacher/students` 학생 상세 모달에서 반별 기록 카드 노출/편집 동작 수동 확인
+## [2025-12-26 11:50] 슬롯/조교 비활성화 시 기록 기본값 정리 및 UI 미지정 옵션 숨김
+
+### Type
+BUGFIX
+
+### Summary
+- ClinicSlot 삭제 시 연결된 StudentCourseRecord의 defaultClinicSlotId를 null로 정리
+- 조교 비활성화 시 관련 StudentCourseRecord의 assistantMemberId를 null로 정리
+- 수업 기록 편집에서 선택된 상태일 때 미지정 옵션을 숨김
+
+### Details
+- 작업 사유: 삭제/비활성화 이후 기본값이 남아있는 문제와 미지정 선택 혼란을 해소
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest" --tests "com.classhub.domain.assignment.application.AssistantManagementServiceTest"`
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/application/AssistantManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/application/AssistantManagementServiceTest.java`
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 조교/슬롯 비활성화 후 학생 상세 모달에서 값이 미지정으로 표시되는지 확인

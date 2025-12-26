@@ -2,6 +2,7 @@ package com.classhub.domain.course.validator;
 
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.validator.ScheduleTimeRangeValidator;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Collection;
@@ -48,9 +49,7 @@ public final class CourseScheduleValidator {
                 || input.endTime() == null) {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
-        if (!input.startTime().isBefore(input.endTime())) {
-            throw new BusinessException(RsCode.BAD_REQUEST);
-        }
+        ScheduleTimeRangeValidator.validate(input.startTime(), input.endTime(), RsCode.BAD_REQUEST);
         return input;
     }
 

@@ -1059,9 +1059,9 @@ function StudentDetailModal({
 }) {
   const { showToast } = useToast();
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [recordDetail, setRecordDetail] = useState<StudentCourseDetailResponse | null>(null);
-  const [recordLoading, setRecordLoading] = useState(false);
-  const [recordError, setRecordError] = useState<string | null>(null);
+  const [recordCache, setRecordCache] = useState<Record<string, StudentCourseDetailResponse>>({});
+  const [recordLoadingIds, setRecordLoadingIds] = useState<Set<string>>(new Set());
+  const [recordErrorMap, setRecordErrorMap] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState(false);
   const [assistantInput, setAssistantInput] = useState("");
   const [clinicInput, setClinicInput] = useState("");
@@ -1077,17 +1077,16 @@ function StudentDetailModal({
 
   const courses = detail?.courses ?? [];
   const selectedCourse = courses.find((course) => course.courseId === selectedCourseId) ?? null;
-  const activeAssignmentExists = courses.some((course) => Boolean(course.assignmentActive));
-  const summaryLabel = courses.length === 0 ? "배치 전" : activeAssignmentExists ? "재원" : "휴원";
-  const summaryVariant = courses.length === 0 ? "secondary" : activeAssignmentExists ? "success" : "secondary";
-  const canEdit = role === "TEACHER" && Boolean(recordDetail?.recordId);
+  const selectedRecordId = selectedCourse?.recordId ?? null;
+  const selectedRecord = selectedRecordId ? recordCache[selectedRecordId] : null;
+  const summaryLabel = courses.length === 0 ? "배치 전" : `배치된 반 ${courses.length}개`;
+  const summaryVariant = "secondary";
+  const canEdit = role === "TEACHER" && Boolean(selectedRecord?.recordId);
   const isTeacher = role === "TEACHER";
 
   useEffect(() => {
     if (!detail || courses.length === 0) {
       setSelectedCourseId(null);
-      setRecordDetail(null);
-      setRecordError(null);
       setEditing(false);
       return;
     }
@@ -1099,6 +1098,72 @@ function StudentDetailModal({
     });
     setEditing(false);
   }, [detail, courses]);
+
+  useEffect(() => {
+    if (!detail?.student?.memberId) {
+      setRecordCache({});
+      setRecordErrorMap({});
+      setRecordLoadingIds(new Set());
+      return;
+    }
+    setRecordCache({});
+    setRecordErrorMap({});
+    setRecordLoadingIds(new Set());
+  }, [detail?.student?.memberId]);
+
+  useEffect(() => {
+    if (!open || !detail || courses.length === 0) {
+      return;
+    }
+    const recordIds = courses
+      .map((course) => course.recordId)
+      .filter((recordId): recordId is string => Boolean(recordId));
+    if (recordIds.length === 0) {
+      return;
+    }
+    const missing = recordIds.filter((recordId) => !recordCache[recordId] && !recordLoadingIds.has(recordId));
+    if (missing.length === 0) {
+      return;
+    }
+    setRecordLoadingIds((prev) => {
+      const next = new Set(prev);
+      missing.forEach((recordId) => next.add(recordId));
+      return next;
+    });
+    Promise.allSettled(missing.map((recordId) => fetchStudentCourseDetail(recordId)))
+      .then((results) => {
+        setRecordCache((prev) => {
+          const next = { ...prev };
+          results.forEach((result, index) => {
+            if (result.status === "fulfilled") {
+              next[missing[index]] = result.value;
+            }
+          });
+          return next;
+        });
+        setRecordErrorMap((prev) => {
+          const next = { ...prev };
+          results.forEach((result, index) => {
+            const recordId = missing[index];
+            if (result.status === "rejected") {
+              const message =
+                result.reason instanceof Error ? result.reason.message : "수업 기록을 불러오지 못했습니다.";
+              next[recordId] = message;
+            } else {
+              delete next[recordId];
+            }
+          });
+          return next;
+        });
+      })
+      .finally(() => {
+        setRecordLoadingIds((prev) => {
+          const next = new Set(prev);
+          missing.forEach((recordId) => next.delete(recordId));
+          return next;
+        });
+      });
+  }, [open, detail, courses, recordCache, recordLoadingIds]);
 
   useEffect(() => {
     if (!open || !isTeacher) {
@@ -1123,7 +1188,7 @@ function StudentDetailModal({
     if (!open || !isTeacher) {
       return;
     }
-    const branchId = recordDetail?.course?.branchId;
+    const branchId = selectedRecord?.course?.branchId;
     if (!branchId) {
       setSlotOptions([]);
       return;
@@ -1141,80 +1206,52 @@ function StudentDetailModal({
       .finally(() => {
         setSlotLoading(false);
       });
-  }, [open, isTeacher, recordDetail?.course?.branchId]);
+  }, [open, isTeacher, selectedRecord?.course?.branchId]);
 
   useEffect(() => {
-    if (!selectedCourse?.recordId) {
-      setRecordDetail(null);
-      setRecordError(null);
-      setEditing(false);
-      return;
-    }
-    if (recordDetail?.recordId === selectedCourse.recordId) {
-      return;
-    }
-    setRecordDetail(null);
-    setRecordLoading(true);
-    setRecordError(null);
-    fetchStudentCourseDetail(selectedCourse.recordId)
-      .then((response) => {
-        setRecordDetail(response);
-      })
-      .catch((err) => {
-        const message = err instanceof Error ? err.message : "수업 기록을 불러오지 못했습니다.";
-        setRecordError(message);
-      })
-      .finally(() => {
-        setRecordLoading(false);
-      });
-  }, [recordDetail?.recordId, selectedCourse?.recordId]);
-
-  useEffect(() => {
-    if (!recordDetail) {
+    if (!selectedRecord) {
       setAssistantInput("");
       setClinicInput("");
       setNotesInput("");
       return;
     }
-    setAssistantInput(recordDetail.assistantMemberId ?? "");
-    setClinicInput(recordDetail.defaultClinicSlotId ?? "");
-    setNotesInput(recordDetail.teacherNotes ?? "");
-  }, [recordDetail]);
+    setAssistantInput(selectedRecord.assistantMemberId ?? "");
+    setClinicInput(selectedRecord.defaultClinicSlotId ?? "");
+    setNotesInput(selectedRecord.teacherNotes ?? "");
+  }, [selectedRecord]);
 
-  const assistantLabel = useMemo(() => {
-    if (!recordDetail?.assistantMemberId) {
+  const getAssistantLabel = (assistantMemberId?: string | null) => {
+    if (!assistantMemberId) {
       return "미지정";
     }
-    const assignment = assistantOptions.find(
-      (option) => option.assistant?.memberId === recordDetail.assistantMemberId
-    );
+    const assignment = assistantOptions.find((option) => option.assistant?.memberId === assistantMemberId);
     if (!assignment?.assistant) {
-      return recordDetail.assistantMemberId;
+      return assistantMemberId;
     }
     const name = assignment.assistant.name ?? "이름 없음";
     const email = assignment.assistant.email ?? "이메일 없음";
     return `${name} (${email})`;
-  }, [assistantOptions, recordDetail?.assistantMemberId]);
+  };
 
-  const clinicSlotLabel = useMemo(() => {
-    if (!recordDetail?.defaultClinicSlotId) {
+  const getClinicSlotLabel = (slotId?: string | null) => {
+    if (!slotId) {
       return "미지정";
     }
-    const slot = slotOptions.find((option) => option.slotId === recordDetail.defaultClinicSlotId);
+    const slot = slotOptions.find((option) => option.slotId === slotId);
     if (!slot) {
-      return recordDetail.defaultClinicSlotId;
+      return slotId;
     }
     return formatClinicSlotLabel(slot);
-  }, [recordDetail?.defaultClinicSlotId, slotOptions]);
+  };
 
   const resetForm = () => {
-    setAssistantInput(recordDetail?.assistantMemberId ?? "");
-    setClinicInput(recordDetail?.defaultClinicSlotId ?? "");
-    setNotesInput(recordDetail?.teacherNotes ?? "");
+    setAssistantInput(selectedRecord?.assistantMemberId ?? "");
+    setClinicInput(selectedRecord?.defaultClinicSlotId ?? "");
+    setNotesInput(selectedRecord?.teacherNotes ?? "");
   };
 
   const handleSave = async () => {
-    if (!recordDetail?.recordId) {
+    if (!selectedRecord?.recordId) {
       return;
     }
     setSaving(true);
@@ -1224,8 +1261,14 @@ function StudentDetailModal({
         defaultClinicSlotId: clinicInput.trim() ? clinicInput.trim() : undefined,
         teacherNotes: notesInput.trim() ? notesInput : undefined
       };
-      const updated = await updateStudentCourseRecord(recordDetail.recordId, payload);
-      setRecordDetail(updated);
+      const updated = await updateStudentCourseRecord(selectedRecord.recordId, payload);
+      const recordId = updated.recordId ?? selectedRecord.recordId;
+      if (recordId) {
+        setRecordCache((prev) => ({
+          ...prev,
+          [recordId]: updated
+        }));
+      }
       onUpdated?.();
       showToast("success", "수업 기록을 수정했습니다.");
       setEditing(false);
@@ -1278,7 +1321,7 @@ function StudentDetailModal({
       {!loading && !error && detail && (
         <div className="space-y-6">
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">상태</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">배치 상태</p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <Badge variant={summaryVariant}>{summaryLabel}</Badge>
             </div>
@@ -1314,165 +1357,196 @@ function StudentDetailModal({
                   const isSelected = course.courseId === selectedCourseId;
                   const courseActive = course.active ?? true;
                   const assignmentActive = course.assignmentActive ?? false;
-                  const ended = isCourseEnded(course.endDate);
+                  const progressState = getCourseProgressState(course.startDate, course.endDate);
+                  const ended = progressState === "ENDED";
+                  const showAssignmentStatus = !ended;
                   const hasAssignment = Boolean(course.assignmentId);
-                  const toggleDisabled = !hasAssignment || !courseActive || ended || assignmentActionId === course.assignmentId;
+                  const showToggle = showAssignmentStatus && hasAssignment && courseActive;
+                  const toggleDisabled = assignmentActionId === course.assignmentId;
+                  const recordId = course.recordId ?? null;
+                  const record = recordId ? recordCache[recordId] : null;
+                  const recordLoading = recordId ? recordLoadingIds.has(recordId) : false;
+                  const recordError = recordId ? recordErrorMap[recordId] : null;
+                  const showRecordBadge = !recordId;
+                  const isEditingTarget = Boolean(recordId && selectedCourseId === course.courseId && editing);
+                  const canShowActions = Boolean(recordId && selectedCourseId === course.courseId && canEdit);
                   return (
-                    <div key={courseKey} className={clsx(isSelected && "rounded-2xl ring-2 ring-indigo-200")}>
+                    <div
+                      key={courseKey}
+                      className={clsx(
+                        "cursor-pointer space-y-3 rounded-3xl border border-slate-200/60 bg-slate-50/40 p-4",
+                        isSelected && "ring-2 ring-indigo-200"
+                      )}
+                      onClick={() => setSelectedCourseId(course.courseId ?? null)}
+                    >
                       <Card
                         title={course.name ?? "반 정보 없음"}
                         description={formatCoursePeriod(course.startDate, course.endDate)}
                       >
                         <div className="flex flex-wrap items-center gap-2">
-                          {!courseActive && <Badge variant="secondary">삭제됨</Badge>}
-                          {ended && <Badge variant="secondary">종료</Badge>}
-                          {hasAssignment ? (
+                          {progressState && (
+                            <Badge variant="secondary">{courseProgressLabel(progressState)}</Badge>
+                          )}
+                          {!ended && !courseActive && <Badge variant="secondary">보관</Badge>}
+                          {showAssignmentStatus && hasAssignment && (
                             <Badge variant={assignmentActive ? "success" : "secondary"}>
                               {assignmentActive ? "재원" : "휴원"}
                             </Badge>
-                          ) : (
+                          )}
+                          {showAssignmentStatus && !hasAssignment && (
                             <Badge variant="secondary">배치 전</Badge>
                           )}
+                          {showRecordBadge && <Badge variant="secondary">기록 없음</Badge>}
                         </div>
                         <div className="mt-4 flex flex-wrap items-center gap-2">
-                          <Button
-                            variant={assignmentActive ? "ghost" : "secondary"}
-                            className="h-9 px-4 text-xs"
-                            onClick={() => handleToggleAssignment(course, !assignmentActive)}
-                            disabled={toggleDisabled}
-                          >
-                            {assignmentActive ? "휴원 처리" : "재원 처리"}
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            className="h-9 px-4 text-xs"
-                            onClick={() => {
-                              setSelectedCourseId(course.courseId ?? null);
-                              if (course.recordId) {
-                                setEditing(true);
-                              }
-                            }}
-                            disabled={!course.recordId}
-                          >
-                            기록 수정
-                          </Button>
-                          {!hasAssignment && (
+                          {showToggle && (
+                            <Button
+                              variant={assignmentActive ? "ghost" : "secondary"}
+                              className="h-9 px-4 text-xs"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleToggleAssignment(course, !assignmentActive);
+                              }}
+                              disabled={toggleDisabled}
+                            >
+                              {assignmentActive ? "휴원 처리" : "재원 처리"}
+                            </Button>
+                          )}
+                          {showAssignmentStatus && !hasAssignment && (
                             <span className="text-xs text-slate-400">배치 후에만 상태 변경이 가능합니다.</span>
                           )}
-                          {ended && <span className="text-xs text-slate-400">종료된 반은 변경할 수 없습니다.</span>}
-                          {!courseActive && <span className="text-xs text-slate-400">삭제된 반은 읽기 전용입니다.</span>}
+                          {ended && <span className="text-xs text-slate-400">종료된 반은 상태 변경이 없습니다.</span>}
+                          {!ended && !courseActive && (
+                            <span className="text-xs text-slate-400">보관된 반은 읽기 전용입니다.</span>
+                          )}
                         </div>
+                      </Card>
+                      <Card
+                        title="수업 기록"
+                        description={course.name ?? "선택한 반의 기록"}
+                        actions={
+                          canShowActions ? (
+                            isEditingTarget ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  className="h-9 px-3 text-xs"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleCancelEdit();
+                                  }}
+                                  disabled={saving}
+                                >
+                                  취소
+                                </Button>
+                                <Button
+                                  className="h-9 px-4 text-xs"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleSave();
+                                  }}
+                                  disabled={saving}
+                                >
+                                  {saving ? "저장 중..." : "저장"}
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                variant="secondary"
+                                className="h-9 px-4 text-xs"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setSelectedCourseId(course.courseId ?? null);
+                                  setEditing(true);
+                                }}
+                                disabled={saving}
+                              >
+                                수정
+                              </Button>
+                            )
+                          ) : null
+                        }
+                      >
+                        {!recordId && <p className="text-sm text-slate-500">해당 반에 수업 기록이 없습니다.</p>}
+                        {recordId && recordLoading && <LoadingState message="수업 기록을 불러오는 중입니다." />}
+                        {recordId && !recordLoading && recordError && <InlineError message={recordError} />}
+                        {recordId && record && !isEditingTarget && (
+                          <dl className="space-y-2 text-sm text-slate-600">
+                            <div className="flex justify-between gap-4">
+                              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                담당 조교
+                              </dt>
+                              <dd className="text-right">{getAssistantLabel(record.assistantMemberId)}</dd>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                기본 클리닉 슬롯
+                              </dt>
+                              <dd className="text-right">{getClinicSlotLabel(record.defaultClinicSlotId)}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">노트</dt>
+                              <dd className="mt-1 whitespace-pre-wrap text-right">
+                                {record.teacherNotes ?? "등록된 노트가 없습니다."}
+                              </dd>
+                            </div>
+                          </dl>
+                        )}
+                        {recordId && record && isEditingTarget && (
+                          <div className="space-y-3">
+                            <Field label="담당 조교">
+                              <Select
+                                value={assistantInput}
+                                onChange={(event) => setAssistantInput(event.target.value)}
+                                disabled={saving || assistantLoading || !isTeacher}
+                              >
+                                {!assistantInput && <option value="">미지정</option>}
+                                {assistantOptions.map((option, assistantIndex) => {
+                                  const assistantId = option.assistant?.memberId ?? `assistant-${assistantIndex}`;
+                                  const name = option.assistant?.name ?? "이름 없음";
+                                  const email = option.assistant?.email ?? "이메일 없음";
+                                  return (
+                                    <option key={assistantId} value={option.assistant?.memberId ?? ""}>
+                                      {name} ({email})
+                                    </option>
+                                  );
+                                })}
+                              </Select>
+                              {assistantError && <InlineError message={assistantError} className="mt-2" />}
+                            </Field>
+                            <Field label="기본 클리닉 슬롯">
+                              <Select
+                                value={clinicInput}
+                                onChange={(event) => setClinicInput(event.target.value)}
+                                disabled={saving || slotLoading || !isTeacher}
+                              >
+                                {!clinicInput && <option value="">미지정</option>}
+                                {slotOptions.map((slot, slotIndex) => {
+                                  const slotId = slot.slotId ?? `slot-${slotIndex}`;
+                                  return (
+                                    <option key={slotId} value={slot.slotId ?? ""}>
+                                      {formatClinicSlotLabel(slot)}
+                                    </option>
+                                  );
+                                })}
+                              </Select>
+                              {slotError && <InlineError message={slotError} className="mt-2" />}
+                            </Field>
+                            <Field label="Teacher Notes">
+                              <textarea
+                                className="h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="학생에게 남길 메모를 입력하세요."
+                                value={notesInput}
+                                onChange={(event) => setNotesInput(event.target.value)}
+                                disabled={saving}
+                              />
+                            </Field>
+                          </div>
+                        )}
                       </Card>
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-2xl border border-slate-200/60 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">수업 기록</p>
-              {canEdit && (
-                editing ? (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      className="h-9 px-3 text-xs"
-                      onClick={handleCancelEdit}
-                      disabled={saving}
-                    >
-                      취소
-                    </Button>
-                    <Button className="h-9 px-4 text-xs" onClick={handleSave} disabled={saving}>
-                      {saving ? "저장 중..." : "저장"}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    className="h-9 px-4 text-xs"
-                    onClick={() => setEditing(true)}
-                    disabled={saving}
-                  >
-                    수정
-                  </Button>
-                )
-              )}
-            </div>
-
-            {recordLoading && <LoadingState message="수업 기록을 불러오는 중입니다." />}
-            {!recordLoading && recordError && <InlineError message={recordError} className="mt-3" />}
-            {!recordLoading && !recordError && !recordDetail && (
-              <p className="mt-3 text-sm text-slate-500">선택한 반에 기록이 없습니다.</p>
-            )}
-            {recordDetail && !editing && (
-              <dl className="mt-3 space-y-2">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">담당 조교</dt>
-                  <dd className="text-right">{assistantLabel}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">기본 클리닉 슬롯</dt>
-                  <dd className="text-right">{clinicSlotLabel}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">노트</dt>
-                  <dd className="mt-1 whitespace-pre-wrap text-right">
-                    {recordDetail.teacherNotes ?? "등록된 노트가 없습니다."}
-                  </dd>
-                </div>
-              </dl>
-            )}
-            {recordDetail && editing && (
-              <div className="mt-4 space-y-3">
-                <Field label="담당 조교">
-                  <Select
-                    value={assistantInput}
-                    onChange={(event) => setAssistantInput(event.target.value)}
-                    disabled={saving || assistantLoading || !isTeacher}
-                  >
-                    <option value="">미지정</option>
-                    {assistantOptions.map((option, index) => {
-                      const assistantId = option.assistant?.memberId ?? `assistant-${index}`;
-                      const name = option.assistant?.name ?? "이름 없음";
-                      const email = option.assistant?.email ?? "이메일 없음";
-                      return (
-                        <option key={assistantId} value={option.assistant?.memberId ?? ""}>
-                          {name} ({email})
-                        </option>
-                      );
-                    })}
-                  </Select>
-                  {assistantError && <InlineError message={assistantError} className="mt-2" />}
-                </Field>
-                <Field label="기본 클리닉 슬롯">
-                  <Select
-                    value={clinicInput}
-                    onChange={(event) => setClinicInput(event.target.value)}
-                    disabled={saving || slotLoading || !isTeacher}
-                  >
-                    <option value="">미지정</option>
-                    {slotOptions.map((slot, index) => {
-                      const slotId = slot.slotId ?? `slot-${index}`;
-                      return (
-                        <option key={slotId} value={slot.slotId ?? ""}>
-                          {formatClinicSlotLabel(slot)}
-                        </option>
-                      );
-                    })}
-                  </Select>
-                  {slotError && <InlineError message={slotError} className="mt-2" />}
-                </Field>
-                <Field label="Teacher Notes">
-                  <textarea
-                    className="h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="학생에게 남길 메모를 입력하세요."
-                    value={notesInput}
-                    onChange={(event) => setNotesInput(event.target.value)}
-                    disabled={saving}
-                  />
-                </Field>
               </div>
             )}
           </section>
@@ -1669,16 +1743,41 @@ function buildCourseLabel(course: CourseResponse | CourseWithTeacherResponse) {
   return `${course.name ?? "이름 없는 반"}${academy ? ` (${academy})` : ""}${teacherPart}`;
 }
 
-function isCourseEnded(endDate?: string | null) {
-  if (!endDate) {
-    return false;
+type CourseProgressState = "UPCOMING" | "ONGOING" | "ENDED";
+
+function getCourseProgressState(startDate?: string | null, endDate?: string | null): CourseProgressState | null {
+  const todayKey = toDateKey(new Date());
+  if (todayKey === null) {
+    return null;
   }
-  const today = new Date();
-  const end = new Date(endDate);
-  if (Number.isNaN(end.getTime())) {
-    return false;
+  const startKey = toDateKey(startDate ? new Date(startDate) : null);
+  const endKey = toDateKey(endDate ? new Date(endDate) : null);
+
+  if (endKey !== null && endKey < todayKey) {
+    return "ENDED";
   }
-  const todayKey = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  const endKey = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
-  return endKey < todayKey;
+  if (startKey !== null && startKey > todayKey) {
+    return "UPCOMING";
+  }
+  if (startKey !== null || endKey !== null) {
+    return "ONGOING";
+  }
+  return null;
+}
+
+function courseProgressLabel(state: CourseProgressState) {
+  if (state === "UPCOMING") {
+    return "진행예정";
+  }
+  if (state === "ONGOING") {
+    return "진행중";
+  }
+  return "종료";
+}
+
+function toDateKey(date: Date | null) {
+  if (!date || Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }

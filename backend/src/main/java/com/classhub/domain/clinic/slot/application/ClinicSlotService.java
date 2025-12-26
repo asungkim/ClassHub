@@ -17,6 +17,7 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.validator.ScheduleTimeRangeValidator;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
@@ -155,6 +156,7 @@ public class ClinicSlotService {
             throw new BusinessException(RsCode.FORBIDDEN);
         }
         slot.delete();
+        studentCourseRecordRepository.clearDefaultClinicSlotId(slotId);
         clinicSlotRepository.save(slot);
     }
 
@@ -187,9 +189,7 @@ public class ClinicSlotService {
             LocalTime endTime,
             Integer defaultCapacity
     ) {
-        if (!startTime.isBefore(endTime)) {
-            throw new BusinessException(RsCode.CLINIC_SLOT_TIME_INVALID);
-        }
+        ScheduleTimeRangeValidator.validate(startTime, endTime, RsCode.CLINIC_SLOT_TIME_INVALID);
         if (defaultCapacity < 1) {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
