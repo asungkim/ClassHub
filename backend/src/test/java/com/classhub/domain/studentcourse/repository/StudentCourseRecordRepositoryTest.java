@@ -8,6 +8,8 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.global.config.JpaConfig;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -46,6 +48,37 @@ class StudentCourseRecordRepositoryTest {
         long count = studentCourseRecordRepository.countByDefaultClinicSlotIdAndDeletedAtIsNull(slotId);
 
         assertThat(count).isEqualTo(1L);
+    }
+
+    @Test
+    void countDefaultClinicSlots_shouldReturnCountsPerSlot() {
+        UUID slotA = UUID.randomUUID();
+        UUID slotB = UUID.randomUUID();
+        Course course = courseRepository.save(createCourse());
+
+        studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), course.getId(), null, slotA, null)
+        );
+        studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), course.getId(), null, slotA, null)
+        );
+        studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), course.getId(), null, slotB, null)
+        );
+        StudentCourseRecord deletedRecord = studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), course.getId(), null, slotB, null)
+        );
+        deletedRecord.delete();
+        studentCourseRecordRepository.save(deletedRecord);
+
+        Map<UUID, Long> counts = studentCourseRecordRepository.countDefaultClinicSlots(List.of(slotA, slotB)).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        StudentCourseRecordRepository.DefaultClinicSlotCount::getSlotId,
+                        StudentCourseRecordRepository.DefaultClinicSlotCount::getCount
+                ));
+
+        assertThat(counts.get(slotA)).isEqualTo(2L);
+        assertThat(counts.get(slotB)).isEqualTo(1L);
     }
 
     private Course createCourse() {

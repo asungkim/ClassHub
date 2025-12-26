@@ -6883,3 +6883,56 @@ DESIGN
   - `docs/plan/backend/season2/clinic-slot-session-card_plan.md`
   - `docs/plan/frontend/season2/clinic-slot-session-card_ui_plan.md`
 - 다음 단계: 설계 승인 후 TDD/구현 진행
+## [2025-12-27 01:12] 클리닉 슬롯 기본 설정 인원 수 응답 확장
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 슬롯 응답에 기본 슬롯 설정 인원 수를 포함하도록 확장
+- 슬롯 목록 조회 시 집계 쿼리로 counts를 계산하도록 보완
+
+### Details
+- 작업 사유: 슬롯 카드에서 기본 설정 인원/정원을 표시하기 위해 API 확장 필요
+- 영향받은 테스트:
+  - `StudentCourseRecordRepositoryTest`
+  - `ClinicSlotServiceTest`
+  - `ClinicSlotControllerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/dto/response/ClinicSlotResponse.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/web/ClinicSlotController.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/web/ClinicSlotControllerTest.java`
+- 다음 단계: OpenAPI 타입 갱신 및 프론트 슬롯 카드 표시 반영
+## [2025-12-27 01:24] 학생 클리닉 카드 표시 계획 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 클리닉 슬롯/세션 카드에 인원 카운트 표시 및 만석 표시 규칙 추가
+- 학생 화면에서 변경 후 재조회 흐름을 설계에 반영
+
+### Details
+- 작업 사유: 학생 화면에서 기본 슬롯/세션 카운트 및 만석 표시 요구 반영
+- 영향받은 테스트: 해당 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-slot-session-card_ui_plan.md`
+- 다음 단계: 프론트 구현 범위 확정 및 승인 후 작업 진행
+## [2025-12-27 01:31] 클리닉 카드 UI 구현 단계 정의
+
+### Type
+DESIGN
+
+### Summary
+- 클리닉 카드 UI 작업을 선생님/조교와 학생 단계로 분리
+
+### Details
+- 작업 사유: 구현 범위를 단계별로 나눠 순차적으로 진행하기 위해
+- 영향받은 테스트: 해당 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/clinic-slot-session-card_ui_plan.md`
+- 다음 단계: 1단계(선생님/조교) 구현 승인 후 작업 시작

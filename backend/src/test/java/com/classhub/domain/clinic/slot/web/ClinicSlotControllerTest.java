@@ -25,6 +25,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +70,7 @@ class ClinicSlotControllerTest {
         ClinicSlot slot = createSlot(UUID.randomUUID(), teacherId, branchId);
         given(clinicSlotService.createSlot(eq(teacherId), any(ClinicSlotCreateRequest.class)))
                 .willReturn(slot);
+        given(clinicSlotService.getDefaultAssignedCount(slot.getId())).willReturn(0L);
         ClinicSlotCreateRequest request = new ClinicSlotCreateRequest(
                 branchId,
                 DayOfWeek.MONDAY,
@@ -83,7 +85,8 @@ class ClinicSlotControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(RsCode.CREATED.getCode()))
-                .andExpect(jsonPath("$.data.slotId").value(slot.getId().toString()));
+                .andExpect(jsonPath("$.data.slotId").value(slot.getId().toString()))
+                .andExpect(jsonPath("$.data.defaultAssignedCount").value(0));
 
         verify(clinicSlotService).createSlot(eq(teacherId), any(ClinicSlotCreateRequest.class));
     }
@@ -95,13 +98,16 @@ class ClinicSlotControllerTest {
         ClinicSlot slot = createSlot(UUID.randomUUID(), teacherId, branchId);
         given(clinicSlotService.getSlots(any(MemberPrincipal.class), eq(branchId), isNull(), isNull()))
                 .willReturn(List.of(slot));
+        given(clinicSlotService.getDefaultAssignedCounts(List.of(slot)))
+                .willReturn(Map.of(slot.getId(), 2L));
 
         mockMvc.perform(get("/api/v1/clinic-slots")
                         .param("branchId", branchId.toString())
                         .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(teacherId, MemberRole.TEACHER))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
-                .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()));
+                .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()))
+                .andExpect(jsonPath("$.data[0].defaultAssignedCount").value(2));
 
         verify(clinicSlotService).getSlots(any(MemberPrincipal.class), eq(branchId), isNull(), isNull());
     }
@@ -114,6 +120,8 @@ class ClinicSlotControllerTest {
         ClinicSlot slot = createSlot(UUID.randomUUID(), teacherId, branchId);
         given(clinicSlotService.getSlots(any(MemberPrincipal.class), eq(branchId), eq(teacherId), isNull()))
                 .willReturn(List.of(slot));
+        given(clinicSlotService.getDefaultAssignedCounts(List.of(slot)))
+                .willReturn(Map.of(slot.getId(), 1L));
 
         mockMvc.perform(get("/api/v1/clinic-slots")
                         .param("branchId", branchId.toString())
@@ -121,7 +129,8 @@ class ClinicSlotControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(assistantId, MemberRole.ASSISTANT))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
-                .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()));
+                .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()))
+                .andExpect(jsonPath("$.data[0].defaultAssignedCount").value(1));
 
         verify(clinicSlotService).getSlots(any(MemberPrincipal.class), eq(branchId), eq(teacherId), isNull());
     }
@@ -133,13 +142,16 @@ class ClinicSlotControllerTest {
         ClinicSlot slot = createSlot(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         given(clinicSlotService.getSlots(any(MemberPrincipal.class), isNull(), isNull(), eq(courseId)))
                 .willReturn(List.of(slot));
+        given(clinicSlotService.getDefaultAssignedCounts(List.of(slot)))
+                .willReturn(Map.of(slot.getId(), 0L));
 
         mockMvc.perform(get("/api/v1/clinic-slots")
                         .param("courseId", courseId.toString())
                         .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(studentId, MemberRole.STUDENT))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
-                .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()));
+                .andExpect(jsonPath("$.data[0].slotId").value(slot.getId().toString()))
+                .andExpect(jsonPath("$.data[0].defaultAssignedCount").value(0));
 
         verify(clinicSlotService).getSlots(any(MemberPrincipal.class), isNull(), isNull(), eq(courseId));
     }
@@ -157,6 +169,7 @@ class ClinicSlotControllerTest {
         );
         given(clinicSlotService.updateSlot(eq(teacherId), eq(slotId), any(ClinicSlotUpdateRequest.class)))
                 .willReturn(slot);
+        given(clinicSlotService.getDefaultAssignedCount(slotId)).willReturn(4L);
 
         mockMvc.perform(patch("/api/v1/clinic-slots/{slotId}", slotId)
                         .with(SecurityMockMvcRequestPostProcessors.authentication(authToken(teacherId, MemberRole.TEACHER)))
@@ -164,7 +177,8 @@ class ClinicSlotControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
-                .andExpect(jsonPath("$.data.slotId").value(slotId.toString()));
+                .andExpect(jsonPath("$.data.slotId").value(slotId.toString()))
+                .andExpect(jsonPath("$.data.defaultAssignedCount").value(4));
 
         verify(clinicSlotService).updateSlot(eq(teacherId), eq(slotId), any(ClinicSlotUpdateRequest.class));
     }

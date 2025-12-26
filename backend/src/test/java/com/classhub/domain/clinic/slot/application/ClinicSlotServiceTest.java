@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -259,6 +261,26 @@ class ClinicSlotServiceTest {
 
         assertThat(slot.isDeleted()).isTrue();
         verify(studentCourseRecordRepository).clearDefaultClinicSlotId(slotId);
+    }
+
+    @Test
+    void getDefaultAssignedCounts_shouldReturnCountsForSlots() {
+        UUID slotIdA = UUID.randomUUID();
+        UUID slotIdB = UUID.randomUUID();
+        ClinicSlot slotA = createSlot(slotIdA, UUID.randomUUID(), DayOfWeek.MONDAY, LocalTime.of(9, 0));
+        ClinicSlot slotB = createSlot(slotIdB, UUID.randomUUID(), DayOfWeek.MONDAY, LocalTime.of(10, 0));
+        StudentCourseRecordRepository.DefaultClinicSlotCount count = mock(
+                StudentCourseRecordRepository.DefaultClinicSlotCount.class
+        );
+        given(count.getSlotId()).willReturn(slotIdA);
+        given(count.getCount()).willReturn(3L);
+        given(studentCourseRecordRepository.countDefaultClinicSlots(List.of(slotIdA, slotIdB)))
+                .willReturn(List.of(count));
+
+        Map<UUID, Long> result = clinicSlotService.getDefaultAssignedCounts(List.of(slotA, slotB));
+
+        assertThat(result.get(slotIdA)).isEqualTo(3L);
+        assertThat(result.get(slotIdB)).isEqualTo(0L);
     }
 
     private Branch createBranch(UUID branchId, VerifiedStatus status) {

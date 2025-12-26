@@ -13,9 +13,24 @@ import org.springframework.data.repository.query.Param;
 
 public interface StudentCourseRecordRepository extends JpaRepository<StudentCourseRecord, UUID> {
 
+    interface DefaultClinicSlotCount {
+        UUID getSlotId();
+        long getCount();
+    }
+
     long countByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
 
     List<StudentCourseRecord> findByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
+
+    @Query("""
+            SELECT scr.defaultClinicSlotId AS slotId,
+                   COUNT(scr) AS count
+            FROM StudentCourseRecord scr
+            WHERE scr.defaultClinicSlotId IN :slotIds
+              AND scr.deletedAt IS NULL
+            GROUP BY scr.defaultClinicSlotId
+            """)
+    List<DefaultClinicSlotCount> countDefaultClinicSlots(@Param("slotIds") List<UUID> slotIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

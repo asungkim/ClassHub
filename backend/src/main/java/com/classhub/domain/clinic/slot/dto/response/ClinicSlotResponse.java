@@ -13,10 +13,15 @@ public record ClinicSlotResponse(
         DayOfWeek dayOfWeek,
         LocalTime startTime,
         LocalTime endTime,
-        Integer defaultCapacity
+        Integer defaultCapacity,
+        Long defaultAssignedCount
 ) {
 
     public static ClinicSlotResponse from(ClinicSlot slot) {
+        return from(slot, 0L);
+    }
+
+    public static ClinicSlotResponse from(ClinicSlot slot, long defaultAssignedCount) {
         return new ClinicSlotResponse(
                 slot.getId(),
                 slot.getTeacherMemberId(),
@@ -25,7 +30,8 @@ public record ClinicSlotResponse(
                 slot.getDayOfWeek(),
                 slot.getStartTime(),
                 slot.getEndTime(),
-                slot.getDefaultCapacity()
+                slot.getDefaultCapacity(),
+                defaultAssignedCount
         );
     }
 }

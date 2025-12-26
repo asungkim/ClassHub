@@ -44,8 +44,12 @@ public class ClinicSlotController {
             @RequestParam(name = "courseId", required = false) UUID courseId
     ) {
         List<ClinicSlot> slots = clinicSlotService.getSlots(principal, branchId, teacherId, courseId);
+        var assignedCounts = clinicSlotService.getDefaultAssignedCounts(slots);
         List<ClinicSlotResponse> response = slots.stream()
-                .map(ClinicSlotResponse::from)
+                .map(slot -> ClinicSlotResponse.from(
+                        slot,
+                        assignedCounts.getOrDefault(slot.getId(), 0L)
+                ))
                 .toList();
         return RsData.from(RsCode.SUCCESS, response);
     }
@@ -58,7 +62,8 @@ public class ClinicSlotController {
             @Valid @RequestBody ClinicSlotCreateRequest request
     ) {
         ClinicSlot slot = clinicSlotService.createSlot(principal.id(), request);
-        return RsData.from(RsCode.CREATED, ClinicSlotResponse.from(slot));
+        long assignedCount = clinicSlotService.getDefaultAssignedCount(slot.getId());
+        return RsData.from(RsCode.CREATED, ClinicSlotResponse.from(slot, assignedCount));
     }
 
     @PatchMapping("/{slotId}")
@@ -70,7 +75,8 @@ public class ClinicSlotController {
             @Valid @RequestBody ClinicSlotUpdateRequest request
     ) {
         ClinicSlot slot = clinicSlotService.updateSlot(principal.id(), slotId, request);
-        return RsData.from(RsCode.SUCCESS, ClinicSlotResponse.from(slot));
+        long assignedCount = clinicSlotService.getDefaultAssignedCount(slot.getId());
+        return RsData.from(RsCode.SUCCESS, ClinicSlotResponse.from(slot, assignedCount));
     }
 
     @DeleteMapping("/{slotId}")

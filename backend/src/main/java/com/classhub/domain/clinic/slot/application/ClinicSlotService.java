@@ -22,7 +22,9 @@ import com.classhub.global.validator.ScheduleTimeRangeValidator;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +86,36 @@ public class ClinicSlotService {
             return getSlotsForStudent(principal.id(), courseId);
         }
         throw new BusinessException(RsCode.FORBIDDEN);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, Long> getDefaultAssignedCounts(List<ClinicSlot> slots) {
+        if (slots == null || slots.isEmpty()) {
+            return Map.of();
+        }
+        List<UUID> slotIds = slots.stream()
+                .map(ClinicSlot::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (slotIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, Long> counts = new HashMap<>();
+        slotIds.forEach(slotId -> counts.put(slotId, 0L));
+        studentCourseRecordRepository.countDefaultClinicSlots(slotIds).forEach(count -> {
+            if (count.getSlotId() != null) {
+                counts.put(count.getSlotId(), count.getCount());
+            }
+        });
+        return counts;
+    }
+
+    @Transactional(readOnly = true)
+    public long getDefaultAssignedCount(UUID slotId) {
+        if (slotId == null) {
+            return 0L;
+        }
+        return studentCourseRecordRepository.countByDefaultClinicSlotIdAndDeletedAtIsNull(slotId);
     }
 
     @Transactional(readOnly = true)

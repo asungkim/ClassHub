@@ -1549,6 +1549,8 @@ export interface components {
             endTime?: string;
             /** Format: int32 */
             defaultCapacity?: number;
+            /** Format: int64 */
+            defaultAssignedCount?: number;
         };
         RsDataClinicSlotResponse: {
             /** Format: int32 */
