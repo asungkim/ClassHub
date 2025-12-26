@@ -16,6 +16,7 @@ import { InlineError } from "@/components/ui/inline-error";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import { Modal } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { formatDateYmdKst } from "@/utils/date";
@@ -37,7 +38,7 @@ type CourseFormMode = "CREATE" | "EDIT";
 
 const statusTabs: { value: CourseStatusFilter; label: string }[] = [
   { value: "ACTIVE", label: "활성" },
-  { value: "INACTIVE", label: "비활성" },
+  { value: "INACTIVE", label: "보관함" },
   { value: "ALL", label: "전체" }
 ];
 
@@ -178,6 +179,8 @@ function TeacherCourseManagement() {
   const [formMode, setFormMode] = useState<CourseFormMode>("CREATE");
   const [editingCourse, setEditingCourse] = useState<CourseResponse | null>(null);
   const [mutatingCourseId, setMutatingCourseId] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<CourseResponse | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   // Debounce keyword to avoid chattiness
   useEffect(() => {
@@ -329,18 +332,30 @@ function TeacherCourseManagement() {
     setEditingCourse(null);
   }, []);
 
+  const handleRequestArchive = useCallback((course: CourseResponse) => {
+    setArchiveTarget(course);
+  }, []);
+
   const handleCourseStatusChange = useCallback(
     async (course: CourseResponse, enabled: boolean) => {
       if (!course.courseId) {
         return;
       }
+
+      // 보관하려는 경우 확인 다이얼로그 표시
+      if (!enabled) {
+        handleRequestArchive(course);
+        return;
+      }
+
+      // 보관 취소하는 경우 바로 실행
       setMutatingCourseId(course.courseId);
       setCourses((prev) =>
         prev.map((item) => (item.courseId === course.courseId ? { ...item, active: enabled } : item))
       );
       try {
         await updateCourseStatus(course.courseId, { enabled });
-        showToast("success", enabled ? "반을 활성화했습니다." : "반을 비활성화했습니다.");
+        showToast("success", "반을 보관 취소했습니다.");
         await Promise.all([loadCourses(), loadCalendar(calendarRange)]);
       } catch (error) {
         const message = error instanceof Error ? error.message : "반 상태를 변경하지 못했습니다.";
@@ -350,8 +365,32 @@ function TeacherCourseManagement() {
         setMutatingCourseId(null);
       }
     },
-    [calendarRange, loadCalendar, loadCourses, showToast]
+    [calendarRange, handleRequestArchive, loadCalendar, loadCourses, showToast]
   );
+
+  const handleConfirmArchive = useCallback(async () => {
+    if (!archiveTarget?.courseId) {
+      return;
+    }
+    setIsArchiving(true);
+    setMutatingCourseId(archiveTarget.courseId);
+    setCourses((prev) =>
+      prev.map((item) => (item.courseId === archiveTarget.courseId ? { ...item, active: false } : item))
+    );
+    try {
+      await updateCourseStatus(archiveTarget.courseId, { enabled: false });
+      showToast("success", "반을 보관했습니다.");
+      await Promise.all([loadCourses(), loadCalendar(calendarRange)]);
+      setArchiveTarget(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "반을 보관하지 못했습니다.";
+      showToast("error", message);
+      await loadCourses();
+    } finally {
+      setIsArchiving(false);
+      setMutatingCourseId(null);
+    }
+  }, [archiveTarget, calendarRange, loadCalendar, loadCourses, showToast]);
 
   const handleCourseFormSubmit = useCallback(
     async (values: CourseFormValues) => {
@@ -418,7 +457,7 @@ function TeacherCourseManagement() {
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Class Management</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900">반 관리</h1>
             <p className="mt-2 text-sm text-slate-500">
-              목록/캘린더에서 반을 확인하고 곧바로 생성·수정·비활성화를 처리할 수 있습니다.
+              목록/캘린더에서 반을 확인하고 곧바로 생성·수정·보관을 처리할 수 있습니다. 반 기간이 지나면 클리닉 자동생성이 중단됩니다.
             </p>
           </div>
           <div className="flex w-full flex-col items-stretch gap-2 md:w-auto">
@@ -503,6 +542,17 @@ function TeacherCourseManagement() {
         initialCourse={editingCourse}
         onClose={handleCloseForm}
         onSubmit={handleCourseFormSubmit}
+      />
+
+      <ConfirmDialog
+        open={Boolean(archiveTarget)}
+        onClose={() => setArchiveTarget(null)}
+        onConfirm={() => void handleConfirmArchive()}
+        title="반을 보관할까요?"
+        message="보관하게 되면 해당 반과 관련된 작업을 할 수 없습니다. 계속하시겠습니까?"
+        confirmText={isArchiving ? "보관 중..." : "보관"}
+        cancelText="취소"
+        isLoading={isArchiving}
       />
     </div>
   );
@@ -686,15 +736,15 @@ function CourseStatusToggle({ active, disabled, onChange }: CourseStatusTogglePr
       onClick={() => onChange(!active)}
       className={clsx(
         "flex items-center gap-3 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-        active ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-slate-200 bg-white text-slate-500",
+        active ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-amber-200 bg-amber-50 text-amber-700",
         disabled && "cursor-not-allowed opacity-60"
       )}
     >
-      <span>{active ? "활성" : "비활성"}</span>
+      <span>{active ? "활성" : "보관됨"}</span>
       <span
         className={clsx(
           "relative inline-flex h-6 w-11 items-center rounded-full transition",
-          active ? "bg-emerald-500" : "bg-slate-300"
+          active ? "bg-emerald-500" : "bg-amber-400"
         )}
       >
         <span
