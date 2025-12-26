@@ -22,6 +22,7 @@ import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepositor
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.LocalDateTime;
@@ -113,11 +114,11 @@ public class StudentEnrollmentApprovalService {
         if (alreadyEnrolled) {
             throw new BusinessException(RsCode.STUDENT_ENROLLMENT_ALREADY_EXISTS);
         }
-        request.approve(processorId, LocalDateTime.now());
+        request.approve(processorId, LocalDateTime.now(KstTime.clock()));
         StudentCourseEnrollment enrollment = StudentCourseEnrollment.create(
                 request.getStudentMemberId(),
                 request.getCourseId(),
-                LocalDateTime.now());
+                LocalDateTime.now(KstTime.clock()));
         enrollmentRepository.save(enrollment);
         StudentCourseRecord record = StudentCourseRecord.create(
                 request.getStudentMemberId(),
@@ -135,7 +136,7 @@ public class StudentEnrollmentApprovalService {
         ensurePending(request);
         Course course = loadCourse(request.getCourseId());
         ensurePermission(processorId, course.getTeacherMemberId());
-        request.reject(processorId, LocalDateTime.now());
+        request.reject(processorId, LocalDateTime.now(KstTime.clock()));
         return buildSingleResponse(request, course);
     }
 
@@ -271,7 +272,7 @@ public class StudentEnrollmentApprovalService {
         if (birthDate == null) {
             return null;
         }
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        return Period.between(birthDate, LocalDate.now(KstTime.clock())).getYears();
     }
 
     private StudentEnrollmentRequest loadRequest(UUID requestId) {

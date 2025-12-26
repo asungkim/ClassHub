@@ -18,7 +18,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -131,4 +130,5 @@ public class CourseController {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
     }
+
 }

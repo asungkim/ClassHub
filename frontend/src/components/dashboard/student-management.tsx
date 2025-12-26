@@ -15,102 +15,59 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { useDebounce } from "@/hooks/use-debounce";
 import {
   DASHBOARD_PAGE_SIZE,
-  approveEnrollmentRequest,
-  fetchAssistantCourses,
+  activateStudentCourseAssignment,
+  approveTeacherStudentRequest,
+  deactivateStudentCourseAssignment,
+  fetchAssignableCourses,
+  fetchAssignmentCandidates,
   fetchClinicSlots,
+  fetchStudentCourseDetail,
   fetchTeacherAssistants,
-  fetchStudentStudentDetail,
-  fetchStudentStudents,
   fetchTeacherCourses,
-  fetchTeacherEnrollmentRequests,
-  rejectEnrollmentRequest,
+  fetchTeacherStudentDetail,
+  fetchTeacherStudents,
+  fetchStudentTeacherRequests,
+  fetchAssistantCourses,
+  createStudentCourseAssignment,
+  rejectTeacherStudentRequest,
   updateStudentCourseRecord
 } from "@/lib/dashboard-api";
 import { formatStudentBirthDate, formatStudentGrade } from "@/utils/student";
 import type {
-  EnrollmentStatus,
   AssistantAssignmentResponse,
   ClinicSlotResponse,
-  StudentCourseStatusFilter,
-  StudentStudentDetailResponse,
-  StudentStudentListItemResponse,
-  TeacherEnrollmentRequestResponse
+  CourseResponse,
+  CourseWithTeacherResponse,
+  StudentCourseDetailResponse,
+  StudentSummaryResponse,
+  TeacherStudentCourseResponse,
+  TeacherStudentDetailResponse,
+  StudentTeacherRequestResponse,
+  StudentTeacherRequestStatus
 } from "@/types/dashboard";
 
 type Role = "TEACHER" | "ASSISTANT";
-type TabKey = "students" | "requests";
-type CourseOption = { value: string; label: string };
+type TabKey = "students" | "requests" | "assignments";
 
-const studentStatusOptions: { value: StudentCourseStatusFilter; label: string }[] = [
-  { value: "ACTIVE", label: "재원" },
-  { value: "INACTIVE", label: "휴원" },
-  { value: "ALL", label: "전체" }
-];
-
-const enrollmentStatusOptions: { value: EnrollmentStatus; label: string }[] = [
+const requestStatusOptions: { value: StudentTeacherRequestStatus; label: string }[] = [
   { value: "PENDING", label: "대기" },
   { value: "APPROVED", label: "승인" },
   { value: "REJECTED", label: "거절" },
-  { value: "CANCELED", label: "취소" }
+  { value: "CANCELLED", label: "취소" }
 ];
 
-const enrollmentStatusBadge: Record<EnrollmentStatus, Parameters<typeof Badge>[0]["variant"]> = {
+const requestStatusBadge: Record<StudentTeacherRequestStatus, Parameters<typeof Badge>[0]["variant"]> = {
   PENDING: "secondary",
   APPROVED: "success",
   REJECTED: "destructive",
-  CANCELED: "secondary"
+  CANCELLED: "secondary"
 };
 
 export function StudentManagementView({ role }: { role: Role }) {
   const [activeTab, setActiveTab] = useState<TabKey>("students");
-  const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
-  const [courseOptionsLoading, setCourseOptionsLoading] = useState(false);
-  const { showToast } = useToast();
-
-  const loadCourseOptions = useCallback(async () => {
-    setCourseOptionsLoading(true);
-    try {
-      if (role === "TEACHER") {
-        const result = await fetchTeacherCourses({
-          status: "ALL",
-          page: 0,
-          size: 100
-        });
-        const options = result.items
-          .filter((course) => Boolean(course.courseId))
-          .map((course) => ({
-            value: course.courseId as string,
-            label: buildCourseLabel(course.name, course.companyName, course.branchName)
-          }));
-        setCourseOptions(options);
-      } else {
-        const result = await fetchAssistantCourses({
-          status: "ALL",
-          page: 0,
-          size: 100
-        });
-        const options = result.items
-          .filter((course) => Boolean(course.courseId))
-          .map((course) => ({
-            value: course.courseId as string,
-            label: buildCourseLabel(course.name, course.companyName, course.branchName, course.teacherName)
-          }));
-        setCourseOptions(options);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "반 정보를 불러오지 못했습니다.";
-      showToast("error", message);
-    } finally {
-      setCourseOptionsLoading(false);
-    }
-  }, [role, showToast]);
-
-  useEffect(() => {
-    void loadCourseOptions();
-  }, [loadCourseOptions]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const headerMeta =
     role === "TEACHER"
@@ -126,6 +83,10 @@ export function StudentManagementView({ role }: { role: Role }) {
           title: "학생 지원",
           description: "연결된 선생님의 학생 현황을 파악하고, 요청 처리 탭에서 등록 신청을 돕습니다."
         };
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((prev) => prev + 1);
+  }, []);
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -144,13 +105,17 @@ export function StudentManagementView({ role }: { role: Role }) {
         <TabsList>
           <TabsTrigger value="students">학생 목록</TabsTrigger>
           <TabsTrigger value="requests">신청 처리</TabsTrigger>
+          <TabsTrigger value="assignments">반 배치</TabsTrigger>
         </TabsList>
 
         <div hidden={activeTab !== "students"}>
-          <StudentsTab role={role} />
+          <StudentsTab role={role} refreshKey={refreshKey} />
         </div>
         <div hidden={activeTab !== "requests"}>
-          <RequestsTab role={role} courseOptions={courseOptions} courseOptionsLoading={courseOptionsLoading} />
+          <RequestsTab onRefresh={handleRefresh} />
+        </div>
+        <div hidden={activeTab !== "assignments"}>
+          <BatchAssignmentTab role={role} refreshKey={refreshKey} />
         </div>
       </Tabs>
     </div>
@@ -159,30 +124,75 @@ export function StudentManagementView({ role }: { role: Role }) {
 
 type StudentsTabProps = {
   role: Role;
+  refreshKey: number;
 };
 
-function StudentsTab({ role }: StudentsTabProps) {
-  const [status, setStatus] = useState<StudentCourseStatusFilter>("ACTIVE");
+function StudentsTab({ role, refreshKey }: StudentsTabProps) {
+  const [courseId, setCourseId] = useState("");
+  const [courseOptions, setCourseOptions] = useState<{ value: string; label: string }[]>([]);
+  const [courseOptionsLoading, setCourseOptionsLoading] = useState(false);
   const [keywordInput, setKeywordInput] = useState("");
   const [appliedKeyword, setAppliedKeyword] = useState("");
   const [page, setPage] = useState(0);
-  const [students, setStudents] = useState<StudentStudentListItemResponse[]>([]);
+  const [students, setStudents] = useState<StudentSummaryResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<StudentStudentDetailResponse | null>(null);
+  const [detail, setDetail] = useState<TeacherStudentDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const { showToast } = useToast();
   const canViewDetail = true;
 
+  const loadCourseOptions = useCallback(async () => {
+    setCourseOptionsLoading(true);
+    try {
+      if (role === "TEACHER") {
+        const result = await fetchTeacherCourses({
+          status: "ALL",
+          page: 0,
+          size: 100
+        });
+        const options = result.items
+          .filter((course) => Boolean(course.courseId))
+          .map((course) => ({
+            value: course.courseId as string,
+            label: buildCourseLabel(course)
+          }));
+        setCourseOptions(options);
+      } else {
+        const result = await fetchAssistantCourses({
+          status: "ALL",
+          page: 0,
+          size: 100
+        });
+        const options = result.items
+          .filter((course) => Boolean(course.courseId))
+          .map((course) => ({
+            value: course.courseId as string,
+            label: buildCourseLabel(course)
+          }));
+        setCourseOptions(options);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "반 정보를 불러오지 못했습니다.";
+      showToast("error", message);
+    } finally {
+      setCourseOptionsLoading(false);
+    }
+  }, [role, showToast]);
+
+  useEffect(() => {
+    void loadCourseOptions();
+  }, [loadCourseOptions]);
+
   const loadStudents = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchStudentStudents({
-        status,
+      const result = await fetchTeacherStudents({
+        courseId: courseId || undefined,
         keyword: appliedKeyword.trim() ? appliedKeyword.trim() : undefined,
         page,
         size: DASHBOARD_PAGE_SIZE
@@ -196,11 +206,11 @@ function StudentsTab({ role }: StudentsTabProps) {
     } finally {
       setLoading(false);
     }
-  }, [appliedKeyword, status, page, showToast]);
+  }, [appliedKeyword, courseId, page, showToast]);
 
   useEffect(() => {
     void loadStudents();
-  }, [loadStudents]);
+  }, [loadStudents, refreshKey]);
 
   useEffect(() => {
     if (!detailStudentId || !canViewDetail) {
@@ -209,7 +219,7 @@ function StudentsTab({ role }: StudentsTabProps) {
     setDetail(null);
     setDetailError(null);
     setDetailLoading(true);
-    fetchStudentStudentDetail(detailStudentId)
+    fetchTeacherStudentDetail(detailStudentId)
       .then((response) => {
         setDetail(response);
       })
@@ -225,15 +235,11 @@ function StudentsTab({ role }: StudentsTabProps) {
 
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
   const emptyDescription = useMemo(() => {
-    switch (status) {
-      case "ACTIVE":
-        return "현재 수강 중인 학생이 없습니다.";
-      case "INACTIVE":
-        return "비활성화된 학생 기록이 없습니다.";
-      default:
-        return "표시할 학생이 없습니다. 필터를 조정해 보세요.";
+    if (courseId) {
+      return "선택한 반에 배치된 학생이 없습니다.";
     }
-  }, [status]);
+    return "연결된 학생이 없습니다. 검색 조건을 바꿔보세요.";
+  }, [courseId]);
 
   const applyKeywordFilter = () => {
     setAppliedKeyword(keywordInput);
@@ -248,19 +254,20 @@ function StudentsTab({ role }: StudentsTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card title="학생 필터" description="상태와 검색어로 원하는 학생을 빠르게 찾으세요.">
+      <Card title="학생 필터" description="반과 검색어로 원하는 학생을 빠르게 찾으세요.">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
           <Select
-            label="상태"
-            className="lg:w-40"
-            value={status}
+            label="반"
+            className="lg:w-64"
+            value={courseId}
             onChange={(event) => {
-              setStatus(event.target.value as StudentCourseStatusFilter);
+              setCourseId(event.target.value);
               setPage(0);
             }}
-            disabled={loading}
+            disabled={loading || courseOptionsLoading}
           >
-            {studentStatusOptions.map((option) => (
+            <option value="">전체</option>
+            {courseOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -292,7 +299,7 @@ function StudentsTab({ role }: StudentsTabProps) {
         </div>
         {role === "ASSISTANT" && (
           <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
-            조교는 학생 기록을 수정할 수 없으며, 상세 정보는 조회만 가능합니다.
+            조교는 학생 기록을 수정할 수 없습니다. (조회 및 상태 확인은 가능합니다.)
           </p>
         )}
         {error && <InlineError message={error} className="mt-4" />}
@@ -307,52 +314,39 @@ function StudentsTab({ role }: StudentsTabProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>학생</TableHead>
-                  <TableHead>학생/학부모</TableHead>
                   <TableHead>학교/학년</TableHead>
                   <TableHead>나이</TableHead>
-                  <TableHead>현재 수강 반</TableHead>
-                  <TableHead>상태</TableHead>
+                  <TableHead>연락처(학생,학부모)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {students.map((student, index) => {
-                  const memberId = student.student?.memberId ?? `student-${index}`;
-                  const active = student.active ?? false;
-                  const activeCourseNames = student.activeCourseNames ?? [];
-                  const courseSummary = activeCourseNames.length > 0 ? activeCourseNames.join(", ") : "-";
+                  const memberId = student.memberId ?? `student-${index}`;
                   return (
                     <TableRow
                       key={memberId}
                       className={clsx(canViewDetail ? "cursor-pointer hover:bg-slate-50" : "cursor-default")}
                       onClick={() => {
-                        const studentId = student.student?.memberId;
+                        const studentId = student.memberId;
                         if (!canViewDetail || !studentId) return;
                         setDetailStudentId(studentId);
                       }}
                     >
                       <TableCell>
                         <div className="flex flex-col text-sm">
-                          <span className="text-base font-semibold text-slate-900">{student.student?.name ?? "-"}</span>
-                          <span className="text-xs text-slate-500">{student.student?.email ?? "-"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-sm text-slate-600">
-                          <span>{student.student?.phoneNumber ?? "-"}</span>
-                          <span className="text-xs text-slate-400">{student.student?.parentPhone ?? "-"}</span>
+                          <span className="text-base font-semibold text-slate-900">{student.name ?? "-"}</span>
+                          <span className="text-xs text-slate-500">{student.email ?? "-"}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">
-                        {student.student?.schoolName ?? "-"}({formatStudentGrade(student.student?.grade)})
+                        {student.schoolName ?? "-"}({formatStudentGrade(student.grade)})
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">{student.student?.age ?? "-"}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{student.age ?? "-"}</TableCell>
                       <TableCell>
-                        <div className="flex flex-col text-sm">
-                          <span className="font-semibold text-slate-900">{courseSummary}</span>
+                        <div className="flex flex-col text-sm text-slate-600">
+                          <span>{student.phoneNumber ?? "-"}</span>
+                          <span className="text-xs text-slate-400">{student.parentPhone ?? "-"}</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={active ? "success" : "secondary"}>{active ? "재원" : "휴원"}</Badge>
                       </TableCell>
                     </TableRow>
                   );
@@ -382,36 +376,28 @@ function StudentsTab({ role }: StudentsTabProps) {
   );
 }
 
-type RequestsTabProps = {
-  role: Role;
-  courseOptions: CourseOption[];
-  courseOptionsLoading: boolean;
-};
-
-function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabProps) {
-  const [courseId, setCourseId] = useState("");
-  const [statuses, setStatuses] = useState<EnrollmentStatus[]>(["PENDING"]);
-  const [studentNameInput, setStudentNameInput] = useState("");
-  const studentName = useDebounce(studentNameInput.trim(), 300);
+function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
+  const [statuses, setStatuses] = useState<StudentTeacherRequestStatus[]>(["PENDING"]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [appliedKeyword, setAppliedKeyword] = useState("");
   const [page, setPage] = useState(0);
-  const [requests, setRequests] = useState<TeacherEnrollmentRequestResponse[]>([]);
+  const [requests, setRequests] = useState<StudentTeacherRequestResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmState, setConfirmState] = useState<{ type: "APPROVE" | "REJECT"; ids: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [detail, setDetail] = useState<TeacherEnrollmentRequestResponse | null>(null);
+  const [detail, setDetail] = useState<StudentTeacherRequestResponse | null>(null);
   const { showToast } = useToast();
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchTeacherEnrollmentRequests({
-        courseId: courseId || undefined,
+      const result = await fetchStudentTeacherRequests({
         statuses: statuses.length > 0 ? statuses : undefined,
-        studentName: studentName || undefined,
+        keyword: appliedKeyword.trim() ? appliedKeyword.trim() : undefined,
         page,
         size: DASHBOARD_PAGE_SIZE
       });
@@ -427,21 +413,17 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
         return next;
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "학생 신청 목록을 불러오지 못했습니다.";
+      const message = err instanceof Error ? err.message : "요청 목록을 불러오지 못했습니다.";
       setError(message);
       showToast("error", message);
     } finally {
       setLoading(false);
     }
-  }, [courseId, statuses, studentName, page, showToast]);
+  }, [appliedKeyword, statuses, page, showToast]);
 
   useEffect(() => {
     void loadRequests();
   }, [loadRequests]);
-
-  useEffect(() => {
-    setPage(0);
-  }, [studentName]);
 
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
   const pendingIds = useMemo(
@@ -454,7 +436,7 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
   const selectedCount = Array.from(selectedIds).length;
   const allPendingSelected = pendingIds.length > 0 && pendingIds.every((id) => selectedIds.has(id));
 
-  const toggleStatus = (value: EnrollmentStatus, checked: boolean) => {
+  const toggleStatus = (value: StudentTeacherRequestStatus, checked: boolean) => {
     setStatuses((prev) => {
       const set = new Set(prev);
       if (checked) {
@@ -468,9 +450,14 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
   };
 
   const resetFilters = () => {
-    setCourseId("");
     setStatuses(["PENDING"]);
-    setStudentNameInput("");
+    setKeywordInput("");
+    setAppliedKeyword("");
+    setPage(0);
+  };
+
+  const applyKeywordFilter = () => {
+    setAppliedKeyword(keywordInput);
     setPage(0);
   };
 
@@ -514,13 +501,14 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
     try {
       const actions =
         confirmState.type === "APPROVE"
-          ? confirmState.ids.map((id) => approveEnrollmentRequest(id))
-          : confirmState.ids.map((id) => rejectEnrollmentRequest(id));
+          ? confirmState.ids.map((id) => approveTeacherStudentRequest(id))
+          : confirmState.ids.map((id) => rejectTeacherStudentRequest(id));
       await Promise.all(actions);
       showToast("success", `${confirmState.ids.length}건의 신청을 ${confirmState.type === "APPROVE" ? "승인" : "거절"}했습니다.`);
       setConfirmState(null);
       setSelectedIds(new Set());
       await loadRequests();
+      onRefresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "신청을 처리하지 못했습니다.";
       showToast("error", message);
@@ -531,31 +519,20 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
 
   return (
     <div className="space-y-6">
-      <Card title="신청 필터" description="반/상태/학생 이름으로 요청 대상을 좁혀보세요.">
+      <Card title="신청 필터" description="상태와 학생 이름으로 요청 대상을 좁혀보세요.">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
-          <Select
-            label="반"
-            value={courseId}
-            onChange={(event) => {
-              setCourseId(event.target.value);
-              setPage(0);
-            }}
-            className="lg:w-64"
-            disabled={loading || courseOptionsLoading || courseOptions.length === 0}
-          >
-            <option value="">전체</option>
-            {courseOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
           <Field label="학생 이름" className="lg:w-60">
             <Input
               placeholder="검색어"
-              value={studentNameInput}
+              value={keywordInput}
               onChange={(event) => {
-                setStudentNameInput(event.target.value);
+                setKeywordInput(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyKeywordFilter();
+                }
               }}
             />
           </Field>
@@ -563,8 +540,8 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
             <Button variant="secondary" onClick={resetFilters} disabled={loading}>
               초기화
             </Button>
-            <Button onClick={() => void loadRequests()} disabled={loading}>
-              새로고침
+            <Button onClick={applyKeywordFilter} disabled={loading}>
+              검색
             </Button>
           </div>
         </div>
@@ -574,7 +551,7 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
             <div>
               <p className="text-sm font-semibold text-slate-700">상태 필터</p>
               <p className="text-xs text-slate-500">
-                현재 선택: {statuses.length ? statuses.map((status) => statusToLabel(status)).join(", ") : "전체"}
+                현재 선택: {statuses.length ? statuses.map((status) => requestStatusToLabel(status)).join(", ") : "전체"}
               </p>
             </div>
             <Button variant="ghost" onClick={() => setStatuses([])} disabled={loading}>
@@ -582,7 +559,7 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
             </Button>
           </div>
           <div className="mt-3 flex flex-wrap gap-4">
-            {enrollmentStatusOptions.map((option) => (
+            {requestStatusOptions.map((option) => (
               <Checkbox
                 key={option.value}
                 label={option.label}
@@ -639,9 +616,10 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
                   <TableHead className="w-10">선택</TableHead>
                   <TableHead>신청일</TableHead>
                   <TableHead>학생</TableHead>
-                  <TableHead>Course</TableHead>
+                  <TableHead>학교/학년</TableHead>
+                  <TableHead>연락처</TableHead>
+                  <TableHead>요청 메시지</TableHead>
                   <TableHead>상태</TableHead>
-                  <TableHead>메시지</TableHead>
                   <TableHead className="text-right">동작</TableHead>
                 </TableRow>
               </TableHeader>
@@ -673,20 +651,16 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
                           <span className="text-xs text-slate-500">{request.student?.email ?? request.student?.phoneNumber ?? "-"}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-sm">
-                          <span className="font-semibold text-slate-900">{request.course?.name ?? "-"}</span>
-                          <span className="text-xs text-slate-500">
-                            {request.course?.companyName ?? ""} {request.course?.branchName ?? ""}
-                          </span>
-                        </div>
+                      <TableCell className="text-sm text-slate-600">
+                        {request.student?.schoolName ?? "-"} ({formatStudentGrade(request.student?.grade)})
                       </TableCell>
+                      <TableCell className="text-sm text-slate-600">{request.student?.phoneNumber ?? "-"}</TableCell>
+                      <TableCell className="max-w-xs truncate text-sm text-slate-600">{request.message ?? "-"}</TableCell>
                       <TableCell>
-                        <Badge variant={enrollmentStatusBadge[request.status ?? "PENDING"]}>
-                          {statusToLabel(request.status ?? "PENDING")}
+                        <Badge variant={requestStatusBadge[request.status ?? "PENDING"]}>
+                          {requestStatusToLabel(request.status ?? "PENDING")}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-xs truncate text-sm text-slate-600">{request.studentMessage ?? "-"}</TableCell>
                       <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
                         {isPending ? (
                           <div className="flex justify-end gap-2">
@@ -730,13 +704,359 @@ function RequestsTab({ role, courseOptions, courseOptionsLoading }: RequestsTabP
         onClose={() => setConfirmState(null)}
         onConfirm={handleConfirm}
         isLoading={actionLoading}
-        title={confirmState?.type === "APPROVE" ? "선택 승인" : "선택 거절"}
+        title={confirmState?.type === "APPROVE" ? "학생 신청 승인" : "학생 신청 거절"}
         message={
           confirmState
-            ? `${confirmState.ids.length}건의 신청을 ${confirmState.type === "APPROVE" ? "승인" : "거절"}하시겠습니까?`
+            ? confirmState.type === "APPROVE"
+              ? `선택한 ${confirmState.ids.length}건의 학생 신청을 승인하시겠습니까?\n승인 시 해당 학생들이 학생 목록에 추가되고 반 배치가 가능해집니다.`
+              : `선택한 ${confirmState.ids.length}건의 학생 신청을 거절하시겠습니까?\n거절된 신청은 복구할 수 없습니다.`
             : ""
         }
         confirmText={confirmState?.type === "APPROVE" ? "승인" : "거절"}
+        cancelText="취소"
+      />
+    </div>
+  );
+}
+
+type BatchAssignmentTabProps = {
+  role: Role;
+  refreshKey: number;
+};
+
+function BatchAssignmentTab({ role, refreshKey }: BatchAssignmentTabProps) {
+  const [courseOptions, setCourseOptions] = useState<CourseResponse[]>([]);
+  const [courseId, setCourseId] = useState("");
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [courseError, setCourseError] = useState<string | null>(null);
+  const [studentKeywordInput, setStudentKeywordInput] = useState("");
+  const [studentKeyword, setStudentKeyword] = useState("");
+  const [page, setPage] = useState(0);
+  const [students, setStudents] = useState<StudentSummaryResponse[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [assigning, setAssigning] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { showToast } = useToast();
+
+  const loadCourses = useCallback(async () => {
+    setCourseLoading(true);
+    setCourseError(null);
+    try {
+      const result = await fetchAssignableCourses({
+        page: 0,
+        size: 100
+      });
+      setCourseOptions(result.items);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "배치 가능한 반을 불러오지 못했습니다.";
+      setCourseError(message);
+      showToast("error", message);
+    } finally {
+      setCourseLoading(false);
+    }
+  }, [showToast]);
+
+  const loadCandidates = useCallback(async () => {
+    if (!courseId) {
+      setStudents([]);
+      setTotal(0);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchAssignmentCandidates({
+        courseId,
+        keyword: studentKeyword.trim() ? studentKeyword.trim() : undefined,
+        page,
+        size: DASHBOARD_PAGE_SIZE
+      });
+      setStudents(result.items);
+      setTotal(result.totalElements);
+      setSelectedIds((prev) => {
+        const next = new Set<string>();
+        result.items.forEach((item) => {
+          if (item.memberId && prev.has(item.memberId)) {
+            next.add(item.memberId);
+          }
+        });
+        return next;
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "배치 후보 학생을 불러오지 못했습니다.";
+      setError(message);
+      showToast("error", message);
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId, page, studentKeyword, showToast]);
+
+  useEffect(() => {
+    void loadCourses();
+  }, [loadCourses]);
+
+  useEffect(() => {
+    void loadCandidates();
+  }, [loadCandidates, refreshKey]);
+
+  const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
+  const selectedCount = selectedIds.size;
+  const candidateIds = useMemo(
+    () => students.map((student) => student.memberId).filter((id): id is string => Boolean(id)),
+    [students]
+  );
+  const allSelected = candidateIds.length > 0 && candidateIds.every((id) => selectedIds.has(id));
+  const selectedCourse = courseOptions.find((course) => course.courseId === courseId);
+
+  const applyStudentKeyword = () => {
+    setStudentKeyword(studentKeywordInput);
+    setPage(0);
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (allSelected) {
+        return new Set();
+      }
+      return new Set(candidateIds);
+    });
+  };
+
+  const toggleSelection = (studentId?: string) => {
+    if (!studentId) {
+      return;
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(studentId)) {
+        next.delete(studentId);
+      } else {
+        next.add(studentId);
+      }
+      return next;
+    });
+  };
+
+  const openAssignConfirm = () => {
+    if (!courseId) {
+      showToast("error", "반을 먼저 선택해 주세요.");
+      return;
+    }
+    if (selectedIds.size === 0) {
+      showToast("error", "배치할 학생을 선택해 주세요.");
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const executeAssign = async () => {
+    setConfirmOpen(false);
+    setAssigning(true);
+    const failures: string[] = [];
+    for (const studentId of selectedIds) {
+      try {
+        await createStudentCourseAssignment({ courseId, studentId });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "배치 처리에 실패했습니다.";
+        failures.push(message);
+      }
+    }
+    setAssigning(false);
+    if (failures.length === 0) {
+      showToast("success", `${selectedIds.size}명의 학생을 배치했습니다.`);
+    } else {
+      showToast("error", `${failures.length}건의 배치가 실패했습니다.`);
+    }
+    setSelectedIds(new Set());
+    await loadCandidates();
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card title="반 선택" description="학생을 배치할 반을 먼저 선택해주세요.">
+        <div className="flex flex-col gap-4">
+          <Select
+            label="반 목록"
+            value={courseId}
+            onChange={(event) => {
+              setCourseId(event.target.value);
+              setPage(0);
+              setSelectedIds(new Set());
+            }}
+            className="lg:w-96"
+            disabled={courseLoading}
+          >
+            <option value="">반을 선택하세요</option>
+            {courseOptions.map((course) => (
+              <option key={course.courseId ?? course.name} value={course.courseId ?? ""}>
+                {buildCourseLabel(course)}
+              </option>
+            ))}
+          </Select>
+          {courseError && <InlineError message={courseError} />}
+          {role === "ASSISTANT" && (
+            <p className="rounded-2xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
+              조교는 배치 가능한 반만 선택할 수 있습니다.
+            </p>
+          )}
+        </div>
+      </Card>
+
+      {!courseId && (
+        <Card>
+          <EmptyState
+            message="반을 선택해주세요"
+            description="상단 드롭다운에서 학생을 배치할 반을 먼저 선택해주세요."
+          />
+        </Card>
+      )}
+
+      {courseId && selectedCourse && (
+        <Card>
+          <div className="rounded-2xl border-2 border-indigo-200 bg-indigo-50/50 px-6 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-indigo-900">선택된 반</p>
+                <p className="mt-1 text-base font-bold text-indigo-700">{buildCourseLabel(selectedCourse)}</p>
+              </div>
+              <Button
+                variant="ghost"
+                className="h-9 px-4 text-xs"
+                onClick={() => {
+                  setCourseId("");
+                  setSelectedIds(new Set());
+                }}
+              >
+                선택 취소
+              </Button>
+            </div>
+            <p className="mt-3 text-sm text-indigo-600">
+              이 반에 학생을 배치하시겠습니까? 아래에서 배치할 학생을 선택해주세요.
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {courseId && (
+        <Card title="배치 후보 학생" description="선택한 반에 아직 배치되지 않은 학생 목록입니다.">
+        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+          <Field label="학생 이름 검색" className="lg:w-60">
+            <Input
+              placeholder="학생 이름"
+              value={studentKeywordInput}
+              onChange={(event) => setStudentKeywordInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyStudentKeyword();
+                }
+              }}
+              disabled={!courseId || loading}
+            />
+          </Field>
+          <div className="flex items-end gap-3">
+            <Button onClick={applyStudentKeyword} disabled={!courseId || loading}>
+              검색
+            </Button>
+          </div>
+        </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm">
+            <div className="text-slate-600">선택 {selectedCount}건</div>
+            <Button
+              variant="secondary"
+              className="h-10 px-4 text-xs"
+              onClick={toggleSelectAll}
+              disabled={candidateIds.length === 0}
+            >
+              {allSelected ? "선택 해제" : "전체 선택"}
+            </Button>
+            <Button
+              className="h-10 px-4 text-xs"
+              onClick={openAssignConfirm}
+              disabled={selectedCount === 0 || assigning}
+            >
+              {assigning ? "배치 중..." : "선택 배치"}
+            </Button>
+          </div>
+
+          {loading && <LoadingState message="학생 목록을 불러오는 중입니다." />}
+          {!loading && error && <InlineError message={error} className="mt-4" />}
+          {!loading && students.length === 0 && (
+            <EmptyState message="배치 후보 없음" description="선택한 반에 배치 가능한 학생이 없습니다." />
+          )}
+
+          {!loading && students.length > 0 && (
+            <div className="mt-4 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">선택</TableHead>
+                    <TableHead>학생</TableHead>
+                    <TableHead>학교/학년</TableHead>
+                    <TableHead>연락처</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {students.map((student, index) => {
+                    const rowKey = student.memberId ?? `candidate-${index}`;
+                    const isSelected = student.memberId ? selectedIds.has(student.memberId) : false;
+                    return (
+                      <TableRow
+                        key={rowKey}
+                        className="cursor-pointer transition hover:bg-slate-50"
+                        onClick={() => toggleSelection(student.memberId)}
+                      >
+                        <TableCell onClick={(event) => event.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
+                            checked={isSelected}
+                            onChange={() => toggleSelection(student.memberId)}
+                            disabled={!student.memberId}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col text-sm">
+                            <span className="font-semibold text-slate-900">{student.name ?? "-"}</span>
+                            <span className="text-xs text-slate-500">{student.email ?? "-"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-600">
+                          {student.schoolName ?? "-"} ({formatStudentGrade(student.grade)})
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-600">
+                          {student.phoneNumber ?? "-"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} disabled={loading || assigning} />
+          )}
+        </Card>
+      )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={executeAssign}
+        isLoading={assigning}
+        title="학생 배치 확인"
+        message={
+          selectedCourse
+            ? `${buildCourseLabel(selectedCourse)} 반에 ${selectedCount}명의 학생을 배치하시겠습니까?`
+            : `${selectedCount}명의 학생을 배치하시겠습니까?`
+        }
+        confirmText="배치"
         cancelText="취소"
       />
     </div>
@@ -756,19 +1076,23 @@ function StudentDetailModal({
   role: Role;
   open: boolean;
   loading: boolean;
-  detail: StudentStudentDetailResponse | null;
+  detail: TeacherStudentDetailResponse | null;
   error: string | null;
   onClose: () => void;
-  onDetailChange: (detail: StudentStudentDetailResponse) => void;
+  onDetailChange: (detail: TeacherStudentDetailResponse) => void;
   onUpdated?: () => void;
 }) {
   const { showToast } = useToast();
-  const [editing, setEditing] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [recordCache, setRecordCache] = useState<Record<string, StudentCourseDetailResponse>>({});
+  const [recordLoadingIds, setRecordLoadingIds] = useState<Set<string>>(new Set());
+  const [recordErrorMap, setRecordErrorMap] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState(false);
   const [assistantInput, setAssistantInput] = useState("");
   const [clinicInput, setClinicInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
   const [saving, setSaving] = useState(false);
+  const [assignmentActionId, setAssignmentActionId] = useState<string | null>(null);
   const [assistantOptions, setAssistantOptions] = useState<AssistantAssignmentResponse[]>([]);
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantError, setAssistantError] = useState<string | null>(null);
@@ -777,26 +1101,94 @@ function StudentDetailModal({
   const [slotError, setSlotError] = useState<string | null>(null);
 
   const courses = detail?.courses ?? [];
-  const records = detail?.records ?? [];
   const selectedCourse = courses.find((course) => course.courseId === selectedCourseId) ?? null;
-  const selectedRecord =
-    records.find((record) => record.courseId === selectedCourseId) ?? null;
-  const activeCourseExists = courses.some((course) => Boolean(course.active));
+  const selectedRecordId = selectedCourse?.recordId ?? null;
+  const selectedRecord = selectedRecordId ? recordCache[selectedRecordId] : null;
+  const summaryLabel = courses.length === 0 ? "배치 전" : `배치된 반 ${courses.length}개`;
+  const summaryVariant = "secondary";
   const canEdit = role === "TEACHER" && Boolean(selectedRecord?.recordId);
   const isTeacher = role === "TEACHER";
 
   useEffect(() => {
     if (!detail || courses.length === 0) {
       setSelectedCourseId(null);
-      setAssistantInput("");
-      setClinicInput("");
-      setNotesInput("");
       setEditing(false);
       return;
     }
-    const activeCourse = courses.find((course) => course.active);
-    setSelectedCourseId(activeCourse?.courseId ?? courses[0]?.courseId ?? null);
+    setSelectedCourseId((prev) => {
+      if (prev && courses.some((course) => course.courseId === prev)) {
+        return prev;
+      }
+      return courses[0]?.courseId ?? null;
+    });
+    setEditing(false);
   }, [detail, courses]);
+
+  useEffect(() => {
+    if (!detail?.student?.memberId) {
+      setRecordCache({});
+      setRecordErrorMap({});
+      setRecordLoadingIds(new Set());
+      return;
+    }
+    setRecordCache({});
+    setRecordErrorMap({});
+    setRecordLoadingIds(new Set());
+  }, [detail?.student?.memberId]);
+
+  useEffect(() => {
+    if (!open || !detail || courses.length === 0) {
+      return;
+    }
+    const recordIds = courses
+      .map((course) => course.recordId)
+      .filter((recordId): recordId is string => Boolean(recordId));
+    if (recordIds.length === 0) {
+      return;
+    }
+    const missing = recordIds.filter((recordId) => !recordCache[recordId] && !recordLoadingIds.has(recordId));
+    if (missing.length === 0) {
+      return;
+    }
+    setRecordLoadingIds((prev) => {
+      const next = new Set(prev);
+      missing.forEach((recordId) => next.add(recordId));
+      return next;
+    });
+    Promise.allSettled(missing.map((recordId) => fetchStudentCourseDetail(recordId)))
+      .then((results) => {
+        setRecordCache((prev) => {
+          const next = { ...prev };
+          results.forEach((result, index) => {
+            if (result.status === "fulfilled") {
+              next[missing[index]] = result.value;
+            }
+          });
+          return next;
+        });
+        setRecordErrorMap((prev) => {
+          const next = { ...prev };
+          results.forEach((result, index) => {
+            const recordId = missing[index];
+            if (result.status === "rejected") {
+              const message =
+                result.reason instanceof Error ? result.reason.message : "수업 기록을 불러오지 못했습니다.";
+              next[recordId] = message;
+            } else {
+              delete next[recordId];
+            }
+          });
+          return next;
+        });
+      })
+      .finally(() => {
+        setRecordLoadingIds((prev) => {
+          const next = new Set(prev);
+          missing.forEach((recordId) => next.delete(recordId));
+          return next;
+        });
+      });
+  }, [open, detail, courses, recordCache, recordLoadingIds]);
 
   useEffect(() => {
     if (!open || !isTeacher) {
@@ -821,13 +1213,14 @@ function StudentDetailModal({
     if (!open || !isTeacher) {
       return;
     }
-    if (!selectedCourse?.branchId) {
+    const branchId = selectedRecord?.course?.branchId;
+    if (!branchId) {
       setSlotOptions([]);
       return;
     }
     setSlotLoading(true);
     setSlotError(null);
-    fetchClinicSlots({ branchId: selectedCourse.branchId })
+    fetchClinicSlots({ branchId })
       .then((result) => {
         setSlotOptions(result);
       })
@@ -838,47 +1231,43 @@ function StudentDetailModal({
       .finally(() => {
         setSlotLoading(false);
       });
-  }, [open, isTeacher, selectedCourse?.branchId]);
+  }, [open, isTeacher, selectedRecord?.course?.branchId]);
 
   useEffect(() => {
     if (!selectedRecord) {
       setAssistantInput("");
       setClinicInput("");
       setNotesInput("");
-      setEditing(false);
       return;
     }
     setAssistantInput(selectedRecord.assistantMemberId ?? "");
     setClinicInput(selectedRecord.defaultClinicSlotId ?? "");
     setNotesInput(selectedRecord.teacherNotes ?? "");
-    setEditing(false);
   }, [selectedRecord]);
 
-  const assistantLabel = useMemo(() => {
-    if (!selectedRecord?.assistantMemberId) {
+  const getAssistantLabel = (assistantMemberId?: string | null) => {
+    if (!assistantMemberId) {
       return "미지정";
     }
-    const assignment = assistantOptions.find(
-      (option) => option.assistant?.memberId === selectedRecord.assistantMemberId
-    );
+    const assignment = assistantOptions.find((option) => option.assistant?.memberId === assistantMemberId);
     if (!assignment?.assistant) {
-      return selectedRecord.assistantMemberId;
+      return assistantMemberId;
     }
     const name = assignment.assistant.name ?? "이름 없음";
     const email = assignment.assistant.email ?? "이메일 없음";
     return `${name} (${email})`;
-  }, [assistantOptions, selectedRecord?.assistantMemberId]);
+  };
 
-  const clinicSlotLabel = useMemo(() => {
-    if (!selectedRecord?.defaultClinicSlotId) {
+  const getClinicSlotLabel = (slotId?: string | null) => {
+    if (!slotId) {
       return "미지정";
     }
-    const slot = slotOptions.find((option) => option.slotId === selectedRecord.defaultClinicSlotId);
+    const slot = slotOptions.find((option) => option.slotId === slotId);
     if (!slot) {
-      return selectedRecord.defaultClinicSlotId;
+      return slotId;
     }
     return formatClinicSlotLabel(slot);
-  }, [selectedRecord?.defaultClinicSlotId, slotOptions]);
+  };
 
   const resetForm = () => {
     setAssistantInput(selectedRecord?.assistantMemberId ?? "");
@@ -887,30 +1276,30 @@ function StudentDetailModal({
   };
 
   const handleSave = async () => {
-    if (!selectedRecord?.recordId || !detail) {
+    if (!selectedRecord?.recordId) {
       return;
     }
     setSaving(true);
     try {
+      const nextAssistant = assistantInput.trim();
+      const currentAssistant = selectedRecord.assistantMemberId ?? "";
+      const nextSlot = clinicInput.trim();
+      const currentSlot = selectedRecord.defaultClinicSlotId ?? "";
+      const nextNotes = notesInput.trim();
       const payload = {
-        assistantMemberId: assistantInput.trim() ? assistantInput.trim() : undefined,
-        defaultClinicSlotId: clinicInput.trim() ? clinicInput.trim() : undefined,
-        teacherNotes: notesInput.trim() ? notesInput : undefined
+        assistantMemberId:
+          nextAssistant && nextAssistant !== currentAssistant ? nextAssistant : undefined,
+        defaultClinicSlotId: nextSlot && nextSlot !== currentSlot ? nextSlot : undefined,
+        teacherNotes: nextNotes ? notesInput : undefined
       };
       const updated = await updateStudentCourseRecord(selectedRecord.recordId, payload);
-      const nextRecords = detail.records?.map((record) => {
-        if (record.recordId !== updated.recordId) {
-          return record;
-        }
-        return {
-          ...record,
-          assistantMemberId: updated.assistantMemberId,
-          defaultClinicSlotId: updated.defaultClinicSlotId,
-          teacherNotes: updated.teacherNotes,
-          active: updated.active
-        };
-      }) ?? [];
-      onDetailChange({ ...detail, records: nextRecords });
+      const recordId = updated.recordId ?? selectedRecord.recordId;
+      if (recordId) {
+        setRecordCache((prev) => ({
+          ...prev,
+          [recordId]: updated
+        }));
+      }
       onUpdated?.();
       showToast("success", "수업 기록을 수정했습니다.");
       setEditing(false);
@@ -927,6 +1316,35 @@ function StudentDetailModal({
     setEditing(false);
   };
 
+  const handleToggleAssignment = async (course: TeacherStudentCourseResponse, nextActive: boolean) => {
+    if (!course.assignmentId || !detail) {
+      return;
+    }
+    setAssignmentActionId(course.assignmentId);
+    try {
+      const response = nextActive
+        ? await activateStudentCourseAssignment(course.assignmentId)
+        : await deactivateStudentCourseAssignment(course.assignmentId);
+      const nextCourses = (detail.courses ?? []).map((item) => {
+        if (item.courseId !== course.courseId) {
+          return item;
+        }
+        return {
+          ...item,
+          assignmentActive: response.active
+        };
+      });
+      onDetailChange({ ...detail, courses: nextCourses });
+      onUpdated?.();
+      showToast("success", nextActive ? "재원 처리했습니다." : "휴원 처리했습니다.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "상태를 변경하지 못했습니다.";
+      showToast("error", message);
+    } finally {
+      setAssignmentActionId(null);
+    }
+  };
+
   return (
     <Modal open={open} onClose={onClose} title="학생 상세 정보" size="lg">
       {loading && <LoadingState message="학생 정보를 불러오는 중입니다." />}
@@ -934,11 +1352,9 @@ function StudentDetailModal({
       {!loading && !error && detail && (
         <div className="space-y-6">
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">상태</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">배치 상태</p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <Badge variant={activeCourseExists ? "success" : "secondary"}>
-                {activeCourseExists ? "재원" : "휴원"}
-              </Badge>
+              <Badge variant={summaryVariant}>{summaryLabel}</Badge>
             </div>
           </section>
 
@@ -960,153 +1376,255 @@ function StudentDetailModal({
 
           <section className="space-y-4">
             <div>
-              <p className="text-sm font-semibold text-slate-900">수강 반</p>
-              <p className="mt-1 text-xs text-slate-500">선택한 반의 기록을 아래에서 수정할 수 있습니다.</p>
+              <p className="text-sm font-semibold text-slate-900">수강 반 목록</p>
+              <p className="mt-1 text-xs text-slate-500">반을 클릭하여 상세 정보를 확인하고 휴원/재원 처리를 진행하세요.</p>
             </div>
             {courses.length === 0 ? (
-              <EmptyState message="수강 반 없음" description="등록된 반 정보가 없습니다." />
+              <EmptyState message="배치 전" description="아직 배치된 반이 없습니다." />
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {courses.map((course, index) => {
-                  const courseKey = course.courseId ?? `course-${index}`;
-                  const isSelected = course.courseId === selectedCourseId;
-                  return (
-                    <button
-                      key={courseKey}
-                      type="button"
-                      onClick={() => setSelectedCourseId(course.courseId ?? null)}
-                      className={clsx(
-                        "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition",
-                        isSelected
-                          ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-indigo-200"
-                      )}
-                    >
-                      <span>{course.name ?? "-"}</span>
-                      <Badge variant={course.active ? "success" : "secondary"} className="text-[10px]">
-                        {course.active ? "활성" : "비활성"}
-                      </Badge>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {selectedCourse && (
-              <InfoCard
-                title="선택한 반 정보"
-                items={[
-                  { label: "반 이름", value: selectedCourse.name ?? "-" },
-                  { label: "지점", value: selectedCourse.branchName ?? "-" },
-                  { label: "회사", value: selectedCourse.companyName ?? "-" },
-                  { label: "기간", value: formatCoursePeriod(selectedCourse.startDate, selectedCourse.endDate) }
-                ]}
-              />
-            )}
-          </section>
-
-          <section className="rounded-2xl border border-slate-200/60 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">수업 기록</p>
-              {canEdit && (
-                editing ? (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      className="h-9 px-3 text-xs"
-                      onClick={handleCancelEdit}
-                      disabled={saving}
-                    >
-                      취소
-                    </Button>
-                    <Button className="h-9 px-4 text-xs" onClick={handleSave} disabled={saving}>
-                      {saving ? "저장 중..." : "저장"}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    className="h-9 px-4 text-xs"
-                    onClick={() => setEditing(true)}
-                    disabled={saving}
-                  >
-                    수정
-                  </Button>
-                )
-              )}
-            </div>
-
-            {!selectedRecord && (
-              <p className="mt-3 text-sm text-slate-500">선택한 반에 기록이 없습니다.</p>
-            )}
-            {selectedRecord && !editing && (
-              <dl className="mt-3 space-y-2">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">담당 조교</dt>
-                  <dd className="text-right">{assistantLabel}</dd>
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">#</TableHead>
+                        <TableHead>반 이름</TableHead>
+                        <TableHead>기간</TableHead>
+                        <TableHead>진행 상태</TableHead>
+                        <TableHead>배치 상태</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {courses.map((course, index) => {
+                        const courseKey = course.courseId ?? `course-${index}`;
+                        const isSelected = course.courseId === selectedCourseId;
+                        const courseActive = course.active ?? true;
+                        const assignmentActive = course.assignmentActive ?? false;
+                        const progressState = getCourseProgressState(course.startDate, course.endDate);
+                        const ended = progressState === "ENDED";
+                        const hasAssignment = Boolean(course.assignmentId);
+                        return (
+                          <TableRow
+                            key={courseKey}
+                            className={clsx(
+                              "cursor-pointer transition hover:bg-slate-50",
+                              isSelected && "bg-indigo-50/50"
+                            )}
+                            onClick={() => setSelectedCourseId(course.courseId ?? null)}
+                          >
+                            <TableCell className="text-sm font-semibold text-slate-500">
+                              {index + 1}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-slate-900">{course.name ?? "-"}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-slate-600">
+                              {formatCoursePeriod(course.startDate, course.endDate)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-2">
+                                {progressState && (
+                                  <Badge variant="secondary">{courseProgressLabel(progressState)}</Badge>
+                                )}
+                                {!ended && !courseActive && <Badge variant="secondary">보관</Badge>}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {!ended && hasAssignment && (
+                                <Badge variant={assignmentActive ? "success" : "secondary"}>
+                                  {assignmentActive ? "재원" : "휴원"}
+                                </Badge>
+                              )}
+                              {!ended && !hasAssignment && <Badge variant="secondary">배치 전</Badge>}
+                              {ended && <span className="text-sm text-slate-400">-</span>}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">기본 클리닉 슬롯</dt>
-                  <dd className="text-right">{clinicSlotLabel}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">노트</dt>
-                  <dd className="mt-1 whitespace-pre-wrap text-right">
-                    {selectedRecord.teacherNotes ?? "등록된 노트가 없습니다."}
-                  </dd>
-                </div>
-              </dl>
-            )}
-            {selectedRecord && editing && (
-              <div className="mt-4 space-y-3">
-                <Field label="담당 조교">
-                  <Select
-                    value={assistantInput}
-                    onChange={(event) => setAssistantInput(event.target.value)}
-                    disabled={saving || assistantLoading || !isTeacher}
+
+                {selectedCourse && (
+                  <Card title="선택한 반 상세 정보" description={selectedCourse.name ?? "반 정보"}>
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-slate-200/70 bg-slate-50/50 px-4 py-3">
+                        <dl className="space-y-2 text-sm">
+                          <div className="flex justify-between gap-4">
+                            <dt className="font-semibold text-slate-700">반 이름</dt>
+                            <dd className="text-slate-900">{selectedCourse.name ?? "-"}</dd>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <dt className="font-semibold text-slate-700">기간</dt>
+                            <dd className="text-slate-900">
+                              {formatCoursePeriod(selectedCourse.startDate, selectedCourse.endDate)}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+
+                      {(() => {
+                        const courseActive = selectedCourse.active ?? true;
+                        const assignmentActive = selectedCourse.assignmentActive ?? false;
+                        const progressState = getCourseProgressState(selectedCourse.startDate, selectedCourse.endDate);
+                        const ended = progressState === "ENDED";
+                        const hasAssignment = Boolean(selectedCourse.assignmentId);
+                        const showToggle = !ended && hasAssignment && courseActive;
+                        const toggleDisabled = assignmentActionId === selectedCourse.assignmentId;
+
+                        return (
+                          <div className="flex flex-col gap-3">
+                            {showToggle && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant={assignmentActive ? "primary" : "secondary"}
+                                  className="h-10 px-4 text-sm"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleToggleAssignment(selectedCourse, !assignmentActive);
+                                  }}
+                                  disabled={toggleDisabled}
+                                >
+                                  {assignmentActive ? "휴원 처리" : "재원 처리"}
+                                </Button>
+                              </div>
+                            )}
+                            {!ended && !hasAssignment && (
+                              <p className="text-sm text-slate-500">배치 후에만 상태 변경이 가능합니다.</p>
+                            )}
+                            {ended && <p className="text-sm text-slate-500">종료된 반은 상태 변경이 없습니다.</p>}
+                            {!ended && !courseActive && (
+                              <p className="text-sm text-slate-500">보관된 반은 읽기 전용입니다.</p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </Card>
+                )}
+
+                {selectedCourse && (
+                  <Card
+                    title="수업 기록"
+                    description={selectedCourse.name ?? "선택한 반의 기록"}
+                    actions={
+                      canEdit && selectedRecord?.recordId ? (
+                        editing ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              className="h-9 px-3 text-xs"
+                              onClick={handleCancelEdit}
+                              disabled={saving}
+                            >
+                              취소
+                            </Button>
+                            <Button
+                              className="h-9 px-4 text-xs"
+                              onClick={handleSave}
+                              disabled={saving}
+                            >
+                              {saving ? "저장 중..." : "저장"}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            className="h-9 px-4 text-xs"
+                            onClick={() => setEditing(true)}
+                            disabled={saving}
+                          >
+                            수정
+                          </Button>
+                        )
+                      ) : null
+                    }
                   >
-                    <option value="">미지정</option>
-                    {assistantOptions.map((option, index) => {
-                      const assistantId = option.assistant?.memberId ?? `assistant-${index}`;
-                      const name = option.assistant?.name ?? "이름 없음";
-                      const email = option.assistant?.email ?? "이메일 없음";
-                      return (
-                        <option key={assistantId} value={option.assistant?.memberId ?? ""}>
-                          {name} ({email})
-                        </option>
-                      );
-                    })}
-                  </Select>
-                  {assistantError && <InlineError message={assistantError} className="mt-2" />}
-                </Field>
-                <Field label="기본 클리닉 슬롯">
-                  <Select
-                    value={clinicInput}
-                    onChange={(event) => setClinicInput(event.target.value)}
-                    disabled={saving || slotLoading || !isTeacher}
-                  >
-                    <option value="">미지정</option>
-                    {slotOptions.map((slot, index) => {
-                      const slotId = slot.slotId ?? `slot-${index}`;
-                      return (
-                        <option key={slotId} value={slot.slotId ?? ""}>
-                          {formatClinicSlotLabel(slot)}
-                        </option>
-                      );
-                    })}
-                  </Select>
-                  {slotError && <InlineError message={slotError} className="mt-2" />}
-                </Field>
-                <Field label="Teacher Notes">
-                  <textarea
-                    className="h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="학생에게 남길 메모를 입력하세요."
-                    value={notesInput}
-                    onChange={(event) => setNotesInput(event.target.value)}
-                    disabled={saving}
-                  />
-                </Field>
-              </div>
+                    {!selectedRecordId && <p className="text-sm text-slate-500">해당 반에 수업 기록이 없습니다.</p>}
+                    {selectedRecordId && recordLoadingIds.has(selectedRecordId) && (
+                      <LoadingState message="수업 기록을 불러오는 중입니다." />
+                    )}
+                    {selectedRecordId && recordErrorMap[selectedRecordId] && (
+                      <InlineError message={recordErrorMap[selectedRecordId]} />
+                    )}
+                    {selectedRecord && !editing && (
+                      <dl className="space-y-2 text-sm text-slate-600">
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            담당 조교
+                          </dt>
+                          <dd className="text-right">{getAssistantLabel(selectedRecord.assistantMemberId)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            기본 클리닉 슬롯
+                          </dt>
+                          <dd className="text-right">{getClinicSlotLabel(selectedRecord.defaultClinicSlotId)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">노트</dt>
+                          <dd className="mt-1 whitespace-pre-wrap text-right">
+                            {selectedRecord.teacherNotes ?? "등록된 노트가 없습니다."}
+                          </dd>
+                        </div>
+                      </dl>
+                    )}
+                    {selectedRecord && editing && (
+                      <div className="space-y-3">
+                        <Field label="담당 조교">
+                          <Select
+                            value={assistantInput}
+                            onChange={(event) => setAssistantInput(event.target.value)}
+                            disabled={saving || assistantLoading || !isTeacher}
+                          >
+                            {!assistantInput && <option value="">미지정</option>}
+                            {assistantOptions.map((option, assistantIndex) => {
+                              const assistantId = option.assistant?.memberId ?? `assistant-${assistantIndex}`;
+                              const name = option.assistant?.name ?? "이름 없음";
+                              const email = option.assistant?.email ?? "이메일 없음";
+                              return (
+                                <option key={assistantId} value={option.assistant?.memberId ?? ""}>
+                                  {name} ({email})
+                                </option>
+                              );
+                            })}
+                          </Select>
+                          {assistantError && <InlineError message={assistantError} className="mt-2" />}
+                        </Field>
+                        <Field label="기본 클리닉 슬롯">
+                          <Select
+                            value={clinicInput}
+                            onChange={(event) => setClinicInput(event.target.value)}
+                            disabled={saving || slotLoading || !isTeacher}
+                          >
+                            {!clinicInput && <option value="">미지정</option>}
+                            {slotOptions.map((slot, slotIndex) => {
+                              const slotId = slot.slotId ?? `slot-${slotIndex}`;
+                              return (
+                                <option key={slotId} value={slot.slotId ?? ""}>
+                                  {formatClinicSlotLabel(slot)}
+                                </option>
+                              );
+                            })}
+                          </Select>
+                          {slotError && <InlineError message={slotError} className="mt-2" />}
+                        </Field>
+                        <Field label="Teacher Notes">
+                          <textarea
+                            className="h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="학생에게 남길 메모를 입력하세요."
+                            value={notesInput}
+                            onChange={(event) => setNotesInput(event.target.value)}
+                            disabled={saving}
+                          />
+                        </Field>
+                      </div>
+                    )}
+                  </Card>
+                )}
+              </>
             )}
           </section>
 
@@ -1125,7 +1643,7 @@ function RequestDetailModal({
   onClose
 }: {
   open: boolean;
-  request: TeacherEnrollmentRequestResponse | null;
+  request: StudentTeacherRequestResponse | null;
   onClose: () => void;
 }) {
   if (!request) {
@@ -1140,7 +1658,7 @@ function RequestDetailModal({
     <Modal open={open} onClose={onClose} title="신청 상세" size="lg">
       <div className="space-y-6">
         <section className="flex flex-wrap items-center gap-3">
-          <Badge variant={enrollmentStatusBadge[status]}>{statusToLabel(status)}</Badge>
+          <Badge variant={requestStatusBadge[status]}>{requestStatusToLabel(status)}</Badge>
           <span className="text-sm text-slate-500">
             신청일 {formatDateTime(request.createdAt)} / 처리일 {formatDateTime(request.processedAt)}
           </span>
@@ -1155,19 +1673,10 @@ function RequestDetailModal({
               { label: "학교(학년)", value: `${request.student?.schoolName ?? "-"}(${formatStudentGrade(request.student?.grade)})`.trim() }
             ]}
           />
-          <InfoCard
-            title="Course 정보"
-            items={[
-              { label: "반 이름", value: request.course?.name ?? "-" },
-              { label: "지점", value: request.course?.branchName ?? "-" },
-              { label: "회사", value: request.course?.companyName ?? "-" },
-              { label: "기간", value: formatCoursePeriod(request.course?.startDate, request.course?.endDate) }
-            ]}
-          />
         </div>
         <section className="rounded-2xl border border-slate-200/60 bg-slate-50 px-4 py-4">
-          <p className="text-sm font-semibold text-slate-900">학생 메시지</p>
-          <p className="mt-2 text-sm text-slate-600">{request.studentMessage ?? "남긴 메시지가 없습니다."}</p>
+          <p className="text-sm font-semibold text-slate-900">요청 메시지</p>
+          <p className="mt-2 text-sm text-slate-600">{request.message ?? "남긴 메시지가 없습니다."}</p>
         </section>
         <div className="flex justify-end">
           <Button onClick={onClose}>닫기</Button>
@@ -1301,17 +1810,51 @@ function formatClinicSlotLabel(slot: ClinicSlotResponse) {
   return `${day} ${startTime}~${endTime}`;
 }
 
-function statusToLabel(status: EnrollmentStatus) {
-  return enrollmentStatusOptions.find((option) => option.value === status)?.label ?? status;
+function requestStatusToLabel(status: StudentTeacherRequestStatus) {
+  return requestStatusOptions.find((option) => option.value === status)?.label ?? status;
 }
 
-function buildCourseLabel(
-  courseName?: string | null,
-  companyName?: string | null,
-  branchName?: string | null,
-  teacherName?: string | null
-) {
-  const academy = [companyName, branchName].filter(Boolean).join(" ");
-  const teacherPart = teacherName ? ` · ${teacherName} 선생님` : "";
-  return `${courseName ?? "이름 없는 반"}${academy ? ` (${academy})` : ""}${teacherPart}`;
+function buildCourseLabel(course: CourseResponse | CourseWithTeacherResponse) {
+  const academy = [course.companyName, course.branchName].filter(Boolean).join(" ");
+  const teacherPart = "teacherName" in course && course.teacherName ? ` · ${course.teacherName} 선생님` : "";
+  return `${course.name ?? "이름 없는 반"}${academy ? ` (${academy})` : ""}${teacherPart}`;
+}
+
+type CourseProgressState = "UPCOMING" | "ONGOING" | "ENDED";
+
+function getCourseProgressState(startDate?: string | null, endDate?: string | null): CourseProgressState | null {
+  const todayKey = toDateKey(new Date());
+  if (todayKey === null) {
+    return null;
+  }
+  const startKey = toDateKey(startDate ? new Date(startDate) : null);
+  const endKey = toDateKey(endDate ? new Date(endDate) : null);
+
+  if (endKey !== null && endKey < todayKey) {
+    return "ENDED";
+  }
+  if (startKey !== null && startKey > todayKey) {
+    return "UPCOMING";
+  }
+  if (startKey !== null || endKey !== null) {
+    return "ONGOING";
+  }
+  return null;
+}
+
+function courseProgressLabel(state: CourseProgressState) {
+  if (state === "UPCOMING") {
+    return "진행예정";
+  }
+  if (state === "ONGOING") {
+    return "진행중";
+  }
+  return "종료";
+}
+
+function toDateKey(date: Date | null) {
+  if (!date || Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }

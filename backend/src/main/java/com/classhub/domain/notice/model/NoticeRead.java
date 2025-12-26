@@ -1,6 +1,7 @@
 package com.classhub.domain.notice.model;
 
 import com.classhub.global.entity.BaseEntity;
+import com.classhub.global.util.KstTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -40,6 +41,6 @@ public class NoticeRead extends BaseEntity {
                        LocalDateTime readAt) {
         this.noticeId = Objects.requireNonNull(noticeId, "noticeId must not be null");
         this.assistantMemberId = Objects.requireNonNull(assistantMemberId, "assistantMemberId must not be null");
-        this.readAt = readAt == null ? LocalDateTime.now() : readAt;
+        this.readAt = readAt == null ? LocalDateTime.now(KstTime.clock()) : readAt;
     }
 }

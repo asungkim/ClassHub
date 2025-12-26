@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -15,6 +14,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import static org.springframework.http.ResponseCookie.*;
+import com.classhub.global.util.KstTime;
 
 @Component
 public class RefreshTokenCookieProvider {
@@ -34,7 +34,7 @@ public class RefreshTokenCookieProvider {
     private String domain;
 
     public void setRefreshToken(HttpServletResponse response, String refreshToken, LocalDateTime expiresAt) {
-        Duration duration = Duration.between(LocalDateTime.now(ZoneOffset.UTC), expiresAt);
+        Duration duration = Duration.between(LocalDateTime.now(KstTime.clock()), expiresAt);
         System.out.println("duration = " + duration.toSeconds());
         long maxAge = Math.max(duration.toSeconds(), 0);
         ResponseCookie cookie = baseCookieBuilder(refreshToken)
@@ -72,4 +72,3 @@ public class RefreshTokenCookieProvider {
         return builder;
     }
 }
-

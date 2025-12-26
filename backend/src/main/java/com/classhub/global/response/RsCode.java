@@ -33,6 +33,8 @@ public enum RsCode {
     // ===== Course / Assignment =====
     COURSE_NOT_FOUND(RsConstant.NOT_FOUND, "반 정보를 찾을 수 없습니다."),
     COURSE_FORBIDDEN(RsConstant.FORBIDDEN, "해당 반에 대한 권한이 없습니다."),
+    COURSE_ENDED(RsConstant.CONFLICT, "종료된 반입니다."),
+    COURSE_SCHEDULE_OVERLAP(RsConstant.CONFLICT, "반 수업 시간이 겹칩니다."),
     ASSISTANT_NOT_FOUND(RsConstant.NOT_FOUND, "담당 조교 정보를 찾을 수 없습니다."),
     ASSISTANT_ALREADY_ASSIGNED(RsConstant.CONFLICT, "이미 연결된 조교입니다."),
     COMPANY_NOT_FOUND(RsConstant.NOT_FOUND, "학원 정보를 찾을 수 없습니다."),
@@ -76,6 +78,14 @@ public enum RsCode {
     STUDENT_ENROLLMENT_REQUEST_CONFLICT(RsConstant.CONFLICT, "이미 처리 중인 신청이 있습니다."),
     STUDENT_ENROLLMENT_ALREADY_EXISTS(RsConstant.CONFLICT, "이미 수강 중인 반입니다."),
     INVALID_ENROLLMENT_REQUEST_STATE(RsConstant.BAD_REQUEST, "현재 상태에서는 처리할 수 없습니다."),
+    STUDENT_COURSE_ASSIGNMENT_ALREADY_EXISTS(RsConstant.CONFLICT, "이미 배치된 학생입니다."),
+    STUDENT_COURSE_ASSIGNMENT_NOT_FOUND(RsConstant.NOT_FOUND, "배치 정보를 찾을 수 없습니다."),
+
+    // ===== Teacher-Student Request =====
+    TEACHER_STUDENT_REQUEST_NOT_FOUND(RsConstant.NOT_FOUND, "선생님 요청을 찾을 수 없습니다."),
+    TEACHER_STUDENT_REQUEST_CONFLICT(RsConstant.CONFLICT, "이미 처리 중인 요청이 있습니다."),
+    TEACHER_STUDENT_ALREADY_ASSIGNED(RsConstant.CONFLICT, "이미 연결된 선생님입니다."),
+    INVALID_TEACHER_STUDENT_REQUEST_STATE(RsConstant.BAD_REQUEST, "현재 상태에서는 처리할 수 없습니다."),
 
     STUDENT_COURSE_RECORD_NOT_FOUND(RsConstant.NOT_FOUND, "학생 수업 기록을 찾을 수 없습니다.");
 

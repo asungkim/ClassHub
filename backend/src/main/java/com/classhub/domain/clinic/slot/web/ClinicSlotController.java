@@ -83,4 +83,5 @@ public class ClinicSlotController {
         clinicSlotService.deleteSlot(principal.id(), slotId);
         return RsData.from(RsCode.SUCCESS, null);
     }
+
 }

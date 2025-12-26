@@ -16,6 +16,7 @@ import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepos
 import com.classhub.domain.member.model.Member;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.member.repository.MemberRepository;
+import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 
@@ -46,6 +47,9 @@ class AssistantManagementServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private StudentCourseRecordRepository studentCourseRecordRepository;
 
     @InjectMocks
     private AssistantManagementService assistantManagementService;
@@ -155,6 +159,7 @@ class AssistantManagementServiceTest {
         );
 
         verify(assignmentRepository).save(assignmentCaptor.capture());
+        verify(studentCourseRecordRepository).clearAssistantMemberId(teacherId, assistantId);
         assertThat(assignmentCaptor.getValue().isActive()).isFalse();
         assertThat(response.isActive()).isFalse();
     }
@@ -178,6 +183,7 @@ class AssistantManagementServiceTest {
         );
 
         verify(assignmentRepository).save(assignmentCaptor.capture());
+        verify(studentCourseRecordRepository, never()).clearAssistantMemberId(any(), any());
         assertThat(assignmentCaptor.getValue().isActive()).isTrue();
         assertThat(response.isActive()).isTrue();
     }

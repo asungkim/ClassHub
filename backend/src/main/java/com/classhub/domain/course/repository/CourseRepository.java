@@ -60,6 +60,23 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             @Param("endDate") LocalDate endDate
     );
 
+    @Query("""
+            SELECT DISTINCT c
+            FROM Course c
+            LEFT JOIN FETCH c.schedules s
+            WHERE c.teacherMemberId = :teacherId
+              AND c.deletedAt IS NULL
+              AND c.startDate <= :endDate
+              AND c.endDate >= :startDate
+              AND (:excludeId IS NULL OR c.id <> :excludeId)
+            """)
+    List<Course> findOverlappingCourses(
+            @Param("teacherId") UUID teacherId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("excludeId") UUID excludeId
+    );
+
     default Page<Course> searchCoursesForAdmin(UUID teacherId,
                                                UUID branchId,
                                                UUID companyId,
@@ -178,4 +195,45 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             @Param("onlyVerified") boolean onlyVerified,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.teacherMemberId = :teacherId
+              AND c.deletedAt IS NULL
+              AND c.endDate >= :today
+              AND (:branchId IS NULL OR c.branchId = :branchId)
+              AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """)
+    Page<Course> searchAssignableCoursesForTeacher(@Param("teacherId") UUID teacherId,
+                                                   @Param("branchId") UUID branchId,
+                                                   @Param("keyword") String keyword,
+                                                   @Param("today") LocalDate today,
+                                                   Pageable pageable);
+
+    default Page<Course> searchAssignableCoursesForTeachers(Collection<UUID> teacherIds,
+                                                            UUID branchId,
+                                                            String keyword,
+                                                            LocalDate today,
+                                                            Pageable pageable) {
+        if (teacherIds == null || teacherIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        return searchAssignableCoursesForTeachersInternal(teacherIds, branchId, keyword, today, pageable);
+    }
+
+    @Query("""
+            SELECT c
+            FROM Course c
+            WHERE c.teacherMemberId IN :teacherIds
+              AND c.deletedAt IS NULL
+              AND c.endDate >= :today
+              AND (:branchId IS NULL OR c.branchId = :branchId)
+              AND (:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """)
+    Page<Course> searchAssignableCoursesForTeachersInternal(@Param("teacherIds") Collection<UUID> teacherIds,
+                                                            @Param("branchId") UUID branchId,
+                                                            @Param("keyword") String keyword,
+                                                            @Param("today") LocalDate today,
+                                                            Pageable pageable);
 }

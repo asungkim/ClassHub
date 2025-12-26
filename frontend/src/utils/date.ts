@@ -1,5 +1,8 @@
 export function formatDateYmdKst(date: Date) {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(date);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -12,9 +15,8 @@ export function formatDateLabelKst(value?: string | null) {
   if (DATE_ONLY_PATTERN.test(raw)) {
     const [year, month, day] = raw.split("-").map((part) => Number.parseInt(part, 10));
     if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
-      const date = new Date(Date.UTC(year, month - 1, day));
+      const date = new Date(year, month - 1, day);
       return new Intl.DateTimeFormat("ko-KR", {
-        timeZone: "Asia/Seoul",
         year: "numeric",
         month: "short",
         day: "numeric"
@@ -27,7 +29,6 @@ export function formatDateLabelKst(value?: string | null) {
     return value;
   }
   return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "short",
     day: "numeric"
@@ -43,7 +44,6 @@ export function formatDateTimeLabelKst(value?: string | null) {
     return value;
   }
   return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "short",
     day: "numeric",

@@ -11,6 +11,8 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
+    command: --default-time-zone=+09:00
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -33,6 +35,9 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      TZ: Asia/Seoul
+      JAVA_TOOL_OPTIONS: -Duser.timezone=Asia/Seoul
     networks:
       - classhub-net
     ports:

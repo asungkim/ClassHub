@@ -19,6 +19,7 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -114,7 +115,7 @@ public class ClinicAttendanceService {
         ensureSessionActive(fromSession);
         ensureSessionActive(toSession);
 
-        if (!ClinicAttendancePolicy.isMoveAllowed(fromSession, LocalDateTime.now())) {
+        if (!ClinicAttendancePolicy.isMoveAllowed(fromSession, LocalDateTime.now(KstTime.clock()))) {
             throw new BusinessException(RsCode.CLINIC_ATTENDANCE_MOVE_FORBIDDEN);
         }
         if (!isSameWeek(fromSession, toSession)) {
@@ -155,7 +156,7 @@ public class ClinicAttendanceService {
         if (isDefaultAttendance(record, session)) {
             throw new BusinessException(RsCode.CLINIC_ATTENDANCE_CANCEL_FORBIDDEN);
         }
-        if (!ClinicAttendancePolicy.isMoveAllowed(session, LocalDateTime.now())) {
+        if (!ClinicAttendancePolicy.isMoveAllowed(session, LocalDateTime.now(KstTime.clock()))) {
             throw new BusinessException(RsCode.CLINIC_ATTENDANCE_LOCKED);
         }
         clinicAttendanceRepository.delete(attendance);
@@ -289,7 +290,7 @@ public class ClinicAttendanceService {
     }
 
     private void ensureSessionNotLocked(ClinicSession session) {
-        if (ClinicAttendancePolicy.isLocked(session, LocalDateTime.now())) {
+        if (ClinicAttendancePolicy.isLocked(session, LocalDateTime.now(KstTime.clock()))) {
             throw new BusinessException(RsCode.CLINIC_ATTENDANCE_LOCKED);
         }
     }
@@ -317,6 +318,6 @@ public class ClinicAttendanceService {
         if (birthDate == null) {
             return null;
         }
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        return Period.between(birthDate, LocalDate.now(KstTime.clock())).getYears();
     }
 }

@@ -5475,3 +5475,847 @@ BEHAVIORAL
 - 영향받은 테스트: `npm run build -- --webpack`
 - 수정한 파일: `frontend/src/components/dashboard/progress/progress-card-list.tsx`, `frontend/src/utils/date.ts`
 - 다음 단계: /teacher/progress/course, /teacher/progress/personal, /assistant/progress/course, /assistant/progress/personal 화면에서 표시 위치 확인
+## [2025-12-25 18:20] 학생-선생님 연결/반 배정 설계 갱신
+
+### Type
+DESIGN
+
+### Summary
+- 학생-선생님 요청/배정 흐름을 설계 문서에 반영
+- StudentCourseAssignment 기반 on/off 처리로 설계 전환
+
+### Details
+- 작업 사유: 학생 요청 기반 연결 후 선생님이 반 배치하는 새 플로우 반영
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/design/final-entity-spec.md`, `docs/design/full-erd.md`
+- 다음 단계: `docs/requirement/v1.4.md`와 `docs/spec/v1.4.md` 갱신 후 TODO 정렬
+- MCP: 없음
+## [2025-12-25 18:31] 요구사항 v1.5 문서 추가
+
+### Type
+DESIGN
+
+### Summary
+- 학생-선생님 연결 요청 및 반 배치 흐름을 Requirement v1.5에 반영
+- 학생 검색/배치/휴원 처리 기준을 요구사항으로 정리
+
+### Details
+- 작업 사유: 기존 Course 신청 기반 흐름을 Teacher 연결/배치 흐름으로 전환
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/requirement/v1.5.md`
+- 다음 단계: `docs/spec/v1.5.md` 작성 및 TODO 정렬
+- MCP: 없음
+## [2025-12-25 19:59] 스펙 v1.5 문서 추가
+
+### Type
+DESIGN
+
+### Summary
+- 학생-선생님 연결 요청/반 배치 흐름을 Spec v1.5로 구체화
+- 관련 API/권한/상태 전환을 새 엔티티 기준으로 갱신
+
+### Details
+- 작업 사유: StudentTeacherRequest/TeacherStudentAssignment/StudentCourseAssignment 도입에 따른 스펙 재정의
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: TODO v1.10 재정렬 및 구현 PLAN 작성
+- MCP: 없음
+## [2025-12-25 20:09] 스펙 v1.5 상태/폐강 규칙 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 목록 상태 정의(배치 전/재원/휴원/전체)와 폐강 처리 규칙을 보강
+- 휴원 조회/클리닉 차단 범위 규칙 추가
+
+### Details
+- 작업 사유: TeacherStudentAssignment/StudentCourseAssignment 상태 정의 명확화
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: TODO v1.10 재정렬 및 구현 PLAN 작성
+- MCP: 없음
+## [2025-12-25 20:51] 스펙 v1.5 학생 상세/일괄 배치 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 상세 조회 엔드포인트 추가 및 반 배치 일괄 API 명시
+- 휴원/재원 처리를 학생 상세에서 수행하도록 규칙 보강
+
+### Details
+- 작업 사유: 반 배치 탭/상세 처리 UI 흐름 반영
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: 프론트 UI 흐름 및 PLAN 문서 작성
+- MCP: 없음
+## [2025-12-25 21:54] 클리닉 배치 개선 백로그 추가
+
+### Type
+DESIGN
+
+### Summary
+- 클리닉 배치 조건 보강 항목을 개선 백로그에 추가
+
+### Details
+- 작업 사유: Course 종료/휴원 학생에 대한 자동 배치 제어 필요
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/refactor/improvment-backlog.md`
+- 다음 단계: 학생-선생님 플로우 구현 후 배치 로직 보강
+- MCP: 없음
+## [2025-12-25 22:02] Course 상태 계산 스펙/ TODO 보강
+
+### Type
+DESIGN
+
+### Summary
+- Course 상태를 기간 기반 계산 필드로 정의하고 응답에 포함하도록 명시
+- TODO에 Course 상태 표시 작업을 추가
+
+### Details
+- 작업 사유: 학생/클리닉 UI에서 진행 상태 표시 필요
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`, `docs/todo/v1.11.md`
+- 다음 단계: Course 상태 응답/표시 구현
+- MCP: 없음
+## [2025-12-25 20:23] TODO v1.11 작성
+
+### Type
+TODO_UPDATE
+
+### Summary
+- v1.10 기준으로 TODO v1.11을 재작성하고 v1.5 요구/스펙을 반영
+- 학생-선생님 연결/반 배치 Epic을 통합 조회 앞에 추가
+
+### Details
+- 작업 사유: v1.5 흐름에 맞춘 TODO 재정렬
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/todo/v1.11.md`
+- 다음 단계: v1.11 기준 PLAN 작성 및 구현
+- MCP: 없음
+## [2025-12-25 20:26] TODO v1.11에 기존 Enrollment 정리 작업 추가
+
+### Type
+TODO_UPDATE
+
+### Summary
+- 학생-선생님 연결/반 배치 Epic 이후 기존 Enrollment 코드 제거 작업을 추가
+
+### Details
+- 작업 사유: 신규 플로우 안정화 이후 정리 단계 분리
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/todo/v1.11.md`
+- 다음 단계: v1.11 기준 PLAN 작성 및 구현
+- MCP: 없음
+## [2025-12-26 00:11] v1.5 스펙에 학생/선생님 관리 흐름 반영
+
+### Type
+DESIGN
+
+### Summary
+- 선생님 신청 처리/학생 목록/상세 모달/반 배치 흐름을 스펙에 반영
+- 학생 선생님 검색/요청 관리 흐름과 API 경로를 정리
+
+### Details
+- 작업 사유: 스펙 보강을 위한 화면/요청 흐름 및 API 정합성 반영
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: v1.5 스펙 기준 TODO/PLAN 업데이트 검토
+- MCP: 없음
+## [2025-12-26 00:18] 요청 처리 API 승인/거절 분리
+
+### Type
+DESIGN
+
+### Summary
+- TeacherStudentRequest 승인/거절/취소를 별도 API로 분리
+- 일괄 승인/거절도 분리 엔드포인트로 정리
+
+### Details
+- 작업 사유: 승인/거절 비즈니스 로직 분리 요구 반영
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: 스펙 기반 PLAN/TODO 정합성 확인
+- MCP: 없음
+## [2025-12-26 00:19] 요청 일괄 처리 제외
+
+### Type
+DESIGN
+
+### Summary
+- TeacherStudentRequest 일괄 승인/거절 API를 범위에서 제외
+- 단건 API 다중 호출로 처리하도록 스펙 명시
+
+### Details
+- 작업 사유: 초기 범위 단순화 및 개선사항 분리
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: 개선사항 backlog에 일괄 처리 추가
+- MCP: 없음
+## [2025-12-26 00:20] 신청 일괄 처리 개선사항 백로그 추가
+
+### Type
+TODO_UPDATE
+
+### Summary
+- TeacherStudentRequest 일괄 승인/거절을 개선사항으로 백로그에 추가
+
+### Details
+- 작업 사유: 초기 범위에서 제외한 일괄 처리를 추후 개선 항목으로 분리
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/refactor/improvment-backlog.md`
+- 다음 단계: 필요 시 이슈/PLAN으로 분리
+- MCP: 없음
+## [2025-12-26 00:22] 반 배치 일괄 API 제외
+
+### Type
+DESIGN
+
+### Summary
+- StudentCourseAssignment 일괄 배치 API를 스펙에서 제거
+
+### Details
+- 작업 사유: 초기 범위 단순화 및 단건 호출 방식 채택
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일: `docs/spec/v1.5.md`
+- 다음 단계: 필요 시 개선사항 백로그로 분리
+- MCP: 없음
+## [2025-12-26 00:40] 학생 선생님 요청 API 계획 수립
+
+### Type
+DESIGN
+
+### Summary
+- 학생 선생님 검색/요청/취소 API 설계 문서를 작성
+
+### Details
+- 작업 사유: v1.5 스펙 기반 학생 API 구현 준비
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/backend/season2/student-teacher-request_plan.md`
+- 다음 단계: 계획 승인 후 TDD 구현
+- MCP: 없음
+## [2025-12-26 00:42] 학생 요청 API 계획 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 선생님 요청 계획에 엔티티/레포지토리 생성 범위와 테스트 순서를 추가
+
+### Details
+- 작업 사유: 미정의된 엔티티/레포지토리 생성 범위를 계획에 반영
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/backend/season2/student-teacher-request_plan.md`
+- 다음 단계: 계획 승인 후 TDD 구현
+- MCP: 없음
+## [2025-12-26 00:43] 학생 요청 API 계획에 개발 순서 추가
+
+### Type
+DESIGN
+
+### Summary
+- student-teacher-request_plan에 구현 순서를 명시
+
+### Details
+- 작업 사유: 엔티티/레포지토리부터 컨트롤러까지 단계별 순서 명확화
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/backend/season2/student-teacher-request_plan.md`
+- 다음 단계: 계획 승인 후 TDD 구현
+- MCP: 없음
+## [2025-12-26 01:01] 학생 선생님 요청 API 기반 구조 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- StudentTeacherRequest/TeacherStudentAssignment 엔티티·레포지토리 추가
+- 학생 선생님 검색 및 요청/취소 서비스·컨트롤러 구현
+- 관련 단위/컨트롤러 테스트 추가
+
+### Details
+- 작업 사유: 학생 요청 흐름의 백엔드 API 구현
+- 영향받은 테스트: `StudentTeacherRequestRepositoryTest`, `TeacherStudentAssignmentRepositoryTest`, `TeacherSearchServiceTest`, `StudentTeacherRequestServiceTest`, `TeacherSearchControllerTest`, `StudentTeacherRequestControllerTest`
+- 수정한 파일: 
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentTeacherRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/TeacherStudentRequestStatus.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/request/StudentTeacherRequestCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/StudentTeacherRequestResponse.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentTeacherRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/model/TeacherStudentAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/member/application/TeacherSearchService.java`
+  - `backend/src/main/java/com/classhub/domain/member/dto/response/TeacherSearchResponse.java`
+  - `backend/src/main/java/com/classhub/domain/member/web/TeacherSearchController.java`
+  - `backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherBranchAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/member/application/TeacherSearchServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentTeacherRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/member/web/TeacherSearchControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentTeacherRequestControllerTest.java`
+- 다음 단계: 학생 요청 목록 조회/취소 API QA 및 통합 테스트
+- MCP: 없음
+## [2025-12-26 01:07] 학생 선생님 검색/요청 UI 계획 수립
+
+### Type
+DESIGN
+
+### Summary
+- 학생 선생님 검색/요청 및 신청 내역 UI 플로우 계획 작성
+
+### Details
+- 작업 사유: 학생 API를 활용한 프론트 구현 준비
+- 영향받은 테스트: 없음 (설계 문서)
+- 수정한 파일: `docs/plan/frontend/season2/student-teacher-request-ui_plan.md`
+- 다음 단계: 계획 승인 후 프론트 구현
+- MCP: 없음
+## [2025-12-26 01:24] 학생 선생님 요청 UI 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생용 선생님 관리 페이지(/student/teachers) 추가 및 검색/요청/내역 UI 구현
+- 선생님 검색/요청 API 클라이언트와 타입 추가
+- 학생 사이드바 및 내 수업 페이지 안내 문구/링크 정리
+
+### Details
+- 작업 사유: 학생-선생님 연결 요청 플로우에 맞는 UI 제공
+- 영향받은 테스트: `npm run build -- --webpack`
+- 수정한 파일: `frontend/src/types/dashboard.ts`, `frontend/src/lib/dashboard-api.ts`, `frontend/src/app/(dashboard)/student/teachers/page.tsx`, `frontend/src/components/dashboard/sidebar.tsx`, `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+- 다음 단계: 수동 QA(선생님 검색/요청 생성/취소 흐름, 모바일 레이아웃)
+## [2025-12-26 01:27] 학생 검색 입력 포커스 유지
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 검색 중 로딩 상태에서도 입력 포커스가 유지되도록 검색 인풋 비활성화를 제거
+
+### Details
+- 작업 사유: 디바운스 요청 동안 키보드 포커스가 사라지는 UX 개선
+- 영향받은 테스트: 미실행
+- 수정한 파일: `frontend/src/app/(dashboard)/student/teachers/page.tsx`, `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
+- 다음 단계: 수동 QA(검색 입력 중 포커스 유지 확인)
+## [2025-12-26 01:39] 선생님 요청/학생관리/반배치 API 설계
+
+### Type
+DESIGN
+
+### Summary
+- TeacherStudentRequest 처리, 학생 목록/상세, 반 배치, 휴원/재원 API 설계 문서 작성
+
+### Details
+- 작업 사유: Teacher/Assistant 플로우 구현을 위한 백엔드 설계 확정 필요
+- 영향받은 테스트: 미실행
+- 수정한 파일: `docs/plan/backend/season2/teacher-student-management_plan.md`
+- 다음 단계: 설계 리뷰 및 승인, 이후 TDD 구현
+## [2025-12-26 01:42] 개발 순서 3단계 분리
+
+### Type
+DESIGN
+
+### Summary
+- Teacher/Assistant 기능 구현 순서를 UI 흐름 기반 3단계로 재정렬
+
+### Details
+- 작업 사유: 범위가 커서 단계별로 개발/검증하기 위함
+- 영향받은 테스트: 미실행
+- 수정한 파일: `docs/plan/backend/season2/teacher-student-management_plan.md`
+- 다음 단계: 단계별 설계 리뷰 및 승인
+## [2025-12-26 01:54] 선생님 요청 처리 API(목록/승인/거절) 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Teacher/Assistant 요청 목록 조회 및 승인/거절 API 추가
+- 요청 응답에 학생 요약 정보 포함
+- 요청 검색용 리포지토리 쿼리 확장
+
+### Details
+- 작업 사유: 0~1단계(요청 처리) 범위 구현
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.enrollment.repository.StudentTeacherRequestRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.enrollment.application.StudentTeacherRequestServiceTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.enrollment.web.StudentTeacherRequestControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/web/StudentTeacherRequestController.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/dto/response/StudentTeacherRequestResponse.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/repository/StudentTeacherRequestRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/application/StudentTeacherRequestServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/enrollment/web/StudentTeacherRequestControllerTest.java`
+- 다음 단계: 반 배치 처리(2단계) 설계/구현
+## [2025-12-26 02:10] 반 배치 API 및 StudentCourseAssignment 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- StudentCourseAssignment 엔티티/레포 추가 및 배치 API(반 목록/후보/배치 생성) 구현
+- TeacherStudentAssignment 검색 쿼리와 Course assignable 조회 쿼리 확장
+- 관련 서비스/컨트롤러/테스트 추가
+
+### Details
+- 작업 사유: 2단계(반 배치 처리) 기능 구현
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.repository.CourseRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepositoryTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseAssignmentServiceTest"`
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.web.CourseAssignmentControllerTest" --tests "com.classhub.domain.studentcourse.web.StudentCourseAssignmentControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/request/StudentCourseAssignmentCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/dto/response/StudentCourseAssignmentResponse.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseAssignmentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/web/CourseAssignmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/repository/CourseRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
+- 다음 단계: 학생 목록/상세 + 휴원/재원 처리(3단계)
+## [2025-12-26 02:35] 선생님 학생 목록/상세 및 반 배치 활성/비활성 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 선생님 학생 목록/상세 조회 API와 응답 DTO 추가
+- StudentCourseAssignment 활성/비활성 API 및 서비스 로직 추가
+- 관련 레포지토리 쿼리/테스트 확장
+
+### Details
+- 작업 사유: 3단계(학생 목록/상세 + 휴원/재원 처리) 기반 API 구현
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.assignment.*" --tests "com.classhub.domain.course.application.CourseAssignmentServiceTest" --tests "com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepositoryTest" --tests "com.classhub.domain.studentcourse.web.StudentCourseAssignmentControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/assignment/application/TeacherStudentService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/web/TeacherStudentController.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/response/TeacherStudentCourseResponse.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/dto/response/TeacherStudentDetailResponse.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/application/TeacherStudentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/web/TeacherStudentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseAssignmentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/web/StudentCourseAssignmentControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepositoryTest.java`
+- 다음 단계: 학생 상세 모달의 휴원/재원 UX 연동 및 관련 프론트 작업
+## [2025-12-26 02:46] 선생님 학생 관리 UI 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- 선생님 학생 관리(신청 처리/학생 목록/상세/반 배치) 프론트엔드 계획 수립
+- 탭 구조, 데이터 흐름, UX 규칙 및 검증 계획 정리
+
+### Details
+- 작업 사유: 신규 플로우 기반 프론트 구현 준비
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-student-management_ui_plan.md`
+- 다음 단계: 설계 승인 후 프론트 구현 착수
+## [2025-12-26 02:50] 선생님 학생 관리 UI 설계 보강
+
+### Type
+DESIGN
+
+### Summary
+- 학생 기록 API 경로 수정 및 반 배치 단건 처리 방침 반영
+- 구현 단계를 3단계로 분할하여 계획 보강
+
+### Details
+- 작업 사유: 설계 명확화 및 구현 순서 정의
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/teacher-student-management_ui_plan.md`
+- 다음 단계: 설계 승인 후 프론트 구현 착수
+## [2025-12-26 03:20] 선생님 신청 처리 탭을 연결 요청 기반으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 신청 처리 탭을 수업 신청에서 선생님-학생 연결 요청 흐름으로 변경
+- 요청 필터/목록/상세 UI를 StudentTeacherRequestResponse 기반으로 재구성
+- 단건 승인/거절 API로 일괄 처리 구현
+
+### Details
+- 작업 사유: 1단계(신청 처리 탭 리워크) 구현
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 학생 목록 + 상세 모달 연동 (2단계)
+## [2025-12-26 03:55] 학생 목록/상세 UI를 선생님 연결 기반으로 전환
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 목록을 teacher-students API로 전환하고 반 필터/검색 흐름으로 재구성
+- 학생 상세 모달을 TeacherStudentDetailResponse 기반으로 수정하고 휴원/재원 토글 연동
+- 수업 기록은 recordId 기준으로 상세 조회/수정하도록 로딩 구조 정리
+
+### Details
+- 작업 사유: 2단계(학생 목록 + 상세 모달 연동) 구현
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 반 배치 탭 추가 (3단계)
+## [2025-12-26 04:20] 반 배치 탭 추가 및 단건 배치 흐름 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 배치 탭을 추가하고 배치 가능한 반/배치 후보 학생 조회 흐름을 연결
+- 체크된 학생을 단건 API로 순차 배치하도록 처리
+- 관련 API 헬퍼와 타입 확장
+
+### Details
+- 작업 사유: 3단계(반 배치 탭 추가) 구현
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 수동 QA 후 UI 미세 조정 또는 커밋
+## [2025-12-26 09:55] 반 스케줄 시간 범위(06~22시) 검증 추가
+
+### Type
+BUGFIX
+
+### Summary
+- Course 스케줄 시작/종료 시간이 06:00~22:00 범위를 벗어나면 거부하도록 검증 추가
+- 경계 시간(06:00, 22:00) 포함 케이스를 테스트로 보강
+
+### Details
+- 작업 사유: 반 관리에서 시간 범위를 벗어난 스케줄이 저장되는 문제 차단
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.validator.CourseScheduleValidatorTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/validator/CourseScheduleValidator.java`
+  - `backend/src/test/java/com/classhub/domain/course/validator/CourseScheduleValidatorTest.java`
+- 다음 단계: Course 생성/수정 API에서 400 응답 확인 및 UI 경고 문구 점검
+## [2025-12-26 10:37] ClinicSlot 시간 범위(06~22시) 공통 검증 적용
+
+### Type
+BUGFIX
+
+### Summary
+- 스케줄 공통 시간 범위(06:00~22:00) 검증 유틸을 추가하고 Course/Clinic에 적용
+- ClinicSlot 생성 시 범위 이탈 요청을 차단하는 테스트를 추가
+
+### Details
+- 작업 사유: ClinicSlot도 Course와 동일하게 허용 시간 범위를 강제해 잘못된 시간 저장을 방지
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest" --tests "com.classhub.domain.course.validator.CourseScheduleValidatorTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/validator/ScheduleTimeRangeValidator.java`
+  - `backend/src/main/java/com/classhub/domain/course/validator/CourseScheduleValidator.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 기존 잘못된 슬롯 데이터가 있는지 점검 후 필요 시 정리
+## [2025-12-26 11:26] 학생 상세 모달 반별 상태/기록 표시 규칙 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 상세 모달의 요약 상태를 배치 개수 기반으로 변경하고 재원/휴원 표기를 반별로 한정
+- 반 카드에 진행 상태(진행예정/진행중/종료) + 재원/휴원 배지를 분리하고 종료 반은 상태 변경 버튼을 숨김
+- 반 선택 UX를 개선하고 기록 없음 표시/선택된 반 표시를 추가
+
+### Details
+- 작업 사유: 학생 단일 상태에 재원/휴원 표기가 섞이지 않도록 반별 상태 중심으로 UI 규칙 정리
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: `/teacher/students` 상세 모달에서 반 선택/상태 표기/버튼 노출 수동 확인
+## [2025-12-26 11:42] 학생 상세 모달을 반별 기록 카드 구조로 재구성
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 상세 모달의 수강 반을 큰 카드 레이아웃으로 전환하고 반 정보/수업 기록 카드를 분리
+- 반별로 수업 기록 카드를 렌더링하고 기록 데이터는 recordId 기준으로 사전 로딩
+- 반 선택/수정 버튼을 카드 내로 이동하고 종료/보관 상태에 맞게 버튼 노출을 정리
+
+### Details
+- 작업 사유: 반별 수업 기록을 한 화면에서 확인하도록 UI 흐름 개선
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: `/teacher/students` 학생 상세 모달에서 반별 기록 카드 노출/편집 동작 수동 확인
+## [2025-12-26 11:50] 슬롯/조교 비활성화 시 기록 기본값 정리 및 UI 미지정 옵션 숨김
+
+### Type
+BUGFIX
+
+### Summary
+- ClinicSlot 삭제 시 연결된 StudentCourseRecord의 defaultClinicSlotId를 null로 정리
+- 조교 비활성화 시 관련 StudentCourseRecord의 assistantMemberId를 null로 정리
+- 수업 기록 편집에서 선택된 상태일 때 미지정 옵션을 숨김
+
+### Details
+- 작업 사유: 삭제/비활성화 이후 기본값이 남아있는 문제와 미지정 선택 혼란을 해소
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest" --tests "com.classhub.domain.assignment.application.AssistantManagementServiceTest"`
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/application/AssistantManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/application/AssistantManagementServiceTest.java`
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 조교/슬롯 비활성화 후 학생 상세 모달에서 값이 미지정으로 표시되는지 확인
+## [2025-12-26 12:48] ClinicSlot 수정 시 기본 슬롯 유지하도록 변경
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSlot 스케줄 수정 시 학생 기본 슬롯을 해제하지 않도록 동작 변경
+- 관련 테스트를 수정해 기본 슬롯 유지 동작을 검증
+
+### Details
+- 작업 사유: 슬롯 업데이트 시 defaultClinicSlotId를 유지해 사용자 설정을 보존
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 슬롯 시간 변경 후 학생 기본 슬롯이 유지되는지 수동 확인
+## [2025-12-26 12:55] 학생 기록 수정 시 변경된 필드만 전송하도록 조정
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 수업 기록 수정 요청에서 변경되지 않은 기본 슬롯/조교 값은 전송하지 않도록 처리
+- 동일 슬롯 재전송으로 인한 중복 오류를 방지
+
+### Details
+- 작업 사유: 담당 조교만 변경 시 기본 슬롯 중복 오류가 발생하는 문제 해소
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 담당 조교만 변경 시 기본 슬롯 중복 오류가 사라졌는지 수동 확인
+## [2025-12-26 13:05] 반 시간표 겹침 생성 방지 로직 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 같은 지점/선생님에서 기간이 겹치는 반의 요일·시간대 중복을 차단
+- 반 생성/수정 시 기존 반 스케줄과의 충돌을 검사하도록 검증 로직 추가
+- 관련 서비스 테스트에 겹침 실패 케이스를 추가
+
+### Details
+- 작업 사유: 반끼리 동일 시간대 겹치는 생성이 가능한 문제 해결
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseServiceTest.java`
+- 다음 단계: 기존 데이터에 겹치는 반이 있는지 점검 후 필요 시 정리
+## [2025-12-26 13:07] 반 시간표 겹침 기준을 선생님 전체로 확대
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 시간표 겹침 검증을 동일 선생님 전체 기준으로 변경(지점 무관)
+- 겹침 조회 쿼리에서 branch 조건 제거
+- 관련 서비스 테스트 파라미터 수정
+
+### Details
+- 작업 사유: 동일 선생님이 운영하는 모든 반끼리 시간 겹침이 발생하지 않도록 제약 강화
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseServiceTest.java`
+- 다음 단계: 다중 지점 반 생성 시에도 겹침이 차단되는지 수동 확인
+## [2025-12-26 13:10] 클리닉 슬롯 시간 겹침 생성/수정 차단
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 동일 선생님/지점의 클리닉 슬롯이 요일/시간대 겹치면 생성/수정 불가하도록 검증 추가
+- 슬롯 생성/수정 서비스 테스트에 겹침 실패 케이스 추가
+
+### Details
+- 작업 사유: 같은 지점 내 클리닉 슬롯 시간 겹침 방지
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 실제 슬롯 생성/수정 화면에서 겹침 차단 동작 확인
+## [2025-12-26 14:47] 반/클리닉 시간표 변경 로깅 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반/클리닉 시간표 생성·수정 시 이전/신규 스케줄을 로그로 기록하도록 추가
+- 스케줄 로그 포맷터 유틸과 단위 테스트 추가
+
+### Details
+- 작업 사유: 시간표 값이 임의로 변경되는 문제의 원인 추적을 위해 변경 이력 로그 확보
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.global.util.ScheduleLogFormatterTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/global/util/ScheduleLogFormatter.java`
+  - `backend/src/test/java/com/classhub/global/util/ScheduleLogFormatterTest.java`
+- 다음 단계: 운영 로그에서 course/clinic slot 스케줄 변경 발생 시점 및 요청 주체 확인
+## [2025-12-26 15:42] 반/클리닉 스케줄 요청 로깅 강화
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반/클리닉 스케줄 생성·수정 요청에서 사용자/요청 정보를 로그로 기록하도록 추가
+- 요청 IP/UA 추출 유틸과 테스트 추가
+
+### Details
+- 작업 사유: 스케줄 값이 변조되는 원인을 추적하기 위해 요청 단위 로그 확보
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.global.util.RequestLogUtilsTest" --tests "com.classhub.global.util.ScheduleLogFormatterTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/global/util/RequestLogUtils.java`
+  - `backend/src/test/java/com/classhub/global/util/RequestLogUtilsTest.java`
+- 다음 단계: 로그에서 요청 IP/UA/actor 기준으로 스케줄 변경 발생 경로 확인
+## [2025-12-26 16:16] KST 기준 시간 처리 통일 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- 서버/DB/프론트의 시간 기준을 KST로 통일하는 설계 문서 작성
+
+### Details
+- 작업 사유: 클리닉 세션 생성 및 시간표 표시의 UTC/KST 불일치 문제 해결
+- 수정한 파일:
+  - `docs/plan/global/timezone-kst_plan.md`
+- 다음 단계: 설계 승인 후 KST Clock 적용 및 클리닉 시간 로직 수정
+## [2025-12-26 16:38] 서버/DB 시간 기준 KST 통일
+
+### Type
+BEHAVIORAL
+
+### Summary
+- KST 기준 Clock 유틸을 추가하고 서버 내부 now() 호출을 KST 기준으로 전환
+- JDBC/Hibernate 시간대 설정을 KST로 변경
+- Docker Compose에서 서버/DB 타임존을 KST로 고정
+
+### Details
+- 작업 사유: 클리닉 세션 생성 및 시간표 표시의 UTC/KST 불일치 해결
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/util/KstTime.java`
+  - `backend/src/main/java/com/classhub/global/config/TimeConfig.java`
+  - `backend/src/main/java/com/classhub/global/config/JpaConfig.java`
+  - `backend/src/main/java/com/classhub/global/entity/BaseTimeEntity.java`
+  - `backend/src/main/java/com/classhub/domain/auth/support/RefreshTokenCookieProvider.java`
+  - `backend/src/main/java/com/classhub/domain/auth/token/InMemoryRefreshTokenStore.java`
+  - `backend/src/main/java/com/classhub/global/jwt/JwtProvider.java`
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/session/application/ClinicSessionService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/application/ClinicAttendanceService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/application/TeacherStudentService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/application/StudentCourseManagementService.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseEnrollment.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/model/StudentCourseAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentAdminService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentEnrollmentApprovalService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/application/StudentTeacherRequestService.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentTeacherRequest.java`
+  - `backend/src/main/java/com/classhub/domain/enrollment/model/StudentEnrollmentRequest.java`
+  - `backend/src/main/java/com/classhub/domain/notice/model/NoticeRead.java`
+  - `backend/src/main/resources/application-local.yml`
+  - `backend/src/main/resources/application-prod.yml`
+  - `backend/src/main/resources/application-test.yml`
+  - `infra/docker/docker-compose-local.yml`
+  - `infra/docker/docker-compose.yml`
+- 다음 단계: 로컬 Docker 재기동 후 슬롯/세션 생성이 KST 기준으로 동작하는지 확인
+## [2025-12-26 16:45] 프론트 날짜/시간 표시 KST 변환 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 프론트 날짜/시간 표시 로직에서 강제 KST 변환을 제거하고 로컬 기준 출력으로 통일
+
+### Details
+- 작업 사유: 백엔드 KST 통일 이후 중복 변환으로 시간 표시가 밀리는 문제 방지
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/utils/date.ts`
+- 다음 단계: 클리닉/반 시간 표시가 KST 기준으로 정상 노출되는지 수동 확인
+## [2025-12-26 17:03] Schedule/Request 로그 제거
+
+### Type
+STRUCTURAL
+
+### Summary
+- 스케줄/요청 로깅 유틸과 관련 로그 호출을 제거
+- 관련 테스트를 삭제
+
+### Details
+- 작업 사유: 요청한 로깅 비활성화 및 코드 정리
+- 영향받은 테스트: 실행하지 않음
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseController.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/web/ClinicSlotController.java`
+  - `backend/src/main/java/com/classhub/global/util/ScheduleLogFormatter.java`
+  - `backend/src/main/java/com/classhub/global/util/RequestLogUtils.java`
+  - `backend/src/test/java/com/classhub/global/util/ScheduleLogFormatterTest.java`
+  - `backend/src/test/java/com/classhub/global/util/RequestLogUtilsTest.java`
+- 다음 단계: 필요 시 backend 테스트 실행

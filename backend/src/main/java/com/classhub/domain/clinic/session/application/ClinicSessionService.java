@@ -17,6 +17,7 @@ import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
+import com.classhub.global.util.KstTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -275,6 +276,6 @@ public class ClinicSessionService {
 
     private boolean canCancel(ClinicSession session) {
         LocalDateTime sessionStart = LocalDateTime.of(session.getDate(), session.getStartTime());
-        return LocalDateTime.now().isBefore(sessionStart);
+        return LocalDateTime.now(KstTime.clock()).isBefore(sessionStart);
     }
 }

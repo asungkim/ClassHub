@@ -52,6 +52,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher-student-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 선생님 요청 목록 조회 */
+        get: operations["getRequests"];
+        put?: never;
+        /** 학생 선생님 요청 생성 */
+        post: operations["createRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/students/me/clinic-attendances": {
         parameters: {
             query?: never;
@@ -79,10 +97,10 @@ export interface paths {
             cookie?: never;
         };
         /** 수업 신청 목록 조회 */
-        get: operations["getRequests"];
+        get: operations["getRequests_1"];
         put?: never;
         /** 학생 수업 등록 요청 생성 */
-        post: operations["createRequest"];
+        post: operations["createRequest_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -101,6 +119,23 @@ export interface paths {
         put?: never;
         /** 개별 진도 생성 */
         post: operations["createPersonalProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/student-course-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 학생 반 배치 생성 */
+        post: operations["createAssignment_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -461,6 +496,57 @@ export interface paths {
         patch: operations["updateAssistantStatus"];
         trace?: never;
     };
+    "/api/v1/teacher-student-requests/{requestId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 선생님 요청 거절 */
+        patch: operations["rejectRequest"];
+        trace?: never;
+    };
+    "/api/v1/teacher-student-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 학생 선생님 요청 취소 */
+        patch: operations["cancelRequest"];
+        trace?: never;
+    };
+    "/api/v1/teacher-student-requests/{requestId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 선생님 요청 승인 */
+        patch: operations["approveRequest"];
+        trace?: never;
+    };
     "/api/v1/students/me/courses/{courseId}/clinic-slot": {
         parameters: {
             query?: never;
@@ -492,7 +578,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** 수업 신청 거절 */
-        patch: operations["rejectRequest"];
+        patch: operations["rejectRequest_1"];
         trace?: never;
     };
     "/api/v1/student-enrollment-requests/{requestId}/cancel": {
@@ -509,7 +595,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** 학생 수업 등록 요청 취소 */
-        patch: operations["cancelRequest"];
+        patch: operations["cancelRequest_1"];
         trace?: never;
     };
     "/api/v1/student-enrollment-requests/{requestId}/approve": {
@@ -526,7 +612,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** 수업 신청 승인 */
-        patch: operations["approveRequest"];
+        patch: operations["approveRequest_1"];
         trace?: never;
     };
     "/api/v1/student-courses/{recordId}": {
@@ -545,6 +631,40 @@ export interface paths {
         head?: never;
         /** 학생 수업 기록 수정 */
         patch: operations["updateStudentCourse"];
+        trace?: never;
+    };
+    "/api/v1/student-course-assignments/{assignmentId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 학생 반 배치 비활성화 */
+        patch: operations["deactivateAssignment"];
+        trace?: never;
+    };
+    "/api/v1/student-course-assignments/{assignmentId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 학생 반 배치 활성화 */
+        patch: operations["activateAssignment"];
         trace?: never;
     };
     "/api/v1/personal-progress/{progressId}": {
@@ -740,6 +860,23 @@ export interface paths {
         patch: operations["updateCompanyVerifiedStatus"];
         trace?: never;
     };
+    "/api/v1/teachers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 학생 선생님 검색 */
+        get: operations["searchTeachers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teachers/me/assistants/search": {
         parameters: {
             query?: never;
@@ -752,6 +889,40 @@ export interface paths {
          * @description 이미 가입한 조교를 이름으로 검색한다.
          */
         get: operations["searchAssistants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher-students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 선생님 학생 목록 조회 */
+        get: operations["getTeacherStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher-students/{studentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 선생님 학생 상세 조회 */
+        get: operations["getTeacherStudentDetail"];
         put?: never;
         post?: never;
         delete?: never;
@@ -896,6 +1067,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses/{courseId}/assignment-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 반 배치 후보 학생 조회 */
+        get: operations["getAssignmentCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/courses/schedule": {
         parameters: {
             query?: never;
@@ -925,6 +1113,23 @@ export interface paths {
         };
         /** 공개 Course 검색 */
         get: operations["getPublicCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/courses/assignable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 배치 가능한 반 목록 조회 */
+        get: operations["getAssignableCourses"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1012,7 +1217,7 @@ export interface paths {
             cookie?: never;
         };
         /** 수업 신청 전체 조회 */
-        get: operations["getRequests_1"];
+        get: operations["getRequests_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1210,6 +1415,60 @@ export interface components {
             message?: string;
             data?: components["schemas"]["AssistantAssignmentResponse"];
         };
+        StudentTeacherRequestCreateRequest: {
+            /** Format: uuid */
+            teacherId: string;
+            message?: string;
+        };
+        RsDataStudentTeacherRequestResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentTeacherRequestResponse"];
+        };
+        StudentSummaryResponse: {
+            /** Format: uuid */
+            memberId?: string;
+            name?: string;
+            email?: string;
+            phoneNumber?: string;
+            schoolName?: string;
+            grade?: string;
+            /** Format: date */
+            birthDate?: string;
+            /** Format: int32 */
+            age?: number;
+            parentPhone?: string;
+        };
+        StudentTeacherRequestResponse: {
+            /** Format: uuid */
+            requestId?: string;
+            teacher?: components["schemas"]["TeacherSearchResponse"];
+            student?: components["schemas"]["StudentSummaryResponse"];
+            /** @enum {string} */
+            status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+            message?: string;
+            /** Format: date-time */
+            processedAt?: string;
+            /** Format: uuid */
+            processedByMemberId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        TeacherBranchSummary: {
+            /** Format: uuid */
+            companyId?: string;
+            companyName?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchName?: string;
+        };
+        TeacherSearchResponse: {
+            /** Format: uuid */
+            teacherId?: string;
+            teacherName?: string;
+            branches?: components["schemas"]["TeacherBranchSummary"][];
+        };
         StudentClinicAttendanceRequest: {
             /** Format: uuid */
             clinicSessionId: string;
@@ -1309,6 +1568,31 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["PersonalProgressResponse"];
+        };
+        StudentCourseAssignmentCreateRequest: {
+            /** Format: uuid */
+            studentId: string;
+            /** Format: uuid */
+            courseId: string;
+        };
+        RsDataStudentCourseAssignmentResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["StudentCourseAssignmentResponse"];
+        };
+        StudentCourseAssignmentResponse: {
+            /** Format: uuid */
+            assignmentId?: string;
+            /** Format: uuid */
+            studentId?: string;
+            /** Format: uuid */
+            courseId?: string;
+            /** Format: uuid */
+            assignedByMemberId?: string;
+            /** Format: date-time */
+            assignedAt?: string;
+            active?: boolean;
         };
         RegisterMemberRequest: {
             /** Format: email */
@@ -1617,20 +1901,6 @@ export interface components {
             message?: string;
             data?: components["schemas"]["TeacherEnrollmentRequestResponse"];
         };
-        StudentSummaryResponse: {
-            /** Format: uuid */
-            memberId?: string;
-            name?: string;
-            email?: string;
-            phoneNumber?: string;
-            schoolName?: string;
-            grade?: string;
-            /** Format: date */
-            birthDate?: string;
-            /** Format: int32 */
-            age?: number;
-            parentPhone?: string;
-        };
         TeacherEnrollmentRequestResponse: {
             /** Format: uuid */
             requestId?: string;
@@ -1720,6 +1990,25 @@ export interface components {
             verified: boolean;
             enabled?: boolean;
         };
+        PageResponseTeacherSearchResponse: {
+            content?: components["schemas"]["TeacherSearchResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseTeacherSearchResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseTeacherSearchResponse"];
+        };
         PageResponseTeacherBranchAssignmentResponse: {
             content?: components["schemas"]["TeacherBranchAssignmentResponse"][];
             /** Format: int32 */
@@ -1778,6 +2067,69 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["AssistantSearchResponse"][];
+        };
+        PageResponseStudentSummaryResponse: {
+            content?: components["schemas"]["StudentSummaryResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseStudentSummaryResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseStudentSummaryResponse"];
+        };
+        RsDataTeacherStudentDetailResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["TeacherStudentDetailResponse"];
+        };
+        TeacherStudentCourseResponse: {
+            /** Format: uuid */
+            courseId?: string;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            active?: boolean;
+            /** Format: uuid */
+            assignmentId?: string;
+            assignmentActive?: boolean;
+            /** Format: uuid */
+            recordId?: string;
+        };
+        TeacherStudentDetailResponse: {
+            student?: components["schemas"]["StudentSummaryResponse"];
+            courses?: components["schemas"]["TeacherStudentCourseResponse"][];
+        };
+        PageResponseStudentTeacherRequestResponse: {
+            content?: components["schemas"]["StudentTeacherRequestResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseStudentTeacherRequestResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseStudentTeacherRequestResponse"];
         };
         ClinicEvent: {
             /** Format: uuid */
@@ -2377,6 +2729,55 @@ export interface operations {
             };
         };
     };
+    getRequests: {
+        parameters: {
+            query?: {
+                status?: ("PENDING" | "APPROVED" | "REJECTED" | "CANCELLED")[];
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
+    createRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentTeacherRequestCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
     getStudentAttendances: {
         parameters: {
             query: {
@@ -2447,7 +2848,7 @@ export interface operations {
             };
         };
     };
-    getRequests: {
+    getRequests_1: {
         parameters: {
             query?: {
                 courseId?: string;
@@ -2473,7 +2874,7 @@ export interface operations {
             };
         };
     };
-    createRequest: {
+    createRequest_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2545,6 +2946,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataPersonalProgressResponse"];
+                };
+            };
+        };
+    };
+    createAssignment_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentCourseAssignmentCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentCourseAssignmentResponse"];
                 };
             };
         };
@@ -3139,6 +3564,72 @@ export interface operations {
             };
         };
     };
+    rejectRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
+    cancelRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
+    approveRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentTeacherRequestResponse"];
+                };
+            };
+        };
+    };
     updateDefaultClinicSlot: {
         parameters: {
             query?: never;
@@ -3165,7 +3656,7 @@ export interface operations {
             };
         };
     };
-    rejectRequest: {
+    rejectRequest_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3187,7 +3678,7 @@ export interface operations {
             };
         };
     };
-    cancelRequest: {
+    cancelRequest_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3209,7 +3700,7 @@ export interface operations {
             };
         };
     };
-    approveRequest: {
+    approveRequest_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3275,6 +3766,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataStudentCourseDetailResponse"];
+                };
+            };
+        };
+    };
+    deactivateAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentCourseAssignmentResponse"];
+                };
+            };
+        };
+    };
+    activateAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataStudentCourseAssignmentResponse"];
                 };
             };
         };
@@ -3645,6 +4180,32 @@ export interface operations {
             };
         };
     };
+    searchTeachers: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                companyId?: string;
+                branchId?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseTeacherSearchResponse"];
+                };
+            };
+        };
+    };
     searchAssistants: {
         parameters: {
             query?: {
@@ -3663,6 +4224,53 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataListAssistantSearchResponse"];
+                };
+            };
+        };
+    };
+    getTeacherStudents: {
+        parameters: {
+            query?: {
+                courseId?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseStudentSummaryResponse"];
+                };
+            };
+        };
+    };
+    getTeacherStudentDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataTeacherStudentDetailResponse"];
                 };
             };
         };
@@ -3855,6 +4463,32 @@ export interface operations {
             };
         };
     };
+    getAssignmentCandidates: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseStudentSummaryResponse"];
+                };
+            };
+        };
+    };
     getCourseSchedules: {
         parameters: {
             query: {
@@ -3902,6 +4536,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataPageResponsePublicCourseResponse"];
+                };
+            };
+        };
+    };
+    getAssignableCourses: {
+        parameters: {
+            query?: {
+                branchId?: string;
+                keyword?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCourseResponse"];
                 };
             };
         };
@@ -3998,7 +4657,7 @@ export interface operations {
             };
         };
     };
-    getRequests_1: {
+    getRequests_2: {
         parameters: {
             query?: {
                 teacherId?: string;

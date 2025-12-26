@@ -25,6 +25,20 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
             """)
     int clearDefaultClinicSlotId(@Param("slotId") UUID slotId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE StudentCourseRecord scr
+            SET scr.assistantMemberId = null
+            WHERE scr.assistantMemberId = :assistantId
+              AND scr.courseId IN (
+                SELECT c.id
+                FROM Course c
+                WHERE c.teacherMemberId = :teacherId
+              )
+            """)
+    int clearAssistantMemberId(@Param("teacherId") UUID teacherId,
+                               @Param("assistantId") UUID assistantId);
+
     @Query("""
             SELECT scr
             FROM StudentCourseRecord scr

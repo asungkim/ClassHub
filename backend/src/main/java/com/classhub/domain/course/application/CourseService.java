@@ -54,6 +54,13 @@ public class CourseService {
 
         CoursePeriodValidator.validate(request.startDate(), request.endDate());
         Set<Course.CourseSchedule> schedules = toSchedules(request.schedules());
+        ensureNoScheduleOverlap(
+                teacherId,
+                request.startDate(),
+                request.endDate(),
+                schedules,
+                null
+        );
 
         Course course = Course.create(
                 branch.getId(),
@@ -127,8 +134,22 @@ public class CourseService {
                 endDate
         );
         course.updateDescription(request.description());
+        boolean scheduleChanged = request.schedules() != null;
+        boolean periodChanged = request.startDate() != null || request.endDate() != null;
+        Set<Course.CourseSchedule> updatedSchedules = scheduleChanged
+                ? toSchedules(request.schedules())
+                : course.getSchedules();
+        if (scheduleChanged || periodChanged) {
+            ensureNoScheduleOverlap(
+                    teacherId,
+                    startDate,
+                    endDate,
+                    updatedSchedules,
+                    course.getId()
+            );
+        }
         if (request.schedules() != null) {
-            course.replaceSchedules(toSchedules(request.schedules()));
+            course.replaceSchedules(updatedSchedules);
         }
         Course saved = courseRepository.save(course);
         CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(List.of(saved));
@@ -202,5 +223,38 @@ public class CourseService {
                 Map.of(branch.getId(), company.getId())
         );
         return courseViewAssembler.toCourseResponse(course, context);
+    }
+
+    private void ensureNoScheduleOverlap(UUID teacherId,
+                                         LocalDate startDate,
+                                         LocalDate endDate,
+                                         Set<Course.CourseSchedule> schedules,
+                                         UUID excludeId) {
+        if (schedules == null || schedules.isEmpty()) {
+            return;
+        }
+        List<Course> overlaps = courseRepository.findOverlappingCourses(
+                teacherId,
+                startDate,
+                endDate,
+                excludeId
+        );
+        for (Course course : overlaps) {
+            for (Course.CourseSchedule existing : course.getSchedules()) {
+                for (Course.CourseSchedule candidate : schedules) {
+                    if (isScheduleOverlapping(existing, candidate)) {
+                        throw new BusinessException(RsCode.COURSE_SCHEDULE_OVERLAP);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isScheduleOverlapping(Course.CourseSchedule existing, Course.CourseSchedule candidate) {
+        if (existing.getDayOfWeek() != candidate.getDayOfWeek()) {
+            return false;
+        }
+        return existing.getStartTime().isBefore(candidate.getEndTime())
+                && candidate.getStartTime().isBefore(existing.getEndTime());
     }
 }

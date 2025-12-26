@@ -17,7 +17,8 @@ class CourseScheduleValidatorTest {
         assertThatCode(() -> CourseScheduleValidator.validate(List.of(
                 new ScheduleInput(DayOfWeek.MONDAY, LocalTime.of(7, 0), LocalTime.of(8, 0)),
                 new ScheduleInput(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(10, 0)),
-                new ScheduleInput(DayOfWeek.TUESDAY, LocalTime.of(6, 0), LocalTime.of(7, 0))
+                new ScheduleInput(DayOfWeek.TUESDAY, LocalTime.of(6, 0), LocalTime.of(7, 0)),
+                new ScheduleInput(DayOfWeek.WEDNESDAY, LocalTime.of(21, 0), LocalTime.of(22, 0))
         ))).doesNotThrowAnyException();
     }
 
@@ -46,6 +47,17 @@ class CourseScheduleValidatorTest {
     void validate_shouldThrowWhenScheduleHasNullField() {
         assertThatThrownBy(() -> CourseScheduleValidator.validate(List.of(
                 new ScheduleInput(null, LocalTime.of(8, 0), LocalTime.of(9, 0))
+        ))).isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void validate_shouldThrowWhenOutsideAllowedTimeRange() {
+        assertThatThrownBy(() -> CourseScheduleValidator.validate(List.of(
+                new ScheduleInput(DayOfWeek.FRIDAY, LocalTime.of(5, 59), LocalTime.of(7, 0))
+        ))).isInstanceOf(BusinessException.class);
+
+        assertThatThrownBy(() -> CourseScheduleValidator.validate(List.of(
+                new ScheduleInput(DayOfWeek.FRIDAY, LocalTime.of(21, 0), LocalTime.of(22, 1))
         ))).isInstanceOf(BusinessException.class);
     }
 }

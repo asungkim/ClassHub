@@ -49,6 +49,11 @@
 - 목적: 대량 신청 처리 시 UX/작업 시간을 줄이기.
 - 작업 범위: 일괄 승인·거절, 상태/키워드 필터 추가, 처리 메타데이터 제공.
 
+### #13 TeacherStudentRequest 일괄 처리
+- 우선순위: 🟡 Medium
+- 목적: 선생님 신청 처리 탭에서 승인/거절을 일괄 처리해 작업 속도를 개선.
+- 작업 범위: `/teacher-student-requests/batch/approve|reject` 추가, 중복/기처리 스킵 정책 정의, UI 체크박스 일괄 처리 플로우 연결.
+
 ### #8 학생 목록(StudentManagement) 학생 단위 그룹화
 - 우선순위: 🟡 Medium
 - 목적: 동일 학생이 여러 반을 듣는 경우 목록에 중복 노출되는 문제 해소, 학생별 진척 파악 용이.
@@ -63,6 +68,11 @@
 - 우선순위: 🟡 Medium
 - 목적: Slot 요일/시간 변경으로 defaultClinicSlotId가 해제된 학생에게 재신청 안내를 제공.
 - 작업 범위: Slot 변경 시 대상 학생 목록 집계, 알림(Notification) 이벤트 발행, 학생 앱에서 재신청 CTA 노출. (Notification 기능 도입 시 구현)
+
+### #12 클리닉 배치 조건 보강
+- 우선순위: 🟡 Medium
+- 목적: Course 종료/휴원 학생에 대해 ClinicSession/Attendance가 자동 생성되지 않도록 배치 조건을 명확히 분리.
+- 작업 범위: ClinicBatchService에서 StudentCourseAssignment 활성 + Course 기간 조건을 반영해 Attendance 생성 대상 필터링. 필요 시 유효 학생이 없는 슬롯은 세션 생성도 건너뛰는 정책 추가.
 
 ---
 

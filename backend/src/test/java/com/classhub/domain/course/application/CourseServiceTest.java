@@ -109,6 +109,12 @@ class CourseServiceTest {
         when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
         when(teacherBranchAssignmentRepository.findByTeacherMemberIdAndBranchId(teacherId, branchId))
                 .thenReturn(Optional.of(assignment));
+        when(courseRepository.findOverlappingCourses(
+                eq(teacherId),
+                eq(request.startDate()),
+                eq(request.endDate()),
+                eq(null)
+        )).thenReturn(List.of());
         when(courseRepository.save(any(Course.class))).thenAnswer(invocation -> {
             Course saved = invocation.getArgument(0);
             ReflectionTestUtils.setField(saved, "id", courseId);
@@ -122,6 +128,41 @@ class CourseServiceTest {
         assertThat(response.companyName()).isEqualTo("러셀");
         assertThat(response.schedules()).hasSize(1);
         verify(courseRepository).save(any(Course.class));
+    }
+
+    @Test
+    void createCourse_shouldThrow_whenScheduleOverlapsExistingCourse() {
+        CourseCreateRequest request = new CourseCreateRequest(
+                branchId,
+                "중3 수학",
+                null,
+                LocalDate.now(),
+                LocalDate.now().plusMonths(1),
+                List.of(new CourseScheduleRequest(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(10, 0)))
+        );
+        Course existing = Course.create(
+                branchId,
+                teacherId,
+                "기존 반",
+                null,
+                request.startDate(),
+                request.endDate(),
+                Set.of(new Course.CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(9, 30), LocalTime.of(10, 30)))
+        );
+        when(branchRepository.findById(branchId)).thenReturn(Optional.of(branch));
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(company));
+        when(teacherBranchAssignmentRepository.findByTeacherMemberIdAndBranchId(teacherId, branchId))
+                .thenReturn(Optional.of(assignment));
+        when(courseRepository.findOverlappingCourses(
+                eq(teacherId),
+                eq(request.startDate()),
+                eq(request.endDate()),
+                eq(null)
+        )).thenReturn(List.of(existing));
+
+        assertThatThrownBy(() -> courseService.createCourse(teacherId, request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.COURSE_SCHEDULE_OVERLAP);
     }
 
     @Test
@@ -207,6 +248,12 @@ class CourseServiceTest {
         when(courseRepository.findById(course.getId())).thenReturn(Optional.of(course));
         when(branchRepository.findAllById(any())).thenReturn(List.of(branch));
         when(companyRepository.findAllById(any())).thenReturn(List.of(company));
+        when(courseRepository.findOverlappingCourses(
+                eq(teacherId),
+                any(LocalDate.class),
+                any(LocalDate.class),
+                eq(course.getId())
+        )).thenReturn(List.of());
         when(courseRepository.save(course)).thenReturn(course);
 
         LocalDate newStart = course.getStartDate().plusDays(1);
@@ -226,6 +273,48 @@ class CourseServiceTest {
         assertThat(response.startDate()).isEqualTo(newStart);
         assertThat(response.schedules()).hasSize(1);
         verify(courseRepository).save(course);
+    }
+
+    @Test
+    void updateCourse_shouldThrow_whenScheduleOverlapsExistingCourse() {
+        Course course = Course.create(
+                branchId,
+                teacherId,
+                "기존 이름",
+                null,
+                LocalDate.now(),
+                LocalDate.now().plusMonths(1),
+                Set.of(new Course.CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(8, 0), LocalTime.of(9, 0)))
+        );
+        ReflectionTestUtils.setField(course, "id", UUID.randomUUID());
+        Course existing = Course.create(
+                branchId,
+                teacherId,
+                "기존 반",
+                null,
+                course.getStartDate(),
+                course.getEndDate(),
+                Set.of(new Course.CourseSchedule(DayOfWeek.MONDAY, LocalTime.of(9, 30), LocalTime.of(10, 30)))
+        );
+        when(courseRepository.findById(course.getId())).thenReturn(Optional.of(course));
+        when(courseRepository.findOverlappingCourses(
+                eq(teacherId),
+                any(LocalDate.class),
+                any(LocalDate.class),
+                eq(course.getId())
+        )).thenReturn(List.of(existing));
+
+        CourseUpdateRequest request = new CourseUpdateRequest(
+                null,
+                null,
+                course.getStartDate(),
+                course.getEndDate(),
+                List.of(new CourseScheduleRequest(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0)))
+        );
+
+        assertThatThrownBy(() -> courseService.updateCourse(teacherId, course.getId(), request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.COURSE_SCHEDULE_OVERLAP);
     }
 
     @Test
