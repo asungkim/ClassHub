@@ -18,6 +18,8 @@ public interface StudentCourseAssignmentRepository extends JpaRepository<Student
 
     List<StudentCourseAssignment> findByStudentMemberId(UUID studentMemberId);
 
+    Page<StudentCourseAssignment> findByCourseId(UUID courseId, Pageable pageable);
+
     @Query("""
             SELECT sca
             FROM StudentCourseAssignment sca

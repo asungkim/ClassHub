@@ -40,7 +40,7 @@ export function ProgressCardList({ items, emptyMessage, onLoadMore, hasMore, loa
             </div>
             <div className="space-y-2">
               <p className="text-base font-semibold text-slate-900">{item.title ?? "제목 없음"}</p>
-              <p className="text-sm text-slate-600 line-clamp-2 whitespace-pre-line">
+              <p className="text-sm text-slate-600 whitespace-pre-line">
                 {item.content || "내용이 없습니다."}
               </p>
             </div>

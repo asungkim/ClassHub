@@ -6581,3 +6581,305 @@ BEHAVIORAL
 - 수정한 파일:
   - `frontend/src/app/(dashboard)/student/my-courses/page.tsx`
 - 다음 단계: 프론트 빌드 및 화면 확인
+## [2025-12-26 19:52] 반 학생 목록 API/프론트 연동 설계
+
+### Type
+DESIGN
+
+### Summary
+- 통합 수업 작성 모달용 반 학생 목록 조회 API와 프론트 연동 계획 수립
+
+### Details
+- 작업 사유: 재원 학생 목록 조회 API 부재로 진도 작성 UI가 동작하지 않음
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `docs/plan/backend/season2/course-students_plan.md`
+  - `docs/plan/frontend/season2/teacher-lesson-compose-students_plan.md`
+- 다음 단계: 설계 승인 후 TDD로 백엔드 API 구현 및 프론트 연동
+## [2025-12-26 19:58] 반 학생 목록 계획 보정
+
+### Type
+DESIGN
+
+### Summary
+- 반 학생 목록 API/모달 계획에 재원/휴원 동시 노출 및 진행 상태 배지 요구 반영
+
+### Details
+- 작업 사유: 재원/휴원 모두 표시 및 진행 상태 배지 요구 반영
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `docs/plan/backend/season2/course-students_plan.md`
+  - `docs/plan/frontend/season2/teacher-lesson-compose-students_plan.md`
+- 다음 단계: 설계 승인 후 TDD 구현
+## [2025-12-26 20:24] 반 학생 목록 조회 API 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반별 학생(재원/휴원) 목록 조회 API 추가
+- 응답에 recordId 및 재원 여부 포함
+
+### Details
+- 작업 사유: 통합 수업 작성 모달에서 학생 목록/recordId 필요
+- 영향받은 테스트: `CourseAssignmentServiceTest`, `CourseAssignmentControllerTest` (컴파일 실패로 미통과)
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/course/dto/response/CourseStudentResponse.java`
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseAssignmentRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseAssignmentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/web/CourseAssignmentControllerTest.java`
+- 테스트: `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseAssignmentServiceTest" --tests "com.classhub.domain.course.web.CourseAssignmentControllerTest"` (PublicCourseService 관련 컴파일 실패)
+- 다음 단계: OpenAPI 갱신 후 프론트 연동
+## [2025-12-26 20:46] 통합 수업 모달 학생 목록 연동
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 수강 학생 조회 API 연동 및 휴원/진행 상태 배지 표시 추가
+
+### Details
+- 작업 사유: 통합 수업 작성 모달에서 재원/휴원 학생과 recordId 필요
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/progress/teacher-lesson-compose-modal.tsx`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 프론트 빌드 및 모달 동작 수동 확인
+## [2025-12-26 21:02] 진도 모달/반 관리 배지 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 통합 수업 모달 학생 라벨에 학교(학년) 표기 추가
+- 반 관리 카드에 진행 상태 배지 표시 추가
+
+### Details
+- 작업 사유: 학생 정보 표현 및 반 진행 상태 가시성 개선
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/progress/teacher-lesson-compose-modal.tsx`
+  - `frontend/src/app/(dashboard)/teacher/courses/page.tsx`
+- 다음 단계: 프론트 빌드 및 화면 확인
+## [2025-12-26 21:20] 개인 진도 학생 검색 API 교체
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 개인 진도 페이지에서 학생 검색/상세 로딩을 teacher-students API로 전환
+
+### Details
+- 작업 사유: 기존 student-courses 목록 API 제거로 학생 목록 조회 실패
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/progress/personal-progress-section.tsx`
+- 다음 단계: 프론트 빌드 및 개인 진도 페이지 동작 확인
+## [2025-12-26 21:36] 학생 캘린더 검색 API 교체
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 캘린더 검색을 teacher-students API로 전환
+- 선택 학생 상세에서 반 목록을 갱신하도록 보완
+
+### Details
+- 작업 사유: 기존 student-courses 목록 API 제거로 검색 실패
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+- 다음 단계: 프론트 빌드 및 학생 캘린더 검색 동작 확인
+## [2025-12-26 21:48] 학생 캘린더 정보 표기 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 캘린더에서 반 목록과 학교/학년을 분리 표기
+
+### Details
+- 작업 사유: 학생 정보 영역에 반/학교-학년을 명확히 구분
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/student-calendar-header.tsx`
+  - `frontend/src/components/dashboard/calendar/student-info-card.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+- 다음 단계: 프론트 빌드 및 학생 캘린더 화면 확인
+## [2025-12-26 21:57] 학생 캘린더 반/학교 정보 갱신 보강
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 상세 조회 결과로 반 목록과 학교/학년 정보를 명확히 갱신
+
+### Details
+- 작업 사유: 학생 캘린더에서 반/학교 정보가 혼재되어 표시됨
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+- 다음 단계: 프론트 빌드 및 학생 캘린더 표시 확인
+## [2025-12-26 22:05] 학생 캘린더 반 정보 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 캘린더에서 반 정보 표시/상세 조회 제거
+
+### Details
+- 작업 사유: 반 정보 표시 불필요로 제거 요청 반영
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-header.tsx`
+  - `frontend/src/components/dashboard/calendar/student-info-card.tsx`
+- 다음 단계: 프론트 빌드 및 학생 캘린더 표시 확인
+## [2025-12-26 22:18] 학생 캘린더 검색/상세 모달 UX 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 검색 결과 반복 노출 방지
+- 캘린더 상세 모달에 반 배지 및 삭제 확인 다이얼로그 추가
+
+### Details
+- 작업 사유: 검색 UX 및 상세 모달 정보 구조 개선 요청 반영
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+  - `frontend/src/components/dashboard/calendar/calendar-day-detail-modal.tsx`
+- 다음 단계: 프론트 빌드 및 캘린더 검색/삭제 동작 확인
+## [2025-12-26 22:32] 클리닉 슬롯 시간 입력 UI 정렬
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 슬롯 시간 입력을 반 생성 모달과 동일한 드롭다운 형태로 변경
+
+### Details
+- 작업 사유: 반 생성 UI와 동일한 시간 입력 UX 적용
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+- 다음 단계: 프론트 빌드 및 슬롯 생성/수정 UX 확인
+## [2025-12-26 22:41] 클리닉 세션 시간 입력 UI 정렬
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 세션 생성 모달의 시간 입력을 반 생성 UI 형태로 통일
+
+### Details
+- 작업 사유: 반 생성/슬롯과 동일한 시간 입력 UX 적용
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+- 다음 단계: 프론트 빌드 및 세션 생성 UX 확인
+## [2025-12-26 22:55] 클리닉 세션 시간 범위 검증 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 세션 시간 검증에 06:00~22:00 범위 제한 추가
+
+### Details
+- 작업 사유: 반과 동일한 시간 범위 검증을 세션에도 적용
+- 영향받은 테스트: `ClinicSessionServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/session/application/ClinicSessionService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/session/application/ClinicSessionServiceTest.java`
+- 테스트: `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.session.application.ClinicSessionServiceTest"`
+- 다음 단계: 프론트 시간 입력 UX와 함께 QA
+## [2025-12-26 23:10] 조교 학생 목록 권한 오류 대응
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 학생 목록 중복 키 경고 해소
+- 조교가 학생 상세에서 수업 기록 조회 시도하지 않도록 차단
+
+### Details
+- 작업 사유: ASSISTANT 화면에서 권한 오류 및 키 중복 경고 발생
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 조교 학생 목록/상세 모달 동작 확인
+## [2025-12-27 00:05] 조교 학생 목록 중복 제거 조회 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 학생 목록을 distinct 학생 기준으로 조회하도록 변경
+- 조교 목록 조회용 repository 쿼리 및 서비스 경로 추가
+
+### Details
+- 작업 사유: 조교가 여러 선생님에 연결될 때 학생이 중복 노출되는 문제 해결
+- 영향받은 테스트: `TeacherStudentAssignmentRepositoryTest`, `TeacherStudentServiceTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/assignment/application/TeacherStudentService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/application/TeacherStudentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepositoryTest.java`
+- 다음 단계: 관련 API 호출 시 조교 목록 중복 제거 확인
+## [2025-12-27 00:24] 조교 검색 중복 완화 및 클리닉 빈 기록 숨김
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 학생 검색 결과 중복 방지를 위해 distinct 조회 흐름 보완
+- 학생 캘린더에서 클리닉 기록이 없는 항목은 표시하지 않도록 처리
+
+### Details
+- 작업 사유: 조교 검색 중복 및 빈 클리닉 기록 카드 노출 문제 대응
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/assignment/application/TeacherStudentService.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/TeacherStudentAssignmentRepository.java`
+  - `frontend/src/components/dashboard/progress/personal-progress-section.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+- 다음 단계: 조교 검색/캘린더 화면에서 중복 및 빈 기록 노출 여부 확인
+## [2025-12-27 00:31] 진도/캘린더 내용 전체 표시
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반별/개인 진도 카드에서 본문 내용을 모두 표시하도록 변경
+- 학생별 캘린더 상세의 본문 클램프 제거
+
+### Details
+- 작업 사유: 진도/캘린더에서 내용이 말줄임 처리되지 않도록 요청 반영
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/progress/progress-card-list.tsx`
+  - `frontend/src/components/dashboard/calendar/calendar-day-detail-modal.tsx`
+- 다음 단계: 긴 본문 표시 시 레이아웃 확인
+## [2025-12-27 00:44] 클리닉 카드 표시 개선 설계 문서 작성
+
+### Type
+DESIGN
+
+### Summary
+- 클리닉 슬롯 기본 설정 인원 표시를 위한 백엔드 설계 문서 작성
+- 클리닉 슬롯/세션 카드 UI 표시 개선 설계 문서 작성
+
+### Details
+- 작업 사유: 슬롯/세션 카드에 시간과 인원 정보를 표시하기 위한 설계 필요
+- 영향받은 테스트: 해당 없음
+- 수정한 파일:
+  - `docs/plan/backend/season2/clinic-slot-session-card_plan.md`
+  - `docs/plan/frontend/season2/clinic-slot-session-card_ui_plan.md`
+- 다음 단계: 설계 승인 후 TDD/구현 진행

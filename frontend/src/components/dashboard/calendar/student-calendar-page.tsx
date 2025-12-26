@@ -8,10 +8,11 @@ import { StudentInfoCard } from "@/components/dashboard/calendar/student-info-ca
 import { MonthlyCalendarGrid } from "@/components/dashboard/calendar/monthly-calendar-grid";
 import { CalendarDayDetailModal } from "@/components/dashboard/calendar/calendar-day-detail-modal";
 import { ProgressEditModal } from "@/components/dashboard/progress/progress-edit-modal";
-import { fetchStudentCourseRecords } from "@/lib/dashboard-api";
+import { fetchTeacherStudents } from "@/lib/dashboard-api";
 import { deleteCourseProgress, deletePersonalProgress, fetchStudentCalendar } from "@/lib/progress-api";
 import { formatDateYmdKst } from "@/utils/date";
-import type { StudentCourseListItemResponse } from "@/types/dashboard";
+import { formatStudentGrade } from "@/utils/student";
+import type { StudentSummaryResponse } from "@/types/dashboard";
 import type {
   ClinicEvent,
   CourseProgressEvent,
@@ -26,7 +27,7 @@ type StudentSearchOption = {
   name: string;
   phoneNumber?: string;
   parentPhoneNumber?: string;
-  courses: string[];
+  schoolLabel?: string;
 };
 
 type DayEvents = {
@@ -116,20 +117,24 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   }, [currentMonth, selectedStudent]);
 
   useEffect(() => {
-    if (!searchValue.trim()) {
+    const trimmed = searchValue.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      return;
+    }
+    if (selectedStudent && trimmed === selectedStudent.name) {
       setSearchResults([]);
       return;
     }
     const timer = setTimeout(async () => {
       try {
         setSearchLoading(true);
-        const response = await fetchStudentCourseRecords({
-          status: "ACTIVE",
-          keyword: searchValue.trim(),
+        const response = await fetchTeacherStudents({
+          keyword: trimmed,
           page: 0,
           size: 30
         });
-        setSearchResults(groupStudentOptions(response.items));
+        setSearchResults(toStudentOptions(response.items));
       } catch (error) {
         const message = error instanceof Error ? error.message : "학생 검색에 실패했습니다.";
         showToast("error", message);
@@ -139,7 +144,7 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [searchValue, showToast]);
+  }, [searchValue, selectedStudent, showToast]);
 
   const handleStudentSelect = (option: StudentSearchOption) => {
     setSelectedStudent(option);
@@ -273,30 +278,36 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   );
 }
 
-function groupStudentOptions(records: StudentCourseListItemResponse[]): StudentSearchOption[] {
-  const map = new Map<string, StudentSearchOption>();
-  records.forEach((record) => {
-    if (!record.studentMemberId) {
-      return;
-    }
-    const existing = map.get(record.studentMemberId);
-    const courseName = record.courseName ?? "반";
-    if (existing) {
-      if (!existing.courses.includes(courseName)) {
-        existing.courses.push(courseName);
+function toStudentOptions(students: StudentSummaryResponse[]): StudentSearchOption[] {
+  const seen = new Set<string>();
+  return students
+    .filter((student) => Boolean(student.memberId))
+    .map((student) => ({
+      studentId: student.memberId ?? "",
+      name: student.name ?? "학생",
+      phoneNumber: student.phoneNumber ?? undefined,
+      parentPhoneNumber: student.parentPhone ?? undefined,
+      schoolLabel: formatStudentSummary(student)
+    }))
+    .filter((option) => {
+      if (!option.studentId) {
+        return true;
       }
-      return;
-    }
-    map.set(record.studentMemberId, {
-      studentId: record.studentMemberId,
-      name: record.studentName ?? "학생",
-      phoneNumber: record.phoneNumber ?? undefined,
-      parentPhoneNumber: record.parentPhoneNumber ?? undefined,
-      courses: [courseName]
+      if (seen.has(option.studentId)) {
+        return false;
+      }
+      seen.add(option.studentId);
+      return true;
     });
-  });
+}
 
-  return Array.from(map.values());
+function formatStudentSummary(student: StudentSummaryResponse) {
+  const schoolName = student.schoolName ?? "학교 정보 없음";
+  const gradeLabel = formatStudentGrade(student.grade);
+  if (!gradeLabel) {
+    return schoolName;
+  }
+  return `${schoolName}(${gradeLabel})`;
 }
 
 function buildEventsByDate(calendarData: StudentCalendarResponse | null): Map<string, DayEvents> {
@@ -318,6 +329,7 @@ function buildEventsByDate(calendarData: StudentCalendarResponse | null): Map<st
   });
   calendarData.clinicEvents?.forEach((event) => {
     if (!event.date) return;
+    if (!event.recordSummary) return;
     const bucket = map.get(event.date) ?? emptyDayEvents();
     bucket.clinic.push(event);
     map.set(event.date, bucket);

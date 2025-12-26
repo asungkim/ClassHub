@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InlineError } from "@/components/ui/inline-error";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -683,6 +684,7 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
       : "등록된 스케줄이 없습니다.";
   const isActive = course.active !== false;
   const disableActions = disabled || !course.courseId;
+  const progressStatus = getCourseProgressStatus(course.startDate, course.endDate);
 
   return (
     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-5 shadow-sm">
@@ -691,7 +693,10 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
           <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">
             {course.companyName ?? "학원"} • {course.branchName ?? "-"}
           </p>
-          <h3 className="text-lg font-bold text-slate-900">{course.name ?? "이름 미지정"}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900">{course.name ?? "이름 미지정"}</h3>
+            <Badge variant={progressStatus.variant}>{progressStatus.label}</Badge>
+          </div>
         </div>
         <div className="flex flex-col items-start gap-2 md:items-end">
           <CourseStatusToggle active={isActive} disabled={disableActions} onChange={(next) => onToggle(next)} />
@@ -1469,4 +1474,36 @@ function normalizeDateInput(value: string) {
   }
   // 이미 YYYY-MM-DD 형식이므로 그대로 반환
   return value;
+}
+
+function getCourseProgressStatus(start?: string | null, end?: string | null) {
+  const today = startOfDay(new Date());
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end);
+
+  if (!startDate && !endDate) {
+    return { label: "일정 미정", variant: "secondary" as const };
+  }
+  if (startDate && today < startDate) {
+    return { label: "진행 예정", variant: "default" as const };
+  }
+  if (endDate && today > endDate) {
+    return { label: "종료", variant: "secondary" as const };
+  }
+  return { label: "진행 중", variant: "success" as const };
+}
+
+function parseDateOnly(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function startOfDay(date: Date) {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
 }

@@ -281,9 +281,9 @@ export default function StudentClinicSchedulePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-slate-900">
-                          {group.teacherName} · {group.branchName}
+                          {group.teacherName}
                         </p>
-                        <p className="text-xs text-slate-500">{group.companyName}</p>
+                        <p className="text-xs text-slate-500">{group.companyName} {group.branchName}</p>
                       </div>
                       {isSelected && <Badge>선택됨</Badge>}
                     </div>
@@ -320,7 +320,7 @@ export default function StudentClinicSchedulePage() {
 
       <Card
         title="기본 슬롯 시간표"
-        description="선택한 반 기준으로 기본 슬롯을 설정하는 시간표가 이어집니다."
+        description="선택한 반 기준으로 기본 슬롯을 설정하는 시간표가 나타납니다."
       >
         <div className="space-y-6">
           {selectedCourseContext ? (
@@ -329,7 +329,7 @@ export default function StudentClinicSchedulePage() {
               <span>
                 {selectedCourseContext.teacherName ?? "선생님"} · {selectedCourseContext.branchName ?? "지점"}
               </span>
-              <span className="text-xs text-slate-400">기본 슬롯은 파란색으로 표시됩니다.</span>
+              <span className="text-xs text-slate-400">기본 슬롯은 파란색으로 표시됩니다. 선택하지 않았으면 아래에서 선택 해주세요.</span>
             </div>
           ) : null}
 

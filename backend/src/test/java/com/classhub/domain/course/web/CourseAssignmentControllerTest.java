@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.classhub.domain.course.application.CourseAssignmentService;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.dto.response.CourseScheduleResponse;
+import com.classhub.domain.course.dto.response.CourseStudentResponse;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.domain.member.model.MemberRole;
@@ -128,5 +129,39 @@ class CourseAssignmentControllerTest {
                 .andExpect(jsonPath("$.data.content[0].name").value("학생"));
 
         verify(courseAssignmentService).getAssignmentCandidates(eq(teacherPrincipal), eq(courseId), any(), eq(0), eq(20));
+    }
+
+    @Test
+    void getCourseStudents_shouldReturnAssignments() throws Exception {
+        StudentSummaryResponse summary = StudentSummaryResponse.builder()
+                .memberId(UUID.randomUUID())
+                .name("학생")
+                .email("student@classhub.com")
+                .phoneNumber("01000001111")
+                .schoolName("중앙중학교")
+                .grade("MIDDLE_1")
+                .build();
+        CourseStudentResponse item = new CourseStudentResponse(UUID.randomUUID(), false, summary);
+        PageResponse<CourseStudentResponse> page = new PageResponse<>(
+                List.of(item),
+                0,
+                20,
+                1,
+                1,
+                true,
+                true
+        );
+        UUID courseId = UUID.randomUUID();
+        given(courseAssignmentService.getCourseStudents(eq(teacherPrincipal), eq(courseId), eq(0), eq(20)))
+                .willReturn(page);
+
+        mockMvc.perform(get("/api/v1/courses/{courseId}/students", courseId)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(authenticationToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
+                .andExpect(jsonPath("$.data.content[0].student.name").value("학생"))
+                .andExpect(jsonPath("$.data.content[0].assignmentActive").value(false));
+
+        verify(courseAssignmentService).getCourseStudents(eq(teacherPrincipal), eq(courseId), eq(0), eq(20));
     }
 }

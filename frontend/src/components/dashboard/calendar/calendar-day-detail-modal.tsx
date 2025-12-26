@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ClinicEvent, CourseProgressEvent, PersonalProgressEvent } from "@/types/progress";
 
 type DayEvents = {
@@ -33,14 +36,19 @@ export function CalendarDayDetailModal({
   onDeleteCourse,
   onDeletePersonal
 }: CalendarDayDetailModalProps) {
+  const [confirmTarget, setConfirmTarget] = useState<{
+    type: "course" | "personal";
+    event: CourseProgressEvent | PersonalProgressEvent;
+  } | null>(null);
   const title = dateKey ? formatDateLabel(dateKey) : "상세 기록";
   const courseEvents = events?.course ?? [];
   const personalEvents = events?.personal ?? [];
   const clinicEvents = events?.clinic ?? [];
 
   return (
-    <Modal open={open} onClose={onClose} title={title} size="lg">
-      <div className="space-y-6">
+    <>
+      <Modal open={open} onClose={onClose} title={title} size="lg">
+        <div className="space-y-6">
         <section className="space-y-3">
           <h3 className="text-sm font-semibold text-slate-700">공통 진도</h3>
           {courseEvents.length === 0 ? (
@@ -50,10 +58,12 @@ export function CalendarDayDetailModal({
               <div key={event.id ?? `course-${index}`} className="rounded-2xl border border-slate-200 px-4 py-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{event.title ?? "제목 없음"}</p>
-                    <p className="text-xs text-slate-500">{event.courseName ?? "반 정보 없음"}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{event.title ?? "제목 없음"}</p>
+                      <Badge variant="secondary">{event.courseName ?? "반 정보 없음"}</Badge>
+                    </div>
                     {event.content ? (
-                      <p className="mt-2 text-xs text-slate-500 whitespace-pre-line line-clamp-3">
+                      <p className="mt-2 text-xs text-slate-500 whitespace-pre-line">
                         {event.content}
                       </p>
                     ) : null}
@@ -63,7 +73,11 @@ export function CalendarDayDetailModal({
                       <Button variant="ghost" onClick={() => onEditCourse(event)} disabled={!event.id}>
                         수정
                       </Button>
-                      <Button variant="ghost" onClick={() => onDeleteCourse(event)} disabled={!event.id}>
+                      <Button
+                        variant="ghost"
+                        onClick={() => event.id && setConfirmTarget({ type: "course", event })}
+                        disabled={!event.id}
+                      >
                         삭제
                       </Button>
                     </div>
@@ -83,10 +97,12 @@ export function CalendarDayDetailModal({
               <div key={event.id ?? `personal-${index}`} className="rounded-2xl border border-slate-200 px-4 py-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{event.title ?? "제목 없음"}</p>
-                    <p className="text-xs text-slate-500">{event.courseName ?? "반 정보 없음"}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{event.title ?? "제목 없음"}</p>
+                      <Badge variant="secondary">{event.courseName ?? "반 정보 없음"}</Badge>
+                    </div>
                     {event.content ? (
-                      <p className="mt-2 text-xs text-slate-500 whitespace-pre-line line-clamp-3">
+                      <p className="mt-2 text-xs text-slate-500 whitespace-pre-line">
                         {event.content}
                       </p>
                     ) : null}
@@ -96,7 +112,11 @@ export function CalendarDayDetailModal({
                       <Button variant="ghost" onClick={() => onEditPersonal(event)} disabled={!event.id}>
                         수정
                       </Button>
-                      <Button variant="ghost" onClick={() => onDeletePersonal(event)} disabled={!event.id}>
+                      <Button
+                        variant="ghost"
+                        onClick={() => event.id && setConfirmTarget({ type: "personal", event })}
+                        disabled={!event.id}
+                      >
                         삭제
                       </Button>
                     </div>
@@ -122,7 +142,7 @@ export function CalendarDayDetailModal({
                 </p>
                 <p className="text-xs text-slate-500">{event.recordSummary?.writerRole ?? "작성자"}</p>
                 {event.recordSummary?.content ? (
-                  <p className="mt-2 text-xs text-slate-500 whitespace-pre-line line-clamp-3">
+                  <p className="mt-2 text-xs text-slate-500 whitespace-pre-line">
                     {event.recordSummary.content}
                   </p>
                 ) : null}
@@ -130,8 +150,31 @@ export function CalendarDayDetailModal({
             ))
           )}
         </section>
-      </div>
-    </Modal>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={Boolean(confirmTarget)}
+        onClose={() => setConfirmTarget(null)}
+        onConfirm={() => {
+          if (!confirmTarget) return;
+          if (confirmTarget.type === "course") {
+            onDeleteCourse(confirmTarget.event as CourseProgressEvent);
+          } else {
+            onDeletePersonal(confirmTarget.event as PersonalProgressEvent);
+          }
+          setConfirmTarget(null);
+        }}
+        title="삭제 확인"
+        message={
+          confirmTarget?.type === "course"
+            ? "해당 진도를 삭제하면 반에 대한 기록이 사라집니다. 삭제할까요?"
+            : "해당 개인 진도는 영구적으로 삭제됩니다. 삭제할까요?"
+        }
+        confirmText="삭제"
+        cancelText="취소"
+      />
+    </>
   );
 }
 

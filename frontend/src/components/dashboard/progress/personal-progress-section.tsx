@@ -7,18 +7,13 @@ import { TextField } from "@/components/ui/text-field";
 import { ProgressFilterBar, type ProgressSelectOption } from "@/components/dashboard/progress/progress-filter-bar";
 import { ProgressCardList } from "@/components/dashboard/progress/progress-card-list";
 import { fetchPersonalProgresses } from "@/lib/progress-api";
-import { fetchStudentCourseRecords } from "@/lib/dashboard-api";
-import type { StudentCourseListItemResponse } from "@/types/dashboard";
+import { fetchTeacherStudentDetail, fetchTeacherStudents } from "@/lib/dashboard-api";
+import { formatStudentGrade } from "@/utils/student";
+import type { StudentSummaryResponse, TeacherStudentCourseResponse } from "@/types/dashboard";
 import type { PersonalProgressResponse, ProgressCursor } from "@/types/progress";
 
 type PersonalProgressSectionProps = {
   role: "TEACHER" | "ASSISTANT";
-};
-
-type StudentGroup = {
-  studentId: string;
-  name: string;
-  records: StudentCourseListItemResponse[];
 };
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -26,9 +21,10 @@ const SEARCH_DEBOUNCE_MS = 300;
 export function PersonalProgressSection({ role }: PersonalProgressSectionProps) {
   const { showToast } = useToast();
   const [searchValue, setSearchValue] = useState("");
-  const [searchResults, setSearchResults] = useState<StudentGroup[]>([]);
+  const [searchResults, setSearchResults] = useState<StudentSummaryResponse[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<StudentGroup | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentSummaryResponse | null>(null);
+  const [studentCourses, setStudentCourses] = useState<TeacherStudentCourseResponse[]>([]);
   const [selectedRecordId, setSelectedRecordId] = useState("");
   const [items, setItems] = useState<PersonalProgressResponse[]>([]);
   const [nextCursor, setNextCursor] = useState<ProgressCursor | null>(null);
@@ -42,17 +38,15 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
       setError(null);
       setSearchLoading(true);
       const trimmedKeyword = keyword?.trim();
-      const response = await fetchStudentCourseRecords({
-        status: "ACTIVE",
+      const response = await fetchTeacherStudents({
         page: 0,
         size: 100,
         keyword: trimmedKeyword && trimmedKeyword.length > 0 ? trimmedKeyword : undefined
       });
-      const groups = groupStudentRecords(response.items);
       if (requestId && requestId !== searchRequestId.current) {
         return;
       }
-      setSearchResults(groups);
+      setSearchResults(dedupeStudents(response.items));
     } catch (err) {
       const message = err instanceof Error ? err.message : "학생 목록을 불러오지 못했습니다.";
       setError(message);
@@ -104,17 +98,36 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
     return () => clearTimeout(timer);
   }, [loadStudents, searchValue, selectedStudent]);
 
+  const loadStudentDetail = useCallback(
+    async (studentId: string) => {
+      try {
+        const detail = await fetchTeacherStudentDetail(studentId);
+        setStudentCourses(detail.courses ?? []);
+        const recordIds = (detail.courses ?? [])
+          .map((course) => course.recordId ?? "")
+          .filter((recordId) => recordId.length > 0);
+        if (recordIds.length === 1) {
+          setSelectedRecordId(recordIds[0]);
+        } else {
+          setSelectedRecordId("");
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "학생 상세 정보를 불러오지 못했습니다.";
+        setError(message);
+        showToast("error", message);
+      }
+    },
+    [showToast]
+  );
+
   useEffect(() => {
-    if (!selectedStudent) {
+    if (!selectedStudent?.memberId) {
+      setStudentCourses([]);
       setSelectedRecordId("");
       return;
     }
-    if (selectedStudent.records.length === 1) {
-      setSelectedRecordId(selectedStudent.records[0]?.recordId ?? "");
-    } else {
-      setSelectedRecordId("");
-    }
-  }, [selectedStudent]);
+    void loadStudentDetail(selectedStudent.memberId);
+  }, [loadStudentDetail, selectedStudent]);
 
   useEffect(() => {
     if (!selectedRecordId) {
@@ -127,13 +140,13 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
 
   const courseOptions = useMemo<ProgressSelectOption[]>(
     () =>
-      selectedStudent?.records
-        .map((record) => ({
-          value: record.recordId ?? "",
-          label: record.courseName ?? "반"
+      studentCourses
+        .map((course) => ({
+          value: course.recordId ?? "",
+          label: course.name ?? "반"
         }))
-        .filter((option) => option.value.length > 0) ?? [],
-    [selectedStudent]
+        .filter((option) => option.value.length > 0),
+    [studentCourses]
   );
 
   if (error && searchResults.length === 0 && !selectedStudent) {
@@ -167,21 +180,21 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
         {searchLoading ? <p className="mt-2 text-xs text-slate-400">검색 중...</p> : null}
         {searchValue.trim().length > 0 && searchResults.length > 0 ? (
           <div className="absolute left-5 right-5 top-full z-10 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-            {searchResults.map((group) => (
+            {searchResults.map((student) => (
               <button
-                key={group.studentId}
+                key={student.memberId ?? student.name}
                 type="button"
                 onClick={() => {
                   searchRequestId.current += 1;
-                  setSelectedStudent(group);
-                  setSearchValue(group.name);
+                  setSelectedStudent(student);
+                  setSearchValue(student.name ?? "");
                   setSearchResults([]);
                 }}
                 className="w-full rounded-xl px-4 py-3 text-left text-sm hover:bg-slate-50"
               >
-                <p className="font-semibold text-slate-900">{group.name}</p>
+                <p className="font-semibold text-slate-900">{student.name ?? "학생"}</p>
                 <p className="text-xs text-slate-500">
-                  {group.records.map((record) => record.courseName ?? "반").join(", ")}
+                  {formatStudentSummary(student)}
                 </p>
               </button>
             ))}
@@ -221,22 +234,26 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
   );
 }
 
-function groupStudentRecords(records: StudentCourseListItemResponse[]): StudentGroup[] {
-  const map = new Map<string, StudentGroup>();
-  records.forEach((record) => {
-    if (!record.studentMemberId) {
-      return;
+function formatStudentSummary(student: StudentSummaryResponse) {
+  const schoolName = student.schoolName ?? "학교 정보 없음";
+  const gradeLabel = formatStudentGrade(student.grade);
+  if (!gradeLabel) {
+    return schoolName;
+  }
+  return `${schoolName}(${gradeLabel})`;
+}
+
+function dedupeStudents(students: StudentSummaryResponse[]) {
+  const seen = new Set<string>();
+  return students.filter((student) => {
+    const key = student.memberId ?? student.email ?? student.name ?? "";
+    if (!key) {
+      return true;
     }
-    const existing = map.get(record.studentMemberId);
-    if (existing) {
-      existing.records.push(record);
-      return;
+    if (seen.has(key)) {
+      return false;
     }
-    map.set(record.studentMemberId, {
-      studentId: record.studentMemberId,
-      name: record.studentName ?? "학생",
-      records: [record]
-    });
+    seen.add(key);
+    return true;
   });
-  return Array.from(map.values());
 }

@@ -8,12 +8,14 @@ import { TextField } from "@/components/ui/text-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import { InlineError } from "@/components/ui/inline-error";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { fetchTeacherCourses, fetchStudentCourseRecords } from "@/lib/dashboard-api";
+import { fetchCourseStudents, fetchTeacherCourses } from "@/lib/dashboard-api";
 import { composeCourseProgress, createCourseProgress, createPersonalProgress } from "@/lib/progress-api";
 import { formatDateYmdKst } from "@/utils/date";
-import type { CourseResponse, StudentCourseListItemResponse } from "@/types/dashboard";
+import { formatStudentGrade } from "@/utils/student";
+import type { CourseResponse, CourseStudentResponse } from "@/types/dashboard";
 import type { CourseProgressCreateRequest, PersonalProgressComposeRequest } from "@/types/progress";
 
 type PersonalInput = {
@@ -35,7 +37,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
   const [courseDate, setCourseDate] = useState(todayString());
   const [courseTitle, setCourseTitle] = useState("");
   const [courseContent, setCourseContent] = useState("");
-  const [students, setStudents] = useState<StudentCourseListItemResponse[]>([]);
+  const [students, setStudents] = useState<CourseStudentResponse[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [personalInputs, setPersonalInputs] = useState<Record<string, PersonalInput>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const studentMap = useMemo(() => {
-    return students.reduce<Record<string, StudentCourseListItemResponse>>((acc, student) => {
+    return students.reduce<Record<string, CourseStudentResponse>>((acc, student) => {
       if (student.recordId) {
         acc[student.recordId] = student;
       }
@@ -100,7 +102,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
         return;
       }
       try {
-        const response = await fetchStudentCourseRecords({ courseId, status: "ACTIVE", page: 0, size: 50 });
+        const response = await fetchCourseStudents({ courseId, page: 0, size: 50 });
         setStudents(response.items);
         setSelectedStudentIds([]);
         setPersonalInputs({});
@@ -270,6 +272,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
             <div className="grid gap-3 md:grid-cols-2">
               {courses.map((course) => {
                 const isSelected = course.courseId === selectedCourseId;
+                const progressStatus = getCourseProgressStatus(course.startDate, course.endDate);
                 return (
                   <button
                     key={course.courseId}
@@ -282,7 +285,10 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
                         : "border-slate-200 hover:border-blue-200 hover:bg-slate-50"
                     )}
                   >
-                    <p className="text-sm font-semibold text-slate-900">{course.name ?? "이름 없는 반"}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{course.name ?? "이름 없는 반"}</p>
+                      <Badge variant={progressStatus.variant}>{progressStatus.label}</Badge>
+                    </div>
                     <p className="text-xs text-slate-500">
                       {course.companyName ?? "학원"} · {course.branchName ?? "지점"}
                     </p>
@@ -338,6 +344,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
               {students.map((student) => {
                 const recordId = student.recordId ?? "";
                 const isChecked = Boolean(recordId && selectedStudentIds.includes(recordId));
+                const isInactive = student.assignmentActive === false;
                 return (
                   <div key={recordId} className="rounded-2xl border border-slate-200 px-4 py-3">
                     <Checkbox
@@ -345,11 +352,12 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
                       onChange={() => recordId && toggleStudent(recordId)}
                       label={
                         <span className="flex flex-col text-left">
-                          <span className="text-sm font-semibold text-slate-900">
-                            {student.studentName ?? "학생"}
+                          <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                            {student.student?.name ?? "학생"}
+                            {isInactive && <Badge variant="secondary">휴원</Badge>}
                           </span>
                           <span className="text-xs text-slate-500">
-                            {student.courseName ?? "반 정보 없음"}
+                            {formatStudentSchoolGrade(student.student)}
                           </span>
                         </span>
                       }
@@ -373,7 +381,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
                     <div key={recordId} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                       <div className="mb-4">
                         <p className="text-sm font-semibold text-slate-900">
-                          {student?.studentName ?? "학생"} · {student?.courseName ?? "반"}
+                          {student?.student?.name ?? "학생"} · {formatStudentSchoolGrade(student?.student)}
                         </p>
                         <p className="text-xs text-slate-500">개인 진도 입력</p>
                       </div>
@@ -431,4 +439,45 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
       />
     </>
   );
+}
+
+function getCourseProgressStatus(start?: string | null, end?: string | null) {
+  const today = startOfDay(new Date());
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end);
+
+  if (!startDate && !endDate) {
+    return { label: "일정 미정", variant: "secondary" as const };
+  }
+  if (startDate && today < startDate) {
+    return { label: "진행 예정", variant: "default" as const };
+  }
+  if (endDate && today > endDate) {
+    return { label: "종료", variant: "secondary" as const };
+  }
+  return { label: "진행 중", variant: "success" as const };
+}
+
+function parseDateOnly(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function startOfDay(date: Date) {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function formatStudentSchoolGrade(student?: CourseStudentResponse["student"]) {
+  const schoolName = student?.schoolName ?? "학교 정보 없음";
+  const gradeLabel = formatStudentGrade(student?.grade);
+  if (!gradeLabel) {
+    return schoolName;
+  }
+  return `${schoolName}(${gradeLabel})`;
 }

@@ -913,6 +913,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses/{courseId}/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 반 수강 학생 조회 */
+        get: operations["getCourseStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/courses/{courseId}/assignment-candidates": {
         parameters: {
             query?: never;
@@ -942,23 +959,6 @@ export interface paths {
          * @description 기간 내 Course 스케줄 목록을 조회한다.
          */
         get: operations["getCourseSchedules"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/courses/public": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 공개 Course 검색 */
-        get: operations["getPublicCourses"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2100,6 +2100,31 @@ export interface components {
             message?: string;
             data?: components["schemas"]["PageResponseCourseResponse"];
         };
+        CourseStudentResponse: {
+            /** Format: uuid */
+            recordId?: string;
+            assignmentActive?: boolean;
+            student?: components["schemas"]["StudentSummaryResponse"];
+        };
+        PageResponseCourseStudentResponse: {
+            content?: components["schemas"]["CourseStudentResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseCourseStudentResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseCourseStudentResponse"];
+        };
         ProgressSliceResponseCourseProgressResponse: {
             items?: components["schemas"]["CourseProgressResponse"][];
             nextCursor?: components["schemas"]["ProgressCursor"];
@@ -2115,47 +2140,6 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["CourseResponse"][];
-        };
-        PageResponsePublicCourseResponse: {
-            content?: components["schemas"]["PublicCourseResponse"][];
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            size?: number;
-            /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            totalPages?: number;
-            first?: boolean;
-            last?: boolean;
-        };
-        PublicCourseResponse: {
-            /** Format: uuid */
-            courseId?: string;
-            /** Format: uuid */
-            branchId?: string;
-            branchName?: string;
-            /** Format: uuid */
-            companyId?: string;
-            companyName?: string;
-            name?: string;
-            description?: string;
-            /** Format: date */
-            startDate?: string;
-            /** Format: date */
-            endDate?: string;
-            active?: boolean;
-            schedules?: components["schemas"]["CourseScheduleResponse"][];
-            /** Format: uuid */
-            teacherId?: string;
-            teacherName?: string;
-            scheduleSummary?: string;
-        };
-        RsDataPageResponsePublicCourseResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            data?: components["schemas"]["PageResponsePublicCourseResponse"];
         };
         PageResponseCompanyResponse: {
             content?: components["schemas"]["CompanyResponse"][];
@@ -3887,6 +3871,31 @@ export interface operations {
             };
         };
     };
+    getCourseStudents: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                courseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseCourseStudentResponse"];
+                };
+            };
+        };
+    };
     getAssignmentCandidates: {
         parameters: {
             query?: {
@@ -3932,34 +3941,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataListCourseResponse"];
-                };
-            };
-        };
-    };
-    getPublicCourses: {
-        parameters: {
-            query?: {
-                companyId?: string;
-                branchId?: string;
-                teacherId?: string;
-                keyword?: string;
-                onlyVerified?: boolean;
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["RsDataPageResponsePublicCourseResponse"];
                 };
             };
         };

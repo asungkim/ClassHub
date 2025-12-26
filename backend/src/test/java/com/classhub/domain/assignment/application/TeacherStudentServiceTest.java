@@ -136,7 +136,35 @@ class TeacherStudentServiceTest {
         );
 
         assertThat(response.content()).isEmpty();
-        verify(teacherStudentAssignmentRepository, never()).searchAssignmentsForTeachersByCourse(any(), any(), any(), any());
+        verify(teacherStudentAssignmentRepository, never())
+                .searchDistinctStudentIdsForTeachers(any(), any(), any(), any());
+    }
+
+    @Test
+    void getTeacherStudents_shouldReturnDistinctSummaries_forAssistant() {
+        MemberPrincipal principal = new MemberPrincipal(assistantId, MemberRole.ASSISTANT);
+        TeacherAssistantAssignment assignment = TeacherAssistantAssignment.create(teacherId, assistantId);
+        given(teacherAssistantAssignmentRepository.findByAssistantMemberIdAndDeletedAtIsNull(assistantId))
+                .willReturn(List.of(assignment));
+        given(teacherStudentAssignmentRepository.searchDistinctStudentIdsForTeachers(
+                eq(List.of(teacherId)),
+                eq(null),
+                eq(null),
+                any(PageRequest.class)
+        )).willReturn(new PageImpl<>(List.of(studentId), PageRequest.of(0, 10), 1));
+        given(memberRepository.findAllById(List.of(studentId))).willReturn(List.of(student));
+        given(studentInfoRepository.findByMemberIdIn(List.of(studentId))).willReturn(List.of(studentInfo));
+
+        PageResponse<StudentSummaryResponse> response = teacherStudentService.getTeacherStudents(
+                principal,
+                null,
+                null,
+                0,
+                10
+        );
+
+        assertThat(response.content()).hasSize(1);
+        assertThat(response.content().getFirst().memberId()).isEqualTo(studentId);
     }
 
     @Test

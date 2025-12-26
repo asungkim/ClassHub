@@ -12,6 +12,7 @@ import com.classhub.domain.assignment.model.TeacherStudentAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
 import com.classhub.domain.course.dto.response.CourseResponse;
+import com.classhub.domain.course.dto.response.CourseStudentResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
@@ -33,8 +34,10 @@ import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -183,6 +186,60 @@ class CourseAssignmentServiceTest {
         assertThatThrownBy(() -> courseAssignmentService.createAssignment(principal, request))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
+    }
+
+    @Test
+    void getCourseStudents_shouldReturnAssignmentsWithStatus() {
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        UUID studentId2 = UUID.randomUUID();
+        StudentCourseAssignment activeAssignment = StudentCourseAssignment.create(studentId, course.getId(), teacherId, null);
+        StudentCourseAssignment inactiveAssignment = StudentCourseAssignment.create(studentId2, course.getId(), teacherId, null);
+        inactiveAssignment.deactivate();
+        given(courseRepository.findById(course.getId())).willReturn(Optional.of(course));
+        given(studentCourseAssignmentRepository.findByCourseId(eq(course.getId()), any()))
+                .willReturn(new PageImpl<>(List.of(activeAssignment, inactiveAssignment), PageRequest.of(0, 10), 2));
+
+        Member student2 = Member.builder()
+                .email("student2@classhub.com")
+                .password("encoded")
+                .name("학생2")
+                .phoneNumber("01011112222")
+                .role(MemberRole.STUDENT)
+                .build();
+        ReflectionTestUtils.setField(student2, "id", studentId2);
+        StudentInfo studentInfo2 = StudentInfo.builder()
+                .memberId(studentId2)
+                .schoolName("중앙중학교")
+                .grade(StudentGrade.MIDDLE_1)
+                .build();
+
+        given(memberRepository.findAllById(any())).willReturn(List.of(student, student2));
+        given(studentInfoRepository.findByMemberIdIn(any())).willReturn(List.of(studentInfo, studentInfo2));
+
+        StudentCourseRecord record1 = StudentCourseRecord.create(studentId, course.getId(), null, null, null);
+        ReflectionTestUtils.setField(record1, "id", UUID.randomUUID());
+        StudentCourseRecord record2 = StudentCourseRecord.create(studentId2, course.getId(), null, null, null);
+        ReflectionTestUtils.setField(record2, "id", UUID.randomUUID());
+        given(studentCourseRecordRepository.findActiveByCourseIdAndStudentIds(eq(course.getId()), any()))
+                .willReturn(List.of(record1, record2));
+
+        PageResponse<CourseStudentResponse> response = courseAssignmentService.getCourseStudents(
+                principal,
+                course.getId(),
+                0,
+                10
+        );
+
+        assertThat(response.content()).hasSize(2);
+        Map<UUID, CourseStudentResponse> mapped = response.content().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        item -> item.student().memberId(),
+                        Function.identity()
+                ));
+        assertThat(mapped.get(studentId).assignmentActive()).isTrue();
+        assertThat(mapped.get(studentId2).assignmentActive()).isFalse();
+        assertThat(mapped.get(studentId).recordId()).isEqualTo(record1.getId());
+        assertThat(mapped.get(studentId2).recordId()).isEqualTo(record2.getId());
     }
 
     @Test

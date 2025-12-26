@@ -8,6 +8,7 @@ import type {
   CourseCreateRequest,
   CourseResponse,
   CourseScheduleRequest,
+  CourseStudentResponse,
   CourseStatusFilter,
   CourseStatusUpdateRequest,
   CourseUpdateRequest,
@@ -593,6 +594,30 @@ export async function fetchStudentCourseRecords(params: {
   const pageData = response.data.data;
   return {
     items: (pageData?.content ?? []) as StudentCourseListItemResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchCourseStudents(params: {
+  courseId: string;
+  page: number;
+  size?: number;
+}): Promise<ListResult<CourseStudentResponse>> {
+  const { courseId, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/courses/{courseId}/students", {
+    params: {
+      path: { courseId },
+      query: { page, size }
+    }
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "학생 목록을 불러오지 못했습니다."));
+  }
+
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as CourseStudentResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
 }

@@ -136,4 +136,14 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
     long countActiveByStudentAndTeacherAndBranch(@Param("studentId") UUID studentId,
                                                  @Param("teacherId") UUID teacherId,
                                                  @Param("branchId") UUID branchId);
+
+    @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            WHERE scr.courseId = :courseId
+              AND scr.studentMemberId IN :studentIds
+              AND scr.deletedAt IS NULL
+            """)
+    List<StudentCourseRecord> findActiveByCourseIdAndStudentIds(@Param("courseId") UUID courseId,
+                                                                @Param("studentIds") List<UUID> studentIds);
 }

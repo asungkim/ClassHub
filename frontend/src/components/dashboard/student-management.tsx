@@ -322,9 +322,10 @@ function StudentsTab({ role, refreshKey }: StudentsTabProps) {
               <TableBody>
                 {students.map((student, index) => {
                   const memberId = student.memberId ?? `student-${index}`;
+                  const rowKey = `${memberId}-${index}`;
                   return (
                     <TableRow
-                      key={memberId}
+                      key={rowKey}
                       className={clsx(canViewDetail ? "cursor-pointer hover:bg-slate-50" : "cursor-default")}
                       onClick={() => {
                         const studentId = student.memberId;
@@ -1124,7 +1125,7 @@ function StudentDetailModal({
   }, [detail?.student?.memberId]);
 
   useEffect(() => {
-    if (!open || !detail || courses.length === 0) {
+    if (!open || !detail || courses.length === 0 || !isTeacher) {
       return;
     }
     const recordIds = courses
@@ -1518,6 +1519,9 @@ function StudentDetailModal({
                               </div>
 
                               {!recordId && <p className="text-sm text-slate-500">해당 반에 수업 기록이 없습니다.</p>}
+                              {recordId && !isTeacher && (
+                                <p className="text-sm text-slate-500">수업 기록은 선생님만 확인할 수 있습니다.</p>
+                              )}
                               {recordId && recordLoadingIds.has(recordId) && (
                                 <LoadingState message="수업 기록을 불러오는 중입니다." />
                               )}

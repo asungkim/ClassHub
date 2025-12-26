@@ -5,6 +5,7 @@ import com.classhub.domain.assignment.model.TeacherStudentAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
 import com.classhub.domain.course.dto.response.CourseResponse;
+import com.classhub.domain.course.dto.response.CourseStudentResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
@@ -134,6 +135,60 @@ public class CourseAssignmentService {
         return PageResponse.from(dtoPage);
     }
 
+    public PageResponse<CourseStudentResponse> getCourseStudents(MemberPrincipal principal,
+                                                                 UUID courseId,
+                                                                 int page,
+                                                                 int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Course course = loadCourse(courseId);
+        ensureTeacherPermission(principal, course.getTeacherMemberId());
+
+        Page<StudentCourseAssignment> assignmentPage = studentCourseAssignmentRepository
+                .findByCourseId(courseId, pageable);
+        if (assignmentPage.isEmpty()) {
+            return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
+        }
+
+        List<StudentCourseAssignment> assignments = assignmentPage.getContent();
+        List<UUID> studentIds = assignments.stream()
+                .map(StudentCourseAssignment::getStudentMemberId)
+                .distinct()
+                .toList();
+        Map<UUID, Member> memberMap = loadMembers(studentIds);
+        Map<UUID, StudentInfo> infoMap = loadStudentInfos(studentIds);
+        Map<UUID, StudentCourseRecord> recordMap = studentCourseRecordRepository
+                .findActiveByCourseIdAndStudentIds(courseId, studentIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        StudentCourseRecord::getStudentMemberId,
+                        record -> record,
+                        (a, b) -> a
+                ));
+
+        List<CourseStudentResponse> content = assignments.stream()
+                .map(assignment -> {
+                    UUID studentId = assignment.getStudentMemberId();
+                    Member member = memberMap.get(studentId);
+                    StudentInfo info = infoMap.get(studentId);
+                    if (member == null || info == null) {
+                        throw new BusinessException(RsCode.STUDENT_PROFILE_NOT_FOUND);
+                    }
+                    StudentCourseRecord record = recordMap.get(studentId);
+                    if (record == null) {
+                        throw new BusinessException(RsCode.STUDENT_COURSE_RECORD_NOT_FOUND);
+                    }
+                    return new CourseStudentResponse(
+                            record.getId(),
+                            assignment.isActive(),
+                            toStudentSummary(member, info)
+                    );
+                })
+                .toList();
+
+        Page<CourseStudentResponse> dtoPage = new PageImpl<>(content, pageable, assignmentPage.getTotalElements());
+        return PageResponse.from(dtoPage);
+    }
+
     @Transactional
     public StudentCourseAssignmentResponse createAssignment(MemberPrincipal principal,
                                                             StudentCourseAssignmentCreateRequest request) {
@@ -228,6 +283,15 @@ public class CourseAssignmentService {
             return;
         }
         throw new BusinessException(RsCode.FORBIDDEN);
+    }
+
+    private void ensureTeacherPermission(MemberPrincipal principal, UUID teacherId) {
+        if (principal.role() != MemberRole.TEACHER) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
+        if (!teacherId.equals(principal.id())) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
     }
 
     private Map<UUID, Member> loadMembers(List<UUID> studentIds) {
