@@ -60,6 +60,23 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
             @Param("endDate") LocalDate endDate
     );
 
+    @Query("""
+            SELECT DISTINCT c
+            FROM Course c
+            LEFT JOIN FETCH c.schedules s
+            WHERE c.teacherMemberId = :teacherId
+              AND c.deletedAt IS NULL
+              AND c.startDate <= :endDate
+              AND c.endDate >= :startDate
+              AND (:excludeId IS NULL OR c.id <> :excludeId)
+            """)
+    List<Course> findOverlappingCourses(
+            @Param("teacherId") UUID teacherId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("excludeId") UUID excludeId
+    );
+
     default Page<Course> searchCoursesForAdmin(UUID teacherId,
                                                UUID branchId,
                                                UUID companyId,

@@ -153,7 +153,31 @@ class ClinicSlotServiceTest {
     }
 
     @Test
-    void updateSlot_shouldClearDefaultSlots_whenScheduleChanges() {
+    void createSlot_shouldThrow_whenOverlappingSlotExists() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        ClinicSlotCreateRequest request = new ClinicSlotCreateRequest(
+                branchId,
+                DayOfWeek.MONDAY,
+                LocalTime.of(18, 30),
+                LocalTime.of(19, 30),
+                10
+        );
+        Branch branch = createBranch(branchId, VerifiedStatus.VERIFIED);
+        ClinicSlot existing = createSlot(UUID.randomUUID(), teacherId, DayOfWeek.MONDAY, LocalTime.of(18, 0));
+
+        given(branchRepository.findById(branchId)).willReturn(Optional.of(branch));
+        given(clinicSlotRepository.findByTeacherMemberIdAndBranchIdAndDeletedAtIsNull(teacherId, branchId))
+                .willReturn(List.of(existing));
+
+        assertThatThrownBy(() -> clinicSlotService.createSlot(teacherId, request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SLOT_CONFLICT);
+        verify(clinicSlotRepository, never()).save(any(ClinicSlot.class));
+    }
+
+    @Test
+    void updateSlot_shouldKeepDefaultSlots_whenScheduleChanges() {
         UUID teacherId = UUID.randomUUID();
         UUID slotId = UUID.randomUUID();
         ClinicSlot slot = createSlot(slotId, teacherId, DayOfWeek.MONDAY, LocalTime.of(18, 0));
@@ -171,7 +195,32 @@ class ClinicSlotServiceTest {
         ClinicSlot updated = clinicSlotService.updateSlot(teacherId, slotId, request);
 
         assertThat(updated.getDayOfWeek()).isEqualTo(DayOfWeek.TUESDAY);
-        verify(studentCourseRecordRepository).clearDefaultClinicSlotId(slotId);
+        verify(studentCourseRecordRepository, never()).clearDefaultClinicSlotId(slotId);
+    }
+
+    @Test
+    void updateSlot_shouldThrow_whenOverlappingSlotExists() {
+        UUID teacherId = UUID.randomUUID();
+        UUID slotId = UUID.randomUUID();
+        ClinicSlot slot = createSlot(slotId, teacherId, DayOfWeek.MONDAY, LocalTime.of(18, 0));
+        ClinicSlot otherSlot = createSlot(UUID.randomUUID(), teacherId, DayOfWeek.MONDAY, LocalTime.of(18, 30));
+        ClinicSlotUpdateRequest request = new ClinicSlotUpdateRequest(
+                DayOfWeek.MONDAY,
+                LocalTime.of(19, 0),
+                LocalTime.of(20, 0),
+                10
+        );
+
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNull(slotId)).willReturn(Optional.of(slot));
+        given(clinicSlotRepository.findByTeacherMemberIdAndBranchIdAndDeletedAtIsNull(
+                teacherId,
+                slot.getBranchId()
+        )).willReturn(List.of(slot, otherSlot));
+
+        assertThatThrownBy(() -> clinicSlotService.updateSlot(teacherId, slotId, request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SLOT_CONFLICT);
+        verify(clinicSlotRepository, never()).save(any(ClinicSlot.class));
     }
 
     @Test

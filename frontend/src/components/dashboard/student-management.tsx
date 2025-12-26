@@ -310,7 +310,7 @@ function StudentsTab({ role }: StudentsTabProps) {
                   <TableHead>학생</TableHead>
                   <TableHead>학교/학년</TableHead>
                   <TableHead>나이</TableHead>
-                  <TableHead>연락처</TableHead>
+                  <TableHead>연락처(학생,학부모)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1256,10 +1256,16 @@ function StudentDetailModal({
     }
     setSaving(true);
     try {
+      const nextAssistant = assistantInput.trim();
+      const currentAssistant = selectedRecord.assistantMemberId ?? "";
+      const nextSlot = clinicInput.trim();
+      const currentSlot = selectedRecord.defaultClinicSlotId ?? "";
+      const nextNotes = notesInput.trim();
       const payload = {
-        assistantMemberId: assistantInput.trim() ? assistantInput.trim() : undefined,
-        defaultClinicSlotId: clinicInput.trim() ? clinicInput.trim() : undefined,
-        teacherNotes: notesInput.trim() ? notesInput : undefined
+        assistantMemberId:
+          nextAssistant && nextAssistant !== currentAssistant ? nextAssistant : undefined,
+        defaultClinicSlotId: nextSlot && nextSlot !== currentSlot ? nextSlot : undefined,
+        teacherNotes: nextNotes ? notesInput : undefined
       };
       const updated = await updateStudentCourseRecord(selectedRecord.recordId, payload);
       const recordId = updated.recordId ?? selectedRecord.recordId;

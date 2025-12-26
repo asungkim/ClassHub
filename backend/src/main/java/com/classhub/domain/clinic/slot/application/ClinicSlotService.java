@@ -44,6 +44,14 @@ public class ClinicSlotService {
         validateCreateRequest(request);
         Branch branch = requireVerifiedBranch(request.branchId());
         clinicPermissionValidator.ensureTeacherAssignment(teacherId, branch.getId());
+        ensureSlotNotOverlapping(
+                teacherId,
+                branch.getId(),
+                request.dayOfWeek(),
+                request.startTime(),
+                request.endTime(),
+                null
+        );
 
         ClinicSlot slot = ClinicSlot.builder()
                 .teacherMemberId(teacherId)
@@ -127,6 +135,17 @@ public class ClinicSlotService {
                 request.endTime()
         );
 
+        if (scheduleChanged) {
+            ensureSlotNotOverlapping(
+                    teacherId,
+                    slot.getBranchId(),
+                    request.dayOfWeek(),
+                    request.startTime(),
+                    request.endTime(),
+                    slotId
+            );
+        }
+
         if (!scheduleChanged) {
             long assignedCount = studentCourseRecordRepository
                     .countByDefaultClinicSlotIdAndDeletedAtIsNull(slotId);
@@ -141,10 +160,6 @@ public class ClinicSlotService {
                 request.endTime(),
                 request.defaultCapacity()
         );
-
-        if (scheduleChanged) {
-            studentCourseRecordRepository.clearDefaultClinicSlotId(slotId);
-        }
 
         return clinicSlotRepository.save(slot);
     }
@@ -213,5 +228,32 @@ public class ClinicSlotService {
         return slot.getDayOfWeek() != dayOfWeek
                 || !slot.getStartTime().equals(startTime)
                 || !slot.getEndTime().equals(endTime);
+    }
+
+    private void ensureSlotNotOverlapping(UUID teacherId,
+                                          UUID branchId,
+                                          DayOfWeek dayOfWeek,
+                                          LocalTime startTime,
+                                          LocalTime endTime,
+                                          UUID excludeId) {
+        List<ClinicSlot> slots = clinicSlotRepository
+                .findByTeacherMemberIdAndBranchIdAndDeletedAtIsNull(teacherId, branchId);
+        boolean overlapped = slots.stream()
+                .filter(slot -> excludeId == null || !slot.getId().equals(excludeId))
+                .anyMatch(slot -> isOverlapping(slot, dayOfWeek, startTime, endTime));
+        if (overlapped) {
+            throw new BusinessException(RsCode.CLINIC_SLOT_CONFLICT);
+        }
+    }
+
+    private boolean isOverlapping(ClinicSlot slot,
+                                  DayOfWeek dayOfWeek,
+                                  LocalTime startTime,
+                                  LocalTime endTime) {
+        if (slot.getDayOfWeek() != dayOfWeek) {
+            return false;
+        }
+        return slot.getStartTime().isBefore(endTime)
+                && startTime.isBefore(slot.getEndTime());
     }
 }

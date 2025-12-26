@@ -6099,3 +6099,92 @@ BUGFIX
   - `backend/src/test/java/com/classhub/domain/assignment/application/AssistantManagementServiceTest.java`
   - `frontend/src/components/dashboard/student-management.tsx`
 - 다음 단계: 조교/슬롯 비활성화 후 학생 상세 모달에서 값이 미지정으로 표시되는지 확인
+## [2025-12-26 12:48] ClinicSlot 수정 시 기본 슬롯 유지하도록 변경
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSlot 스케줄 수정 시 학생 기본 슬롯을 해제하지 않도록 동작 변경
+- 관련 테스트를 수정해 기본 슬롯 유지 동작을 검증
+
+### Details
+- 작업 사유: 슬롯 업데이트 시 defaultClinicSlotId를 유지해 사용자 설정을 보존
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 슬롯 시간 변경 후 학생 기본 슬롯이 유지되는지 수동 확인
+## [2025-12-26 12:55] 학생 기록 수정 시 변경된 필드만 전송하도록 조정
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 수업 기록 수정 요청에서 변경되지 않은 기본 슬롯/조교 값은 전송하지 않도록 처리
+- 동일 슬롯 재전송으로 인한 중복 오류를 방지
+
+### Details
+- 작업 사유: 담당 조교만 변경 시 기본 슬롯 중복 오류가 발생하는 문제 해소
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- 다음 단계: 담당 조교만 변경 시 기본 슬롯 중복 오류가 사라졌는지 수동 확인
+## [2025-12-26 13:05] 반 시간표 겹침 생성 방지 로직 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 같은 지점/선생님에서 기간이 겹치는 반의 요일·시간대 중복을 차단
+- 반 생성/수정 시 기존 반 스케줄과의 충돌을 검사하도록 검증 로직 추가
+- 관련 서비스 테스트에 겹침 실패 케이스를 추가
+
+### Details
+- 작업 사유: 반끼리 동일 시간대 겹치는 생성이 가능한 문제 해결
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseServiceTest.java`
+- 다음 단계: 기존 데이터에 겹치는 반이 있는지 점검 후 필요 시 정리
+## [2025-12-26 13:07] 반 시간표 겹침 기준을 선생님 전체로 확대
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 시간표 겹침 검증을 동일 선생님 전체 기준으로 변경(지점 무관)
+- 겹침 조회 쿼리에서 branch 조건 제거
+- 관련 서비스 테스트 파라미터 수정
+
+### Details
+- 작업 사유: 동일 선생님이 운영하는 모든 반끼리 시간 겹침이 발생하지 않도록 제약 강화
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseService.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseServiceTest.java`
+- 다음 단계: 다중 지점 반 생성 시에도 겹침이 차단되는지 수동 확인
+## [2025-12-26 13:10] 클리닉 슬롯 시간 겹침 생성/수정 차단
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 동일 선생님/지점의 클리닉 슬롯이 요일/시간대 겹치면 생성/수정 불가하도록 검증 추가
+- 슬롯 생성/수정 서비스 테스트에 겹침 실패 케이스 추가
+
+### Details
+- 작업 사유: 같은 지점 내 클리닉 슬롯 시간 겹침 방지
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.slot.application.ClinicSlotServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicSlotService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicSlotServiceTest.java`
+- 다음 단계: 실제 슬롯 생성/수정 화면에서 겹침 차단 동작 확인
