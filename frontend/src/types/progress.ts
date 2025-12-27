@@ -15,8 +15,8 @@ export type CourseProgressSlice = components["schemas"]["ProgressSliceResponseCo
 export type PersonalProgressSlice = components["schemas"]["ProgressSliceResponsePersonalProgressResponse"];
 export type StudentCalendarResponse = components["schemas"]["StudentCalendarResponse"];
 export type CourseProgressEvent = components["schemas"]["CourseProgressEvent"] & { content?: string };
-export type PersonalProgressEvent = components["schemas"]["PersonalProgressEvent"] & { content?: string };
-export type ClinicRecordSummary = components["schemas"]["ClinicRecordSummary"] & { content?: string };
+export type PersonalProgressEvent = components["schemas"]["PersonalProgressEvent"] & { content?: string; writerId?: string };
+export type ClinicRecordSummary = components["schemas"]["ClinicRecordSummary"] & { content?: string; writerId?: string };
 export type ClinicEvent = Omit<components["schemas"]["ClinicEvent"], "recordSummary"> & {
   recordSummary?: ClinicRecordSummary;
 };

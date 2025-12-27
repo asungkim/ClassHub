@@ -11,11 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { fetchCourseStudents, fetchTeacherCourses } from "@/lib/dashboard-api";
+import { fetchAssistantCourses, fetchCourseStudents, fetchTeacherCourses } from "@/lib/dashboard-api";
 import { composeCourseProgress, createCourseProgress, createPersonalProgress } from "@/lib/progress-api";
 import { formatDateYmdKst } from "@/utils/date";
 import { formatStudentGrade } from "@/utils/student";
-import type { CourseResponse, CourseStudentResponse } from "@/types/dashboard";
+import type { CourseResponse, CourseStudentResponse, CourseWithTeacherResponse } from "@/types/dashboard";
 import type { CourseProgressCreateRequest, PersonalProgressComposeRequest } from "@/types/progress";
 
 type PersonalInput = {
@@ -23,16 +23,28 @@ type PersonalInput = {
   content: string;
 };
 
+type LessonComposeRole = "TEACHER" | "ASSISTANT";
+
 type TeacherLessonComposeModalProps = {
   open: boolean;
   onClose: () => void;
+  role?: LessonComposeRole;
+};
+
+type CourseListItem = {
+  courseId?: string;
+  name?: string;
+  companyName?: string;
+  branchName?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 const todayString = () => formatDateYmdKst(new Date());
 
-export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonComposeModalProps) {
+export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: TeacherLessonComposeModalProps) {
   const { showToast } = useToast();
-  const [courses, setCourses] = useState<CourseResponse[]>([]);
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [courseDate, setCourseDate] = useState(todayString());
   const [courseTitle, setCourseTitle] = useState("");
@@ -81,17 +93,30 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
 
   const loadCourses = useCallback(async () => {
     try {
-      const response = await fetchTeacherCourses({ status: "ACTIVE", page: 0, size: 50 });
-      setCourses(response.items);
-      if (response.items.length > 0) {
-        const firstCourseId = response.items[0]?.courseId ?? "";
+      const response =
+        role === "TEACHER"
+          ? await fetchTeacherCourses({ status: "ACTIVE", page: 0, size: 50 })
+          : await fetchAssistantCourses({ status: "ACTIVE", page: 0, size: 50 });
+      const items = response.items
+        .map((course: CourseResponse | CourseWithTeacherResponse) => ({
+          courseId: course.courseId,
+          name: course.name,
+          companyName: course.companyName,
+          branchName: course.branchName,
+          startDate: course.startDate,
+          endDate: course.endDate
+        }))
+        .filter((course) => Boolean(course.courseId));
+      setCourses(items);
+      if (items.length > 0) {
+        const firstCourseId = items[0]?.courseId ?? "";
         setSelectedCourseId((prev) => prev || firstCourseId);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "반 목록을 불러오지 못했습니다.";
       showToast("error", message);
     }
-  }, [showToast]);
+  }, [role, showToast]);
 
   const loadStudents = useCallback(
     async (courseId: string) => {

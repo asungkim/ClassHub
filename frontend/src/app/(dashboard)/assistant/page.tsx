@@ -1,12 +1,14 @@
 "use client";
 
 import clsx from "clsx";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useFeedbackSummary } from "@/hooks/feedback/use-feedback-summary";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { InlineError } from "@/components/ui/inline-error";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TeacherLessonComposeModal } from "@/components/dashboard/progress/teacher-lesson-compose-modal";
 import type { FeedbackResponse, FeedbackStatus } from "@/types/dashboard";
 
 const stats = [
@@ -25,6 +27,7 @@ const actions = [
 
 export default function AssistantDashboardPage() {
   const { canRender, fallback } = useRoleGuard("ASSISTANT");
+  const [composeOpen, setComposeOpen] = useState(false);
   const feedbackSummary = useFeedbackSummary();
   if (!canRender) {
     return fallback;
@@ -33,11 +36,16 @@ export default function AssistantDashboardPage() {
   return (
     <div className="space-y-6 lg:space-y-8">
       <section className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-100 sm:px-8">
-        <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500">Assistant Dashboard</p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">클리닉 일정과 학생 지원을 빠르게 확인하세요.</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          담당 반, 학생 요청, 근무 일지를 한 화면에서 관리할 수 있습니다.
-        </p>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-500">Assistant Dashboard</p>
+            <h1 className="mt-2 text-3xl font-bold text-slate-900">클리닉 일정과 학생 지원을 빠르게 확인하세요.</h1>
+            <p className="mt-2 text-sm text-slate-500">
+              담당 반, 학생 요청, 근무 일지를 한 화면에서 관리할 수 있습니다.
+            </p>
+          </div>
+          <Button onClick={() => setComposeOpen(true)}>+ 수업 내용 작성</Button>
+        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -68,6 +76,8 @@ export default function AssistantDashboardPage() {
           ))}
         </div>
       </section>
+
+      <TeacherLessonComposeModal open={composeOpen} onClose={() => setComposeOpen(false)} role="ASSISTANT" />
     </div>
   );
 }

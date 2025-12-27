@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/toast";
+import { useSession } from "@/components/session/session-provider";
 import { ErrorState } from "@/components/ui/error-state";
 import { StudentCalendarHeader } from "@/components/dashboard/calendar/student-calendar-header";
 import { StudentInfoCard } from "@/components/dashboard/calendar/student-info-card";
@@ -84,7 +85,9 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   const { showToast } = useToast();
-  const canEdit = role === "TEACHER";
+  const { member } = useSession();
+  const memberId = member?.memberId ?? null;
+  const isTeacher = member?.role === "TEACHER" || role === "TEACHER";
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<StudentSearchOption[]>([]);
@@ -188,12 +191,51 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     setCurrentMonth((prev) => startOfMonth(addMonths(prev, offset)));
   };
 
-  const handleDeleteCourseProgress = async (id: string) => {
-    if (!canEdit) {
+  const canEditCourse = useCallback(
+    (event: CourseProgressEvent) => {
+      if (isTeacher) {
+        return true;
+      }
+      if (!memberId) {
+        return false;
+      }
+      return event.writerId === memberId;
+    },
+    [isTeacher, memberId]
+  );
+
+  const canEditPersonal = useCallback(
+    (event: PersonalProgressEvent) => {
+      if (isTeacher) {
+        return true;
+      }
+      if (!memberId) {
+        return false;
+      }
+      return event.writerId === memberId;
+    },
+    [isTeacher, memberId]
+  );
+
+  const canEditClinic = useCallback(
+    (event: ClinicEvent) => {
+      if (isTeacher) {
+        return true;
+      }
+      if (!memberId) {
+        return false;
+      }
+      return event.recordSummary?.writerId === memberId;
+    },
+    [isTeacher, memberId]
+  );
+
+  const handleDeleteCourseProgress = async (event: CourseProgressEvent) => {
+    if (!event.id || !canEditCourse(event)) {
       return;
     }
     try {
-      await deleteCourseProgress(id);
+      await deleteCourseProgress(event.id);
       showToast("success", "진도 기록을 삭제했습니다.");
       await loadCalendar();
     } catch (error) {
@@ -202,12 +244,12 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     }
   };
 
-  const handleDeletePersonalProgress = async (id: string) => {
-    if (!canEdit) {
+  const handleDeletePersonalProgress = async (event: PersonalProgressEvent) => {
+    if (!event.id || !canEditPersonal(event)) {
       return;
     }
     try {
-      await deletePersonalProgress(id);
+      await deletePersonalProgress(event.id);
       showToast("success", "진도 기록을 삭제했습니다.");
       await loadCalendar();
     } catch (error) {
@@ -216,8 +258,9 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     }
   };
 
-  const handleDeleteClinicRecord = async (recordId: string) => {
-    if (!canEdit) {
+  const handleDeleteClinicRecord = async (event: ClinicEvent) => {
+    const recordId = event.recordSummary?.id;
+    if (!recordId || !canEditClinic(event)) {
       return;
     }
     try {
@@ -300,9 +343,14 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
         open={Boolean(selectedDateKey)}
         dateKey={selectedDateKey}
         events={selectedDayEvents}
-        canEdit={canEdit}
         onClose={() => setSelectedDateKey(null)}
+        canEditCourse={canEditCourse}
+        canEditPersonal={canEditPersonal}
+        canEditClinic={canEditClinic}
         onEditCourse={(event) => {
+          if (!canEditCourse(event)) {
+            return;
+          }
           if (!event.id || !event.courseId) {
             return;
           }
@@ -315,6 +363,9 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
           });
         }}
         onEditPersonal={(event) => {
+          if (!canEditPersonal(event)) {
+            return;
+          }
           if (!event.id || !event.courseId || !event.studentCourseRecordId) {
             return;
           }
@@ -328,6 +379,9 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
           });
         }}
         onEditClinic={(event) => {
+          if (!canEditClinic(event)) {
+            return;
+          }
           const recordSummary = event.recordSummary;
           if (!recordSummary?.id) {
             return;
@@ -340,14 +394,9 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
           });
           setClinicEditError(null);
         }}
-        onDeleteCourse={(event) => event.id && void handleDeleteCourseProgress(event.id)}
-        onDeletePersonal={(event) => event.id && void handleDeletePersonalProgress(event.id)}
-        onDeleteClinic={(event) => {
-          const recordId = event.recordSummary?.id;
-          if (recordId) {
-            void handleDeleteClinicRecord(recordId);
-          }
-        }}
+        onDeleteCourse={(event) => void handleDeleteCourseProgress(event)}
+        onDeletePersonal={(event) => void handleDeletePersonalProgress(event)}
+        onDeleteClinic={(event) => void handleDeleteClinicRecord(event)}
       />
 
       <ProgressEditModal

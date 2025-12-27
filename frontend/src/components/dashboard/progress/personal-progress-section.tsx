@@ -253,7 +253,13 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
 
   const canEditDelete = useCallback(
     (item: PersonalProgressResponse) => {
-      return member?.role === "TEACHER" && item.writerId === member?.memberId;
+      if (!member?.memberId) {
+        return false;
+      }
+      if (member.role === "TEACHER") {
+        return true;
+      }
+      return item.writerId === member.memberId;
     },
     [member]
   );
@@ -269,7 +275,7 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
     [studentCourses]
   );
 
-  const isTeacher = member?.role === "TEACHER";
+  const canWrite = member?.role === "TEACHER" || member?.role === "ASSISTANT";
 
   if (error && searchResults.length === 0 && !selectedStudent) {
     return (
@@ -352,7 +358,7 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
                   ))}
                 </select>
               </div>
-              {isTeacher && selectedRecordId && (
+              {canWrite && selectedRecordId && (
                 <Button variant="primary" onClick={() => setCreateModalOpen(true)} className="sm:mb-0">
                   + 진도 작성
                 </Button>
@@ -361,7 +367,7 @@ export function PersonalProgressSection({ role }: PersonalProgressSectionProps) 
           )}
 
           {/* 반이 하나뿐일 때 */}
-          {selectedStudent && courseOptions.length === 1 && isTeacher && selectedRecordId && (
+          {selectedStudent && courseOptions.length === 1 && canWrite && selectedRecordId && (
             <Button variant="primary" onClick={() => setCreateModalOpen(true)} className="w-full">
               + 진도 작성
             </Button>

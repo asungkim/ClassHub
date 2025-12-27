@@ -200,7 +200,13 @@ export function CourseProgressSection({ role }: CourseProgressSectionProps) {
 
   const canEditDelete = useCallback(
     (item: CourseProgressResponse) => {
-      return member?.role === "TEACHER" && item.writerId === member?.memberId;
+      if (!member?.memberId) {
+        return false;
+      }
+      if (member.role === "TEACHER") {
+        return true;
+      }
+      return item.writerId === member.memberId;
     },
     [member]
   );
@@ -216,7 +222,7 @@ export function CourseProgressSection({ role }: CourseProgressSectionProps) {
     );
   }
 
-  const isTeacher = member?.role === "TEACHER";
+  const canWrite = member?.role === "TEACHER" || member?.role === "ASSISTANT";
 
   const selectedCourse = courseOptions.find((option) => option.value === selectedCourseId);
 
@@ -246,7 +252,7 @@ export function CourseProgressSection({ role }: CourseProgressSectionProps) {
                 ))}
               </select>
             </div>
-            {isTeacher && selectedCourseId && (
+            {canWrite && selectedCourseId && (
               <Button
                 variant="primary"
                 onClick={() => setCreateModalOpen(true)}

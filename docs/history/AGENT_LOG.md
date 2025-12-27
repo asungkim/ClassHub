@@ -7380,3 +7380,57 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/clinic/record/application/ClinicRecordServiceTest.java`
 - MCP 사용: 없음
 - 다음 단계: 조교/교사 권한 시나리오 수동 확인 및 필요 시 컨트롤러 테스트 보강
+## [2025-12-27 17:28] 조교 진도/출석 UI 개선 계획 수립
+
+### Type
+DESIGN
+
+### Summary
+- 조교 대시보드 통합 작성 모달, 진도/캘린더 작성자 기준 편집, 출석부 학생 추가 흐름 개선 계획 정리
+
+### Details
+- 작업 사유: 조교 권한 확장에 맞춘 프런트 화면 동작 정의
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/assistant-progress-attendance-ui_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 계획 승인 후 프런트 구현 진행
+## [2025-12-27 17:31] 조교 통합 작성 모달 반 목록 설명 보정
+
+### Type
+DESIGN
+
+### Summary
+- 조교 모달에서 연결된 선생님들의 모든 반을 불러온다는 흐름을 계획에 반영
+
+### Details
+- 작업 사유: 계획 피드백 반영(조교 반 목록 범위 보정)
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/assistant-progress-attendance-ui_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 계획 승인 후 프런트 구현 진행
+## [2025-12-27 17:41] 조교 진도/캘린더 편집 및 통합 작성 모달 지원
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 대시보드에 통합 수업 작성 모달 추가 및 반 목록 로딩 분기 적용
+- 진도 카드 편집/삭제 버튼을 작성자 기준으로 노출
+- 학생 캘린더 상세 모달에 작성자 기준 편집 제어 추가
+
+### Details
+- 작업 사유: 조교 권한 확장에 맞춘 프런트 UI 동작 반영
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/assistant/page.tsx`
+  - `frontend/src/components/dashboard/progress/teacher-lesson-compose-modal.tsx`
+  - `frontend/src/components/dashboard/progress/course-progress-section.tsx`
+  - `frontend/src/components/dashboard/progress/personal-progress-section.tsx`
+  - `frontend/src/components/dashboard/calendar/calendar-day-detail-modal.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+  - `frontend/src/types/progress.ts`
+- MCP 사용: 없음
+- 다음 단계: 조교 캘린더 응답에 writerId 포함 여부 확인 후 수동 테스트

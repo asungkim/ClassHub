@@ -18,8 +18,10 @@ type CalendarDayDetailModalProps = {
   open: boolean;
   dateKey: string | null;
   events: DayEvents | null;
-  canEdit: boolean;
   onClose: () => void;
+  canEditCourse?: (event: CourseProgressEvent) => boolean;
+  canEditPersonal?: (event: PersonalProgressEvent) => boolean;
+  canEditClinic?: (event: ClinicEvent) => boolean;
   onEditCourse: (event: CourseProgressEvent) => void;
   onEditPersonal: (event: PersonalProgressEvent) => void;
   onEditClinic: (event: ClinicEvent) => void;
@@ -32,8 +34,10 @@ export function CalendarDayDetailModal({
   open,
   dateKey,
   events,
-  canEdit,
   onClose,
+  canEditCourse,
+  canEditPersonal,
+  canEditClinic,
   onEditCourse,
   onEditPersonal,
   onEditClinic,
@@ -77,7 +81,7 @@ export function CalendarDayDetailModal({
                     <p className="text-xs text-slate-400">
                       작성자 {formatWriterLabel(event.writerName, event.writerRole)}
                     </p>
-                    {canEdit ? (
+                    {canEditCourse?.(event) ? (
                       <div className="flex gap-2">
                         <Button variant="ghost" onClick={() => onEditCourse(event)} disabled={!event.id}>
                           수정
@@ -124,7 +128,7 @@ export function CalendarDayDetailModal({
                     <p className="text-xs text-slate-400">
                       작성자 {formatWriterLabel(event.writerName, event.writerRole)}
                     </p>
-                    {canEdit ? (
+                    {canEditPersonal?.(event) ? (
                       <div className="flex gap-2">
                         <Button variant="ghost" onClick={() => onEditPersonal(event)} disabled={!event.id}>
                           수정
@@ -173,7 +177,7 @@ export function CalendarDayDetailModal({
                     <p className="text-xs text-slate-400">
                       작성자 {formatWriterLabel(event.recordSummary?.writerName, event.recordSummary?.writerRole)}
                     </p>
-                    {canEdit ? (
+                    {canEditClinic?.(event) ? (
                       <div className="flex gap-2">
                         <Button
                           variant="ghost"
