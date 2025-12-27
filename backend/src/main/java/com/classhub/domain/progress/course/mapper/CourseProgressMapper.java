@@ -14,10 +14,11 @@ public class CourseProgressMapper {
 
     private final MemberRepository memberRepository;
 
-    public CourseProgressResponse toResponse(CourseProgress progress, MemberRole writerRole) {
-        String writerName = memberRepository.findById(progress.getWriterId())
-                .map(Member::getName)
-                .orElse("알 수 없음");
+    public CourseProgressResponse toResponse(CourseProgress progress) {
+        Member writer = memberRepository.findById(progress.getWriterId())
+                .orElse(null);
+        String writerName = writer == null ? "알 수 없음" : writer.getName();
+        MemberRole writerRole = writer == null ? null : writer.getRole();
 
         return new CourseProgressResponse(
                 progress.getId(),

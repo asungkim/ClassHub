@@ -51,7 +51,7 @@ public class PersonalProgressService {
                 .content(request.content())
                 .build();
         PersonalProgress saved = personalProgressRepository.save(progress);
-        return personalProgressMapper.toResponse(saved, record.getCourseId(), MemberRole.TEACHER);
+        return personalProgressMapper.toResponse(saved, record.getCourseId());
     }
 
     @Transactional(readOnly = true)
@@ -74,7 +74,7 @@ public class PersonalProgressService {
                 PageRequest.of(0, pageSize)
         );
         List<PersonalProgressResponse> items = progressList.stream()
-                .map(progress -> personalProgressMapper.toResponse(progress, record.getCourseId(), MemberRole.TEACHER))
+                .map(progress -> personalProgressMapper.toResponse(progress, record.getCourseId()))
                 .toList();
         ProgressCursor nextCursor = resolveNextCursor(progressList, pageSize);
         return new ProgressSliceResponse<>(items, nextCursor);
@@ -89,9 +89,10 @@ public class PersonalProgressService {
                 progress.getStudentCourseRecordId(),
                 ProgressAccessMode.WRITE
         );
+        ensureWriterAccess(principal, progress.getWriterId());
         progress.update(request.date(), request.title(), request.content());
         PersonalProgress saved = personalProgressRepository.save(progress);
-        return personalProgressMapper.toResponse(saved, record.getCourseId(), MemberRole.TEACHER);
+        return personalProgressMapper.toResponse(saved, record.getCourseId());
     }
 
     public void deletePersonalProgress(MemberPrincipal principal, UUID progressId) {
@@ -101,6 +102,7 @@ public class PersonalProgressService {
                 progress.getStudentCourseRecordId(),
                 ProgressAccessMode.WRITE
         );
+        ensureWriterAccess(principal, progress.getWriterId());
         personalProgressRepository.delete(progress);
     }
 
@@ -131,5 +133,11 @@ public class PersonalProgressService {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
         return limit;
+    }
+
+    private void ensureWriterAccess(MemberPrincipal principal, UUID writerId) {
+        if (principal.role() == MemberRole.ASSISTANT && !principal.id().equals(writerId)) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
     }
 }

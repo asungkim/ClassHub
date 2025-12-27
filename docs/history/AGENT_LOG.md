@@ -7333,3 +7333,50 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/course/web/CourseAssignmentControllerTest.java`
 - MCP 사용: 없음
 - 다음 단계: Stage 2(Progress 권한 확대 + 작성자 정책) 구현
+## [2025-12-27 17:20] Progress 조교 권한 확대 및 작성자 수정 제한 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Progress 생성/수정/삭제에 ASSISTANT 권한 허용 및 작성자 제한 적용
+- Progress 응답의 작성자 역할을 실제 작성자 기준으로 반환
+- 관련 권한/서비스/컨트롤러 테스트 보강
+
+### Details
+- 작업 사유: Stage 2 권한 확장 및 조교 작성자 정책 반영
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.progress.support.ProgressPermissionValidatorTest" --tests "com.classhub.domain.progress.course.application.CourseProgressServiceTest" --tests "com.classhub.domain.progress.personal.application.PersonalProgressServiceTest" --tests "com.classhub.domain.progress.course.web.CourseProgressControllerTest" --tests "com.classhub.domain.progress.personal.web.PersonalProgressControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/progress/support/ProgressPermissionValidator.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/application/CourseProgressService.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/application/PersonalProgressService.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/mapper/CourseProgressMapper.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/mapper/PersonalProgressMapper.java`
+  - `backend/src/main/java/com/classhub/domain/progress/course/web/CourseProgressController.java`
+  - `backend/src/main/java/com/classhub/domain/progress/personal/web/PersonalProgressController.java`
+  - `backend/src/test/java/com/classhub/domain/progress/support/ProgressPermissionValidatorTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/course/application/CourseProgressServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/personal/application/PersonalProgressServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/course/web/CourseProgressControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/progress/personal/web/PersonalProgressControllerTest.java`
+- MCP 사용: 없음
+- 다음 단계: Stage 3(ClinicRecord 작성자 정책) 구현
+## [2025-12-27 17:22] ClinicRecord 조교 작성자 제한 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 클리닉 기록 수정/삭제 시 조교는 본인 작성 기록만 허용
+- 관련 서비스 테스트 보강
+
+### Details
+- 작업 사유: Stage 3 작성자 권한 정책 반영
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.clinic.record.application.ClinicRecordServiceTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/clinic/record/application/ClinicRecordService.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/record/application/ClinicRecordServiceTest.java`
+- MCP 사용: 없음
+- 다음 단계: 조교/교사 권한 시나리오 수동 확인 및 필요 시 컨트롤러 테스트 보강

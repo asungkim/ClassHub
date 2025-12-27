@@ -36,7 +36,7 @@ public class PersonalProgressController {
     private final PersonalProgressService personalProgressService;
 
     @PostMapping("/student-courses/{recordId}/personal-progress")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "개별 진도 생성")
     public RsData<PersonalProgressResponse> createPersonalProgress(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -69,7 +69,7 @@ public class PersonalProgressController {
     }
 
     @PatchMapping("/personal-progress/{progressId}")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "개별 진도 수정")
     public RsData<PersonalProgressResponse> updatePersonalProgress(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -81,7 +81,7 @@ public class PersonalProgressController {
     }
 
     @DeleteMapping("/personal-progress/{progressId}")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "개별 진도 삭제")
     public RsData<Void> deletePersonalProgress(
             @AuthenticationPrincipal MemberPrincipal principal,

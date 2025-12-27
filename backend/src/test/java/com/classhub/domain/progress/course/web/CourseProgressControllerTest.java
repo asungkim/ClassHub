@@ -94,6 +94,28 @@ class CourseProgressControllerTest {
     }
 
     @Test
+    void createCourseProgress_shouldAllowAssistant() throws Exception {
+        CourseProgressResponse response = sampleResponse();
+        given(courseProgressService.createCourseProgress(eq(assistantPrincipal), eq(response.courseId()), any()))
+                .willReturn(response);
+
+        CourseProgressCreateRequest request = new CourseProgressCreateRequest(
+                response.date(),
+                response.title(),
+                response.content()
+        );
+
+        mockMvc.perform(post("/api/v1/courses/{courseId}/course-progress", response.courseId())
+                        .with(auth(assistantPrincipal))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(RsCode.CREATED.getCode()));
+
+        verify(courseProgressService).createCourseProgress(eq(assistantPrincipal), eq(response.courseId()), any());
+    }
+
+    @Test
     void composeCourseProgress_shouldReturnCreated() throws Exception {
         CourseProgressResponse response = sampleResponse();
         UUID recordId = UUID.randomUUID();
@@ -160,6 +182,36 @@ class CourseProgressControllerTest {
 
         mockMvc.perform(patch("/api/v1/course-progress/{progressId}", response.id())
                         .with(auth(teacherPrincipal))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("Updated"));
+    }
+
+    @Test
+    void updateCourseProgress_shouldAllowAssistant() throws Exception {
+        CourseProgressResponse response = sampleResponse();
+        CourseProgressUpdateRequest request = new CourseProgressUpdateRequest(
+                LocalDate.of(2024, Month.MARCH, 10),
+                "Updated",
+                "memo"
+        );
+        CourseProgressResponse updated = new CourseProgressResponse(
+                response.id(),
+                response.courseId(),
+                request.date(),
+                request.title(),
+                request.content(),
+                response.writerId(),
+                response.writerName(),
+                response.writerRole(),
+                response.createdAt()
+        );
+        given(courseProgressService.updateCourseProgress(eq(assistantPrincipal), eq(response.id()), any()))
+                .willReturn(updated);
+
+        mockMvc.perform(patch("/api/v1/course-progress/{progressId}", response.id())
+                        .with(auth(assistantPrincipal))
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

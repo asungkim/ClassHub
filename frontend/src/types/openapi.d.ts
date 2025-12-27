@@ -879,7 +879,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 선생님 학생 목록 조회 */
+        /** 학생 목록 조회 */
         get: operations["getTeacherStudents"];
         put?: never;
         post?: never;

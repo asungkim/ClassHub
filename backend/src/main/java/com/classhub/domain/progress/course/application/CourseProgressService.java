@@ -53,7 +53,7 @@ public class CourseProgressService {
                 .content(request.content())
                 .build();
         CourseProgress saved = courseProgressRepository.save(progress);
-        return courseProgressMapper.toResponse(saved, MemberRole.TEACHER);
+        return courseProgressMapper.toResponse(saved);
     }
 
     public CourseProgressResponse composeCourseProgress(MemberPrincipal principal,
@@ -74,7 +74,7 @@ public class CourseProgressService {
         if (!personalProgresses.isEmpty()) {
             personalProgressRepository.saveAll(personalProgresses);
         }
-        return courseProgressMapper.toResponse(saved, MemberRole.TEACHER);
+        return courseProgressMapper.toResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -93,7 +93,7 @@ public class CourseProgressService {
                 PageRequest.of(0, pageSize)
         );
         List<CourseProgressResponse> items = progressList.stream()
-                .map(progress -> courseProgressMapper.toResponse(progress, MemberRole.TEACHER))
+                .map(courseProgressMapper::toResponse)
                 .toList();
         ProgressCursor nextCursor = resolveNextCursor(progressList, pageSize);
         return new ProgressSliceResponse<>(items, nextCursor);
@@ -104,14 +104,16 @@ public class CourseProgressService {
                                                        CourseProgressUpdateRequest request) {
         CourseProgress progress = loadProgress(progressId);
         permissionValidator.ensureCourseAccess(principal, progress.getCourseId(), ProgressAccessMode.WRITE);
+        ensureWriterAccess(principal, progress.getWriterId());
         progress.update(request.date(), request.title(), request.content());
         CourseProgress saved = courseProgressRepository.save(progress);
-        return courseProgressMapper.toResponse(saved, MemberRole.TEACHER);
+        return courseProgressMapper.toResponse(saved);
     }
 
     public void deleteCourseProgress(MemberPrincipal principal, UUID progressId) {
         CourseProgress progress = loadProgress(progressId);
         permissionValidator.ensureCourseAccess(principal, progress.getCourseId(), ProgressAccessMode.WRITE);
+        ensureWriterAccess(principal, progress.getWriterId());
         courseProgressRepository.delete(progress);
     }
 
@@ -162,5 +164,11 @@ public class CourseProgressService {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }
         return limit;
+    }
+
+    private void ensureWriterAccess(MemberPrincipal principal, UUID writerId) {
+        if (principal.role() == MemberRole.ASSISTANT && !principal.id().equals(writerId)) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
     }
 }
