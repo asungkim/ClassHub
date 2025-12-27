@@ -81,7 +81,7 @@ export function StudentManagementView({ role }: { role: Role }) {
           kicker: "Assistant · Students",
           accent: "text-emerald-500",
           title: "학생 지원",
-          description: "연결된 선생님의 학생 현황을 파악하고, 요청 처리 탭에서 등록 신청을 돕습니다."
+          description: "선생님의 학생 현황을 파악하고, 연결 신청을 승인하거나 거절하세요. 또한 반에 학생을 배치할 수 있습니다."
         };
 
   const handleRefresh = useCallback(() => {

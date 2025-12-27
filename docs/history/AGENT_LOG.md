@@ -6990,3 +6990,50 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
   - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
 - 다음 단계: 학생 화면에서 카운트/만석 표시 및 갱신 동작 확인
+## [2025-12-27 11:14] Feedback 해결 상태 노출 스펙 보강
+
+### Type
+DESIGN
+
+### Summary
+- Feedback 엔티티에 resolvedAt/resolvedByMemberId 추가
+- 요구사항에 해결 상태 대시보드 노출 추가
+- 스펙에 /feedback/me 및 상태 처리 명시
+
+### Details
+- 작업 사유: 피드백 해결 시 작성자 대시보드에 상태 표시 필요
+- 영향받은 테스트: 문서 변경만 (미실행)
+- 수정한 파일:
+  - `docs/design/final-entity-spec.md`
+  - `docs/requirement/v1.5.md`
+  - `docs/spec/v1.5.md`
+- 다음 단계: Feedback 백엔드 설계 문서(PLAN) 작성 및 승인 요청
+## [2025-12-27 11:19] Feedback 백엔드 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Feedback 기능 백엔드 설계 문서 작성
+- 생성/조회/해결 처리 API 및 도메인/테스트 계획 정리
+
+### Details
+- 작업 사유: 피드백 기능 구현 전 설계 문서 수립
+- 영향받은 테스트: 문서 변경만 (미실행)
+- 수정한 파일:
+  - `docs/plan/backend/season2/feedback-management_plan.md`
+- 다음 단계: PLAN 검토/승인 후 TDD 기반 구현 착수
+## [2025-12-27 11:23] Feedback PLAN 수정(작성자 연락처 포함)
+
+### Type
+DESIGN
+
+### Summary
+- 관리자 피드백 목록 응답에 작성자 이메일/전화번호 포함
+
+### Details
+- 작업 사유: 관리자 목록에서 연락처 확인 요구 반영
+- 영향받은 테스트: 문서 변경만 (미실행)
+- 수정한 파일:
+  - `docs/plan/backend/season2/feedback-management_plan.md`
+- 다음 단계: PLAN 재확인 후 승인 시 TDD 구현 착수

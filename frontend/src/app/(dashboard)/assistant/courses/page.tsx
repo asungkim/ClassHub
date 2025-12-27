@@ -123,8 +123,7 @@ function AssistantCourseContent() {
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">Assistant · Courses</p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">반 목록</h1>
         <p className="mt-2 text-sm text-slate-500">
-          연결된 선생님의 반을 확인하고, 수업 준비 혹은 클리닉 업무에 참고하세요. Assignment가 비활성화된 선생님의 반은 표시되지
-          않습니다.
+          연결된 선생님의 반을 확인하고, 수업 준비 혹은 클리닉 업무에 참고하세요.
         </p>
       </header>
 
