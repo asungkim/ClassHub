@@ -1108,6 +1108,10 @@ function StudentDetailModal({
   const [notesInput, setNotesInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [assignmentActionId, setAssignmentActionId] = useState<string | null>(null);
+  const [assignmentConfirmTarget, setAssignmentConfirmTarget] = useState<{
+    course: TeacherStudentCourseResponse;
+    nextActive: boolean;
+  } | null>(null);
   const [assistantOptions, setAssistantOptions] = useState<AssistantAssignmentResponse[]>([]);
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantError, setAssistantError] = useState<string | null>(null);
@@ -1510,7 +1514,11 @@ function StudentDetailModal({
                                   className="h-10 px-4 text-sm"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    handleToggleAssignment(course, !assignmentActive);
+                                    if (assignmentActive) {
+                                      setAssignmentConfirmTarget({ course, nextActive: false });
+                                      return;
+                                    }
+                                    handleToggleAssignment(course, true);
                                   }}
                                   disabled={toggleDisabled}
                                 >
@@ -1657,6 +1665,22 @@ function StudentDetailModal({
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(assignmentConfirmTarget)}
+        onClose={() => setAssignmentConfirmTarget(null)}
+        onConfirm={() => {
+          if (!assignmentConfirmTarget) {
+            return;
+          }
+          void handleToggleAssignment(assignmentConfirmTarget.course, assignmentConfirmTarget.nextActive);
+          setAssignmentConfirmTarget(null);
+        }}
+        isLoading={Boolean(assignmentActionId)}
+        title="휴원 처리 확인"
+        message="휴원을 하게 되면 해당 학생의 수업을 기록할 수 없고 클리닉 관련 기능이 모두 제한됩니다. 휴원 처리할까요?"
+        confirmText="휴원 처리"
+        cancelText="취소"
+      />
     </Modal>
   );
 }

@@ -7943,3 +7943,91 @@ DESIGN
   - `docs/plan/backend/season2/course-holdoff-and-leave_plan.md`
 - MCP 사용: 없음
 - 다음 단계: 사용자 리뷰 후 승인 시 TDD 구현 시작
+## [2025-12-27 22:49] 휴원/재원 연동 및 반 자동 보관 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 휴원/재원 시 StudentCourseRecord soft delete/restore와 ClinicAttendance 정리/재생성 연동
+- 반 종료+7일 자동 보관 배치와 보관된 반 자동 출석 생성 차단
+
+### Details
+- 작업 사유: 휴원/재원 정책 및 반 보관 규칙을 실제 서비스 로직에 반영
+- 영향받은 테스트: 
+  - `CourseAssignmentServiceTest`
+  - `ClinicAttendanceRepositoryQueryTest`
+  - `StudentCourseRecordRepositoryTest`
+  - `ClinicDefaultSlotServiceTest`
+  - `ClinicBatchServiceTest`
+  - `CourseArchiveServiceTest`
+  - `CourseArchiveSchedulerTest`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/batch/application/ClinicBatchService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepository.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseArchiveService.java`
+  - `backend/src/main/java/com/classhub/domain/course/scheduler/CourseArchiveScheduler.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseAssignmentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceRepositoryQueryTest.java`
+  - `backend/src/test/java/com/classhub/domain/studentcourse/repository/StudentCourseRecordRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/slot/application/ClinicDefaultSlotServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/clinic/batch/application/ClinicBatchServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseArchiveServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/scheduler/CourseArchiveSchedulerTest.java`
+- 테스트 실행: `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseAssignmentServiceTest" --tests "com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepositoryQueryTest" --tests "com.classhub.domain.studentcourse.repository.StudentCourseRecordRepositoryTest" --tests "com.classhub.domain.clinic.slot.application.ClinicDefaultSlotServiceTest" --tests "com.classhub.domain.clinic.batch.application.ClinicBatchServiceTest" --tests "com.classhub.domain.course.application.CourseArchiveServiceTest" --tests "com.classhub.domain.course.scheduler.CourseArchiveSchedulerTest"`
+- MCP 사용: 없음
+- 다음 단계: 프론트 경고 UI/권한 흐름 확인 및 통합 테스트 진행
+## [2025-12-27 23:47] 학생 클리닉 접근 제한 및 휴원 확인 다이얼로그 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 클리닉 시간표/주간 세션에서 휴원·보관 상태 시 클리닉 기능 접근 차단
+- 학생 상세 모달에서 휴원 처리 시 확인 다이얼로그 추가
+
+### Details
+- 작업 사유: 휴원 상태에서 클리닉 기능 접근을 제한하고, 휴원 처리 시 경고를 명확히 전달
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+  - `frontend/src/components/dashboard/student-management.tsx`
+- MCP 사용: 없음
+- 다음 단계: 휴원 학생이 클리닉 페이지에서 접근 제한되는지 수동 확인
+## [2025-12-27 23:49] 반 종료 후 보관까지 남은 기간 안내
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 종료일이 지난 활성 반에 대해 자동 보관까지 남은 일수 안내 문구 추가
+
+### Details
+- 작업 사유: 반 종료 이후 자동 보관까지의 잔여 기간을 명확히 안내
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/courses/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 종료된 반 카드에서 보관까지 남은 일수 표시 확인
+## [2025-12-27 23:52] 초기 반 시간표 중복 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 선생님별 초기 반(A/B) 시간대가 서로 겹치지 않도록 시드 시간표를 분리
+
+### Details
+- 작업 사유: 동일 선생님의 반이 같은 시간대로 생성되는 문제 방지
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/init/data/CourseInitData.java`
+- MCP 사용: 없음
+- 다음 단계: 로컬 초기화 시 반별 시간표가 서로 다른지 확인

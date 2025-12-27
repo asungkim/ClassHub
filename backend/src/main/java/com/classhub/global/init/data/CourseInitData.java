@@ -28,8 +28,12 @@ public class CourseInitData extends BaseInitData {
 
     private static final LocalDate START_DATE = LocalDate.of(2025, 1, 1);
     private static final LocalDate END_DATE = LocalDate.of(2025, 12, 31);
-    private static final LocalTime COURSE_START = LocalTime.of(19, 0);
-    private static final LocalTime COURSE_END = LocalTime.of(21, 0);
+    private static final List<TimeRange> COURSE_TIME_SLOTS = List.of(
+            new TimeRange(LocalTime.of(14, 0), LocalTime.of(16, 0)),
+            new TimeRange(LocalTime.of(16, 0), LocalTime.of(18, 0)),
+            new TimeRange(LocalTime.of(18, 0), LocalTime.of(20, 0)),
+            new TimeRange(LocalTime.of(20, 0), LocalTime.of(22, 0))
+    );
 
     private static final Map<String, List<DayOfWeek>> TEACHER_DAYS = Map.of(
             "te1@n.com", List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
@@ -65,11 +69,14 @@ public class CourseInitData extends BaseInitData {
             List<TeacherBranchAssignment> assignments = assignmentRepository
                     .findByTeacherMemberIdAndDeletedAtIsNull(teacher.get().getId(), org.springframework.data.domain.Pageable.unpaged())
                     .getContent();
+            int courseIndex = 0;
             for (TeacherBranchAssignment assignment : assignments) {
                 Optional<Branch> branch = branchRepository.findById(assignment.getBranchId());
                 String branchName = branch.map(Branch::getName).orElse("반");
-                createOrUpdateCourse(teacher.get().getId(), assignment.getBranchId(), branchName + " A반", entry.getValue(), force);
-                createOrUpdateCourse(teacher.get().getId(), assignment.getBranchId(), branchName + " B반", entry.getValue(), force);
+                TimeRange firstSlot = resolveTimeRange(courseIndex++);
+                TimeRange secondSlot = resolveTimeRange(courseIndex++);
+                createOrUpdateCourse(teacher.get().getId(), assignment.getBranchId(), branchName + " A반", entry.getValue(), firstSlot, force);
+                createOrUpdateCourse(teacher.get().getId(), assignment.getBranchId(), branchName + " B반", entry.getValue(), secondSlot, force);
             }
         }
     }
@@ -78,9 +85,10 @@ public class CourseInitData extends BaseInitData {
                                       UUID branchId,
                                       String name,
                                       List<DayOfWeek> days,
+                                      TimeRange timeRange,
                                       boolean force) {
         Optional<Course> existing = courseRepository.findByTeacherMemberIdAndBranchIdAndName(teacherId, branchId, name);
-        Set<Course.CourseSchedule> schedules = buildSchedules(days);
+        Set<Course.CourseSchedule> schedules = buildSchedules(days, timeRange);
         if (existing.isPresent()) {
             if (force) {
                 Course course = existing.get();
@@ -103,10 +111,20 @@ public class CourseInitData extends BaseInitData {
         courseRepository.save(course);
     }
 
-    private Set<Course.CourseSchedule> buildSchedules(List<DayOfWeek> days) {
+    private Set<Course.CourseSchedule> buildSchedules(List<DayOfWeek> days, TimeRange timeRange) {
         return Set.of(
-                new Course.CourseSchedule(days.get(0), COURSE_START, COURSE_END),
-                new Course.CourseSchedule(days.get(1), COURSE_START, COURSE_END)
+                new Course.CourseSchedule(days.get(0), timeRange.start, timeRange.end),
+                new Course.CourseSchedule(days.get(1), timeRange.start, timeRange.end)
         );
+    }
+
+    private TimeRange resolveTimeRange(int index) {
+        if (COURSE_TIME_SLOTS.isEmpty()) {
+            return new TimeRange(LocalTime.of(19, 0), LocalTime.of(21, 0));
+        }
+        return COURSE_TIME_SLOTS.get(index % COURSE_TIME_SLOTS.size());
+    }
+
+    private record TimeRange(LocalTime start, LocalTime end) {
     }
 }

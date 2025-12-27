@@ -685,6 +685,7 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
   const isActive = course.active !== false;
   const disableActions = disabled || !course.courseId;
   const progressStatus = getCourseProgressStatus(course.startDate, course.endDate);
+  const archiveCountdown = isActive ? getArchiveCountdown(course.endDate) : null;
 
   return (
     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-5 shadow-sm">
@@ -720,6 +721,13 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
           기간: {formatDateRange(course.startDate, course.endDate)}
         </p>
         <p className="mt-1 text-slate-500">수업 시간: {scheduleSummary}</p>
+        {archiveCountdown ? (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            {archiveCountdown.daysLeft === 0
+              ? "반 종료 기간이 지나 오늘 보관 처리됩니다."
+              : `반 종료 기간이 지나 보관 처리까지 ${archiveCountdown.daysLeft}일 남았습니다.`}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -1501,6 +1509,27 @@ function getCourseProgressStatus(start?: string | null, end?: string | null) {
     return { label: "종료", variant: "secondary" as const };
   }
   return { label: "진행 중", variant: "success" as const };
+}
+
+function getArchiveCountdown(end?: string | null) {
+  if (!end) {
+    return null;
+  }
+  const endDate = parseDateOnly(end);
+  if (!endDate) {
+    return null;
+  }
+  const today = startOfDay(new Date());
+  if (today <= endDate) {
+    return null;
+  }
+  const archiveDate = addDays(endDate, 7);
+  if (today > archiveDate) {
+    return null;
+  }
+  const diffMs = archiveDate.getTime() - today.getTime();
+  const daysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  return { daysLeft };
 }
 
 function parseDateOnly(value?: string | null) {

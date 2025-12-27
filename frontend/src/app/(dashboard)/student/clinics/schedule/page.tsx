@@ -18,6 +18,8 @@ import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
 import { api } from "@/lib/api";
 import { getApiErrorMessage, getFetchError } from "@/lib/api-error";
+import { fetchStudentMyCourses } from "@/lib/dashboard-api";
+import type { StudentMyCourseResponse } from "@/types/dashboard";
 
 type ClinicContextCourse = {
   courseId: string;
@@ -38,6 +40,13 @@ type ClinicContextGroup = {
 
 type ClinicSlotResponse = components["schemas"]["ClinicSlotResponse"];
 type StudentDefaultClinicSlotRequest = components["schemas"]["StudentDefaultClinicSlotRequest"];
+
+type CourseStatus = {
+  assignmentActive: boolean;
+  courseActive: boolean;
+};
+
+const COURSE_STATUS_PAGE_SIZE = 50;
 
 const DAY_ORDER = [
   { value: "MONDAY", label: "월" },
@@ -68,6 +77,10 @@ export default function StudentClinicSchedulePage() {
   const [pendingSlot, setPendingSlot] = useState<ClinicSlotResponse | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedDayKey, setSelectedDayKey] = useState<string>(DAY_ORDER[0].value);
+  const [courseStatusMap, setCourseStatusMap] = useState<Map<string, CourseStatus>>(new Map());
+  const [courseStatusLoading, setCourseStatusLoading] = useState(false);
+  const [courseStatusError, setCourseStatusError] = useState<string | null>(null);
 
   const contextGroups = useMemo<ClinicContextGroup[]>(() => {
     const map = new Map<string, ClinicContextGroup>();
@@ -147,6 +160,49 @@ export default function StudentClinicSchedulePage() {
     void refresh();
   }, [refresh]);
 
+  const loadCourseStatuses = useCallback(async () => {
+    setCourseStatusLoading(true);
+    setCourseStatusError(null);
+    try {
+      let page = 0;
+      let total = 0;
+      const allCourses: StudentMyCourseResponse[] = [];
+      while (page === 0 || allCourses.length < total) {
+        const result = await fetchStudentMyCourses({ page, size: COURSE_STATUS_PAGE_SIZE });
+        if (page === 0) {
+          total = result.totalElements;
+        }
+        if (result.items.length === 0) {
+          break;
+        }
+        allCourses.push(...result.items);
+        page += 1;
+      }
+      const nextMap = new Map<string, CourseStatus>();
+      allCourses.forEach((course) => {
+        const courseId = course.course?.courseId;
+        if (!courseId) {
+          return;
+        }
+        nextMap.set(courseId, {
+          assignmentActive: course.assignmentActive ?? true,
+          courseActive: course.course?.active ?? true
+        });
+      });
+      setCourseStatusMap(nextMap);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "수강 상태를 불러오지 못했습니다.";
+      setCourseStatusError(message);
+      showToast("error", message);
+    } finally {
+      setCourseStatusLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    void loadCourseStatuses();
+  }, [loadCourseStatuses]);
+
   const closeConfirm = useCallback(() => {
     setConfirmOpen(false);
     setPendingSlot(null);
@@ -156,6 +212,23 @@ export default function StudentClinicSchedulePage() {
     () => contexts.find((context) => context.courseId === selectedCourseId) ?? null,
     [contexts, selectedCourseId]
   );
+  const selectedCourseStatus = useMemo(
+    () => (selectedCourseId ? courseStatusMap.get(selectedCourseId) ?? null : null),
+    [courseStatusMap, selectedCourseId]
+  );
+  const selectedCourseBlockedReason = useMemo(() => {
+    if (!selectedCourseStatus || !selectedCourseId) {
+      return null;
+    }
+    if (!selectedCourseStatus.assignmentActive) {
+      return "휴원 상태라 클리닉 기능을 사용할 수 없습니다.";
+    }
+    if (!selectedCourseStatus.courseActive) {
+      return "보관된 반이라 클리닉 기능을 사용할 수 없습니다.";
+    }
+    return null;
+  }, [selectedCourseId, selectedCourseStatus]);
+  const isSelectedCourseBlocked = Boolean(selectedCourseBlockedReason);
 
   const {
     slots,
@@ -189,6 +262,10 @@ export default function StudentClinicSchedulePage() {
       if (!slot.slotId || !selectedCourseId || isUpdating) {
         return;
       }
+      if (isSelectedCourseBlocked) {
+        showToast("info", selectedCourseBlockedReason ?? "클리닉 기능을 사용할 수 없습니다.");
+        return;
+      }
       if (slot.slotId === selectedCourseContext?.defaultClinicSlotId) {
         showToast("info", "이미 기본 슬롯으로 설정되어 있습니다.");
         return;
@@ -196,11 +273,23 @@ export default function StudentClinicSchedulePage() {
       setPendingSlot(slot);
       setConfirmOpen(true);
     },
-    [isUpdating, selectedCourseContext?.defaultClinicSlotId, selectedCourseId, showToast]
+    [
+      isSelectedCourseBlocked,
+      isUpdating,
+      selectedCourseBlockedReason,
+      selectedCourseContext?.defaultClinicSlotId,
+      selectedCourseId,
+      showToast
+    ]
   );
 
   const handleConfirmDefaultSlot = useCallback(async () => {
     if (!pendingSlot?.slotId || !selectedCourseId) {
+      return;
+    }
+    if (isSelectedCourseBlocked) {
+      showToast("info", selectedCourseBlockedReason ?? "클리닉 기능을 사용할 수 없습니다.");
+      closeConfirm();
       return;
     }
     setIsUpdating(true);
@@ -227,20 +316,26 @@ export default function StudentClinicSchedulePage() {
     } finally {
       setIsUpdating(false);
     }
-  }, [closeConfirm, pendingSlot?.slotId, refresh, refreshSlots, selectedCourseId, showToast]);
+  }, [
+    closeConfirm,
+    isSelectedCourseBlocked,
+    pendingSlot?.slotId,
+    refresh,
+    refreshSlots,
+    selectedCourseBlockedReason,
+    selectedCourseId,
+    showToast
+  ]);
 
   if (!canRender) {
     return fallback;
   }
   return (
-    <div className="space-y-6 lg:space-y-8">
-      <Card title="클리닉 시간표" description="수업별 기본 슬롯을 선택하기 전에 선생님/지점 맥락을 먼저 고릅니다.">
-        <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 lg:space-y-8 overflow-x-hidden">
+      <Card title="클리닉 시간표" description="수업별 기본 슬롯을 선택하기 전에 선생님을 먼저 고르세요.">
+        <div className="space-y-4 md:space-y-6 overflow-x-hidden">
           <div>
             <p className="text-sm font-semibold text-slate-700">선생님/지점 선택</p>
-            <p className="text-xs text-slate-500">
-              수강 중인 선생님과 지점을 선택하면 해당 반의 기본 슬롯을 설정할 수 있습니다.
-            </p>
           </div>
 
           {error && (
@@ -273,22 +368,21 @@ export default function StudentClinicSchedulePage() {
                     type="button"
                     onClick={() => handleSelectContext(group.key)}
                     className={clsx(
-                      "rounded-2xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+                      "rounded-2xl border p-3 md:p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
                       isSelected
                         ? "border-blue-200 bg-blue-50/70 shadow-sm"
                         : "border-slate-200 bg-white hover:border-slate-300"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {group.teacherName}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 truncate">
+                          {group.teacherName} ({group.companyName} {group.branchName})
                         </p>
-                        <p className="text-xs text-slate-500">{group.companyName} {group.branchName}</p>
                       </div>
                       {isSelected && <Badge>선택됨</Badge>}
                     </div>
-                    <p className="mt-3 text-xs text-slate-500">반 {group.courses.length}개</p>
+                    <p className="mt-2 md:mt-3 text-xs text-slate-500">반 {group.courses.length}개</p>
 
                     {isSelected && group.courses.length > 1 && (
                       <div className="mt-3">
@@ -330,6 +424,14 @@ export default function StudentClinicSchedulePage() {
               <span className="text-xs text-slate-400">기본 슬롯은 파란색으로 표시됩니다. 선택하지 않았으면 아래에서 선택 해주세요.</span>
             </div>
           ) : null}
+          {selectedCourseBlockedReason && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              {selectedCourseBlockedReason}
+            </div>
+          )}
+          {courseStatusError && (
+            <InlineError message={courseStatusError} />
+          )}
 
           {!selectedCourseId && (
             <EmptyState message="반을 먼저 선택해 주세요." description="선생님/지점 선택 후 반이 정해져야 시간표가 표시됩니다." />
@@ -356,70 +458,160 @@ export default function StudentClinicSchedulePage() {
           )}
 
           {selectedCourseId && !slotsLoading && slots.length > 0 && !slotsError && (
-            <div className="space-y-3">
-              <p className="text-xs text-slate-500">슬롯을 클릭하면 기본 슬롯으로 설정할 수 있습니다.</p>
-              <WeeklyTimeGrid
-                days={GRID_DAYS}
-                itemsByDay={slotsByDay}
-                startHour={GRID_START_HOUR}
-                endHour={GRID_END_HOUR}
-                hourHeight={GRID_HOUR_HEIGHT}
-                showDateHeader={false}
-                getItemRange={(slot) => ({
-                  startTime: slot.startTime,
-                  endTime: slot.endTime
-                })}
-                getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
-                renderItem={({ item, style }) => {
-                  const isDefault = item.slotId && item.slotId === selectedCourseContext?.defaultClinicSlotId;
-                  const assignedCount = item.defaultAssignedCount ?? 0;
-                  const capacity = item.defaultCapacity ?? 0;
-                  const isFull = capacity > 0 && assignedCount >= capacity;
-                  const isDisabled = isDefault || isUpdating;
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => handleSlotSelect(item)}
-                      disabled={isDisabled}
-                      className={clsx(
-                        "absolute left-1 right-1 rounded-2xl border px-2.5 py-2 text-left text-xs shadow-sm transition",
-                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
-                        isDefault
-                          ? "cursor-default border-blue-200 bg-blue-50/70 text-slate-700"
-                          : isFull
-                            ? "border-rose-200 bg-rose-50 text-slate-700"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
-                        isDisabled && "opacity-60"
-                      )}
-                      style={style}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 space-y-1">
-                          <p className="text-xs font-semibold leading-tight break-words">
-                            {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            기본 {assignedCount}/{capacity}
-                          </p>
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-1">
-                          {isDefault && (
-                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                              기본
-                            </span>
+            <>
+              {/* 모바일 뷰: 요일 탭 + 슬롯 카드 리스트 */}
+              <div className="md:hidden space-y-3 overflow-x-hidden">
+                <p className="text-xs text-slate-500">요일을 선택하면 해당 요일의 슬롯을 볼 수 있습니다.</p>
+
+                {/* 요일 탭 */}
+                <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
+                  {DAY_ORDER.map((day) => {
+                    const daySlots = slotsByDay[day.value] ?? [];
+                    const hasSlots = daySlots.length > 0;
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => setSelectedDayKey(day.value)}
+                        className={clsx(
+                          "flex-shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition",
+                          "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+                          selectedDayKey === day.value
+                            ? "bg-blue-100 text-blue-700"
+                            : hasSlots
+                              ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              : "bg-slate-50 text-slate-400"
+                        )}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 선택된 요일의 슬롯 리스트 */}
+                {slotsByDay[selectedDayKey] && slotsByDay[selectedDayKey].length > 0 ? (
+                  <div className="space-y-2">
+                    {slotsByDay[selectedDayKey].map((slot) => {
+                      const isDefault = slot.slotId && slot.slotId === selectedCourseContext?.defaultClinicSlotId;
+                      const assignedCount = slot.defaultAssignedCount ?? 0;
+                      const capacity = slot.defaultCapacity ?? 0;
+                      const isFull = capacity > 0 && assignedCount >= capacity;
+                      const isDisabled = isDefault || isUpdating || isSelectedCourseBlocked || courseStatusLoading;
+
+                      return (
+                        <button
+                          key={slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}`}
+                          type="button"
+                          onClick={() => handleSlotSelect(slot)}
+                          disabled={isDisabled}
+                          className={clsx(
+                            "w-full rounded-2xl border p-4 text-left transition min-h-[80px]",
+                            "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+                            isDefault
+                              ? "cursor-default border-blue-200 bg-blue-50/70"
+                              : isFull
+                                ? "border-rose-200 bg-rose-50"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm",
+                            isDisabled && "opacity-60"
                           )}
-                          {isFull && (
-                            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
-                              만석
-                            </span>
-                          )}
+                        >
+                          <div className="flex items-center justify-between gap-2 h-full">
+                            <div className="space-y-1.5 flex-1 min-w-0">
+                              <p className="text-lg font-semibold text-slate-900">
+                                {formatTime(slot.startTime)} ~ {formatTime(slot.endTime)}
+                              </p>
+                              <p className="text-sm text-slate-500">
+                                기본 {assignedCount}/{capacity}
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                              {isDefault && (
+                                <Badge>기본</Badge>
+                              )}
+                              {isFull && (
+                                <Badge variant="destructive">만석</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <EmptyState
+                    message="이 요일은 등록된 일정이 없습니다."
+                    description="다른 요일을 선택해주세요."
+                  />
+                )}
+              </div>
+
+              {/* 데스크톱 뷰: 기존 주간 그리드 */}
+              <div className="hidden md:block space-y-3">
+                <p className="text-xs text-slate-500">슬롯을 클릭하면 기본 슬롯으로 설정할 수 있습니다.</p>
+                <WeeklyTimeGrid
+                  days={GRID_DAYS}
+                  itemsByDay={slotsByDay}
+                  startHour={GRID_START_HOUR}
+                  endHour={GRID_END_HOUR}
+                  hourHeight={GRID_HOUR_HEIGHT}
+                  showDateHeader={false}
+                  getItemRange={(slot) => ({
+                    startTime: slot.startTime,
+                    endTime: slot.endTime
+                  })}
+                  getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
+                  renderItem={({ item, style }) => {
+                    const isDefault = item.slotId && item.slotId === selectedCourseContext?.defaultClinicSlotId;
+                    const assignedCount = item.defaultAssignedCount ?? 0;
+                    const capacity = item.defaultCapacity ?? 0;
+                    const isFull = capacity > 0 && assignedCount >= capacity;
+                    const isDisabled = isDefault || isUpdating || isSelectedCourseBlocked || courseStatusLoading;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => handleSlotSelect(item)}
+                        disabled={isDisabled}
+                        className={clsx(
+                          "absolute left-1 right-1 rounded-2xl border px-2.5 py-2 text-left text-xs shadow-sm transition",
+                          "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+                          isDefault
+                            ? "cursor-default border-blue-200 bg-blue-50/70 text-slate-700"
+                            : isFull
+                              ? "border-rose-200 bg-rose-50 text-slate-700"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                          isDisabled && "opacity-60"
+                        )}
+                        style={style}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 space-y-1">
+                            <p className="text-xs font-semibold leading-tight break-words">
+                              {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
+                            </p>
+                            <p className="text-[10px] text-slate-500">
+                              기본 {assignedCount}/{capacity}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            {isDefault && (
+                              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                기본
+                              </span>
+                            )}
+                            {isFull && (
+                              <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+                                만석
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                }}
-              />
-            </div>
+                      </button>
+                    );
+                  }}
+                />
+              </div>
+            </>
           )}
         </div>
       </Card>
@@ -452,7 +644,10 @@ export default function StudentClinicSchedulePage() {
             <Button variant="secondary" onClick={closeConfirm} disabled={isUpdating}>
               취소
             </Button>
-            <Button onClick={() => void handleConfirmDefaultSlot()} disabled={isUpdating}>
+            <Button
+              onClick={() => void handleConfirmDefaultSlot()}
+              disabled={isUpdating || isSelectedCourseBlocked || courseStatusLoading}
+            >
               {isUpdating ? "변경 중..." : "확인"}
             </Button>
           </div>
