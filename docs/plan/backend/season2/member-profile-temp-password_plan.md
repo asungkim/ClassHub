@@ -17,9 +17,9 @@
   - 이메일 변경 시 중복 검증
 - 임시 비밀번호 즉시 발급
   - 이메일 + 휴대폰 번호 입력으로 본인 확인
-  - 검증 성공 시 임시 비밀번호를 즉시 발급하고 응답에 포함
+  - 검증 성공 시 `Classmate` + 4자리 숫자 + `!` 패턴의 임시 비밀번호를 즉시 발급하고 응답에 포함
   - 발급된 비밀번호는 BCrypt로 저장
-  - 화면에 `임시 비밀번호: Temp1234!` 형태로 노출
+  - 화면에 `임시 비밀번호: Classmate1234!` 형태로 노출
 
 ### Non-functional
 - SMTP/메일 인프라 없이 동작
@@ -35,7 +35,7 @@
   - Response: updated profile (GET과 동일 스키마)
 - `POST /api/v1/auth/temp-password`
   - Request: `{ email, phoneNumber }`
-  - Response: `{ tempPassword: "Temp1234!" }`
+  - Response: `{ tempPassword: "Classmate1234!" }`
 
 ## 4. Domain Model (Draft)
 - Entity

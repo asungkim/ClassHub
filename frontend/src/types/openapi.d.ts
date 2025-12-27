@@ -2034,6 +2034,8 @@ export interface components {
             title?: string;
             content?: string;
             homeworkProgress?: string;
+            /** Format: uuid */
+            writerId?: string;
             writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
@@ -2070,6 +2072,8 @@ export interface components {
             date?: string;
             title?: string;
             content?: string;
+            /** Format: uuid */
+            writerId?: string;
             writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";

@@ -7502,3 +7502,52 @@ DESIGN
   - `docs/plan/backend/season2/member-profile-temp-password_plan.md`
 - MCP 사용: 없음
 - 다음 단계: 계획 승인 후 TDD 구현
+## [2025-12-27 18:06] 임시 비밀번호 포맷 변경 반영
+
+### Type
+DESIGN
+
+### Summary
+- 임시 비밀번호 응답 포맷을 Classmate + 4자리 숫자 + ! 로 변경
+
+### Details
+- 작업 사유: 임시 비밀번호 포맷 변경 요청 반영
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/requirement/v1.5.md`
+  - `docs/spec/v1.5.md`
+  - `docs/plan/backend/season2/member-profile-temp-password_plan.md`
+- MCP 사용: 없음
+- 다음 단계: TDD로 내 정보/임시 비밀번호 API 구현
+## [2025-12-27 18:13] 내 정보/임시 비밀번호 API 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 내 정보 조회/수정 API와 임시 비밀번호 발급 API 구현
+- 프로필 DTO/서비스 및 임시 비밀번호 생성기 추가
+
+### Details
+- 작업 사유: v1.5 요구사항에 따른 내 정보 관리 및 비밀번호 복구 지원
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.member.application.MemberProfileServiceTest" --tests "com.classhub.domain.auth.application.TempPasswordServiceTest" --tests "com.classhub.domain.member.web.MemberControllerTest" --tests "com.classhub.domain.auth.web.AuthControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/member/model/Member.java`
+  - `backend/src/main/java/com/classhub/domain/member/repository/MemberRepository.java`
+  - `backend/src/main/java/com/classhub/domain/member/application/MemberProfileService.java`
+  - `backend/src/main/java/com/classhub/domain/member/web/MemberController.java`
+  - `backend/src/main/java/com/classhub/domain/member/dto/request/MemberProfileUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/member/dto/request/StudentInfoUpdateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/member/dto/response/MemberProfileResponse.java`
+  - `backend/src/main/java/com/classhub/domain/auth/application/TempPasswordService.java`
+  - `backend/src/main/java/com/classhub/domain/auth/support/TempPasswordGenerator.java`
+  - `backend/src/main/java/com/classhub/domain/auth/web/AuthController.java`
+  - `backend/src/main/java/com/classhub/domain/auth/dto/request/TempPasswordRequest.java`
+  - `backend/src/main/java/com/classhub/domain/auth/dto/response/TempPasswordResponse.java`
+  - `backend/src/test/java/com/classhub/domain/member/application/MemberProfileServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/member/web/MemberControllerTest.java`
+  - `backend/src/test/java/com/classhub/domain/auth/application/TempPasswordServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java`
+- MCP 사용: 없음
+- 다음 단계: OpenAPI 스키마 및 프런트 타입 갱신 후 UI 연동
