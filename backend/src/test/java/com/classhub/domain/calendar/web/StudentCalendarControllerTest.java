@@ -82,6 +82,7 @@ class StudentCalendarControllerTest {
                 LocalDate.of(2024, Month.MARCH, 3),
                 "개별",
                 "개인 내용",
+                UUID.randomUUID(),
                 "Lee",
                 MemberRole.ASSISTANT,
                 LocalDateTime.of(2024, Month.MARCH, 3, 10, 30)
@@ -91,6 +92,7 @@ class StudentCalendarControllerTest {
                 "클리닉",
                 "클리닉 내용",
                 "숙제",
+                UUID.randomUUID(),
                 "Park",
                 MemberRole.TEACHER,
                 LocalDateTime.of(2024, Month.MARCH, 4, 18, 30)

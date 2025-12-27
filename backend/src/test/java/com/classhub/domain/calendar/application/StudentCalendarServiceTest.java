@@ -155,11 +155,13 @@ class StudentCalendarServiceTest {
         assertThat(response.personalProgress()).hasSize(1);
         assertThat(response.personalProgress().get(0).courseName()).isEqualTo("중3 수학");
         assertThat(response.personalProgress().get(0).content()).isEqualTo("memo");
+        assertThat(response.personalProgress().get(0).writerId()).isEqualTo(teacherId);
         assertThat(response.personalProgress().get(0).writerName()).isEqualTo("TEACHER");
         assertThat(response.personalProgress().get(0).createdAt()).isEqualTo(personalCreatedAt);
         assertThat(response.clinicEvents()).hasSize(1);
         assertThat(response.clinicEvents().get(0).recordSummary().content()).isEqualTo("clinic memo");
         assertThat(response.clinicEvents().get(0).recordSummary().homeworkProgress()).isEqualTo("homework");
+        assertThat(response.clinicEvents().get(0).recordSummary().writerId()).isEqualTo(assistantId);
         assertThat(response.clinicEvents().get(0).recordSummary().writerRole())
                 .isEqualTo(MemberRole.ASSISTANT);
         assertThat(response.clinicEvents().get(0).recordSummary().writerName()).isEqualTo("ASSISTANT");

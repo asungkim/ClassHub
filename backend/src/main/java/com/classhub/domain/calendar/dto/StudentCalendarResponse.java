@@ -37,6 +37,7 @@ public record StudentCalendarResponse(
             LocalDate date,
             String title,
             String content,
+            UUID writerId,
             String writerName,
             MemberRole writerRole,
             LocalDateTime createdAt
@@ -61,6 +62,7 @@ public record StudentCalendarResponse(
             String title,
             String content,
             String homeworkProgress,
+            UUID writerId,
             String writerName,
             MemberRole writerRole,
             LocalDateTime createdAt

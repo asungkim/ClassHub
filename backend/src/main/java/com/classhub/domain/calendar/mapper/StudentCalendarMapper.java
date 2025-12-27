@@ -55,6 +55,7 @@ public class StudentCalendarMapper {
                             progress.getDate(),
                             progress.getTitle(),
                             progress.getContent(),
+                            progress.getWriterId(),
                             resolveWriterName(nameMap, progress.getWriterId()),
                             resolveWriterRole(roleMap, progress.getWriterId()),
                             progress.getCreatedAt()
@@ -94,6 +95,7 @@ public class StudentCalendarMapper {
                 event.getRecordTitle(),
                 event.getRecordContent(),
                 event.getRecordHomeworkProgress(),
+                event.getRecordWriterId(),
                 writerName,
                 writerRole,
                 event.getRecordCreatedAt()

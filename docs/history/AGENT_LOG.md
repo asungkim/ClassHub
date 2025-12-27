@@ -7434,3 +7434,71 @@ BEHAVIORAL
   - `frontend/src/types/progress.ts`
 - MCP 사용: 없음
 - 다음 단계: 조교 캘린더 응답에 writerId 포함 여부 확인 후 수동 테스트
+## [2025-12-27 17:53] 학생 캘린더 개인 진도/클리닉 기록 작성자 ID 노출
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 개인 진도와 클리닉 기록 요약 응답에 writerId를 포함
+- 캘린더 응답 매퍼 및 컨트롤러/서비스 테스트 보강
+
+### Details
+- 작업 사유: 조교 편집 권한 판단을 위해 작성자 ID가 필요
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.calendar.application.StudentCalendarServiceTest" --tests "com.classhub.domain.calendar.web.StudentCalendarControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/StudentCalendarResponse.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+- MCP 사용: 없음
+- 다음 단계: OpenAPI 스키마 갱신 시 PersonalProgressEvent/ClinicRecordSummary에 writerId 반영
+## [2025-12-27 17:57] 내 정보/임시 비밀번호 요구사항 및 스펙 반영
+
+### Type
+DESIGN
+
+### Summary
+- 역할별 내 정보 조회/수정 요구사항 추가
+- 이메일+휴대폰 기반 임시 비밀번호 발급 요구사항 추가
+- 스펙에 플로우/리소스/추적성 업데이트
+
+### Details
+- 작업 사유: v1.5 요구사항에 내 정보/임시 비밀번호 기능 추가 요청 반영
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/requirement/v1.5.md`
+  - `docs/spec/v1.5.md`
+- MCP 사용: 없음
+- 다음 단계: 해당 스펙 기반으로 PLAN/TODO 및 구현 범위 확정
+## [2025-12-27 18:01] 내 정보/임시 비밀번호 백엔드 설계 작성
+
+### Type
+DESIGN
+
+### Summary
+- 내 정보 조회/수정 및 임시 비밀번호 발급 기능의 백엔드 설계 문서 작성
+
+### Details
+- 작업 사유: v1.5 요구사항/스펙 추가 내용에 대한 백엔드 구현 계획 수립
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/backend/season2/member-profile-temp-password_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 계획 승인 후 TDD로 서비스/컨트롤러 구현
+## [2025-12-27 18:02] 내 정보 응답 비밀번호 제외 명시
+
+### Type
+DESIGN
+
+### Summary
+- 내 정보 조회 응답에서 비밀번호를 제외하도록 설계 문서에 명시
+
+### Details
+- 작업 사유: 민감 정보 노출 방지 요구 반영
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/backend/season2/member-profile-temp-password_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 계획 승인 후 TDD 구현
