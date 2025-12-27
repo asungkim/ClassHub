@@ -22,7 +22,7 @@ public class StudentInfoInitData extends BaseInitData {
 
     public StudentInfoInitData(MemberRepository memberRepository,
                                StudentInfoRepository studentInfoRepository) {
-        super("season2-student-info-seed", 110);
+        super("season2-student-info-seed", 40);
         this.memberRepository = memberRepository;
         this.studentInfoRepository = studentInfoRepository;
     }

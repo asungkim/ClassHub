@@ -3,6 +3,7 @@ package com.classhub.domain.assignment.repository;
 import com.classhub.domain.assignment.model.StudentTeacherRequest;
 import com.classhub.domain.assignment.model.TeacherStudentRequestStatus;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -67,4 +68,7 @@ public interface StudentTeacherRequestRepository extends JpaRepository<StudentTe
                                                           @Param("statuses") Set<TeacherStudentRequestStatus> statuses,
                                                           @Param("keyword") String keyword,
                                                           Pageable pageable);
+
+    Optional<StudentTeacherRequest> findByStudentMemberIdAndTeacherMemberId(UUID studentMemberId,
+                                                                             UUID teacherMemberId);
 }

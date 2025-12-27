@@ -7691,3 +7691,176 @@ BEHAVIORAL
   - `frontend/src/components/dashboard/sidebar.tsx`
 - MCP 사용: 없음
 - 다음 단계: 사이드바 사용자 카드 텍스트 표시 확인
+## [2025-12-27 20:08] InitData 확장 테스트 시드 설계
+
+### Type
+DESIGN
+
+### Summary
+- 대규모 테스트용 InitData(회원/관계/클리닉) 확장 계획 수립
+
+### Details
+- 작업 사유: QA/개발 테스트를 위한 풍부한 시드 데이터 필요
+- 영향받은 테스트: 없음 (설계 단계)
+- 수정한 파일:
+  - `docs/plan/backend/season2/initdata-extended-test_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 사용자 피드백 반영 후 승인 시 구현 시작
+## [2025-12-27 20:09] Init 시드에서 Alice 개인 학원 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- InitCompanies/InitBranches에서 Alice 개인 학원 시드를 삭제
+
+### Details
+- 작업 사유: Alice 관련 초기 데이터 제거 요청 반영
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/init/seeds/InitCompanies.java`
+  - `backend/src/main/java/com/classhub/global/init/seeds/InitBranches.java`
+- MCP 사용: 없음
+- 다음 단계: 필요 시 시드 데이터 재적용 및 로컬 부팅 확인
+## [2025-12-27 20:10] InitData 스모크 테스트 Alice 시드 제거 반영
+
+### Type
+STRUCTURAL
+
+### Summary
+- InitDataSmokeTest에서 Alice 개인 학원 기대값 제거
+- 학원 타입 검증 로직을 ACADEMY 기준으로 단순화
+
+### Details
+- 작업 사유: Alice 개인 학원 시드 삭제에 따른 테스트 수정
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `backend/src/test/java/com/classhub/global/init/InitDataSmokeTest.java`
+- MCP 사용: 없음
+- 다음 단계: InitData 스모크 테스트 실행 확인
+## [2025-12-27 20:11] InitData 확장 플랜에 Course 스케줄 수 반영
+
+### Type
+DESIGN
+
+### Summary
+- Course 스케줄을 2개로 제한하는 요구사항을 플랜에 추가
+
+### Details
+- 작업 사유: Course별 스케줄 수 제한 요구 반영
+- 영향받은 테스트: 없음 (설계 단계)
+- 수정한 파일:
+  - `docs/plan/backend/season2/initdata-extended-test_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 플랜 승인 후 InitData 구현 진행
+## [2025-12-27 20:12] InitData 확장 플랜에 일요일 클리닉 슬롯 포함
+
+### Type
+DESIGN
+
+### Summary
+- ClinicSlot 요일에 일요일 슬롯 포함 규칙 추가
+- Course/ClinicSlot 요일 예시를 2개 스케줄 기준으로 갱신
+
+### Details
+- 작업 사유: ClinicSlot 시간표에 일요일 포함 요구 반영
+- 영향받은 테스트: 없음 (설계 단계)
+- 수정한 파일:
+  - `docs/plan/backend/season2/initdata-extended-test_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 플랜 승인 후 InitData 구현 진행
+## [2025-12-27 20:18] InitData 확장 플랜에 시드 실행 순서 추가
+
+### Type
+DESIGN
+
+### Summary
+- Company→Branch→Member→TeacherBranchAssignment→Course→ClinicSlot→StudentTeacherRequest 순서 명시
+
+### Details
+- 작업 사유: 요청한 시드 실행 순서를 플랜에 반영
+- 영향받은 테스트: 없음 (설계 단계)
+- 수정한 파일:
+  - `docs/plan/backend/season2/initdata-extended-test_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 실행 순서에 StudentInfo 포함 여부 확인
+## [2025-12-27 20:19] InitData 확장 플랜에 StudentInfo 순서 반영
+
+### Type
+DESIGN
+
+### Summary
+- Member 직후에 StudentInfo 시드 실행 순서 추가
+
+### Details
+- 작업 사유: StudentInfo는 Member 생성 직후 실행하도록 요청 반영
+- 영향받은 테스트: 없음 (설계 단계)
+- 수정한 파일:
+  - `docs/plan/backend/season2/initdata-extended-test_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 플랜 승인 후 InitData 구현 진행
+## [2025-12-27 20:30] InitData 확장에서 ClinicSlot 시드 제거
+
+### Type
+DESIGN
+
+### Summary
+- InitData 확장 플랜에서 ClinicSlot 생성/검증 항목 제거
+- 시드 실행 순서에서 ClinicSlot 단계 삭제
+
+### Details
+- 작업 사유: ClinicSlot은 API로 생성되어 세션 생성 흐름을 검증해야 하므로 시드에서 제외
+- 영향받은 테스트: 없음 (설계 단계)
+- 수정한 파일:
+  - `docs/plan/backend/season2/initdata-extended-test_plan.md`
+- MCP 사용: 없음
+- 다음 단계: ClinicSlot 관련 구현/테스트 제거 반영
+## [2025-12-27 20:30] ClinicSlot 시드 제거 및 스모크 테스트 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClinicSlot InitData 및 관련 리포지토리 메서드 제거
+- InitData 스모크 테스트에서 ClinicSlot 검증 삭제
+
+### Details
+- 작업 사유: ClinicSlot은 API 생성 기반으로 검증해야 하므로 시드 제외
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/init/data/ClinicSlotInitData.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/slot/repository/ClinicSlotRepository.java`
+  - `backend/src/test/java/com/classhub/global/init/InitDataSmokeTest.java`
+- MCP 사용: 없음
+- 다음 단계: InitData 관련 테스트 실행
+## [2025-12-27 20:35] InitData 확장 시드 구현 및 스모크 테스트 갱신
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Member/StudentInfo 대량 시드와 배정/반/요청 InitData 구현
+- InitData 스모크 테스트 기준을 확장 시드에 맞게 갱신
+
+### Details
+- 작업 사유: 테스트 환경에서 실제 플로우 검증 가능한 데이터 구성
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.global.init.InitDataSmokeTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/global/init/seeds/InitMembers.java`
+  - `backend/src/main/java/com/classhub/global/init/seeds/InitStudentInfos.java`
+  - `backend/src/main/java/com/classhub/global/init/seeds/InitTeacherBranchAssignments.java`
+  - `backend/src/main/java/com/classhub/global/init/data/MemberInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/StudentInfoInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/CompanyInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/BranchInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/TeacherAssistantAssignmentInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/TeacherBranchAssignmentInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/CourseInitData.java`
+  - `backend/src/main/java/com/classhub/global/init/data/StudentTeacherRequestInitData.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/model/TeacherBranchAssignment.java`
+  - `backend/src/main/java/com/classhub/domain/course/repository/CourseRepository.java`
+  - `backend/src/main/java/com/classhub/domain/assignment/repository/StudentTeacherRequestRepository.java`
+  - `backend/src/test/java/com/classhub/global/init/InitDataSmokeTest.java`
+- MCP 사용: 없음
+- 다음 단계: 필요 시 TeacherStudentAssignment/StudentCourseAssignment 시드 확장 검토

@@ -236,4 +236,8 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
                                                             @Param("keyword") String keyword,
                                                             @Param("today") LocalDate today,
                                                             Pageable pageable);
+
+    java.util.Optional<Course> findByTeacherMemberIdAndBranchIdAndName(UUID teacherMemberId,
+                                                                       UUID branchId,
+                                                                       String name);
 }

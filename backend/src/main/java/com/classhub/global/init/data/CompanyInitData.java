@@ -23,7 +23,7 @@ public class CompanyInitData extends BaseInitData {
 
     public CompanyInitData(CompanyRepository companyRepository,
                            MemberRepository memberRepository) {
-        super("season2-company-seed", 200);
+        super("season2-company-seed", 10);
         this.companyRepository = companyRepository;
         this.memberRepository = memberRepository;
     }

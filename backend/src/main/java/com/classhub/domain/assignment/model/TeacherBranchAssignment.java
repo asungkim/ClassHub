@@ -66,4 +66,10 @@ public class TeacherBranchAssignment extends BaseEntity {
     public boolean isActive() {
         return !isDeleted();
     }
+
+    public void changeRole(BranchRole role) {
+        if (role != null) {
+            this.role = role;
+        }
+    }
 }

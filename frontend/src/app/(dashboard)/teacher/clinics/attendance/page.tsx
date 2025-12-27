@@ -723,16 +723,11 @@ export default function TeacherClinicAttendancePage() {
 
               <TextField
                 label="학생 검색"
-                placeholder="이름/연락처 검색"
+                placeholder="이름 검색"
                 value={studentKeyword}
                 onChange={(event) => setStudentKeyword(event.target.value)}
               />
 
-              <div className="flex justify-end">
-                <Button variant="secondary" onClick={() => void loadStudents()} disabled={!selectedCourseId}>
-                  검색
-                </Button>
-              </div>
 
               {studentLoading && <Skeleton className="h-32" />}
 
