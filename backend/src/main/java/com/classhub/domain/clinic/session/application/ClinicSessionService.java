@@ -18,6 +18,7 @@ import com.classhub.domain.member.model.MemberRole;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import com.classhub.global.util.KstTime;
+import com.classhub.global.validator.ScheduleTimeRangeValidator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -227,9 +228,7 @@ public class ClinicSessionService {
     }
 
     private void validateTimeRange(LocalTime startTime, LocalTime endTime, Integer capacity) {
-        if (!startTime.isBefore(endTime)) {
-            throw new BusinessException(RsCode.CLINIC_SESSION_TIME_INVALID);
-        }
+        ScheduleTimeRangeValidator.validate(startTime, endTime, RsCode.CLINIC_SESSION_TIME_INVALID);
         if (capacity < 1) {
             throw new BusinessException(RsCode.BAD_REQUEST);
         }

@@ -108,12 +108,16 @@ class ProgressPermissionValidatorTest {
     }
 
     @Test
-    void ensureCourseAccess_shouldRejectAssistantWrite() {
+    void ensureCourseAccess_shouldAllowAssistantWrite_whenAssignmentActive() {
         UUID courseId = UUID.randomUUID();
+        Course course = createCourse(courseId, teacherId);
+        given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
+        given(assistantAssignmentRepository.findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(teacherId, assistantId))
+                .willReturn(Optional.of(TeacherAssistantAssignment.create(teacherId, assistantId)));
 
-        assertThatThrownBy(() -> validator.ensureCourseAccess(assistantPrincipal, courseId, ProgressAccessMode.WRITE))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
+        Course result = validator.ensureCourseAccess(assistantPrincipal, courseId, ProgressAccessMode.WRITE);
+
+        assertThat(result).isEqualTo(course);
     }
 
     @Test
@@ -167,12 +171,19 @@ class ProgressPermissionValidatorTest {
     }
 
     @Test
-    void ensureRecordAccess_shouldRejectAssistantWrite() {
+    void ensureRecordAccess_shouldAllowAssistantWrite_whenAssignmentActive() {
         UUID recordId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        StudentCourseRecord record = createRecord(recordId, studentId, courseId);
+        Course course = createCourse(courseId, teacherId);
+        given(studentCourseRecordRepository.findById(recordId)).willReturn(Optional.of(record));
+        given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
+        given(assistantAssignmentRepository.findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(teacherId, assistantId))
+                .willReturn(Optional.of(TeacherAssistantAssignment.create(teacherId, assistantId)));
 
-        assertThatThrownBy(() -> validator.ensureRecordAccess(assistantPrincipal, recordId, ProgressAccessMode.WRITE))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
+        StudentCourseRecord result = validator.ensureRecordAccess(assistantPrincipal, recordId, ProgressAccessMode.WRITE);
+
+        assertThat(result).isEqualTo(record);
     }
 
     @Test

@@ -1,11 +1,14 @@
 package com.classhub.domain.auth.web;
 
 import com.classhub.domain.auth.application.AuthService;
+import com.classhub.domain.auth.application.TempPasswordService;
 import com.classhub.domain.auth.dto.request.LoginRequest;
 import com.classhub.domain.auth.dto.request.LogoutRequest;
+import com.classhub.domain.auth.dto.request.TempPasswordRequest;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.LoginResponse;
 import com.classhub.domain.auth.dto.response.MeResponse;
+import com.classhub.domain.auth.dto.response.TempPasswordResponse;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
@@ -32,6 +35,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final RefreshTokenCookieProvider refreshTokenCookieProvider;
+    private final TempPasswordService tempPasswordService;
 
     @GetMapping("/me")
     @Operation(summary = "현재 로그인한 사용자 정보 조회", description = "Access 토큰 기준으로 현재 사용자의 식별자/역할을 조회한다.")
@@ -78,6 +82,12 @@ public class AuthController {
         }
         refreshTokenCookieProvider.clearRefreshToken(httpServletResponse);
         return RsData.from(RsCode.SUCCESS, null);
+    }
+
+    @PostMapping("/temp-password")
+    @Operation(summary = "임시 비밀번호 발급", description = "이메일과 전화번호로 본인 확인 후 임시 비밀번호를 발급한다.")
+    public RsData<TempPasswordResponse> issueTempPassword(@Valid @RequestBody TempPasswordRequest request) {
+        return RsData.from(RsCode.SUCCESS, tempPasswordService.issueTempPassword(request));
     }
 
 }

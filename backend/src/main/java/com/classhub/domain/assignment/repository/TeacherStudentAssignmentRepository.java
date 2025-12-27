@@ -100,6 +100,52 @@ public interface TeacherStudentAssignmentRepository extends JpaRepository<Teache
                                                                         @Param("keyword") String keyword,
                                                                         Pageable pageable);
 
+    @Query(value = """
+            SELECT tsa.studentMemberId
+            FROM TeacherStudentAssignment tsa
+            JOIN Member m ON m.id = tsa.studentMemberId
+            JOIN StudentInfo si ON si.memberId = m.id
+            WHERE tsa.teacherMemberId IN :teacherIds
+              AND tsa.deletedAt IS NULL
+              AND (:courseId IS NULL OR EXISTS (
+                    SELECT 1
+                    FROM StudentCourseAssignment sca
+                    JOIN Course c ON c.id = sca.courseId
+                    WHERE sca.courseId = :courseId
+                      AND sca.studentMemberId = tsa.studentMemberId
+                      AND c.teacherMemberId IN :teacherIds
+              ))
+              AND (:keyword IS NULL
+                   OR LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR LOWER(si.schoolName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR LOWER(m.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            GROUP BY tsa.studentMemberId
+            ORDER BY MAX(tsa.createdAt) DESC
+            """, countQuery = """
+            SELECT COUNT(DISTINCT tsa.studentMemberId)
+            FROM TeacherStudentAssignment tsa
+            JOIN Member m ON m.id = tsa.studentMemberId
+            JOIN StudentInfo si ON si.memberId = m.id
+            WHERE tsa.teacherMemberId IN :teacherIds
+              AND tsa.deletedAt IS NULL
+              AND (:courseId IS NULL OR EXISTS (
+                    SELECT 1
+                    FROM StudentCourseAssignment sca
+                    JOIN Course c ON c.id = sca.courseId
+                    WHERE sca.courseId = :courseId
+                      AND sca.studentMemberId = tsa.studentMemberId
+                      AND c.teacherMemberId IN :teacherIds
+              ))
+              AND (:keyword IS NULL
+                   OR LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR LOWER(si.schoolName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR LOWER(m.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """)
+    Page<UUID> searchDistinctStudentIdsForTeachers(@Param("teacherIds") List<UUID> teacherIds,
+                                                   @Param("courseId") UUID courseId,
+                                                   @Param("keyword") String keyword,
+                                                   Pageable pageable);
+
     boolean existsByTeacherMemberIdInAndStudentMemberIdAndDeletedAtIsNull(List<UUID> teacherIds,
                                                                           UUID studentMemberId);
 }

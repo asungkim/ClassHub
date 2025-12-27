@@ -59,28 +59,35 @@ public class TeacherStudentService {
                                                                    int size) {
         PageRequest pageable = PageRequest.of(page, size);
         String normalizedKeyword = normalizeKeyword(keyword);
-        Page<TeacherStudentAssignment> assignmentPage;
         if (principal.role() == MemberRole.TEACHER) {
-            assignmentPage = teacherStudentAssignmentRepository.searchAssignmentsForTeacherByCourse(
+            Page<TeacherStudentAssignment> assignmentPage = teacherStudentAssignmentRepository.searchAssignmentsForTeacherByCourse(
                     principal.id(),
                     courseId,
                     normalizedKeyword,
                     pageable
             );
+            return toStudentSummaryResponseFromAssignments(assignmentPage, pageable);
         } else if (principal.role() == MemberRole.ASSISTANT) {
             List<UUID> teacherIds = resolveAssistantTeacherIds(principal.id());
             if (teacherIds.isEmpty()) {
                 return PageResponse.from(new PageImpl<>(List.of(), pageable, 0));
             }
-            assignmentPage = teacherStudentAssignmentRepository.searchAssignmentsForTeachersByCourse(
+            Page<UUID> studentIdPage = teacherStudentAssignmentRepository.searchDistinctStudentIdsForTeachers(
                     teacherIds,
                     courseId,
                     normalizedKeyword,
                     pageable
             );
+            return toStudentSummaryResponseFromStudentIds(studentIdPage, pageable);
         } else {
             throw new BusinessException(RsCode.FORBIDDEN);
         }
+    }
+
+    private PageResponse<StudentSummaryResponse> toStudentSummaryResponseFromAssignments(
+            Page<TeacherStudentAssignment> assignmentPage,
+            PageRequest pageable
+    ) {
         if (assignmentPage.isEmpty()) {
             return PageResponse.from(new PageImpl<>(List.of(), pageable, assignmentPage.getTotalElements()));
         }
@@ -91,17 +98,38 @@ public class TeacherStudentService {
         Map<UUID, Member> memberMap = loadMembers(studentIds);
         Map<UUID, StudentInfo> infoMap = loadStudentInfos(studentIds);
         List<StudentSummaryResponse> content = assignmentPage.getContent().stream()
-                .map(assignment -> {
-                    Member member = memberMap.get(assignment.getStudentMemberId());
-                    StudentInfo info = infoMap.get(assignment.getStudentMemberId());
-                    if (member == null || info == null) {
-                        throw new BusinessException(RsCode.INTERNAL_SERVER);
-                    }
-                    return toStudentSummary(member, info);
-                })
+                .map(assignment -> toStudentSummary(memberMap, infoMap, assignment.getStudentMemberId()))
                 .toList();
         Page<StudentSummaryResponse> dtoPage = new PageImpl<>(content, pageable, assignmentPage.getTotalElements());
         return PageResponse.from(dtoPage);
+    }
+
+    private PageResponse<StudentSummaryResponse> toStudentSummaryResponseFromStudentIds(
+            Page<UUID> studentIdPage,
+            PageRequest pageable
+    ) {
+        if (studentIdPage.isEmpty()) {
+            return PageResponse.from(new PageImpl<>(List.of(), pageable, studentIdPage.getTotalElements()));
+        }
+        List<UUID> studentIds = studentIdPage.getContent();
+        Map<UUID, Member> memberMap = loadMembers(studentIds);
+        Map<UUID, StudentInfo> infoMap = loadStudentInfos(studentIds);
+        List<StudentSummaryResponse> content = studentIds.stream()
+                .map(studentId -> toStudentSummary(memberMap, infoMap, studentId))
+                .toList();
+        Page<StudentSummaryResponse> dtoPage = new PageImpl<>(content, pageable, studentIdPage.getTotalElements());
+        return PageResponse.from(dtoPage);
+    }
+
+    private StudentSummaryResponse toStudentSummary(Map<UUID, Member> memberMap,
+                                                    Map<UUID, StudentInfo> infoMap,
+                                                    UUID studentId) {
+        Member member = memberMap.get(studentId);
+        StudentInfo info = infoMap.get(studentId);
+        if (member == null || info == null) {
+            throw new BusinessException(RsCode.INTERNAL_SERVER);
+        }
+        return toStudentSummary(member, info);
     }
 
     public TeacherStudentDetailResponse getTeacherStudentDetail(MemberPrincipal principal, UUID studentId) {

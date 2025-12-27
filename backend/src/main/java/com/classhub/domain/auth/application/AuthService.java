@@ -53,9 +53,15 @@ public class AuthService {
         if (!jwtProvider.isValidToken(refreshToken)) {
             throw new BusinessException(RsCode.UNAUTHENTICATED);
         }
+        if (!jwtProvider.isRefreshToken(refreshToken)) {
+            throw new BusinessException(RsCode.UNAUTHENTICATED);
+        }
 
         Member member = memberRepository.findById(jwtProvider.getUserId(refreshToken))
                 .orElseThrow(() -> new BusinessException(RsCode.UNAUTHENTICATED));
+        if (member.isDeleted()) {
+            throw new BusinessException(RsCode.MEMBER_INACTIVE);
+        }
 
         return issueTokens(member);
     }
@@ -64,6 +70,9 @@ public class AuthService {
     public void logout(LogoutRequest request) {
         String token = request.refreshToken();
         if (token == null || !jwtProvider.isValidToken(token)) {
+            return;
+        }
+        if (!jwtProvider.isRefreshToken(token)) {
             return;
         }
 

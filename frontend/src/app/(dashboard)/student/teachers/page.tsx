@@ -104,7 +104,6 @@ function StudentTeachersContent() {
 
 function TeacherSearchTab({ onRequestSuccess }: TeacherSearchTabProps) {
   const { showToast } = useToast();
-  const [companyId, setCompanyId] = useState("");
   const [branchId, setBranchId] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
   const keyword = useDebounce(keywordInput.trim(), 300);
@@ -115,9 +114,7 @@ function TeacherSearchTab({ onRequestSuccess }: TeacherSearchTabProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
-  const [companyNameMap, setCompanyNameMap] = useState<Record<string, string>>({});
-  const [branchOptionMap, setBranchOptionMap] = useState<Record<string, Record<string, string>>>({});
+  const [branchOptions, setBranchOptions] = useState<Option[]>([]);
 
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherSearchResponse | null>(null);
   const [requestMessage, setRequestMessage] = useState("");
@@ -128,7 +125,6 @@ function TeacherSearchTab({ onRequestSuccess }: TeacherSearchTabProps) {
     setError(null);
     try {
       const result = await fetchTeacherSearch({
-        companyId: companyId || undefined,
         branchId: branchId || undefined,
         keyword: keyword || undefined,
         page,
@@ -136,72 +132,35 @@ function TeacherSearchTab({ onRequestSuccess }: TeacherSearchTabProps) {
       });
       setTeachers(result.items);
       setTotal(result.totalElements);
-      setCompanyOptions((prev) => {
-        const map = new Map(prev.map((opt) => [opt.value, opt.label] as const));
-        result.items.forEach((teacher) => {
-          teacher.branches?.forEach((branch) => {
-            if (branch.companyId) {
-              map.set(branch.companyId, branch.companyName ?? "학원");
-            }
-          });
+
+      // 학원명 + 지점명으로 합쳐진 옵션 생성
+      const branchMap = new Map<string, string>();
+      result.items.forEach((teacher) => {
+        teacher.branches?.forEach((branch) => {
+          if (branch.branchId) {
+            const companyName = branch.companyName ?? "학원";
+            const branchName = branch.branchName ?? "지점";
+            const label = `${companyName} ${branchName}`;
+            branchMap.set(branch.branchId, label);
+          }
         });
-        return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
       });
-      setCompanyNameMap((prev) => {
-        const next = { ...prev };
-        result.items.forEach((teacher) => {
-          teacher.branches?.forEach((branch) => {
-            if (branch.companyId) {
-              next[branch.companyId] = branch.companyName ?? "학원";
-            }
-          });
-        });
-        return next;
-      });
-      setBranchOptionMap((prev) => {
-        const next: Record<string, Record<string, string>> = { ...prev };
-        result.items.forEach((teacher) => {
-          teacher.branches?.forEach((branch) => {
-            if (branch.companyId && branch.branchId) {
-              const existing = next[branch.companyId] ? { ...next[branch.companyId] } : {};
-              existing[branch.branchId] = branch.branchName ?? "지점";
-              next[branch.companyId] = existing;
-            }
-          });
-        });
-        return next;
-      });
+      setBranchOptions(Array.from(branchMap.entries()).map(([value, label]) => ({ value, label })));
     } catch (err) {
       const message = err instanceof Error ? err.message : "선생님 목록을 불러오지 못했습니다.";
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [branchId, companyId, keyword, page]);
+  }, [branchId, keyword, page]);
 
   useEffect(() => {
     void loadTeachers();
   }, [loadTeachers]);
 
-  const branchSelectOptions = useMemo(() => {
-    if (companyId && branchOptionMap[companyId]) {
-      return Object.entries(branchOptionMap[companyId]).map(([value, label]) => ({ value, label }));
-    }
-    const union = new Map<string, string>();
-    Object.entries(branchOptionMap).forEach(([companyKey, branches]) => {
-      const companyLabel = companyNameMap[companyKey];
-      Object.entries(branches).forEach(([value, label]) => {
-        const mergedLabel = companyLabel ? `${companyLabel} ${label}` : label;
-        union.set(value, mergedLabel);
-      });
-    });
-    return Array.from(union.entries()).map(([value, label]) => ({ value, label }));
-  }, [branchOptionMap, companyId, companyNameMap]);
-
   const totalPages = Math.ceil(total / DASHBOARD_PAGE_SIZE);
 
   const resetFilters = () => {
-    setCompanyId("");
     setBranchId("");
     setKeywordInput("");
     setPage(0);
@@ -243,35 +202,17 @@ function TeacherSearchTab({ onRequestSuccess }: TeacherSearchTabProps) {
     <div className="space-y-6">
       <Card title="검색 필터" description="이름과 학원/지점 필터를 조합해 연결할 선생님을 찾으세요.">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
-          <Field label="학원(Company)" className="lg:w-60">
-            <Select
-              value={companyId}
-              onChange={(event) => {
-                setCompanyId(event.target.value);
-                setBranchId("");
-                setPage(0);
-              }}
-              disabled={loading}
-            >
-              <option value="">전체</option>
-              {companyOptions.map((company) => (
-                <option key={company.value} value={company.value}>
-                  {company.label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="지점(Branch)" className="lg:w-60">
+          <Field label="학원/지점" className="lg:w-60">
             <Select
               value={branchId}
               onChange={(event) => {
                 setBranchId(event.target.value);
                 setPage(0);
               }}
-              disabled={loading || branchSelectOptions.length === 0}
+              disabled={loading || branchOptions.length === 0}
             >
               <option value="">전체</option>
-              {branchSelectOptions.map((branch) => (
+              {branchOptions.map((branch) => (
                 <option key={branch.value} value={branch.value}>
                   {branch.label}
                 </option>
@@ -514,9 +455,8 @@ function TeacherRequestsTab() {
                       <dd className="text-slate-500">{formatDate(request.processedAt)}</dd>
                     </div>
                   </dl>
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-                    <span>처리자 {request.processedByMemberId ?? "-"}</span>
-                    {cancellable && (
+                  {cancellable && (
+                    <div className="mt-4 flex justify-end">
                       <Button
                         variant="ghost"
                         className="text-sm"
@@ -525,8 +465,8 @@ function TeacherRequestsTab() {
                       >
                         신청 취소
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </article>
               );
             })}

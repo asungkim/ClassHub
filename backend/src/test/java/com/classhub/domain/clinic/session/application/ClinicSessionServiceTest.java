@@ -126,6 +126,25 @@ class ClinicSessionServiceTest {
     }
 
     @Test
+    void createEmergencySession_shouldThrow_whenTimeOutsideRange() {
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        ClinicSessionEmergencyCreateRequest request = new ClinicSessionEmergencyCreateRequest(
+                branchId,
+                null,
+                LocalDate.of(2024, 3, 5),
+                LocalTime.of(5, 0),
+                LocalTime.of(7, 0),
+                6
+        );
+
+        assertThatThrownBy(() -> clinicSessionService.createEmergencySession(principal, request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.CLINIC_SESSION_TIME_INVALID);
+    }
+
+    @Test
     void cancelSession_shouldMarkCanceled() {
         UUID teacherId = UUID.randomUUID();
         UUID sessionId = UUID.randomUUID();

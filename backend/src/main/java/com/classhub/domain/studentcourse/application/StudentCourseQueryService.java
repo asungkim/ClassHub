@@ -4,9 +4,11 @@ import com.classhub.domain.course.application.CourseViewAssembler;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
-import com.classhub.domain.studentcourse.dto.response.StudentCourseResponse;
-import com.classhub.domain.studentcourse.model.StudentCourseEnrollment;
-import com.classhub.domain.studentcourse.repository.StudentCourseEnrollmentRepository;
+import com.classhub.domain.studentcourse.dto.response.StudentMyCourseResponse;
+import com.classhub.domain.studentcourse.model.StudentCourseAssignment;
+import com.classhub.domain.studentcourse.model.StudentCourseRecord;
+import com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepository;
+import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
@@ -26,46 +28,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class StudentCourseQueryService {
 
-    private final StudentCourseEnrollmentRepository enrollmentRepository;
+    private final StudentCourseAssignmentRepository assignmentRepository;
+    private final StudentCourseRecordRepository recordRepository;
     private final CourseRepository courseRepository;
     private final CourseViewAssembler courseViewAssembler;
 
-    public PageResponse<StudentCourseResponse> getMyCourses(UUID studentId, String keyword, int page, int size) {
-        String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+    public PageResponse<StudentMyCourseResponse> getMyCourses(UUID studentId, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
-        Page<StudentCourseEnrollment> enrollmentPage = enrollmentRepository.searchActiveEnrollments(
-                studentId,
-                normalizedKeyword,
-                pageable
-        );
-        if (enrollmentPage.isEmpty()) {
-            return PageResponse.from(new PageImpl<>(List.of(), pageable, enrollmentPage.getTotalElements()));
+        Page<StudentCourseAssignment> assignmentPage = assignmentRepository
+                .findByStudentMemberIdWithActiveCourse(studentId, pageable);
+        if (assignmentPage.isEmpty()) {
+            return PageResponse.from(new PageImpl<>(List.of(), pageable, assignmentPage.getTotalElements()));
         }
-        Map<UUID, CourseResponse> courseMap = loadCourseResponses(enrollmentPage.getContent());
-        List<StudentCourseResponse> content = enrollmentPage.getContent().stream()
-                .map(enrollment -> {
-                    CourseResponse courseResponse = courseMap.get(enrollment.getCourseId());
-                    if (courseResponse == null) {
-                        throw new BusinessException(RsCode.COURSE_NOT_FOUND);
-                    }
-                    return new StudentCourseResponse(
-                            enrollment.getId(),
-                            enrollment.getEnrolledAt(),
-                            courseResponse
-                    );
-                })
-                .toList();
-        Page<StudentCourseResponse> dtoPage = new PageImpl<>(
-                content,
-                pageable,
-                enrollmentPage.getTotalElements()
-        );
-        return PageResponse.from(dtoPage);
-    }
-
-    private Map<UUID, CourseResponse> loadCourseResponses(List<StudentCourseEnrollment> enrollments) {
-        List<UUID> courseIds = enrollments.stream()
-                .map(StudentCourseEnrollment::getCourseId)
+        List<StudentCourseAssignment> assignments = assignmentPage.getContent();
+        List<UUID> courseIds = assignments.stream()
+                .map(StudentCourseAssignment::getCourseId)
                 .distinct()
                 .toList();
         List<Course> courses = courseRepository.findAllById(courseIds).stream()
@@ -75,10 +52,36 @@ public class StudentCourseQueryService {
             throw new BusinessException(RsCode.COURSE_NOT_FOUND);
         }
         CourseViewAssembler.CourseContext context = courseViewAssembler.buildContext(courses);
-        return courses.stream()
+        Map<UUID, CourseResponse> courseMap = courses.stream()
                 .collect(Collectors.toMap(
                         Course::getId,
                         course -> courseViewAssembler.toCourseResponse(course, context)
                 ));
+        Map<UUID, StudentCourseRecord> recordMap = recordRepository
+                .findByStudentMemberIdAndDeletedAtIsNull(studentId)
+                .stream()
+                .collect(Collectors.toMap(StudentCourseRecord::getCourseId, record -> record, (a, b) -> a));
+        List<StudentMyCourseResponse> content = assignments.stream()
+                .map(assignment -> {
+                    CourseResponse course = courseMap.get(assignment.getCourseId());
+                    if (course == null) {
+                        throw new BusinessException(RsCode.COURSE_NOT_FOUND);
+                    }
+                    StudentCourseRecord record = recordMap.get(assignment.getCourseId());
+                    return new StudentMyCourseResponse(
+                            assignment.getId(),
+                            assignment.getAssignedAt(),
+                            assignment.isActive(),
+                            record == null ? null : record.getId(),
+                            course
+                    );
+                })
+                .toList();
+        Page<StudentMyCourseResponse> dtoPage = new PageImpl<>(
+                content,
+                pageable,
+                assignmentPage.getTotalElements()
+        );
+        return PageResponse.from(dtoPage);
     }
 }

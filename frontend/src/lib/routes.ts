@@ -18,6 +18,16 @@ export function getDashboardRoute(role: Role | string): string {
   return routeMap[role] || "/";
 }
 
+export function getProfileRoute(role: Role | string): string {
+  const routeMap: Record<string, string> = {
+    TEACHER: "/teacher/profile",
+    ASSISTANT: "/assistant/profile",
+    STUDENT: "/student/profile"
+  };
+
+  return routeMap[role] || getDashboardRoute(role);
+}
+
 /**
  * 현재 경로가 역할에 맞는 대시보드 경로인지 확인
  */

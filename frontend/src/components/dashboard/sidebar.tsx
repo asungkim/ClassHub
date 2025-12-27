@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { useState } from "react";
 import { useSession } from "@/components/session/session-provider";
-import { getDashboardRoute } from "@/lib/routes";
+import { getDashboardRoute, getProfileRoute } from "@/lib/routes";
 import type { Role } from "@/lib/routes";
 
 type MenuItem = {
@@ -59,7 +59,6 @@ const menuByRole: Record<Role, MenuItem[]> = {
         { href: "/assistant/clinics/attendance", label: "오늘의 출석부", icon: "🧾" }
       ]
     },
-    { href: "/assistant/worklogs", label: "근무 일지", icon: "📝" },
     {
       label: "진도 관리",
       icon: "📈",
@@ -74,7 +73,6 @@ const menuByRole: Record<Role, MenuItem[]> = {
   STUDENT: [
     { href: "/student", label: "대시보드", icon: "📊" },
     { href: "/student/my-courses", label: "내 수업", icon: "🎓" },
-    { href: "/student/teachers", label: "선생님 관리", icon: "🧑‍🏫" },
     {
       label: "클리닉",
       icon: "🩺",
@@ -82,14 +80,14 @@ const menuByRole: Record<Role, MenuItem[]> = {
         { href: "/student/clinics/schedule", label: "클리닉 시간표", icon: "🧭" },
         { href: "/student/clinics/week", label: "이번 주 클리닉", icon: "🗓️" }
       ]
-    }
+    },
+    { href: "/student/teachers", label: "선생님 관리", icon: "🧑‍🏫" },
   ],
   SUPER_ADMIN: [
     { href: "/admin", label: "대시보드", icon: "📊" },
-    { href: "/admin/courses", label: "반 관리", icon: "📚" },
-    { href: "/admin/student-enrollment-requests", label: "학생 요청 관리", icon: "📝" },
     { href: "/admin/companies", label: "학원 검증", icon: "🏢" },
     { href: "/admin/branches", label: "지점 검증", icon: "🏪" },
+    { href: "/admin/feedback", label: "피드백 관리", icon: "💬" },
   ],
 };
 
@@ -99,7 +97,10 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const role = member?.role as Role | undefined;
   const menu = role ? menuByRole[role] : [];
   const dashboardHref = (role ? getDashboardRoute(role) : "/") as Route;
+  const profileHref = (role ? getProfileRoute(role) : "/") as Route;
   const initials = member?.name?.[0] ?? "게";
+  const roleLabel = roleToLabel(role);
+  const nameWithRole = member?.name ? `${member.name} ${roleLabel}` : roleLabel;
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   return (
@@ -113,22 +114,25 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <Link href={dashboardHref} className="text-sm font-semibold text-slate-900">
             ClassHub
           </Link>
-          <p className="text-xs text-slate-500">{roleToLabel(role)}</p>
         </div>
       </div>
 
       {/* 사용자 카드 */}
-      <div className="mx-5 mt-4 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
+      <Link
+        href={profileHref}
+        onClick={onNavigate}
+        className="mx-5 mt-4 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 transition hover:border-blue-200 hover:bg-blue-50/40"
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg font-semibold text-white shadow">
             {initials}
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-900">{member?.name ?? "게스트"}</p>
+            <p className="text-sm font-semibold text-slate-900">{nameWithRole}</p>
             <p className="text-xs text-slate-500">{member?.email ?? "-"}</p>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* 메뉴 */}
       <nav className="mt-4 flex-1 space-y-1 overflow-y-auto px-4 pb-6">

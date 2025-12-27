@@ -13,9 +13,34 @@ import org.springframework.data.repository.query.Param;
 
 public interface StudentCourseRecordRepository extends JpaRepository<StudentCourseRecord, UUID> {
 
+    interface DefaultClinicSlotCount {
+        UUID getSlotId();
+        long getCount();
+    }
+
     long countByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
 
     List<StudentCourseRecord> findByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
+
+    @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            JOIN Course c ON c.id = scr.courseId
+            WHERE scr.defaultClinicSlotId = :slotId
+              AND scr.deletedAt IS NULL
+              AND c.deletedAt IS NULL
+            """)
+    List<StudentCourseRecord> findActiveByDefaultClinicSlotId(@Param("slotId") UUID slotId);
+
+    @Query("""
+            SELECT scr.defaultClinicSlotId AS slotId,
+                   COUNT(scr) AS count
+            FROM StudentCourseRecord scr
+            WHERE scr.defaultClinicSlotId IN :slotIds
+              AND scr.deletedAt IS NULL
+            GROUP BY scr.defaultClinicSlotId
+            """)
+    List<DefaultClinicSlotCount> countDefaultClinicSlots(@Param("slotIds") List<UUID> slotIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -102,6 +127,9 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
     Optional<StudentCourseRecord> findByStudentMemberIdAndCourseIdAndDeletedAtIsNull(UUID studentMemberId,
                                                                                       UUID courseId);
 
+    Optional<StudentCourseRecord> findByStudentMemberIdAndCourseId(UUID studentMemberId,
+                                                                    UUID courseId);
+
     List<StudentCourseRecord> findByStudentMemberIdAndDeletedAtIsNull(UUID studentMemberId);
 
     @Query("""
@@ -136,4 +164,14 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
     long countActiveByStudentAndTeacherAndBranch(@Param("studentId") UUID studentId,
                                                  @Param("teacherId") UUID teacherId,
                                                  @Param("branchId") UUID branchId);
+
+    @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            WHERE scr.courseId = :courseId
+              AND scr.studentMemberId IN :studentIds
+              AND scr.deletedAt IS NULL
+            """)
+    List<StudentCourseRecord> findActiveByCourseIdAndStudentIds(@Param("courseId") UUID courseId,
+                                                                @Param("studentIds") List<UUID> studentIds);
 }

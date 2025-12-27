@@ -21,7 +21,8 @@ public class StudentCalendarMapper {
 
     public List<CourseProgressEvent> toCourseProgressEvents(List<CourseProgress> progresses,
                                                             Map<UUID, Course> courseMap,
-                                                            Map<UUID, MemberRole> roleMap) {
+                                                            Map<UUID, MemberRole> roleMap,
+                                                            Map<UUID, String> nameMap) {
         return progresses.stream()
                 .map(progress -> new CourseProgressEvent(
                         progress.getId(),
@@ -31,7 +32,9 @@ public class StudentCalendarMapper {
                         progress.getTitle(),
                         progress.getContent(),
                         progress.getWriterId(),
-                        resolveWriterRole(roleMap, progress.getWriterId())
+                        resolveWriterName(nameMap, progress.getWriterId()),
+                        resolveWriterRole(roleMap, progress.getWriterId()),
+                        progress.getCreatedAt()
                 ))
                 .toList();
     }
@@ -39,7 +42,8 @@ public class StudentCalendarMapper {
     public List<PersonalProgressEvent> toPersonalProgressEvents(List<PersonalProgress> progresses,
                                                                 Map<UUID, UUID> recordCourseMap,
                                                                 Map<UUID, Course> courseMap,
-                                                                Map<UUID, MemberRole> roleMap) {
+                                                                Map<UUID, MemberRole> roleMap,
+                                                                Map<UUID, String> nameMap) {
         return progresses.stream()
                 .map(progress -> {
                     UUID courseId = resolveCourseId(recordCourseMap, progress.getStudentCourseRecordId());
@@ -51,14 +55,18 @@ public class StudentCalendarMapper {
                             progress.getDate(),
                             progress.getTitle(),
                             progress.getContent(),
-                            resolveWriterRole(roleMap, progress.getWriterId())
+                            progress.getWriterId(),
+                            resolveWriterName(nameMap, progress.getWriterId()),
+                            resolveWriterRole(roleMap, progress.getWriterId()),
+                            progress.getCreatedAt()
                     );
                 })
                 .toList();
     }
 
     public List<ClinicEvent> toClinicEvents(List<ClinicAttendanceEventProjection> events,
-                                            Map<UUID, MemberRole> roleMap) {
+                                            Map<UUID, MemberRole> roleMap,
+                                            Map<UUID, String> nameMap) {
         return events.stream()
                 .map(event -> new ClinicEvent(
                         event.getClinicSessionId(),
@@ -69,23 +77,28 @@ public class StudentCalendarMapper {
                         event.getStartTime(),
                         event.getEndTime(),
                         event.isCanceled(),
-                        buildRecordSummary(event, roleMap)
+                        buildRecordSummary(event, roleMap, nameMap)
                 ))
                 .toList();
     }
 
     private ClinicRecordSummary buildRecordSummary(ClinicAttendanceEventProjection event,
-                                                   Map<UUID, MemberRole> roleMap) {
+                                                   Map<UUID, MemberRole> roleMap,
+                                                   Map<UUID, String> nameMap) {
         if (event.getRecordId() == null) {
             return null;
         }
         MemberRole writerRole = resolveWriterRole(roleMap, event.getRecordWriterId());
+        String writerName = resolveWriterName(nameMap, event.getRecordWriterId());
         return new ClinicRecordSummary(
                 event.getRecordId(),
                 event.getRecordTitle(),
                 event.getRecordContent(),
                 event.getRecordHomeworkProgress(),
-                writerRole
+                event.getRecordWriterId(),
+                writerName,
+                writerRole,
+                event.getRecordCreatedAt()
         );
     }
 
@@ -111,5 +124,13 @@ public class StudentCalendarMapper {
             throw new BusinessException(RsCode.INTERNAL_SERVER);
         }
         return role;
+    }
+
+    private String resolveWriterName(Map<UUID, String> nameMap, UUID writerId) {
+        String name = nameMap.get(writerId);
+        if (name == null) {
+            throw new BusinessException(RsCode.INTERNAL_SERVER);
+        }
+        return name;
     }
 }

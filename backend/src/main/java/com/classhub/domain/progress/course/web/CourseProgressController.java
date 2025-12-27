@@ -37,7 +37,7 @@ public class CourseProgressController {
     private final CourseProgressService courseProgressService;
 
     @PostMapping("/courses/{courseId}/course-progress")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "반 공통 진도 생성")
     public RsData<CourseProgressResponse> createCourseProgress(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -49,7 +49,7 @@ public class CourseProgressController {
     }
 
     @PostMapping("/courses/{courseId}/course-progress/compose")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "공통 진도 + 개인 진도 배치 생성")
     public RsData<CourseProgressResponse> composeCourseProgress(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -82,7 +82,7 @@ public class CourseProgressController {
     }
 
     @PatchMapping("/course-progress/{progressId}")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "반 공통 진도 수정")
     public RsData<CourseProgressResponse> updateCourseProgress(
             @AuthenticationPrincipal MemberPrincipal principal,
@@ -94,7 +94,7 @@ public class CourseProgressController {
     }
 
     @DeleteMapping("/course-progress/{progressId}")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ASSISTANT')")
     @Operation(summary = "반 공통 진도 삭제")
     public RsData<Void> deleteCourseProgress(
             @AuthenticationPrincipal MemberPrincipal principal,

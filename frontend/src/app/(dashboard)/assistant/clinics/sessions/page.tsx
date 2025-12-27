@@ -17,6 +17,7 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/text-field";
 import { TimeSelect } from "@/components/ui/time-select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
@@ -398,6 +399,8 @@ export default function AssistantClinicSessionsPage() {
                 renderItem={({ item, style }) => {
                   const isCanceled = Boolean(item.isCanceled);
                   const isEmergency = item.sessionType === "EMERGENCY";
+                  const attendanceCount = item.attendanceCount ?? 0;
+                  const capacity = item.capacity ?? 0;
                   return (
                     <div
                       className={clsx(
@@ -411,12 +414,12 @@ export default function AssistantClinicSessionsPage() {
                       style={style}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">
-                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-xs font-semibold leading-tight break-words">
+                            {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
                           </p>
-                          <p className="text-[11px]">
-                            {isEmergency ? "긴급" : "정규"} · 정원 {item.capacity ?? "-"}
+                          <p className="text-[10px]">
+                            {isEmergency ? "긴급" : "정규"} · 참석 {attendanceCount}/{capacity}
                           </p>
                         </div>
                         {!isCanceled && (
@@ -440,11 +443,10 @@ export default function AssistantClinicSessionsPage() {
 
       <Modal open={isEmergencyOpen} onClose={closeEmergencyModal} title="긴급 세션 생성" size="sm">
         <div className="space-y-4">
-          <TextField
+          <DatePicker
             label="날짜"
-            type="date"
             value={emergencyForm.date}
-            onChange={(event) => setEmergencyForm((prev) => ({ ...prev, date: event.target.value }))}
+            onChange={(date) => setEmergencyForm((prev) => ({ ...prev, date }))}
           />
           <TimeSelect
             label="시작 시간"

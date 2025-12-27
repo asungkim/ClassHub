@@ -8,27 +8,22 @@ import type {
   CourseCreateRequest,
   CourseResponse,
   CourseScheduleRequest,
+  CourseStudentResponse,
   CourseStatusFilter,
   CourseStatusUpdateRequest,
   CourseUpdateRequest,
   CourseWithTeacherResponse,
-  EnrollmentStatus,
   AssistantAssignmentResponse,
   AssistantAssignmentPage,
-  PublicCourseResponse,
   TeacherSearchResponse,
   ClinicSlotResponse,
   StudentCourseAssignmentCreateRequest,
   StudentCourseDetailResponse,
   StudentCourseAssignmentResponse,
-  StudentCourseListItemResponse,
   StudentCourseRecordUpdateRequest,
-  StudentCourseResponse,
-  StudentCourseStatusFilter,
+  StudentMyCourseResponse,
   StudentSummaryResponse,
   TeacherStudentDetailResponse,
-  StudentEnrollmentRequestCreateRequest,
-  StudentEnrollmentRequestResponse,
   StudentTeacherRequestCreateRequest,
   StudentTeacherRequestResponse,
   StudentTeacherRequestStatus,
@@ -36,8 +31,10 @@ import type {
   TeacherBranchAssignment,
   TeacherBranchAssignmentCreateRequest,
   TeacherBranchAssignmentStatusUpdateRequest,
-  TeacherEnrollmentRequestResponse,
-  VerificationFilter
+  VerificationFilter,
+  FeedbackCreateRequest,
+  FeedbackResponse,
+  FeedbackFilter
 } from "@/types/dashboard";
 
 type ListResult<T> = {
@@ -214,6 +211,74 @@ export async function fetchAdminBranches(params: {
   };
 }
 
+export async function createFeedback(body: FeedbackCreateRequest): Promise<FeedbackResponse> {
+  const response = await api.POST("/api/v1/feedback", { body });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백을 등록하지 못했습니다."));
+  }
+  return response.data.data as FeedbackResponse;
+}
+
+export async function fetchMyFeedbacks(params: {
+  status?: FeedbackFilter;
+  page: number;
+  size?: number;
+}): Promise<ListResult<FeedbackResponse>> {
+  const { status, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/feedback/me", {
+    params: {
+      query: {
+        status: status === "ALL" ? undefined : status,
+        page,
+        size
+      }
+    }
+  });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백 목록을 불러오지 못했습니다."));
+  }
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as FeedbackResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchAdminFeedbacks(params: {
+  status: FeedbackFilter;
+  page: number;
+  size?: number;
+}): Promise<ListResult<FeedbackResponse>> {
+  const { status, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/feedback", {
+    params: {
+      query: {
+        status: status === "ALL" ? undefined : status,
+        page,
+        size
+      }
+    }
+  });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백 목록을 불러오지 못했습니다."));
+  }
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as FeedbackResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function resolveFeedback(feedbackId: string): Promise<FeedbackResponse> {
+  const response = await api.PATCH("/api/v1/feedback/{feedbackId}/resolve", {
+    params: { path: { feedbackId } }
+  });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백 상태를 변경하지 못했습니다."));
+  }
+  return response.data.data as FeedbackResponse;
+}
+
 export async function updateAdminBranchStatus(branchId: string, payload: BranchVerifiedStatusRequest) {
   const response = await api.PATCH("/api/v1/branches/{branchId}/verified-status", {
     params: { path: { branchId } },
@@ -260,94 +325,6 @@ export async function fetchAdminCourses(params: {
   };
 }
 
-export async function fetchAdminEnrollmentRequests(params: {
-  teacherId?: string;
-  courseId?: string;
-  statuses?: EnrollmentStatus[];
-  studentName?: string;
-  page: number;
-  size?: number;
-}): Promise<ListResult<TeacherEnrollmentRequestResponse>> {
-  const { teacherId, courseId, statuses, studentName, page, size = DASHBOARD_PAGE_SIZE } = params;
-  const response = await api.GET("/api/v1/admin/student-enrollment-requests", {
-    params: {
-      query: {
-        teacherId: teacherId && teacherId.trim().length > 0 ? teacherId.trim() : undefined,
-        courseId: courseId && courseId.trim().length > 0 ? courseId.trim() : undefined,
-        status: statuses && statuses.length > 0 ? statuses : undefined,
-        studentName: studentName && studentName.trim().length > 0 ? studentName.trim() : undefined,
-        page,
-        size
-      }
-    }
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "학생 신청 목록을 불러오지 못했습니다."));
-  }
-
-  const pageData = response.data.data;
-  return {
-    items: (pageData?.content ?? []) as TeacherEnrollmentRequestResponse[],
-    totalElements: pageData?.totalElements ?? 0
-  };
-}
-
-export async function fetchTeacherEnrollmentRequests(params: {
-  courseId?: string;
-  statuses?: EnrollmentStatus[];
-  studentName?: string;
-  page: number;
-  size?: number;
-}): Promise<ListResult<TeacherEnrollmentRequestResponse>> {
-  const { courseId, statuses, studentName, page, size = DASHBOARD_PAGE_SIZE } = params;
-  const response = await api.GET("/api/v1/student-enrollment-requests", {
-    params: {
-      query: {
-        courseId: courseId && courseId.trim().length > 0 ? courseId.trim() : undefined,
-        status: statuses && statuses.length > 0 ? statuses : undefined,
-        studentName: studentName && studentName.trim().length > 0 ? studentName.trim() : undefined,
-        page,
-        size
-      }
-    }
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "학생 신청 목록을 불러오지 못했습니다."));
-  }
-
-  const pageData = response.data.data;
-  return {
-    items: (pageData?.content ?? []) as TeacherEnrollmentRequestResponse[],
-    totalElements: pageData?.totalElements ?? 0
-  };
-}
-
-export async function approveEnrollmentRequest(requestId: string) {
-  const response = await api.PATCH("/api/v1/student-enrollment-requests/{requestId}/approve", {
-    params: { path: { requestId } }
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "학생 신청을 승인하지 못했습니다."));
-  }
-
-  return response.data.data as TeacherEnrollmentRequestResponse;
-}
-
-export async function rejectEnrollmentRequest(requestId: string) {
-  const response = await api.PATCH("/api/v1/student-enrollment-requests/{requestId}/reject", {
-    params: { path: { requestId } }
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "학생 신청을 거절하지 못했습니다."));
-  }
-
-  return response.data.data as TeacherEnrollmentRequestResponse;
-}
-
 export async function deleteAdminCourse(courseId: string) {
   const response = (await api.DELETE("/api/v1/admin/courses/{courseId}", {
     params: { path: { courseId } }
@@ -385,50 +362,6 @@ export async function fetchAssistantCourses(params: {
   const pageData = response.data.data;
   return {
     items: (pageData?.content ?? []) as CourseWithTeacherResponse[],
-    totalElements: pageData?.totalElements ?? 0
-  };
-}
-
-export async function fetchPublicCourses(params: {
-  companyId?: string;
-  branchId?: string;
-  teacherId?: string;
-  keyword?: string;
-  onlyVerified?: boolean;
-  page: number;
-  size?: number;
-}): Promise<ListResult<PublicCourseResponse>> {
-  const {
-    companyId,
-    branchId,
-    teacherId,
-    keyword,
-    onlyVerified = true,
-    page,
-    size = DASHBOARD_PAGE_SIZE
-  } = params;
-
-  const response = await api.GET("/api/v1/courses/public", {
-    params: {
-      query: {
-        companyId: companyId || undefined,
-        branchId: branchId || undefined,
-        teacherId: teacherId || undefined,
-        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
-        onlyVerified,
-        page,
-        size
-      }
-    }
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "공개 반을 검색하지 못했습니다."));
-  }
-
-  const pageData = response.data.data;
-  return {
-    items: (pageData?.content ?? []) as PublicCourseResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
 }
@@ -566,23 +499,16 @@ export async function fetchClinicSlots(params: {
   return (response.data.data ?? []) as ClinicSlotResponse[];
 }
 
-export async function fetchStudentCourseRecords(params: {
-  courseId?: string;
-  status: StudentCourseStatusFilter;
-  keyword?: string;
+export async function fetchCourseStudents(params: {
+  courseId: string;
   page: number;
   size?: number;
-}): Promise<ListResult<StudentCourseListItemResponse>> {
-  const { courseId, status, keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
-  const response = await api.GET("/api/v1/student-courses", {
+}): Promise<ListResult<CourseStudentResponse>> {
+  const { courseId, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/courses/{courseId}/students", {
     params: {
-      query: {
-        courseId: courseId && courseId.trim().length > 0 ? courseId.trim() : undefined,
-        status,
-        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
-        page,
-        size
-      }
+      path: { courseId },
+      query: { page, size }
     }
   });
 
@@ -592,7 +518,7 @@ export async function fetchStudentCourseRecords(params: {
 
   const pageData = response.data.data;
   return {
-    items: (pageData?.content ?? []) as StudentCourseListItemResponse[],
+    items: (pageData?.content ?? []) as CourseStudentResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
 }
@@ -698,15 +624,13 @@ export async function deactivateStudentCourseAssignment(assignmentId: string) {
 }
 
 export async function fetchStudentMyCourses(params: {
-  keyword?: string;
   page: number;
   size?: number;
-}): Promise<ListResult<StudentCourseResponse>> {
-  const { keyword, page, size = DASHBOARD_PAGE_SIZE } = params;
+}): Promise<ListResult<StudentMyCourseResponse>> {
+  const { page, size = DASHBOARD_PAGE_SIZE } = params;
   const response = await api.GET("/api/v1/students/me/courses", {
     params: {
       query: {
-        keyword: keyword && keyword.trim().length > 0 ? keyword.trim() : undefined,
         page,
         size
       }
@@ -719,7 +643,7 @@ export async function fetchStudentMyCourses(params: {
 
   const pageData = response.data.data;
   return {
-    items: (pageData?.content ?? []) as StudentCourseResponse[],
+    items: (pageData?.content ?? []) as StudentMyCourseResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
 }
@@ -830,57 +754,6 @@ export async function rejectTeacherStudentRequest(requestId: string) {
   }
 
   return response.data.data as StudentTeacherRequestResponse;
-}
-
-export async function fetchMyEnrollmentRequests(params: {
-  statuses?: EnrollmentStatus[];
-  page: number;
-  size?: number;
-}): Promise<ListResult<StudentEnrollmentRequestResponse>> {
-  const { statuses, page, size = DASHBOARD_PAGE_SIZE } = params;
-  const response = await api.GET("/api/v1/student-enrollment-requests/me", {
-    params: {
-      query: {
-        status: statuses && statuses.length > 0 ? statuses : undefined,
-        page,
-        size
-      }
-    }
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "신청 내역을 불러오지 못했습니다."));
-  }
-
-  const pageData = response.data.data;
-  return {
-    items: (pageData?.content ?? []) as StudentEnrollmentRequestResponse[],
-    totalElements: pageData?.totalElements ?? 0
-  };
-}
-
-export async function createStudentEnrollmentRequest(body: StudentEnrollmentRequestCreateRequest) {
-  const response = await api.POST("/api/v1/student-enrollment-requests", {
-    body
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "수업 등록 요청을 생성하지 못했습니다."));
-  }
-
-  return response.data.data as StudentEnrollmentRequestResponse;
-}
-
-export async function cancelStudentEnrollmentRequest(requestId: string) {
-  const response = await api.PATCH("/api/v1/student-enrollment-requests/{requestId}/cancel", {
-    params: { path: { requestId } }
-  });
-
-  if (response.error || !response.data?.data) {
-    throw new Error(getApiErrorMessage(response.error, "신청을 취소하지 못했습니다."));
-  }
-
-  return response.data.data as StudentEnrollmentRequestResponse;
 }
 
 export async function fetchCourseCalendar(params: { startDate: string; endDate: string }) {

@@ -2,16 +2,28 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/toast";
+import { useSession } from "@/components/session/session-provider";
 import { ErrorState } from "@/components/ui/error-state";
 import { StudentCalendarHeader } from "@/components/dashboard/calendar/student-calendar-header";
 import { StudentInfoCard } from "@/components/dashboard/calendar/student-info-card";
 import { MonthlyCalendarGrid } from "@/components/dashboard/calendar/monthly-calendar-grid";
 import { CalendarDayDetailModal } from "@/components/dashboard/calendar/calendar-day-detail-modal";
 import { ProgressEditModal } from "@/components/dashboard/progress/progress-edit-modal";
-import { fetchStudentCourseRecords } from "@/lib/dashboard-api";
-import { deleteCourseProgress, deletePersonalProgress, fetchStudentCalendar } from "@/lib/progress-api";
+import { Button } from "@/components/ui/button";
+import { InlineError } from "@/components/ui/inline-error";
+import { Modal } from "@/components/ui/modal";
+import { TextField } from "@/components/ui/text-field";
+import { fetchTeacherStudents } from "@/lib/dashboard-api";
+import {
+  deleteClinicRecord,
+  deleteCourseProgress,
+  deletePersonalProgress,
+  fetchStudentCalendar,
+  updateClinicRecord
+} from "@/lib/progress-api";
 import { formatDateYmdKst } from "@/utils/date";
-import type { StudentCourseListItemResponse } from "@/types/dashboard";
+import { formatStudentGrade } from "@/utils/student";
+import type { StudentSummaryResponse } from "@/types/dashboard";
 import type {
   ClinicEvent,
   CourseProgressEvent,
@@ -26,7 +38,7 @@ type StudentSearchOption = {
   name: string;
   phoneNumber?: string;
   parentPhoneNumber?: string;
-  courses: string[];
+  schoolLabel?: string;
 };
 
 type DayEvents = {
@@ -55,6 +67,16 @@ type EditTarget = {
   initialContent?: string;
 };
 
+type ClinicEditFormState = {
+  title: string;
+  content: string;
+  homeworkProgress: string;
+};
+
+type ClinicEditTarget = {
+  recordId: string;
+};
+
 type StudentCalendarPageProps = {
   role: CalendarRole;
 };
@@ -63,7 +85,9 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   const { showToast } = useToast();
-  const canEdit = role === "TEACHER";
+  const { member } = useSession();
+  const memberId = member?.memberId ?? null;
+  const isTeacher = member?.role === "TEACHER" || role === "TEACHER";
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<StudentSearchOption[]>([]);
@@ -75,6 +99,14 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [clinicEditTarget, setClinicEditTarget] = useState<ClinicEditTarget | null>(null);
+  const [clinicEditForm, setClinicEditForm] = useState<ClinicEditFormState>({
+    title: "",
+    content: "",
+    homeworkProgress: ""
+  });
+  const [clinicEditError, setClinicEditError] = useState<string | null>(null);
+  const [clinicEditLoading, setClinicEditLoading] = useState(false);
 
   const monthLabel = formatMonthLabel(currentMonth);
   const canMovePrev = canMoveMonth(currentMonth, -1);
@@ -116,20 +148,24 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   }, [currentMonth, selectedStudent]);
 
   useEffect(() => {
-    if (!searchValue.trim()) {
+    const trimmed = searchValue.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      return;
+    }
+    if (selectedStudent && trimmed === selectedStudent.name) {
       setSearchResults([]);
       return;
     }
     const timer = setTimeout(async () => {
       try {
         setSearchLoading(true);
-        const response = await fetchStudentCourseRecords({
-          status: "ACTIVE",
-          keyword: searchValue.trim(),
+        const response = await fetchTeacherStudents({
+          keyword: trimmed,
           page: 0,
           size: 30
         });
-        setSearchResults(groupStudentOptions(response.items));
+        setSearchResults(toStudentOptions(response.items));
       } catch (error) {
         const message = error instanceof Error ? error.message : "학생 검색에 실패했습니다.";
         showToast("error", message);
@@ -139,7 +175,7 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [searchValue, showToast]);
+  }, [searchValue, selectedStudent, showToast]);
 
   const handleStudentSelect = (option: StudentSearchOption) => {
     setSelectedStudent(option);
@@ -155,12 +191,51 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     setCurrentMonth((prev) => startOfMonth(addMonths(prev, offset)));
   };
 
-  const handleDeleteCourseProgress = async (id: string) => {
-    if (!canEdit) {
+  const canEditCourse = useCallback(
+    (event: CourseProgressEvent) => {
+      if (isTeacher) {
+        return true;
+      }
+      if (!memberId) {
+        return false;
+      }
+      return event.writerId === memberId;
+    },
+    [isTeacher, memberId]
+  );
+
+  const canEditPersonal = useCallback(
+    (event: PersonalProgressEvent) => {
+      if (isTeacher) {
+        return true;
+      }
+      if (!memberId) {
+        return false;
+      }
+      return event.writerId === memberId;
+    },
+    [isTeacher, memberId]
+  );
+
+  const canEditClinic = useCallback(
+    (event: ClinicEvent) => {
+      if (isTeacher) {
+        return true;
+      }
+      if (!memberId) {
+        return false;
+      }
+      return event.recordSummary?.writerId === memberId;
+    },
+    [isTeacher, memberId]
+  );
+
+  const handleDeleteCourseProgress = async (event: CourseProgressEvent) => {
+    if (!event.id || !canEditCourse(event)) {
       return;
     }
     try {
-      await deleteCourseProgress(id);
+      await deleteCourseProgress(event.id);
       showToast("success", "진도 기록을 삭제했습니다.");
       await loadCalendar();
     } catch (error) {
@@ -169,17 +244,60 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     }
   };
 
-  const handleDeletePersonalProgress = async (id: string) => {
-    if (!canEdit) {
+  const handleDeletePersonalProgress = async (event: PersonalProgressEvent) => {
+    if (!event.id || !canEditPersonal(event)) {
       return;
     }
     try {
-      await deletePersonalProgress(id);
+      await deletePersonalProgress(event.id);
       showToast("success", "진도 기록을 삭제했습니다.");
       await loadCalendar();
     } catch (error) {
       const message = error instanceof Error ? error.message : "진도를 삭제하지 못했습니다.";
       showToast("error", message);
+    }
+  };
+
+  const handleDeleteClinicRecord = async (event: ClinicEvent) => {
+    const recordId = event.recordSummary?.id;
+    if (!recordId || !canEditClinic(event)) {
+      return;
+    }
+    try {
+      await deleteClinicRecord(recordId);
+      showToast("success", "클리닉 기록을 삭제했습니다.");
+      await loadCalendar();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "클리닉 기록을 삭제하지 못했습니다.";
+      showToast("error", message);
+    }
+  };
+
+  const handleSaveClinicRecord = async () => {
+    if (!clinicEditTarget) {
+      return;
+    }
+    if (!clinicEditForm.title.trim() || !clinicEditForm.content.trim()) {
+      setClinicEditError("제목과 내용을 입력해주세요.");
+      return;
+    }
+    setClinicEditLoading(true);
+    setClinicEditError(null);
+    try {
+      await updateClinicRecord(clinicEditTarget.recordId, {
+        title: clinicEditForm.title,
+        content: clinicEditForm.content,
+        homeworkProgress: clinicEditForm.homeworkProgress || undefined
+      });
+      showToast("success", "클리닉 기록을 수정했습니다.");
+      setClinicEditTarget(null);
+      await loadCalendar();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "클리닉 기록을 수정하지 못했습니다.";
+      setClinicEditError(message);
+      showToast("error", message);
+    } finally {
+      setClinicEditLoading(false);
     }
   };
 
@@ -225,9 +343,14 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
         open={Boolean(selectedDateKey)}
         dateKey={selectedDateKey}
         events={selectedDayEvents}
-        canEdit={canEdit}
         onClose={() => setSelectedDateKey(null)}
+        canEditCourse={canEditCourse}
+        canEditPersonal={canEditPersonal}
+        canEditClinic={canEditClinic}
         onEditCourse={(event) => {
+          if (!canEditCourse(event)) {
+            return;
+          }
           if (!event.id || !event.courseId) {
             return;
           }
@@ -240,6 +363,9 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
           });
         }}
         onEditPersonal={(event) => {
+          if (!canEditPersonal(event)) {
+            return;
+          }
           if (!event.id || !event.courseId || !event.studentCourseRecordId) {
             return;
           }
@@ -252,8 +378,25 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
             initialContent: event.content ?? ""
           });
         }}
-        onDeleteCourse={(event) => event.id && void handleDeleteCourseProgress(event.id)}
-        onDeletePersonal={(event) => event.id && void handleDeletePersonalProgress(event.id)}
+        onEditClinic={(event) => {
+          if (!canEditClinic(event)) {
+            return;
+          }
+          const recordSummary = event.recordSummary;
+          if (!recordSummary?.id) {
+            return;
+          }
+          setClinicEditTarget({ recordId: recordSummary.id });
+          setClinicEditForm({
+            title: recordSummary.title ?? "",
+            content: recordSummary.content ?? "",
+            homeworkProgress: recordSummary.homeworkProgress ?? ""
+          });
+          setClinicEditError(null);
+        }}
+        onDeleteCourse={(event) => void handleDeleteCourseProgress(event)}
+        onDeletePersonal={(event) => void handleDeletePersonalProgress(event)}
+        onDeleteClinic={(event) => void handleDeleteClinicRecord(event)}
       />
 
       <ProgressEditModal
@@ -266,6 +409,47 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
         }}
       />
 
+      <Modal
+        open={Boolean(clinicEditTarget)}
+        onClose={() => {
+          if (!clinicEditLoading) {
+            setClinicEditTarget(null);
+          }
+        }}
+        title="클리닉 기록 수정"
+        size="md"
+      >
+        <div className="space-y-4">
+          <TextField
+            label="제목"
+            value={clinicEditForm.title}
+            onChange={(event) => setClinicEditForm((prev) => ({ ...prev, title: event.target.value }))}
+          />
+          <label className="flex flex-col gap-2 text-sm text-slate-700">
+            내용
+            <textarea
+              value={clinicEditForm.content}
+              onChange={(event) => setClinicEditForm((prev) => ({ ...prev, content: event.target.value }))}
+              className="min-h-[140px] rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            />
+          </label>
+          <TextField
+            label="과제 진행"
+            value={clinicEditForm.homeworkProgress}
+            onChange={(event) => setClinicEditForm((prev) => ({ ...prev, homeworkProgress: event.target.value }))}
+          />
+          {clinicEditError && <InlineError message={clinicEditError} />}
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setClinicEditTarget(null)} disabled={clinicEditLoading}>
+              취소
+            </Button>
+            <Button onClick={() => void handleSaveClinicRecord()} disabled={clinicEditLoading}>
+              {clinicEditLoading ? "저장 중..." : "저장"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {calendarLoading ? (
         <ErrorState title="캘린더를 불러오는 중" description="잠시만 기다려 주세요." />
       ) : null}
@@ -273,30 +457,36 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   );
 }
 
-function groupStudentOptions(records: StudentCourseListItemResponse[]): StudentSearchOption[] {
-  const map = new Map<string, StudentSearchOption>();
-  records.forEach((record) => {
-    if (!record.studentMemberId) {
-      return;
-    }
-    const existing = map.get(record.studentMemberId);
-    const courseName = record.courseName ?? "반";
-    if (existing) {
-      if (!existing.courses.includes(courseName)) {
-        existing.courses.push(courseName);
+function toStudentOptions(students: StudentSummaryResponse[]): StudentSearchOption[] {
+  const seen = new Set<string>();
+  return students
+    .filter((student) => Boolean(student.memberId))
+    .map((student) => ({
+      studentId: student.memberId ?? "",
+      name: student.name ?? "학생",
+      phoneNumber: student.phoneNumber ?? undefined,
+      parentPhoneNumber: student.parentPhone ?? undefined,
+      schoolLabel: formatStudentSummary(student)
+    }))
+    .filter((option) => {
+      if (!option.studentId) {
+        return true;
       }
-      return;
-    }
-    map.set(record.studentMemberId, {
-      studentId: record.studentMemberId,
-      name: record.studentName ?? "학생",
-      phoneNumber: record.phoneNumber ?? undefined,
-      parentPhoneNumber: record.parentPhoneNumber ?? undefined,
-      courses: [courseName]
+      if (seen.has(option.studentId)) {
+        return false;
+      }
+      seen.add(option.studentId);
+      return true;
     });
-  });
+}
 
-  return Array.from(map.values());
+function formatStudentSummary(student: StudentSummaryResponse) {
+  const schoolName = student.schoolName ?? "학교 정보 없음";
+  const gradeLabel = formatStudentGrade(student.grade);
+  if (!gradeLabel) {
+    return schoolName;
+  }
+  return `${schoolName}(${gradeLabel})`;
 }
 
 function buildEventsByDate(calendarData: StudentCalendarResponse | null): Map<string, DayEvents> {
@@ -318,6 +508,7 @@ function buildEventsByDate(calendarData: StudentCalendarResponse | null): Map<st
   });
   calendarData.clinicEvents?.forEach((event) => {
     if (!event.date) return;
+    if (!event.recordSummary) return;
     const bucket = map.get(event.date) ?? emptyDayEvents();
     bucket.clinic.push(event);
     map.set(event.date, bucket);

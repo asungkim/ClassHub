@@ -489,6 +489,8 @@ enum SessionType {
 - memberId (UUID, FK → Member, not null)
 - content (Text, not null)
 - status (FeedbackStatus, not null, default: SUBMITTED) // SUBMITTED, RESOLVED
+- resolvedAt (LocalDateTime, nullable)
+- resolvedByMemberId (UUID, FK → Member, nullable)
 
 **ENUM:**
 
@@ -508,6 +510,7 @@ enum FeedbackStatus {
 
 - 로그인한 사용자만 작성 가능
 - 관리자가 피드백 확인 후 RESOLVED 처리
+- RESOLVED 처리 시 resolvedAt/resolvedByMemberId 기록
 - 실제 DELETE 허용 (관리자가 삭제 가능)
 
 ---

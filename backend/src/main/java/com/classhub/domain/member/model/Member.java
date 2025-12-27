@@ -41,6 +41,12 @@ public class Member extends BaseEntity {
         this.password = encodedPassword;
     }
 
+    public void changeEmail(String email) {
+        if (email != null) {
+            this.email = email;
+        }
+    }
+
     public void changeName(String name) {
         if (name != null) {
             this.name = name;

@@ -117,12 +117,41 @@ class AuthServiceTest {
     }
 
     @Test
+    void refresh_shouldThrow_whenTokenIsNotRefreshToken() {
+        String refreshToken = "refresh-token";
+        given(refreshTokenStore.isBlacklisted(refreshToken)).willReturn(false);
+        given(jwtProvider.isValidToken(refreshToken)).willReturn(true);
+        given(jwtProvider.isRefreshToken(refreshToken)).willReturn(false);
+
+        assertThatThrownBy(() -> authService.refresh(refreshToken))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.UNAUTHENTICATED);
+        verify(memberRepository, never()).findById(any());
+    }
+
+    @Test
+    void refresh_shouldThrow_whenMemberIsDeleted() {
+        String refreshToken = "refresh-token";
+        teacher.deactivate();
+        given(refreshTokenStore.isBlacklisted(refreshToken)).willReturn(false);
+        given(jwtProvider.isValidToken(refreshToken)).willReturn(true);
+        given(jwtProvider.isRefreshToken(refreshToken)).willReturn(true);
+        given(jwtProvider.getUserId(refreshToken)).willReturn(teacherId);
+        given(memberRepository.findById(teacherId)).willReturn(Optional.of(teacher));
+
+        assertThatThrownBy(() -> authService.refresh(refreshToken))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.MEMBER_INACTIVE);
+    }
+
+    @Test
     void logout_shouldBlacklistToken_whenSingleDeviceLogout() {
         String refreshToken = "refresh-token";
         LogoutRequest request = new LogoutRequest(refreshToken, false);
         LocalDateTime expiration = LocalDateTime.now().plusDays(7);
 
         given(jwtProvider.isValidToken(refreshToken)).willReturn(true);
+        given(jwtProvider.isRefreshToken(refreshToken)).willReturn(true);
         given(refreshTokenStore.isBlacklisted(refreshToken)).willReturn(false);
         given(jwtProvider.getExpiration(refreshToken)).willReturn(expiration);
 
@@ -139,6 +168,7 @@ class AuthServiceTest {
         UUID memberId = UUID.randomUUID();
 
         given(jwtProvider.isValidToken(refreshToken)).willReturn(true);
+        given(jwtProvider.isRefreshToken(refreshToken)).willReturn(true);
         given(jwtProvider.getUserId(refreshToken)).willReturn(memberId);
 
         authService.logout(request);

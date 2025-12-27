@@ -216,6 +216,40 @@ class ClinicRecordServiceTest {
     }
 
     @Test
+    void updateRecord_shouldThrow_whenAssistantNotWriter() {
+        UUID teacherId = UUID.randomUUID();
+        UUID assistantId = UUID.randomUUID();
+        UUID attendanceId = UUID.randomUUID();
+        UUID recordId = UUID.randomUUID();
+        UUID studentCourseRecordId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        MemberPrincipal principal = new MemberPrincipal(assistantId, MemberRole.ASSISTANT);
+        ClinicRecord record = ClinicRecord.builder()
+                .clinicAttendanceId(attendanceId)
+                .writerId(teacherId)
+                .title("old")
+                .content("old")
+                .homeworkProgress("old")
+                .build();
+        ReflectionTestUtils.setField(record, "id", recordId);
+        ClinicAttendance attendance = createAttendance(attendanceId, studentCourseRecordId);
+        StudentCourseRecord studentCourseRecord =
+                createStudentCourseRecord(studentCourseRecordId, UUID.randomUUID(), courseId);
+        Course course = createCourse(courseId, teacherId);
+        ClinicRecordUpdateRequest request = new ClinicRecordUpdateRequest("new", "updated", "done");
+
+        given(clinicRecordRepository.findById(recordId)).willReturn(Optional.of(record));
+        given(clinicAttendanceRepository.findById(attendanceId)).willReturn(Optional.of(attendance));
+        given(studentCourseRecordRepository.findById(studentCourseRecordId))
+                .willReturn(Optional.of(studentCourseRecord));
+        given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> clinicRecordService.updateRecord(principal, recordId, request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
+    }
+
+    @Test
     void deleteRecord_shouldDelete_whenTeacherAuthorized() {
         UUID teacherId = UUID.randomUUID();
         UUID attendanceId = UUID.randomUUID();
@@ -245,6 +279,39 @@ class ClinicRecordServiceTest {
         clinicRecordService.deleteRecord(principal, recordId);
 
         verify(clinicRecordRepository).delete(record);
+    }
+
+    @Test
+    void deleteRecord_shouldThrow_whenAssistantNotWriter() {
+        UUID teacherId = UUID.randomUUID();
+        UUID assistantId = UUID.randomUUID();
+        UUID attendanceId = UUID.randomUUID();
+        UUID recordId = UUID.randomUUID();
+        UUID studentCourseRecordId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        MemberPrincipal principal = new MemberPrincipal(assistantId, MemberRole.ASSISTANT);
+        ClinicRecord record = ClinicRecord.builder()
+                .clinicAttendanceId(attendanceId)
+                .writerId(teacherId)
+                .title("title")
+                .content("content")
+                .homeworkProgress(null)
+                .build();
+        ReflectionTestUtils.setField(record, "id", recordId);
+        ClinicAttendance attendance = createAttendance(attendanceId, studentCourseRecordId);
+        StudentCourseRecord studentCourseRecord =
+                createStudentCourseRecord(studentCourseRecordId, UUID.randomUUID(), courseId);
+        Course course = createCourse(courseId, teacherId);
+
+        given(clinicRecordRepository.findById(recordId)).willReturn(Optional.of(record));
+        given(clinicAttendanceRepository.findById(attendanceId)).willReturn(Optional.of(attendance));
+        given(studentCourseRecordRepository.findById(studentCourseRecordId))
+                .willReturn(Optional.of(studentCourseRecord));
+        given(courseRepository.findById(courseId)).willReturn(Optional.of(course));
+
+        assertThatThrownBy(() -> clinicRecordService.deleteRecord(principal, recordId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
     }
 
     private ClinicAttendance createAttendance(UUID attendanceId, UUID recordId) {

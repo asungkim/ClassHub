@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import { InlineError } from "@/components/ui/inline-error";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { fetchTeacherCourses, fetchStudentCourseRecords } from "@/lib/dashboard-api";
+import { fetchAssistantCourses, fetchCourseStudents, fetchTeacherCourses } from "@/lib/dashboard-api";
 import { composeCourseProgress, createCourseProgress, createPersonalProgress } from "@/lib/progress-api";
 import { formatDateYmdKst } from "@/utils/date";
-import type { CourseResponse, StudentCourseListItemResponse } from "@/types/dashboard";
+import { formatStudentGrade } from "@/utils/student";
+import type { CourseResponse, CourseStudentResponse, CourseWithTeacherResponse } from "@/types/dashboard";
 import type { CourseProgressCreateRequest, PersonalProgressComposeRequest } from "@/types/progress";
 
 type PersonalInput = {
@@ -21,21 +22,34 @@ type PersonalInput = {
   content: string;
 };
 
+type LessonComposeRole = "TEACHER" | "ASSISTANT";
+
 type TeacherLessonComposeModalProps = {
   open: boolean;
   onClose: () => void;
+  role?: LessonComposeRole;
+};
+
+type CourseListItem = {
+  courseId?: string;
+  name?: string;
+  companyName?: string;
+  branchName?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 const todayString = () => formatDateYmdKst(new Date());
 
-export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonComposeModalProps) {
+export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: TeacherLessonComposeModalProps) {
   const { showToast } = useToast();
-  const [courses, setCourses] = useState<CourseResponse[]>([]);
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [courseDate, setCourseDate] = useState(todayString());
   const [courseTitle, setCourseTitle] = useState("");
   const [courseContent, setCourseContent] = useState("");
-  const [students, setStudents] = useState<StudentCourseListItemResponse[]>([]);
+  const [students, setStudents] = useState<CourseStudentResponse[]>([]);
+  const [studentKeyword, setStudentKeyword] = useState("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [personalInputs, setPersonalInputs] = useState<Record<string, PersonalInput>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -43,13 +57,24 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const studentMap = useMemo(() => {
-    return students.reduce<Record<string, StudentCourseListItemResponse>>((acc, student) => {
+    return students.reduce<Record<string, CourseStudentResponse>>((acc, student) => {
       if (student.recordId) {
         acc[student.recordId] = student;
       }
       return acc;
     }, {});
   }, [students]);
+
+  const filteredStudents = useMemo(() => {
+    const keyword = studentKeyword.trim().toLowerCase();
+    if (!keyword) {
+      return students;
+    }
+    return students.filter((student) => {
+      const name = student.student?.name ?? "";
+      return name.toLowerCase().includes(keyword);
+    });
+  }, [studentKeyword, students]);
 
   const isDirty =
     Boolean(courseTitle.trim()) ||
@@ -62,6 +87,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
     setCourseTitle("");
     setCourseContent("");
     setStudents([]);
+    setStudentKeyword("");
     setSelectedStudentIds([]);
     setPersonalInputs({});
     setSubmitError(null);
@@ -79,29 +105,44 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
 
   const loadCourses = useCallback(async () => {
     try {
-      const response = await fetchTeacherCourses({ status: "ACTIVE", page: 0, size: 50 });
-      setCourses(response.items);
-      if (response.items.length > 0) {
-        const firstCourseId = response.items[0]?.courseId ?? "";
+      const response =
+        role === "TEACHER"
+          ? await fetchTeacherCourses({ status: "ACTIVE", page: 0, size: 50 })
+          : await fetchAssistantCourses({ status: "ACTIVE", page: 0, size: 50 });
+      const items = response.items
+        .map((course: CourseResponse | CourseWithTeacherResponse) => ({
+          courseId: course.courseId,
+          name: course.name,
+          companyName: course.companyName,
+          branchName: course.branchName,
+          startDate: course.startDate,
+          endDate: course.endDate
+        }))
+        .filter((course) => Boolean(course.courseId));
+      setCourses(items);
+      if (items.length > 0) {
+        const firstCourseId = items[0]?.courseId ?? "";
         setSelectedCourseId((prev) => prev || firstCourseId);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "반 목록을 불러오지 못했습니다.";
       showToast("error", message);
     }
-  }, [showToast]);
+  }, [role, showToast]);
 
   const loadStudents = useCallback(
     async (courseId: string) => {
       if (!courseId) {
         setStudents([]);
+        setStudentKeyword("");
         setSelectedStudentIds([]);
         setPersonalInputs({});
         return;
       }
       try {
-        const response = await fetchStudentCourseRecords({ courseId, status: "ACTIVE", page: 0, size: 50 });
+        const response = await fetchCourseStudents({ courseId, page: 0, size: 50 });
         setStudents(response.items);
+        setStudentKeyword("");
         setSelectedStudentIds([]);
         setPersonalInputs({});
       } catch (error) {
@@ -270,6 +311,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
             <div className="grid gap-3 md:grid-cols-2">
               {courses.map((course) => {
                 const isSelected = course.courseId === selectedCourseId;
+                const progressStatus = getCourseProgressStatus(course.startDate, course.endDate);
                 return (
                   <button
                     key={course.courseId}
@@ -282,7 +324,10 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
                         : "border-slate-200 hover:border-blue-200 hover:bg-slate-50"
                     )}
                   >
-                    <p className="text-sm font-semibold text-slate-900">{course.name ?? "이름 없는 반"}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{course.name ?? "이름 없는 반"}</p>
+                      <Badge variant={progressStatus.variant}>{progressStatus.label}</Badge>
+                    </div>
                     <p className="text-xs text-slate-500">
                       {course.companyName ?? "학원"} · {course.branchName ?? "지점"}
                     </p>
@@ -334,32 +379,51 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
               <h3 className="text-lg font-semibold text-slate-900">학생별 개인 진도</h3>
               <p className="text-sm text-slate-500">선택한 학생에 대해서만 개인 진도를 입력합니다.</p>
             </div>
+            <TextField
+              label="학생 이름 검색"
+              placeholder="이름을 입력해 검색하세요."
+              value={studentKeyword}
+              onChange={(event) => setStudentKeyword(event.target.value)}
+            />
             <div className="grid gap-2 md:grid-cols-2">
-              {students.map((student) => {
+              {filteredStudents.map((student) => {
                 const recordId = student.recordId ?? "";
-                const isChecked = Boolean(recordId && selectedStudentIds.includes(recordId));
+                const isSelected = Boolean(recordId && selectedStudentIds.includes(recordId));
+                const isInactive = student.assignmentActive === false;
                 return (
                   <div key={recordId} className="rounded-2xl border border-slate-200 px-4 py-3">
-                    <Checkbox
-                      checked={isChecked}
-                      onChange={() => recordId && toggleStudent(recordId)}
-                      label={
-                        <span className="flex flex-col text-left">
-                          <span className="text-sm font-semibold text-slate-900">
-                            {student.studentName ?? "학생"}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {student.courseName ?? "반 정보 없음"}
-                          </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col text-left">
+                        <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                          {student.student?.name ?? "학생"}
+                          {isInactive && <Badge variant="secondary">휴원</Badge>}
                         </span>
-                      }
-                    />
+                        <span className="text-xs text-slate-500">
+                          {formatStudentSchoolGrade(student.student)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isSelected && <Badge variant="success">선택됨</Badge>}
+                        <Button
+                          variant={isSelected ? "ghost" : "secondary"}
+                          className="h-8 px-3 text-xs"
+                          onClick={() => recordId && toggleStudent(recordId)}
+                        >
+                          {isSelected ? "해제" : "선택"}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
               {students.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
                   선택한 반에 학생이 없습니다.
+                </div>
+              ) : null}
+              {students.length > 0 && filteredStudents.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
+                  검색 결과가 없습니다.
                 </div>
               ) : null}
             </div>
@@ -373,7 +437,7 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
                     <div key={recordId} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                       <div className="mb-4">
                         <p className="text-sm font-semibold text-slate-900">
-                          {student?.studentName ?? "학생"} · {student?.courseName ?? "반"}
+                          {student?.student?.name ?? "학생"} · {formatStudentSchoolGrade(student?.student)}
                         </p>
                         <p className="text-xs text-slate-500">개인 진도 입력</p>
                       </div>
@@ -431,4 +495,45 @@ export function TeacherLessonComposeModal({ open, onClose }: TeacherLessonCompos
       />
     </>
   );
+}
+
+function getCourseProgressStatus(start?: string | null, end?: string | null) {
+  const today = startOfDay(new Date());
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end);
+
+  if (!startDate && !endDate) {
+    return { label: "일정 미정", variant: "secondary" as const };
+  }
+  if (startDate && today < startDate) {
+    return { label: "진행 예정", variant: "default" as const };
+  }
+  if (endDate && today > endDate) {
+    return { label: "종료", variant: "secondary" as const };
+  }
+  return { label: "진행 중", variant: "success" as const };
+}
+
+function parseDateOnly(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function startOfDay(date: Date) {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function formatStudentSchoolGrade(student?: CourseStudentResponse["student"]) {
+  const schoolName = student?.schoolName ?? "학교 정보 없음";
+  const gradeLabel = formatStudentGrade(student?.grade);
+  if (!gradeLabel) {
+    return schoolName;
+  }
+  return `${schoolName}(${gradeLabel})`;
 }

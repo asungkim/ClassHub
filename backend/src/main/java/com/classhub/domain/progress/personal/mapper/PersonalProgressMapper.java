@@ -16,11 +16,11 @@ public class PersonalProgressMapper {
     private final MemberRepository memberRepository;
 
     public PersonalProgressResponse toResponse(PersonalProgress progress,
-                                               UUID courseId,
-                                               MemberRole writerRole) {
-        String writerName = memberRepository.findById(progress.getWriterId())
-                .map(Member::getName)
-                .orElse("알 수 없음");
+                                               UUID courseId) {
+        Member writer = memberRepository.findById(progress.getWriterId())
+                .orElse(null);
+        String writerName = writer == null ? "알 수 없음" : writer.getName();
+        MemberRole writerRole = writer == null ? null : writer.getRole();
 
         return new PersonalProgressResponse(
                 progress.getId(),

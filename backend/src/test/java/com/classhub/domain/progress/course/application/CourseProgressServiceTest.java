@@ -58,14 +58,18 @@ class CourseProgressServiceTest {
     private CourseProgressService courseProgressService;
 
     private MemberPrincipal teacherPrincipal;
+    private MemberPrincipal assistantPrincipal;
     private UUID teacherId;
+    private UUID assistantId;
     private UUID courseId;
 
     @BeforeEach
     void setUp() {
         teacherId = UUID.randomUUID();
+        assistantId = UUID.randomUUID();
         courseId = UUID.randomUUID();
         teacherPrincipal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        assistantPrincipal = new MemberPrincipal(assistantId, MemberRole.ASSISTANT);
     }
 
     @Test
@@ -93,7 +97,7 @@ class CourseProgressServiceTest {
                 MemberRole.TEACHER,
                 saved.getCreatedAt()
         );
-        given(courseProgressMapper.toResponse(any(CourseProgress.class), any(MemberRole.class)))
+        given(courseProgressMapper.toResponse(any(CourseProgress.class)))
                 .willReturn(mockResponse);
 
         CourseProgressResponse response = courseProgressService.createCourseProgress(
@@ -142,7 +146,7 @@ class CourseProgressServiceTest {
                 MemberRole.TEACHER,
                 saved.getCreatedAt()
         );
-        given(courseProgressMapper.toResponse(any(CourseProgress.class), any(MemberRole.class)))
+        given(courseProgressMapper.toResponse(any(CourseProgress.class)))
                 .willReturn(mockResponse);
 
         CourseProgressResponse response = courseProgressService.composeCourseProgress(
@@ -209,9 +213,9 @@ class CourseProgressServiceTest {
                 MemberRole.TEACHER,
                 second.getCreatedAt()
         );
-        given(courseProgressMapper.toResponse(eq(first), any(MemberRole.class)))
+        given(courseProgressMapper.toResponse(eq(first)))
                 .willReturn(firstResponse);
-        given(courseProgressMapper.toResponse(eq(second), any(MemberRole.class)))
+        given(courseProgressMapper.toResponse(eq(second)))
                 .willReturn(secondResponse);
 
         ProgressSliceResponse<CourseProgressResponse> response = courseProgressService.getCourseProgresses(
@@ -253,7 +257,7 @@ class CourseProgressServiceTest {
                 MemberRole.TEACHER,
                 progress.getCreatedAt()
         );
-        given(courseProgressMapper.toResponse(any(CourseProgress.class), any(MemberRole.class)))
+        given(courseProgressMapper.toResponse(any(CourseProgress.class)))
                 .willReturn(mockResponse);
 
         CourseProgressResponse response = courseProgressService.updateCourseProgress(
@@ -264,6 +268,38 @@ class CourseProgressServiceTest {
 
         assertThat(response.title()).isEqualTo("New");
         assertThat(response.content()).isEqualTo("updated");
+    }
+
+    @Test
+    void updateCourseProgress_shouldThrow_whenAssistantNotWriter() {
+        Course course = createCourse(courseId, teacherId);
+        CourseProgress progress = buildCourseProgress(courseId, teacherId, LocalDate.of(2024, Month.MARCH, 1), "Old");
+        given(courseProgressRepository.findById(progress.getId())).willReturn(java.util.Optional.of(progress));
+        given(permissionValidator.ensureCourseAccess(assistantPrincipal, courseId, ProgressAccessMode.WRITE))
+                .willReturn(course);
+
+        CourseProgressUpdateRequest request = new CourseProgressUpdateRequest(
+                LocalDate.of(2024, Month.MARCH, 2),
+                "New",
+                "updated"
+        );
+
+        assertThatThrownBy(() -> courseProgressService.updateCourseProgress(assistantPrincipal, progress.getId(), request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
+    }
+
+    @Test
+    void deleteCourseProgress_shouldThrow_whenAssistantNotWriter() {
+        Course course = createCourse(courseId, teacherId);
+        CourseProgress progress = buildCourseProgress(courseId, teacherId, LocalDate.of(2024, Month.MARCH, 1), "Old");
+        given(courseProgressRepository.findById(progress.getId())).willReturn(java.util.Optional.of(progress));
+        given(permissionValidator.ensureCourseAccess(assistantPrincipal, courseId, ProgressAccessMode.WRITE))
+                .willReturn(course);
+
+        assertThatThrownBy(() -> courseProgressService.deleteCourseProgress(assistantPrincipal, progress.getId()))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
     }
 
     private Course createCourse(UUID id, UUID ownerId) {

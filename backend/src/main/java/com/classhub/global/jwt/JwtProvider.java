@@ -29,6 +29,9 @@ import com.classhub.global.util.KstTime;
 public class JwtProvider {
 
     private final static String TOKEN_PREFIX = "Bearer "; // 토큰은 Bearer로 시작해야함
+    private static final String CLAIM_TOKEN_TYPE = "tokenType";
+    private static final String TOKEN_TYPE_ACCESS = "ACCESS";
+    private static final String TOKEN_TYPE_REFRESH = "REFRESH";
     private final JwtProperties jwtProperties;
 
     public String generateAccessToken(UUID memberId, MemberRole role) {
@@ -37,7 +40,8 @@ public class JwtProvider {
                 Duration.ofMillis(jwtProperties.getAccessTokenExpirationMillis()),
                 Map.of(
                         "id", memberId.toString(),
-                        "role", role.name()
+                        "role", role.name(),
+                        CLAIM_TOKEN_TYPE, TOKEN_TYPE_ACCESS
                 )
         );
     }
@@ -46,7 +50,10 @@ public class JwtProvider {
         return generateToken(
                 memberId.toString(),
                 Duration.ofMillis(jwtProperties.getRefreshTokenExpirationMillis()),
-                Map.of("id", memberId.toString())
+                Map.of(
+                        "id", memberId.toString(),
+                        CLAIM_TOKEN_TYPE, TOKEN_TYPE_REFRESH
+                )
         );
     }
 
@@ -135,6 +142,16 @@ public class JwtProvider {
     public UUID getUserId(String token) {
         Claims claims = getClaims(token);
         return UUID.fromString(claims.get("id", String.class));
+    }
+
+    public boolean isRefreshToken(String token) {
+        Claims claims = getClaims(token);
+        String tokenType = claims.get(CLAIM_TOKEN_TYPE, String.class);
+        if (tokenType != null) {
+            return TOKEN_TYPE_REFRESH.equals(tokenType);
+        }
+        return claims.get("role", String.class) == null
+                && claims.get("authority", String.class) == null;
     }
 
     public LocalDateTime getExpiration(String token) {

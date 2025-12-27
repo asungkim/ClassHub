@@ -48,7 +48,7 @@ const roleOptions: { value: BranchRole; label: string; description: string }[] =
   },
   {
     value: "FREELANCE",
-    label: "프리랜서 (FREELANCE)",
+    label: "출강 강사",
     description: "외부 출강 또는 프리랜서 계약으로 등록합니다."
   }
 ];
@@ -236,7 +236,9 @@ function AssignmentList({
                 <Badge variant={assignment.companyType === "INDIVIDUAL" ? "secondary" : "default"}>
                   {assignment.companyType === "INDIVIDUAL" ? "개인" : "회사"}
                 </Badge>
-                <Badge variant="secondary">{assignment.role === "OWNER" ? "대표" : "출강 강사"}</Badge>
+                <Badge variant="secondary">
+                  {assignment.role === "OWNER" ? "대표" : "출강 강사"}
+                </Badge>
               </div>
               <p className="text-sm font-medium text-slate-700">{assignment.branchName ?? "지점명 미입력"}</p>
               <div className="text-xs text-slate-500">
@@ -336,14 +338,10 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
   const [selectedBranch, setSelectedBranch] = useState<BranchResponse | null>(null);
   const [newBranchName, setNewBranchName] = useState("");
 
-  const [companyQuery, setCompanyQuery] = useState("");
-  const [debouncedCompanyQuery, setDebouncedCompanyQuery] = useState("");
   const [companyOptions, setCompanyOptions] = useState<CompanyResponse[]>([]);
   const [companyLoading, setCompanyLoading] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);
 
-  const [branchQuery, setBranchQuery] = useState("");
-  const [debouncedBranchQuery, setDebouncedBranchQuery] = useState("");
   const [branchOptions, setBranchOptions] = useState<BranchResponse[]>([]);
   const [branchLoading, setBranchLoading] = useState(false);
   const [branchError, setBranchError] = useState<string | null>(null);
@@ -363,10 +361,6 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
     setSelectedCompany(null);
     setSelectedBranch(null);
     setNewBranchName("");
-    setCompanyQuery("");
-    setDebouncedCompanyQuery("");
-    setBranchQuery("");
-    setDebouncedBranchQuery("");
     setCompanyOptions([]);
     setBranchOptions([]);
     setCompanyError(null);
@@ -382,20 +376,6 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
   }, [open, resetForm]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedCompanyQuery(companyQuery.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [companyQuery]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedBranchQuery(branchQuery.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [branchQuery]);
-
-  useEffect(() => {
     if (!open || flowType !== "COMPANY" || companySelectionMode !== "SEARCH") {
       setCompanyOptions([]);
       setCompanyError(null);
@@ -408,8 +388,7 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
       setCompanyError(null);
       try {
         const result = await searchTeacherCompanies({
-          keyword: debouncedCompanyQuery || undefined,
-          size: 20
+          size: 100
         });
         if (!cancelled) {
           setCompanyOptions(result.items);
@@ -429,7 +408,7 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
     return () => {
       cancelled = true;
     };
-  }, [debouncedCompanyQuery, flowType, open, companySelectionMode]);
+  }, [flowType, open, companySelectionMode]);
 
   useEffect(() => {
     if (
@@ -451,8 +430,7 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
       try {
         const result = await searchBranches({
           companyId: selectedCompany.companyId,
-          keyword: debouncedBranchQuery || undefined,
-          size: 20
+          size: 100
         });
         if (!cancelled) {
           setBranchOptions(result.items);
@@ -475,7 +453,6 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
   }, [
     branchSelectionMode,
     companySelectionMode,
-    debouncedBranchQuery,
     flowType,
     open,
     selectedCompany?.companyId
@@ -512,8 +489,6 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
     setSelectedCompany(company);
     setSelectedBranch(null);
     setBranchSelectionMode("SEARCH");
-    setBranchQuery("");
-    setDebouncedBranchQuery("");
   };
 
   const handleEnableManualCompany = () => {
@@ -521,10 +496,6 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
     setBranchSelectionMode("MANUAL");
     setSelectedCompany(null);
     setSelectedBranch(null);
-    setCompanyQuery("");
-    setDebouncedCompanyQuery("");
-    setBranchQuery("");
-    setDebouncedBranchQuery("");
     setNewBranchName("");
   };
 
@@ -540,16 +511,12 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
   const handleEnableManualBranch = () => {
     setBranchSelectionMode("MANUAL");
     setSelectedBranch(null);
-    setBranchQuery("");
-    setDebouncedBranchQuery("");
   };
 
   const handleBackToBranchSearch = () => {
     setBranchSelectionMode("SEARCH");
     setSelectedBranch(null);
     setNewBranchName("");
-    setBranchQuery("");
-    setDebouncedBranchQuery("");
   };
 
   const buildPayload = (): TeacherBranchAssignmentCreateRequest | null => {
@@ -667,7 +634,7 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
                 개인 학원
               </TabsTrigger>
               <TabsTrigger value="COMPANY" className="flex-1">
-                회사 학원
+                대형 학원
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -706,43 +673,13 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
           </div>
         ) : (
           <div className="space-y-5">
-            <Select
-              label="출강 역할"
-              value={role}
-              onChange={(event) => setRole(event.target.value as BranchRole)}
-              disabled={submitting}
-              helperText="회사 학원에서는 대표/프리랜서 중 하나를 선택하세요."
-            >
-              {roleOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3">
+              <p className="text-sm font-semibold text-blue-900">역할: 출강 강사 </p>
+              <p className="mt-1 text-xs text-blue-700">대형 학원에 출강하는 경우 자동으로 출강 강사로 등록됩니다.</p>
+            </div>
 
             <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-700">회사 선택</p>
-                {companySelectionMode === "MANUAL" ? (
-                  <button
-                    type="button"
-                    className="text-xs font-semibold text-blue-600 hover:underline disabled:text-slate-400"
-                    onClick={handleBackToCompanySearch}
-                    disabled={submitting}
-                  >
-                    검색으로 돌아가기
-                  </button>
-                ) : selectedCompany ? (
-                  <button
-                    type="button"
-                    className="text-xs font-semibold text-slate-500 hover:underline"
-                    onClick={() => setSelectedCompany(null)}
-                    disabled={submitting}
-                  >
-                    선택 해제
-                  </button>
-                ) : null}
-              </div>
+              <p className="text-sm font-semibold text-slate-700">회사</p>
               {companySelectionMode === "MANUAL" ? (
                 <>
                   <Input
@@ -759,150 +696,107 @@ function TeacherBranchAssignmentModal({ open, onClose, onCreated }: AssignmentMo
                     onChange={(event) => setCompanyBranchName(event.target.value)}
                     disabled={submitting}
                   />
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-blue-600 hover:underline disabled:text-slate-400"
+                    onClick={handleBackToCompanySearch}
+                    disabled={submitting}
+                  >
+                    드롭다운에서 선택하기
+                  </button>
                   <p className="text-xs text-slate-500">
                     회사와 첫 지점을 함께 등록합니다. 지점명은 가장 먼저 출강하는 지점으로 입력하세요.
                   </p>
                 </>
               ) : (
                 <>
-                  <Input
-                    className="mt-2"
-                    placeholder="회사명 또는 키워드를 입력하세요"
-                    value={companyQuery}
-                    onChange={(event) => setCompanyQuery(event.target.value)}
-                    disabled={submitting}
-                  />
+                  <Select
+                    value={selectedCompany?.companyId ?? ""}
+                    onChange={(event) => {
+                      const companyId = event.target.value;
+                      if (companyId === "__manual__") {
+                        handleEnableManualCompany();
+                        return;
+                      }
+                      if (!companyId) {
+                        setSelectedCompany(null);
+                        return;
+                      }
+                      const company = companyOptions.find((c) => c.companyId === companyId);
+                      if (company) {
+                        handleCompanySelect(company);
+                      }
+                    }}
+                    disabled={submitting || companyLoading}
+                  >
+                    <option value="">회사를 선택하세요</option>
+                    {companyOptions.map((company) => (
+                      <option key={company.companyId} value={company.companyId}>
+                        {company.name}
+                      </option>
+                    ))}
+                    <option value="__manual__">직접 입력</option>
+                  </Select>
                   {companyError ? <InlineError message={companyError} /> : null}
-                  <div className="space-y-2">
-                    {companyOptions.map((company) => {
-                      const isSelected = selectedCompany?.companyId === company.companyId;
-                      return (
-                        <button
-                          key={company.companyId}
-                          type="button"
-                          className={clsx(
-                            "w-full rounded-2xl border px-4 py-3 text-left transition",
-                            isSelected ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-200"
-                          )}
-                          onClick={() => handleCompanySelect(company)}
-                          disabled={submitting}
-                        >
-                          <p className="font-semibold text-slate-900">{company.name}</p>
-                          <p className="text-xs text-slate-500">
-                            {company.type === "INDIVIDUAL" ? "개인 학원" : "회사 학원"}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {!companyLoading && companyOptions.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-center">
-                      <p className="text-sm font-semibold text-slate-700">회사가 목록에 없으신가요? 직접 등록하세요.</p>
-                      <Button
-                        variant="secondary"
-                        className="mt-3 w-full"
-                        onClick={handleEnableManualCompany}
-                        disabled={submitting}
-                      >
-                        회사 직접 등록
-                      </Button>
-                    </div>
-                  ) : null}
                   {companyLoading ? <p className="text-xs text-slate-500">회사 목록을 불러오는 중입니다…</p> : null}
-                  {selectedCompany ? (
-                    <p className="text-xs text-slate-500">
-                      선택된 회사: <span className="font-semibold text-slate-900">{selectedCompany.name}</span>
-                    </p>
-                  ) : null}
                 </>
               )}
             </section>
 
             {companySelectionMode === "SEARCH" ? (
               <section className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-700">지점 선택</p>
-                  {branchSelectionMode === "MANUAL" ? (
+                <p className="text-sm font-semibold text-slate-700">지점</p>
+                {branchSelectionMode === "MANUAL" ? (
+                  <>
+                    <Input
+                      className="mt-2"
+                      placeholder="새 지점명을 입력하세요"
+                      value={newBranchName}
+                      onChange={(event) => setNewBranchName(event.target.value)}
+                      disabled={submitting || !selectedCompany}
+                    />
                     <button
                       type="button"
                       className="text-xs font-semibold text-blue-600 hover:underline disabled:text-slate-400"
                       onClick={handleBackToBranchSearch}
                       disabled={submitting || !selectedCompany}
                     >
-                      지점 검색으로 돌아가기
+                      드롭다운에서 선택하기
                     </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="text-xs font-semibold text-blue-600 hover:underline disabled:text-slate-400"
-                      onClick={handleEnableManualBranch}
-                      disabled={submitting || !selectedCompany}
-                    >
-                      지점 직접 입력
-                    </button>
-                  )}
-                </div>
-                {branchSelectionMode === "MANUAL" ? (
-                  <Input
-                    className="mt-2"
-                    placeholder="새 지점명을 입력하세요"
-                    value={newBranchName}
-                    onChange={(event) => setNewBranchName(event.target.value)}
-                    disabled={submitting || !selectedCompany}
-                  />
+                  </>
                 ) : (
                   <>
-                    <Input
-                      className="mt-2"
-                      placeholder="지점명을 입력하세요"
-                      value={branchQuery}
-                      onChange={(event) => setBranchQuery(event.target.value)}
-                      disabled={submitting || !selectedCompany}
-                    />
+                    <Select
+                      value={selectedBranch?.branchId ?? ""}
+                      onChange={(event) => {
+                        const branchId = event.target.value;
+                        if (branchId === "__manual__") {
+                          handleEnableManualBranch();
+                          return;
+                        }
+                        if (!branchId) {
+                          setSelectedBranch(null);
+                          return;
+                        }
+                        const branch = branchOptions.find((b) => b.branchId === branchId);
+                        if (branch) {
+                          setSelectedBranch(branch);
+                        }
+                      }}
+                      disabled={submitting || !selectedCompany || branchLoading}
+                    >
+                      <option value="">지점을 선택하세요</option>
+                      {branchOptions.map((branch) => (
+                        <option key={branch.branchId} value={branch.branchId}>
+                          {branch.name}
+                        </option>
+                      ))}
+                      <option value="__manual__">직접 입력</option>
+                    </Select>
                     {branchError ? <InlineError message={branchError} /> : null}
-                    <div className="space-y-2">
-                      {branchOptions.map((branch) => {
-                        const isSelected = selectedBranch?.branchId === branch.branchId;
-                        return (
-                          <button
-                            key={branch.branchId}
-                            type="button"
-                            className={clsx(
-                              "w-full rounded-2xl border px-4 py-3 text-left transition",
-                              isSelected ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-200"
-                            )}
-                            onClick={() => setSelectedBranch(branch)}
-                            disabled={submitting}
-                          >
-                            <p className="font-semibold text-slate-900">{branch.name}</p>
-                            <p className="text-xs text-slate-500">
-                              {branch.companyName ?? selectedCompany?.name ?? "학원 미확인"}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {!branchLoading && branchOptions.length === 0 && selectedCompany ? (
-                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-center">
-                        <p className="text-sm font-semibold text-slate-700">지점이 목록에 없으신가요? 직접 등록하세요.</p>
-                        <Button
-                          variant="secondary"
-                          className="mt-3 w-full"
-                          onClick={handleEnableManualBranch}
-                          disabled={submitting}
-                        >
-                          지점 직접 등록
-                        </Button>
-                      </div>
-                    ) : null}
                     {branchLoading ? <p className="text-xs text-slate-500">지점 목록을 불러오는 중입니다…</p> : null}
-                    {selectedBranch ? (
-                      <p className="text-xs text-slate-500">
-                        선택된 지점: <span className="font-semibold text-slate-900">{selectedBranch.name}</span>
-                      </p>
-                    ) : null}
                     {!selectedCompany ? (
-                      <p className="text-xs text-slate-500">회사를 먼저 선택하면 지점을 검색할 수 있습니다.</p>
+                      <p className="text-xs text-slate-500">회사를 먼저 선택하면 지점을 선택할 수 있습니다.</p>
                     ) : null}
                   </>
                 )}

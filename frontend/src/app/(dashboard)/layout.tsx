@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import type { Route } from "next";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/components/session/session-provider";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getProfileRoute } from "@/lib/routes";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -17,6 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push("/");
     }
   }, [status, router]);
+
 
   // 로딩 중이거나 인증되지 않은 경우 스켈레톤 표시
   if (status === "loading" || status === "unauthenticated") {
@@ -65,6 +69,49 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           © {new Date().getFullYear()} ClassHub. 필요한 메뉴는 좌측 사이드바에서 선택하세요.
         </footer>
       </div>
+
+      <Suspense fallback={null}>
+        <ForcePasswordPrompt role={member?.role} />
+      </Suspense>
     </div>
+  );
+}
+
+function ForcePasswordPrompt({ role }: { role?: string | null }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [forcePasswordOpen, setForcePasswordOpen] = useState(false);
+
+  const forcePasswordChange = useMemo(() => searchParams.get("forcePasswordChange") === "1", [searchParams]);
+
+  useEffect(() => {
+    if (forcePasswordChange) {
+      setForcePasswordOpen(true);
+    }
+  }, [forcePasswordChange]);
+
+  return (
+    <ConfirmDialog
+      open={forcePasswordOpen}
+      title="비밀번호 변경 안내"
+      message="임시 비밀번호로 로그인했습니다. 내 정보에서 새 비밀번호로 변경해주세요."
+      confirmText="변경하러 가기"
+      cancelText="나중에"
+      onClose={() => {
+        setForcePasswordOpen(false);
+        if (forcePasswordChange) {
+          const nextParams = new URLSearchParams(searchParams.toString());
+          nextParams.delete("forcePasswordChange");
+          const nextPath = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname;
+          router.replace(nextPath as Route);
+        }
+      }}
+      onConfirm={() => {
+        setForcePasswordOpen(false);
+        const profileRoute = role ? getProfileRoute(role) : "/";
+        router.replace(profileRoute as Route);
+      }}
+    />
   );
 }

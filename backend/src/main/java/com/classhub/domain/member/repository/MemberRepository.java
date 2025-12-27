@@ -13,6 +13,8 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     Optional<Member> findByEmail(String email);
 
+    Optional<Member> findByEmailAndPhoneNumber(String email, String phoneNumber);
+
     boolean existsByEmail(String email);
 
     List<Member> findTop5ByRoleAndDeletedAtIsNullAndEmailContainingIgnoreCaseOrderByEmailAsc(

@@ -2,6 +2,7 @@ package com.classhub.domain.course.web;
 
 import com.classhub.domain.course.application.CourseAssignmentService;
 import com.classhub.domain.course.dto.response.CourseResponse;
+import com.classhub.domain.course.dto.response.CourseStudentResponse;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.dto.response.StudentSummaryResponse;
 import com.classhub.global.response.PageResponse;
@@ -61,6 +62,24 @@ public class CourseAssignmentController {
                 principal,
                 courseId,
                 keyword,
+                page,
+                size
+        );
+        return RsData.from(RsCode.SUCCESS, response);
+    }
+
+    @GetMapping("/{courseId}/students")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
+    @Operation(summary = "반 수강 학생 조회")
+    public RsData<PageResponse<CourseStudentResponse>> getCourseStudents(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable UUID courseId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size
+    ) {
+        PageResponse<CourseStudentResponse> response = courseAssignmentService.getCourseStudents(
+                principal,
+                courseId,
                 page,
                 size
         );

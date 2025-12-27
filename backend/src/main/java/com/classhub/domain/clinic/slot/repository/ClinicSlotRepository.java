@@ -28,4 +28,5 @@ public interface ClinicSlotRepository extends JpaRepository<ClinicSlot, UUID> {
     Optional<ClinicSlot> findByIdAndDeletedAtIsNullForUpdate(@Param("slotId") UUID slotId);
 
     Optional<ClinicSlot> findByIdAndDeletedAtIsNull(UUID slotId);
+
 }

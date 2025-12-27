@@ -2,6 +2,7 @@ package com.classhub.global.init.seeds;
 
 import com.classhub.domain.member.model.StudentGrade;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,36 +14,42 @@ public final class InitStudentInfos {
     }
 
     public static List<StudentInfoSeed> seeds() {
-        return List.of(
-                new StudentInfoSeed(
-                        "student.jaekyung@classhub.dev",
-                        "서울과학고등학교",
-                        StudentGrade.HIGH_2,
-                        LocalDate.of(2008, 3, 14),
-                        "010-9988-7766"
-                ),
-                new StudentInfoSeed(
-                        "student.arin@classhub.dev",
-                        "분당중학교",
-                        StudentGrade.MIDDLE_2,
-                        LocalDate.of(2011, 9, 2),
-                        "010-4444-8888"
-                ),
-                new StudentInfoSeed(
-                        "student.donghyuk@classhub.dev",
-                        "신촌초등학교",
-                        StudentGrade.ELEMENTARY_5,
-                        LocalDate.of(2014, 1, 28),
-                        "010-1111-5555"
-                ),
-                new StudentInfoSeed(
-                        "student.sumin@classhub.dev",
-                        "대치고등학교",
-                        StudentGrade.GAP_YEAR,
-                        LocalDate.of(2006, 7, 19),
-                        "010-2222-6666"
-                )
-        );
+        List<StudentInfoSeed> seeds = new ArrayList<>();
+        StudentGrade[] grades = {
+                StudentGrade.ELEMENTARY_4,
+                StudentGrade.ELEMENTARY_5,
+                StudentGrade.ELEMENTARY_6,
+                StudentGrade.MIDDLE_1,
+                StudentGrade.MIDDLE_2,
+                StudentGrade.MIDDLE_3,
+                StudentGrade.HIGH_1,
+                StudentGrade.HIGH_2,
+                StudentGrade.HIGH_3,
+                StudentGrade.GAP_YEAR
+        };
+        String[] schoolNames = {
+                "서울초등학교",
+                "부산초등학교",
+                "대구중학교",
+                "광주중학교",
+                "대전고등학교",
+                "인천고등학교",
+                "분당중학교",
+                "대치고등학교",
+                "강남고등학교",
+                "수원고등학교"
+        };
+
+        for (int i = 1; i <= 100; i += 1) {
+            String email = "st" + i + "@n.com";
+            StudentGrade grade = grades[(i - 1) % grades.length];
+            String schoolName = schoolNames[(i - 1) % schoolNames.length];
+            LocalDate birthDate = LocalDate.of(2004 + (i % 10), ((i - 1) % 12) + 1, ((i - 1) % 28) + 1);
+            String parentPhone = String.format("010-9%03d-%04d", 100 + (i % 900), 1000 + (i % 9000));
+            seeds.add(new StudentInfoSeed(email, schoolName, grade, birthDate, parentPhone));
+        }
+
+        return List.copyOf(seeds);
     }
 
     public record StudentInfoSeed(

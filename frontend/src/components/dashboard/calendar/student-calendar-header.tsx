@@ -5,7 +5,7 @@ import type { RefObject } from "react";
 type StudentSearchOption = {
   studentId: string;
   name: string;
-  courses: string[];
+  schoolLabel?: string;
 };
 
 type StudentCalendarHeaderProps = {
@@ -59,7 +59,7 @@ export function StudentCalendarHeader({
                 className="w-full rounded-xl px-4 py-3 text-left text-sm hover:bg-slate-50"
               >
                 <p className="font-semibold text-slate-900">{option.name}</p>
-                <p className="text-xs text-slate-500">{option.courses.join(", ")}</p>
+                <p className="text-xs text-slate-500">{option.schoolLabel ?? "학교 정보 없음"}</p>
               </button>
             ))}
           </div>

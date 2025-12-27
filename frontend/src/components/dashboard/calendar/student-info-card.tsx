@@ -6,7 +6,7 @@ type StudentInfo = {
   name: string;
   phoneNumber?: string;
   parentPhoneNumber?: string;
-  courses: string[];
+  schoolLabel?: string;
 };
 
 type StudentInfoCardProps = {
@@ -33,7 +33,7 @@ export function StudentInfoCard({ student, onChangeStudent }: StudentInfoCardPro
               변경
             </Button>
           </div>
-          <p className="text-sm text-slate-600">반: {student.courses.join(", ")}</p>
+          <p className="text-sm text-slate-600">학교/학년: {student.schoolLabel ?? "학교 정보 없음"}</p>
           <p className="text-sm text-slate-600">
             연락처: {student.phoneNumber ?? "-"} / 보호자: {student.parentPhoneNumber ?? "-"}
           </p>

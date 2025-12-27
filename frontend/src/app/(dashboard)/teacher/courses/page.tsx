@@ -11,11 +11,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InlineError } from "@/components/ui/inline-error";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import { Modal } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { formatDateYmdKst } from "@/utils/date";
@@ -37,7 +39,7 @@ type CourseFormMode = "CREATE" | "EDIT";
 
 const statusTabs: { value: CourseStatusFilter; label: string }[] = [
   { value: "ACTIVE", label: "활성" },
-  { value: "INACTIVE", label: "비활성" },
+  { value: "INACTIVE", label: "보관함" },
   { value: "ALL", label: "전체" }
 ];
 
@@ -178,6 +180,8 @@ function TeacherCourseManagement() {
   const [formMode, setFormMode] = useState<CourseFormMode>("CREATE");
   const [editingCourse, setEditingCourse] = useState<CourseResponse | null>(null);
   const [mutatingCourseId, setMutatingCourseId] = useState<string | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<CourseResponse | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   // Debounce keyword to avoid chattiness
   useEffect(() => {
@@ -329,18 +333,30 @@ function TeacherCourseManagement() {
     setEditingCourse(null);
   }, []);
 
+  const handleRequestArchive = useCallback((course: CourseResponse) => {
+    setArchiveTarget(course);
+  }, []);
+
   const handleCourseStatusChange = useCallback(
     async (course: CourseResponse, enabled: boolean) => {
       if (!course.courseId) {
         return;
       }
+
+      // 보관하려는 경우 확인 다이얼로그 표시
+      if (!enabled) {
+        handleRequestArchive(course);
+        return;
+      }
+
+      // 보관 취소하는 경우 바로 실행
       setMutatingCourseId(course.courseId);
       setCourses((prev) =>
         prev.map((item) => (item.courseId === course.courseId ? { ...item, active: enabled } : item))
       );
       try {
         await updateCourseStatus(course.courseId, { enabled });
-        showToast("success", enabled ? "반을 활성화했습니다." : "반을 비활성화했습니다.");
+        showToast("success", "반을 보관 취소했습니다.");
         await Promise.all([loadCourses(), loadCalendar(calendarRange)]);
       } catch (error) {
         const message = error instanceof Error ? error.message : "반 상태를 변경하지 못했습니다.";
@@ -350,8 +366,32 @@ function TeacherCourseManagement() {
         setMutatingCourseId(null);
       }
     },
-    [calendarRange, loadCalendar, loadCourses, showToast]
+    [calendarRange, handleRequestArchive, loadCalendar, loadCourses, showToast]
   );
+
+  const handleConfirmArchive = useCallback(async () => {
+    if (!archiveTarget?.courseId) {
+      return;
+    }
+    setIsArchiving(true);
+    setMutatingCourseId(archiveTarget.courseId);
+    setCourses((prev) =>
+      prev.map((item) => (item.courseId === archiveTarget.courseId ? { ...item, active: false } : item))
+    );
+    try {
+      await updateCourseStatus(archiveTarget.courseId, { enabled: false });
+      showToast("success", "반을 보관했습니다.");
+      await Promise.all([loadCourses(), loadCalendar(calendarRange)]);
+      setArchiveTarget(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "반을 보관하지 못했습니다.";
+      showToast("error", message);
+      await loadCourses();
+    } finally {
+      setIsArchiving(false);
+      setMutatingCourseId(null);
+    }
+  }, [archiveTarget, calendarRange, loadCalendar, loadCourses, showToast]);
 
   const handleCourseFormSubmit = useCallback(
     async (values: CourseFormValues) => {
@@ -418,7 +458,7 @@ function TeacherCourseManagement() {
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Class Management</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900">반 관리</h1>
             <p className="mt-2 text-sm text-slate-500">
-              목록/캘린더에서 반을 확인하고 곧바로 생성·수정·비활성화를 처리할 수 있습니다.
+              목록/캘린더에서 반을 확인하고 곧바로 생성·수정·보관을 처리할 수 있습니다. 반 기간이 지나면 클리닉 자동생성이 중단됩니다.
             </p>
           </div>
           <div className="flex w-full flex-col items-stretch gap-2 md:w-auto">
@@ -503,6 +543,17 @@ function TeacherCourseManagement() {
         initialCourse={editingCourse}
         onClose={handleCloseForm}
         onSubmit={handleCourseFormSubmit}
+      />
+
+      <ConfirmDialog
+        open={Boolean(archiveTarget)}
+        onClose={() => setArchiveTarget(null)}
+        onConfirm={() => void handleConfirmArchive()}
+        title="반을 보관할까요?"
+        message="보관하게 되면 해당 반과 관련된 작업을 할 수 없습니다. 계속하시겠습니까?"
+        confirmText={isArchiving ? "보관 중..." : "보관"}
+        cancelText="취소"
+        isLoading={isArchiving}
       />
     </div>
   );
@@ -633,6 +684,8 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
       : "등록된 스케줄이 없습니다.";
   const isActive = course.active !== false;
   const disableActions = disabled || !course.courseId;
+  const progressStatus = getCourseProgressStatus(course.startDate, course.endDate);
+  const archiveCountdown = isActive ? getArchiveCountdown(course.endDate) : null;
 
   return (
     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-5 shadow-sm">
@@ -641,7 +694,10 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
           <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">
             {course.companyName ?? "학원"} • {course.branchName ?? "-"}
           </p>
-          <h3 className="text-lg font-bold text-slate-900">{course.name ?? "이름 미지정"}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900">{course.name ?? "이름 미지정"}</h3>
+            <Badge variant={progressStatus.variant}>{progressStatus.label}</Badge>
+          </div>
         </div>
         <div className="flex flex-col items-start gap-2 md:items-end">
           <CourseStatusToggle active={isActive} disabled={disableActions} onChange={(next) => onToggle(next)} />
@@ -665,6 +721,13 @@ function CourseListCard({ course, onEdit, onToggle, disabled }: CourseListCardPr
           기간: {formatDateRange(course.startDate, course.endDate)}
         </p>
         <p className="mt-1 text-slate-500">수업 시간: {scheduleSummary}</p>
+        {archiveCountdown ? (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            {archiveCountdown.daysLeft === 0
+              ? "반 종료 기간이 지나 오늘 보관 처리됩니다."
+              : `반 종료 기간이 지나 보관 처리까지 ${archiveCountdown.daysLeft}일 남았습니다.`}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -686,15 +749,15 @@ function CourseStatusToggle({ active, disabled, onChange }: CourseStatusTogglePr
       onClick={() => onChange(!active)}
       className={clsx(
         "flex items-center gap-3 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-        active ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-slate-200 bg-white text-slate-500",
+        active ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-amber-200 bg-amber-50 text-amber-700",
         disabled && "cursor-not-allowed opacity-60"
       )}
     >
-      <span>{active ? "활성" : "비활성"}</span>
+      <span>{active ? "활성" : "보관됨"}</span>
       <span
         className={clsx(
           "relative inline-flex h-6 w-11 items-center rounded-full transition",
-          active ? "bg-emerald-500" : "bg-slate-300"
+          active ? "bg-emerald-500" : "bg-amber-400"
         )}
       >
         <span
@@ -870,7 +933,17 @@ function CourseFormModalContent({
   const scheduleValues = watch("schedules");
 
   const handleAddSchedule = () => {
-    append(createDefaultSchedule());
+    // 마지막 스케줄을 복사해서 추가
+    const lastSchedule = scheduleValues?.[scheduleValues.length - 1];
+    if (lastSchedule) {
+      append({
+        dayOfWeek: lastSchedule.dayOfWeek,
+        startTime: lastSchedule.startTime,
+        endTime: lastSchedule.endTime
+      });
+    } else {
+      append(createDefaultSchedule());
+    }
   };
 
   const handleRemoveSchedule = (index: number) => {
@@ -1419,4 +1492,57 @@ function normalizeDateInput(value: string) {
   }
   // 이미 YYYY-MM-DD 형식이므로 그대로 반환
   return value;
+}
+
+function getCourseProgressStatus(start?: string | null, end?: string | null) {
+  const today = startOfDay(new Date());
+  const startDate = parseDateOnly(start);
+  const endDate = parseDateOnly(end);
+
+  if (!startDate && !endDate) {
+    return { label: "일정 미정", variant: "secondary" as const };
+  }
+  if (startDate && today < startDate) {
+    return { label: "진행 예정", variant: "default" as const };
+  }
+  if (endDate && today > endDate) {
+    return { label: "종료", variant: "secondary" as const };
+  }
+  return { label: "진행 중", variant: "success" as const };
+}
+
+function getArchiveCountdown(end?: string | null) {
+  if (!end) {
+    return null;
+  }
+  const endDate = parseDateOnly(end);
+  if (!endDate) {
+    return null;
+  }
+  const today = startOfDay(new Date());
+  if (today <= endDate) {
+    return null;
+  }
+  const archiveDate = addDays(endDate, 7);
+  if (today > archiveDate) {
+    return null;
+  }
+  const diffMs = archiveDate.getTime() - today.getTime();
+  const daysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  return { daysLeft };
+}
+
+function parseDateOnly(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function startOfDay(date: Date) {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
 }

@@ -38,12 +38,7 @@ public class ProgressPermissionValidator {
                                                   ProgressAccessMode accessMode) {
         return switch (principal.role()) {
             case TEACHER -> ensureTeacherRecord(principal.id(), recordId);
-            case ASSISTANT -> {
-                if (accessMode == ProgressAccessMode.WRITE) {
-                    throw new BusinessException(RsCode.FORBIDDEN);
-                }
-                yield ensureAssistantRecord(principal.id(), recordId);
-            }
+            case ASSISTANT -> ensureAssistantRecord(principal.id(), recordId);
             default -> throw new BusinessException(RsCode.FORBIDDEN);
         };
     }
@@ -67,9 +62,6 @@ public class ProgressPermissionValidator {
     private Course ensureAssistantCourse(UUID assistantId,
                                          UUID courseId,
                                          ProgressAccessMode accessMode) {
-        if (accessMode == ProgressAccessMode.WRITE) {
-            throw new BusinessException(RsCode.FORBIDDEN);
-        }
         Course course = loadCourse(courseId);
         ensureAssistantAssignment(assistantId, course.getTeacherMemberId());
         return course;

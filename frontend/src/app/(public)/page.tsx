@@ -24,6 +24,8 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [forcePasswordChange, setForcePasswordChange] = useState(false);
+  const tempPasswordPattern = /^Classmate\d{4}!$/;
 
   const handleLogin = async () => {
     setFormError(null);
@@ -47,10 +49,12 @@ export default function HomePage() {
       }
 
       const loginData: LoginResponseData = response.data.data ?? {};
+      setForcePasswordChange(tempPasswordPattern.test(password));
       await setToken(loginData.accessToken ?? null);
     } catch (error) {
       const rawMessage = error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다.";
       setFormError(rawMessage.includes("비활성화된 계정") ? inactiveMessage : rawMessage);
+      setForcePasswordChange(false);
     } finally {
       setIsLoading(false);
     }
@@ -60,9 +64,12 @@ export default function HomePage() {
   useEffect(() => {
     if (status === "authenticated" && member?.role) {
       const dashboardRoute = getDashboardRoute(member.role) as Route;
-      router.replace(dashboardRoute);
+      const targetRoute = forcePasswordChange
+        ? (`${dashboardRoute}?forcePasswordChange=1` as Route)
+        : dashboardRoute;
+      router.replace(targetRoute);
     }
-  }, [status, member, router]);
+  }, [status, member, router, forcePasswordChange]);
 
   const sessionMessage =
     status === "authenticated"
@@ -139,9 +146,9 @@ export default function HomePage() {
             </div>
 
             <div className="flex justify-end text-sm text-blue-600">
-              <button type="button" className="font-medium hover:text-blue-700">
+              <Link href="/auth/temp-password" className="font-medium hover:text-blue-700">
                 비밀번호 찾기
-              </button>
+              </Link>
             </div>
 
             {formError ? <InlineError message={formError} /> : null}

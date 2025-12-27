@@ -1,6 +1,7 @@
 package com.classhub.domain.progress.personal.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -18,6 +19,8 @@ import com.classhub.domain.progress.personal.repository.PersonalProgressReposito
 import com.classhub.domain.progress.support.ProgressPermissionValidator;
 import com.classhub.domain.progress.support.ProgressPermissionValidator.ProgressAccessMode;
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
+import com.classhub.global.exception.BusinessException;
+import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -47,16 +50,20 @@ class PersonalProgressServiceTest {
     private PersonalProgressService personalProgressService;
 
     private MemberPrincipal teacherPrincipal;
+    private MemberPrincipal assistantPrincipal;
     private UUID teacherId;
+    private UUID assistantId;
     private UUID recordId;
     private UUID courseId;
 
     @BeforeEach
     void setUp() {
         teacherId = UUID.randomUUID();
+        assistantId = UUID.randomUUID();
         recordId = UUID.randomUUID();
         courseId = UUID.randomUUID();
         teacherPrincipal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
+        assistantPrincipal = new MemberPrincipal(assistantId, MemberRole.ASSISTANT);
     }
 
     @Test
@@ -84,7 +91,7 @@ class PersonalProgressServiceTest {
                 MemberRole.TEACHER,
                 saved.getCreatedAt()
         );
-        given(personalProgressMapper.toResponse(any(PersonalProgress.class), eq(courseId), any(MemberRole.class)))
+        given(personalProgressMapper.toResponse(any(PersonalProgress.class), eq(courseId)))
                 .willReturn(mockResponse);
 
         PersonalProgressResponse response = personalProgressService.createPersonalProgress(
@@ -132,9 +139,9 @@ class PersonalProgressServiceTest {
                 MemberRole.TEACHER,
                 second.getCreatedAt()
         );
-        given(personalProgressMapper.toResponse(eq(first), eq(courseId), any(MemberRole.class)))
+        given(personalProgressMapper.toResponse(eq(first), eq(courseId)))
                 .willReturn(firstResponse);
-        given(personalProgressMapper.toResponse(eq(second), eq(courseId), any(MemberRole.class)))
+        given(personalProgressMapper.toResponse(eq(second), eq(courseId)))
                 .willReturn(secondResponse);
 
         ProgressSliceResponse<PersonalProgressResponse> response = personalProgressService.getPersonalProgresses(
@@ -178,7 +185,7 @@ class PersonalProgressServiceTest {
                 MemberRole.TEACHER,
                 progress.getCreatedAt()
         );
-        given(personalProgressMapper.toResponse(any(PersonalProgress.class), eq(courseId), any(MemberRole.class)))
+        given(personalProgressMapper.toResponse(any(PersonalProgress.class), eq(courseId)))
                 .willReturn(mockResponse);
 
         PersonalProgressResponse response = personalProgressService.updatePersonalProgress(
@@ -203,6 +210,40 @@ class PersonalProgressServiceTest {
         personalProgressService.deletePersonalProgress(teacherPrincipal, progress.getId());
 
         verify(personalProgressRepository).delete(progress);
+    }
+
+    @Test
+    void updatePersonalProgress_shouldThrow_whenAssistantNotWriter() {
+        StudentCourseRecord record = createRecord(recordId, courseId);
+        PersonalProgress progress = buildPersonalProgress(recordId, teacherId, LocalDate.of(2024, Month.MARCH, 1), "Old");
+        given(personalProgressRepository.findById(progress.getId()))
+                .willReturn(java.util.Optional.of(progress));
+        given(permissionValidator.ensureRecordAccess(assistantPrincipal, recordId, ProgressAccessMode.WRITE))
+                .willReturn(record);
+
+        PersonalProgressUpdateRequest request = new PersonalProgressUpdateRequest(
+                LocalDate.of(2024, Month.MARCH, 2),
+                "New",
+                "updated"
+        );
+
+        assertThatThrownBy(() -> personalProgressService.updatePersonalProgress(assistantPrincipal, progress.getId(), request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
+    }
+
+    @Test
+    void deletePersonalProgress_shouldThrow_whenAssistantNotWriter() {
+        StudentCourseRecord record = createRecord(recordId, courseId);
+        PersonalProgress progress = buildPersonalProgress(recordId, teacherId, LocalDate.of(2024, Month.MARCH, 1), "Old");
+        given(personalProgressRepository.findById(progress.getId()))
+                .willReturn(java.util.Optional.of(progress));
+        given(permissionValidator.ensureRecordAccess(assistantPrincipal, recordId, ProgressAccessMode.WRITE))
+                .willReturn(record);
+
+        assertThatThrownBy(() -> personalProgressService.deletePersonalProgress(assistantPrincipal, progress.getId()))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
     }
 
     private StudentCourseRecord createRecord(UUID recordId, UUID courseId) {

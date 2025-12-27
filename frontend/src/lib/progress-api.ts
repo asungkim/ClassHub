@@ -6,6 +6,8 @@ import type {
   CourseProgressResponse,
   CourseProgressSlice,
   CourseProgressUpdateRequest,
+  ClinicRecordResponse,
+  ClinicRecordUpdateRequest,
   PersonalProgressCreateRequest,
   PersonalProgressResponse,
   PersonalProgressSlice,
@@ -159,6 +161,29 @@ export async function deletePersonalProgress(progressId: string) {
 
   if (response.error) {
     throw new Error(getApiErrorMessage(response.error, "개인 진도를 삭제하지 못했습니다."));
+  }
+}
+
+export async function updateClinicRecord(recordId: string, payload: ClinicRecordUpdateRequest) {
+  const response = await api.PATCH("/api/v1/clinic-records/{recordId}", {
+    params: { path: { recordId } },
+    body: payload
+  });
+
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "클리닉 기록을 수정하지 못했습니다."));
+  }
+
+  return response.data.data as ClinicRecordResponse;
+}
+
+export async function deleteClinicRecord(recordId: string) {
+  const response = (await api.DELETE("/api/v1/clinic-records/{recordId}", {
+    params: { path: { recordId } }
+  })) as { error?: unknown };
+
+  if (response.error) {
+    throw new Error(getApiErrorMessage(response.error, "클리닉 기록을 삭제하지 못했습니다."));
   }
 }
 

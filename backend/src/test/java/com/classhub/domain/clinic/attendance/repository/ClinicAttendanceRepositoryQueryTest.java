@@ -140,6 +140,37 @@ class ClinicAttendanceRepositoryQueryTest {
                 });
     }
 
+    @Test
+    void deleteUpcomingAttendances_shouldRemoveOnlyFutureSessions() {
+        UUID teacherId = UUID.randomUUID();
+        Course course = courseRepository.save(createCourse(teacherId));
+        StudentCourseRecord record = studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), course.getId(), null, null, null)
+        );
+        ClinicSlot slot = clinicSlotRepository.save(createSlot(teacherId));
+        LocalDate baseDate = LocalDate.of(2024, Month.MARCH, 5);
+        LocalTime thresholdTime = LocalTime.of(12, 0);
+        ClinicSession beforeSession = clinicSessionRepository.save(
+                createSession(slot, teacherId, slot.getBranchId(), baseDate, LocalTime.of(9, 0))
+        );
+        ClinicSession atSession = clinicSessionRepository.save(
+                createSession(slot, teacherId, slot.getBranchId(), baseDate, thresholdTime)
+        );
+        ClinicSession afterSession = clinicSessionRepository.save(
+                createSession(slot, teacherId, slot.getBranchId(), baseDate.plusDays(1), LocalTime.of(10, 0))
+        );
+        clinicAttendanceRepository.save(attendanceFor(record.getId(), beforeSession.getId()));
+        clinicAttendanceRepository.save(attendanceFor(record.getId(), atSession.getId()));
+        clinicAttendanceRepository.save(attendanceFor(record.getId(), afterSession.getId()));
+
+        int deleted = clinicAttendanceRepository.deleteUpcomingAttendances(record.getId(), baseDate, thresholdTime);
+
+        assertThat(deleted).isEqualTo(2);
+        List<ClinicAttendance> remaining = clinicAttendanceRepository.findAll();
+        assertThat(remaining).hasSize(1);
+        assertThat(remaining.getFirst().getClinicSessionId()).isEqualTo(beforeSession.getId());
+    }
+
     private Course createCourse(UUID teacherId) {
         return Course.create(
                 UUID.randomUUID(),
@@ -176,6 +207,32 @@ class ClinicAttendanceRepositoryQueryTest {
                 .endTime(slot.getEndTime())
                 .capacity(slot.getDefaultCapacity())
                 .canceled(false)
+                .build();
+    }
+
+    private ClinicSession createSession(ClinicSlot slot,
+                                        UUID teacherId,
+                                        UUID branchId,
+                                        LocalDate date,
+                                        LocalTime startTime) {
+        return ClinicSession.builder()
+                .slotId(slot.getId())
+                .teacherMemberId(teacherId)
+                .branchId(branchId)
+                .sessionType(ClinicSessionType.REGULAR)
+                .creatorMemberId(null)
+                .date(date)
+                .startTime(startTime)
+                .endTime(startTime.plusHours(1))
+                .capacity(slot.getDefaultCapacity())
+                .canceled(false)
+                .build();
+    }
+
+    private ClinicAttendance attendanceFor(UUID recordId, UUID sessionId) {
+        return ClinicAttendance.builder()
+                .clinicSessionId(sessionId)
+                .studentCourseRecordId(recordId)
                 .build();
     }
 }

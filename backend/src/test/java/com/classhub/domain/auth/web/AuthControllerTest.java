@@ -13,10 +13,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.classhub.domain.auth.application.AuthService;
+import com.classhub.domain.auth.application.TempPasswordService;
 import com.classhub.domain.auth.dto.request.LoginRequest;
 import com.classhub.domain.auth.dto.request.LogoutRequest;
+import com.classhub.domain.auth.dto.request.TempPasswordRequest;
 import com.classhub.domain.auth.dto.response.AuthTokens;
 import com.classhub.domain.auth.dto.response.MeResponse;
+import com.classhub.domain.auth.dto.response.TempPasswordResponse;
 import com.classhub.domain.auth.support.RefreshTokenCookieProvider;
 import com.classhub.domain.member.dto.MemberPrincipal;
 import com.classhub.domain.member.model.MemberRole;
@@ -60,6 +63,9 @@ class AuthControllerTest {
 
         @MockitoBean
         private RefreshTokenCookieProvider refreshTokenCookieProvider;
+
+        @MockitoBean
+        private TempPasswordService tempPasswordService;
 
         @BeforeEach
         public void setUp() {
@@ -158,5 +164,19 @@ class AuthControllerTest {
                 assertThat(captor.getValue().refreshToken()).isEqualTo("cookie-refresh-token");
                 assertThat(captor.getValue().logoutAll()).isFalse();
                 verify(refreshTokenCookieProvider).clearRefreshToken(any());
+        }
+
+        @Test
+        void tempPassword_shouldReturnTempPassword() throws Exception {
+                TempPasswordRequest request = new TempPasswordRequest("user@classhub.dev", "010-1234-5678");
+                given(tempPasswordService.issueTempPassword(any(TempPasswordRequest.class)))
+                                .willReturn(new TempPasswordResponse("Classmate1234!"));
+
+                mockMvc.perform(post("/api/v1/auth/temp-password")
+                                .contentType(APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
+                                .andExpect(jsonPath("$.data.tempPassword").value("Classmate1234!"));
         }
 }

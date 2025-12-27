@@ -1,10 +1,15 @@
 "use client";
 
 import clsx from "clsx";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { useFeedbackSummary } from "@/hooks/feedback/use-feedback-summary";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { InlineError } from "@/components/ui/inline-error";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TeacherLessonComposeModal } from "@/components/dashboard/progress/teacher-lesson-compose-modal";
+import type { FeedbackResponse, FeedbackStatus } from "@/types/dashboard";
 
 const highlightCards = [
   { label: "활성 반", value: "5개", sub: "이번 주 수업", tone: "from-blue-500 to-indigo-500" },
@@ -23,6 +28,7 @@ const quickActions = [
 export default function TeacherDashboardPage() {
   const { canRender, fallback } = useRoleGuard("TEACHER");
   const [composeOpen, setComposeOpen] = useState(false);
+  const feedbackSummary = useFeedbackSummary();
   if (!canRender) {
     return fallback;
   }
@@ -55,6 +61,8 @@ export default function TeacherDashboardPage() {
         ))}
       </section>
 
+      <FeedbackSummarySection summary={feedbackSummary} />
+
       <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <h2 className="text-lg font-semibold text-slate-900">빠른 작업</h2>
         <p className="mt-1 text-sm text-slate-500">자주 사용하는 메뉴를 한곳에 모았습니다.</p>
@@ -75,4 +83,68 @@ export default function TeacherDashboardPage() {
       <TeacherLessonComposeModal open={composeOpen} onClose={() => setComposeOpen(false)} />
     </div>
   );
+}
+
+type FeedbackSummarySectionProps = {
+  summary: {
+    items: FeedbackResponse[];
+    isLoading: boolean;
+    error: string | null;
+  };
+};
+
+function FeedbackSummarySection({ summary }: FeedbackSummarySectionProps) {
+  const { items, isLoading, error } = summary;
+  const visibleItems = useMemo(() => items.slice(0, 3), [items]);
+  if (!isLoading && !error && visibleItems.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">내 피드백</h2>
+          <p className="mt-1 text-sm text-slate-500">최근 제출한 피드백 상태를 확인하세요.</p>
+        </div>
+      </div>
+
+      {error && <InlineError message={error} className="mt-4" />}
+
+      <div className="mt-4 space-y-3">
+        {isLoading && (
+          <>
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+          </>
+        )}
+        {!isLoading &&
+          visibleItems.map((feedback, index) => {
+            const status = (feedback.status ?? "SUBMITTED") as FeedbackStatus;
+            const statusLabel = status === "RESOLVED" ? "해결됨" : "미해결";
+            const badgeVariant = status === "RESOLVED" ? "success" : "secondary";
+            return (
+              <div
+                key={feedback.feedbackId ?? `${feedback.createdAt ?? "feedback"}-${index}`}
+                className="rounded-2xl border border-slate-200 px-4 py-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Badge variant={badgeVariant}>{statusLabel}</Badge>
+                  <span className="text-xs text-slate-500">작성일: {formatDate(feedback.createdAt)}</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-600 line-clamp-2">{feedback.content ?? "-"}</p>
+                {feedback.resolvedAt && (
+                  <p className="mt-2 text-xs text-slate-400">해결일: {formatDate(feedback.resolvedAt)}</p>
+                )}
+              </div>
+            );
+          })}
+      </div>
+    </section>
+  );
+}
+
+function formatDate(value?: string) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("ko", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }

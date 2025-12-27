@@ -19,7 +19,7 @@ public class MemberInitData extends BaseInitData {
 
     public MemberInitData(MemberRepository memberRepository,
                           PasswordEncoder passwordEncoder) {
-        super("season2-member-seed", 100);
+        super("season2-member-seed", 30);
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
     }

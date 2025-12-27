@@ -29,7 +29,7 @@ public class TeacherStudentController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
-    @Operation(summary = "선생님 학생 목록 조회")
+    @Operation(summary = "학생 목록 조회")
     public RsData<PageResponse<StudentSummaryResponse>> getTeacherStudents(
             @AuthenticationPrincipal MemberPrincipal principal,
             @RequestParam(name = "courseId", required = false) UUID courseId,

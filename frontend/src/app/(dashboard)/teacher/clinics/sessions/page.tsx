@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/text-field";
-import { TimeSelect } from "@/components/ui/time-select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
@@ -36,14 +36,13 @@ const DAY_KEYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDA
 
 type DayKey = (typeof DAY_KEYS)[number];
 
-const TIME_PLACEHOLDER = "--:--";
 const GRID_START_HOUR = 6;
 const GRID_END_HOUR = 22;
 const GRID_HOUR_HEIGHT = 56;
 
 const GRID_DAYS = DAY_OPTIONS.map((day) => ({ key: day.value, label: day.label }));
 
-const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : TIME_PLACEHOLDER);
+const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : "--:--");
 
 const getDayKeyFromDate = (date?: string): DayKey | null => {
   if (!date) return null;
@@ -364,6 +363,8 @@ export default function TeacherClinicSessionsPage() {
                 renderItem={({ item, style }) => {
                   const isCanceled = Boolean(item.isCanceled);
                   const isEmergency = item.sessionType === "EMERGENCY";
+                  const attendanceCount = item.attendanceCount ?? 0;
+                  const capacity = item.capacity ?? 0;
                   return (
                     <div
                       className={clsx(
@@ -377,12 +378,12 @@ export default function TeacherClinicSessionsPage() {
                       style={style}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">
-                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-xs font-semibold leading-tight break-words">
+                            {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
                           </p>
-                          <p className="text-[11px]">
-                            {isEmergency ? "긴급" : "정규"} · 정원 {item.capacity ?? "-"}
+                          <p className="text-[10px]">
+                            {isEmergency ? "긴급" : "정규"} · 참석 {attendanceCount}/{capacity}
                           </p>
                         </div>
                         {!isCanceled && (
@@ -406,22 +407,35 @@ export default function TeacherClinicSessionsPage() {
 
       <Modal open={isEmergencyOpen} onClose={closeEmergencyModal} title="긴급 세션 생성" size="sm">
         <div className="space-y-4">
-          <TextField
+          <DatePicker
             label="날짜"
-            type="date"
             value={emergencyForm.date}
-            onChange={(event) => setEmergencyForm((prev) => ({ ...prev, date: event.target.value }))}
+            onChange={(date) => setEmergencyForm((prev) => ({ ...prev, date }))}
           />
-          <TimeSelect
-            label="시작 시간"
-            value={emergencyForm.startTime}
-            onChange={(value) => setEmergencyForm((prev) => ({ ...prev, startTime: value }))}
-          />
-          <TimeSelect
-            label="종료 시간"
-            value={emergencyForm.endTime}
-            onChange={(value) => setEmergencyForm((prev) => ({ ...prev, endTime: value }))}
-          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <TimeDropdownSelect
+              label="시작 시간"
+              value={emergencyForm.startTime}
+              minHour={GRID_START_HOUR}
+              maxHour={GRID_END_HOUR}
+              onChange={(value) =>
+                setEmergencyForm((prev) => {
+                  const next = { ...prev, startTime: value };
+                  if (!prev.endTime || !isEndAfterStart(value, prev.endTime)) {
+                    next.endTime = getNextSlotTime(value);
+                  }
+                  return next;
+                })
+              }
+            />
+            <TimeDropdownSelect
+              label="종료 시간"
+              value={emergencyForm.endTime || getNextSlotTime(emergencyForm.startTime)}
+              minHour={Math.min(GRID_END_HOUR, Number(emergencyForm.startTime.split(":")[0] ?? GRID_START_HOUR))}
+              maxHour={GRID_END_HOUR}
+              onChange={(value) => setEmergencyForm((prev) => ({ ...prev, endTime: value }))}
+            />
+          </div>
           <TextField
             label="정원"
             type="number"
@@ -454,6 +468,92 @@ export default function TeacherClinicSessionsPage() {
       />
     </div>
   );
+}
+
+type TimeDropdownSelectProps = {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  minHour?: number;
+  maxHour?: number;
+};
+
+function TimeDropdownSelect({
+  label,
+  value,
+  onChange,
+  minHour = GRID_START_HOUR,
+  maxHour = GRID_END_HOUR
+}: TimeDropdownSelectProps) {
+  const [hour, minute] = value.split(":").map((v) => v.padStart(2, "0"));
+  const currentHour = hour || "09";
+  const currentMinute = minute || "00";
+
+  const hourOptions = useMemo(() => {
+    const options: string[] = [];
+    for (let h = minHour; h <= maxHour; h++) {
+      options.push(String(h).padStart(2, "0"));
+    }
+    return options;
+  }, [minHour, maxHour]);
+
+  const minuteOptions = ["00", "10", "20", "30", "40", "50"];
+
+  return (
+    <div className="flex flex-col gap-2">
+      {label ? (
+        <span className="text-sm font-semibold text-slate-700">
+          {label}
+          <span className="ml-1 text-rose-500">*</span>
+        </span>
+      ) : null}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-600">시</label>
+          <Select value={currentHour} onChange={(event) => onChange(`${event.target.value}:${currentMinute}`)}>
+            {hourOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-600">분</label>
+          <Select value={currentMinute} onChange={(event) => onChange(`${currentHour}:${event.target.value}`)}>
+            {minuteOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function isEndAfterStart(start?: string, end?: string) {
+  if (!start || !end) {
+    return false;
+  }
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  const startTotal = startHour * 60 + startMinute;
+  const endTotal = endHour * 60 + endMinute;
+  return endTotal > startTotal;
+}
+
+function getNextSlotTime(value?: string) {
+  if (!value) {
+    return "10:00";
+  }
+  const [hour, minute] = value.split(":").map(Number);
+  let nextHour = hour + 1;
+  if (nextHour > GRID_END_HOUR) {
+    nextHour = GRID_END_HOUR;
+  }
+  return `${String(nextHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 function getCurrentWeekRange(baseDate: Date = new Date()) {

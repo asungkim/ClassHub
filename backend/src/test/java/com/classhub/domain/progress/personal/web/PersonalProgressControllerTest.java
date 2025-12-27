@@ -92,6 +92,28 @@ class PersonalProgressControllerTest {
     }
 
     @Test
+    void createPersonalProgress_shouldAllowAssistant() throws Exception {
+        PersonalProgressResponse response = sampleResponse();
+        given(personalProgressService.createPersonalProgress(eq(assistantPrincipal), eq(response.studentCourseRecordId()), any()))
+                .willReturn(response);
+
+        PersonalProgressCreateRequest request = new PersonalProgressCreateRequest(
+                response.date(),
+                response.title(),
+                response.content()
+        );
+
+        mockMvc.perform(post("/api/v1/student-courses/{recordId}/personal-progress", response.studentCourseRecordId())
+                        .with(auth(assistantPrincipal))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(RsCode.CREATED.getCode()));
+
+        verify(personalProgressService).createPersonalProgress(eq(assistantPrincipal), eq(response.studentCourseRecordId()), any());
+    }
+
+    @Test
     void getPersonalProgresses_shouldReturnSliceForAssistant() throws Exception {
         PersonalProgressResponse response = sampleResponse();
         ProgressSliceResponse<PersonalProgressResponse> slice = new ProgressSliceResponse<>(
@@ -137,6 +159,37 @@ class PersonalProgressControllerTest {
 
         mockMvc.perform(patch("/api/v1/personal-progress/{progressId}", response.id())
                         .with(auth(teacherPrincipal))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("Updated"));
+    }
+
+    @Test
+    void updatePersonalProgress_shouldAllowAssistant() throws Exception {
+        PersonalProgressResponse response = sampleResponse();
+        PersonalProgressUpdateRequest request = new PersonalProgressUpdateRequest(
+                LocalDate.of(2024, Month.MARCH, 10),
+                "Updated",
+                "memo"
+        );
+        PersonalProgressResponse updated = new PersonalProgressResponse(
+                response.id(),
+                response.studentCourseRecordId(),
+                response.courseId(),
+                request.date(),
+                request.title(),
+                request.content(),
+                response.writerId(),
+                response.writerName(),
+                response.writerRole(),
+                response.createdAt()
+        );
+        given(personalProgressService.updatePersonalProgress(eq(assistantPrincipal), eq(response.id()), any()))
+                .willReturn(updated);
+
+        mockMvc.perform(patch("/api/v1/personal-progress/{progressId}", response.id())
+                        .with(auth(assistantPrincipal))
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

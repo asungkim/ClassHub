@@ -10,6 +10,7 @@ import com.classhub.domain.clinic.record.repository.ClinicRecordRepository;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
 import com.classhub.domain.member.dto.MemberPrincipal;
+import com.classhub.domain.member.model.MemberRole;
 import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.exception.BusinessException;
@@ -73,6 +74,7 @@ public class ClinicRecordService {
                 .orElseThrow(RsCode.CLINIC_RECORD_NOT_FOUND::toException);
         Course course = loadCourseByAttendance(loadAttendance(record.getClinicAttendanceId()));
         ensureWriterPermission(principal, course);
+        ensureWriterAccess(principal, record);
         record.update(request.title(), request.content(), request.homeworkProgress());
         return clinicRecordRepository.save(record);
     }
@@ -85,6 +87,7 @@ public class ClinicRecordService {
                 .orElseThrow(RsCode.CLINIC_RECORD_NOT_FOUND::toException);
         Course course = loadCourseByAttendance(loadAttendance(record.getClinicAttendanceId()));
         ensureWriterPermission(principal, course);
+        ensureWriterAccess(principal, record);
         clinicRecordRepository.delete(record);
     }
 
@@ -110,5 +113,11 @@ public class ClinicRecordService {
 
     private void ensureWriterPermission(MemberPrincipal principal, Course course) {
         clinicPermissionValidator.ensureStaffAccess(principal, course.getTeacherMemberId());
+    }
+
+    private void ensureWriterAccess(MemberPrincipal principal, ClinicRecord record) {
+        if (principal.role() == MemberRole.ASSISTANT && !principal.id().equals(record.getWriterId())) {
+            throw new BusinessException(RsCode.FORBIDDEN);
+        }
     }
 }

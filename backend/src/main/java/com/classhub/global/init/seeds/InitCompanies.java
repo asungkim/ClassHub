@@ -15,13 +15,6 @@ public final class InitCompanies {
     public static List<CompanySeed> seeds() {
         return List.of(
                 new CompanySeed(
-                        "Alice Private Lab",
-                        "개인 연구실 기반 소수 정예 학원",
-                        CompanyType.INDIVIDUAL,
-                        VerifiedStatus.VERIFIED,
-                        "teacher.alice@classhub.dev"
-                ),
-                new CompanySeed(
                         "러셀",
                         "러셀 러닝센터",
                         CompanyType.ACADEMY,

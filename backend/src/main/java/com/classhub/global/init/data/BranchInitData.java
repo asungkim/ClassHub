@@ -27,7 +27,7 @@ public class BranchInitData extends BaseInitData {
     public BranchInitData(CompanyRepository companyRepository,
                           BranchRepository branchRepository,
                           MemberRepository memberRepository) {
-        super("season2-branch-seed", 210);
+        super("season2-branch-seed", 20);
         this.companyRepository = companyRepository;
         this.branchRepository = branchRepository;
         this.memberRepository = memberRepository;

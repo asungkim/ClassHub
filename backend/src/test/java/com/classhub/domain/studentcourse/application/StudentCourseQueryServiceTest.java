@@ -1,32 +1,32 @@
 package com.classhub.domain.studentcourse.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.anyList;
 
 import com.classhub.domain.course.application.CourseViewAssembler;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.model.Course;
 import com.classhub.domain.course.repository.CourseRepository;
-import com.classhub.domain.studentcourse.dto.response.StudentCourseResponse;
-import com.classhub.domain.studentcourse.model.StudentCourseEnrollment;
-import com.classhub.domain.studentcourse.repository.StudentCourseEnrollmentRepository;
+import com.classhub.domain.studentcourse.dto.response.StudentMyCourseResponse;
+import com.classhub.domain.studentcourse.model.StudentCourseAssignment;
+import com.classhub.domain.studentcourse.model.StudentCourseRecord;
+import com.classhub.domain.studentcourse.repository.StudentCourseAssignmentRepository;
+import com.classhub.domain.studentcourse.repository.StudentCourseRecordRepository;
 import com.classhub.global.response.PageResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -35,74 +35,130 @@ import org.springframework.test.util.ReflectionTestUtils;
 class StudentCourseQueryServiceTest {
 
     @Mock
-    private StudentCourseEnrollmentRepository enrollmentRepository;
-
+    private StudentCourseAssignmentRepository assignmentRepository;
+    @Mock
+    private StudentCourseRecordRepository recordRepository;
     @Mock
     private CourseRepository courseRepository;
-
     @Mock
     private CourseViewAssembler courseViewAssembler;
 
     @InjectMocks
     private StudentCourseQueryService queryService;
 
-    private UUID studentId;
-    private UUID courseId;
-    private Course course;
-    private CourseResponse courseResponse;
-    private StudentCourseEnrollment enrollment;
+    @Test
+    void getMyCourses_shouldIncludeActiveAndInactiveAssignments() {
+        UUID studentId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID courseId1 = UUID.randomUUID();
+        UUID courseId2 = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
 
-    @BeforeEach
-    void setUp() {
-        studentId = UUID.randomUUID();
-        courseId = UUID.randomUUID();
-        course = Course.create(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                "고2 수학",
-                "desc",
-                LocalDate.now(),
-                LocalDate.now().plusMonths(2),
+        StudentCourseAssignment assignmentActive = StudentCourseAssignment.create(
+                studentId,
+                courseId1,
+                teacherId,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 10, 0)
+        );
+        UUID assignmentId1 = UUID.randomUUID();
+        ReflectionTestUtils.setField(assignmentActive, "id", assignmentId1);
+
+        StudentCourseAssignment assignmentInactive = StudentCourseAssignment.create(
+                studentId,
+                courseId2,
+                teacherId,
+                LocalDateTime.of(2025, Month.JANUARY, 2, 10, 0)
+        );
+        assignmentInactive.deactivate();
+        UUID assignmentId2 = UUID.randomUUID();
+        ReflectionTestUtils.setField(assignmentInactive, "id", assignmentId2);
+
+        PageRequest pageable = PageRequest.of(0, 20);
+        given(assignmentRepository.findByStudentMemberIdWithActiveCourse(studentId, pageable))
+                .willReturn(new PageImpl<>(List.of(assignmentActive, assignmentInactive), pageable, 2));
+
+        Course course1 = Course.create(
+                branchId,
+                teacherId,
+                "Course 1",
+                null,
+                LocalDate.of(2025, Month.JANUARY, 1),
+                LocalDate.of(2025, Month.MARCH, 1),
                 Set.of()
         );
-        ReflectionTestUtils.setField(course, "id", courseId);
-        courseResponse = new CourseResponse(
-                courseId,
-                UUID.randomUUID(),
-                "잠실",
-                UUID.randomUUID(),
-                "러셀",
-                "고2 수학",
-                "desc",
-                LocalDate.now(),
-                LocalDate.now().plusMonths(2),
+        ReflectionTestUtils.setField(course1, "id", courseId1);
+        Course course2 = Course.create(
+                branchId,
+                teacherId,
+                "Course 2",
+                null,
+                LocalDate.of(2025, Month.JANUARY, 1),
+                LocalDate.of(2025, Month.MARCH, 1),
+                Set.of()
+        );
+        ReflectionTestUtils.setField(course2, "id", courseId2);
+
+        List<Course> courses = List.of(course1, course2);
+        given(courseRepository.findAllById(anyList())).willReturn(courses);
+        CourseViewAssembler.CourseContext context = new CourseViewAssembler.CourseContext(
+                Map.of(),
+                Map.of(),
+                Map.of()
+        );
+        given(courseViewAssembler.buildContext(courses)).willReturn(context);
+        CourseResponse response1 = new CourseResponse(
+                courseId1,
+                branchId,
+                "Branch",
+                companyId,
+                "Company",
+                "Course 1",
+                null,
+                LocalDate.of(2025, Month.JANUARY, 1),
+                LocalDate.of(2025, Month.MARCH, 1),
                 true,
                 List.of()
         );
-        enrollment = StudentCourseEnrollment.create(studentId, courseId, LocalDateTime.now());
-        ReflectionTestUtils.setField(enrollment, "id", UUID.randomUUID());
-    }
-
-    @Test
-    void getMyCourses_shouldReturnPagedCourses() {
-        Page<StudentCourseEnrollment> page = new PageImpl<>(List.of(enrollment), PageRequest.of(0, 10), 1);
-        when(enrollmentRepository.searchActiveEnrollments(eq(studentId), anyString(), eq(PageRequest.of(0, 10))))
-                .thenReturn(page);
-        when(courseRepository.findAllById(anyCollection())).thenReturn(List.of(course));
-        CourseViewAssembler.CourseContext context = new CourseViewAssembler.CourseContext(
-                java.util.Map.of(),
-                java.util.Map.of(),
-                java.util.Map.of()
+        CourseResponse response2 = new CourseResponse(
+                courseId2,
+                branchId,
+                "Branch",
+                companyId,
+                "Company",
+                "Course 2",
+                null,
+                LocalDate.of(2025, Month.JANUARY, 1),
+                LocalDate.of(2025, Month.MARCH, 1),
+                true,
+                List.of()
         );
-        when(courseViewAssembler.buildContext(anyCollection())).thenReturn(context);
-        when(courseViewAssembler.toCourseResponse(course, context)).thenReturn(courseResponse);
+        given(courseViewAssembler.toCourseResponse(course1, context)).willReturn(response1);
+        given(courseViewAssembler.toCourseResponse(course2, context)).willReturn(response2);
 
-        PageResponse<StudentCourseResponse> response = queryService.getMyCourses(studentId, "수학", 0, 10);
+        StudentCourseRecord record = StudentCourseRecord.create(studentId, courseId1, null, null, null);
+        UUID recordId = UUID.randomUUID();
+        ReflectionTestUtils.setField(record, "id", recordId);
+        given(recordRepository.findByStudentMemberIdAndDeletedAtIsNull(studentId))
+                .willReturn(List.of(record));
 
-        assertThat(response.content()).hasSize(1);
-        StudentCourseResponse first = response.content().getFirst();
-        assertThat(first.course().name()).isEqualTo("고2 수학");
-        assertThat(first.enrollmentId()).isEqualTo(enrollment.getId());
-        verify(enrollmentRepository).searchActiveEnrollments(studentId, "수학", PageRequest.of(0, 10));
+        PageResponse<StudentMyCourseResponse> result = queryService.getMyCourses(studentId, 0, 20);
+
+        assertThat(result.content()).hasSize(2);
+        Map<UUID, StudentMyCourseResponse> responseMap = result.content().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        response -> response.course().courseId(),
+                        Function.identity()
+                ));
+        StudentMyCourseResponse first = responseMap.get(courseId1);
+        StudentMyCourseResponse second = responseMap.get(courseId2);
+
+        assertThat(first.assignmentId()).isEqualTo(assignmentId1);
+        assertThat(first.assignmentActive()).isTrue();
+        assertThat(first.recordId()).isEqualTo(recordId);
+
+        assertThat(second.assignmentId()).isEqualTo(assignmentId2);
+        assertThat(second.assignmentActive()).isFalse();
+        assertThat(second.recordId()).isNull();
     }
 }

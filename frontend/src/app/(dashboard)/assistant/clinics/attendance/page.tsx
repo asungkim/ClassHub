@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useClinicSessions } from "@/hooks/clinic/use-clinic-sessions";
-import { fetchAssistantCourses, fetchStudentCourseRecords } from "@/lib/dashboard-api";
+import { fetchAssistantCourses, fetchCourseStudents } from "@/lib/dashboard-api";
 import { api } from "@/lib/api";
 import { getApiErrorMessage, getFetchError } from "@/lib/api-error";
 import { useToast } from "@/components/ui/toast";
@@ -19,13 +19,61 @@ import { TextField } from "@/components/ui/text-field";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { components } from "@/types/openapi";
-import type { CourseWithTeacherResponse, StudentCourseListItemResponse } from "@/types/dashboard";
+import type { CourseStudentResponse, CourseWithTeacherResponse } from "@/types/dashboard";
 
 const ATTENDANCE_LOCK_MINUTES = 10;
 
 const TIME_PLACEHOLDER = "--:--";
 
 const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : TIME_PLACEHOLDER);
+
+const formatGradeLabel = (grade?: string) => {
+  if (!grade) {
+    return "-";
+  }
+  const normalized = grade.trim();
+  const directMap: Record<string, string> = {
+    HIGH_1: "고1",
+    HIGH_2: "고2",
+    HIGH_3: "고3",
+    MIDDLE_1: "중1",
+    MIDDLE_2: "중2",
+    MIDDLE_3: "중3",
+    ELEMENTARY_1: "초1",
+    ELEMENTARY_2: "초2",
+    ELEMENTARY_3: "초3",
+    ELEMENTARY_4: "초4",
+    ELEMENTARY_5: "초5",
+    ELEMENTARY_6: "초6"
+  };
+  if (directMap[normalized]) {
+    return directMap[normalized];
+  }
+  const match = normalized.match(/^(HIGH|MIDDLE|ELEMENTARY)_(\d)$/);
+  if (match) {
+    const prefixMap: Record<string, string> = { HIGH: "고", MIDDLE: "중", ELEMENTARY: "초" };
+    return `${prefixMap[match[1]] ?? ""}${match[2]}`;
+  }
+  return normalized;
+};
+
+const formatSchoolGrade = (schoolName?: string, grade?: string) => {
+  const trimmedSchool = schoolName?.trim();
+  const schoolLabel = trimmedSchool && trimmedSchool.length > 0 ? trimmedSchool : null;
+  const gradeLabel = formatGradeLabel(grade);
+  if (schoolLabel && gradeLabel !== "-") {
+    return `${schoolLabel}(${gradeLabel})`;
+  }
+  if (schoolLabel) {
+    return schoolLabel;
+  }
+  return gradeLabel;
+};
+
+const getAttendanceEmail = (attendance: ClinicAttendanceDetailResponse) => {
+  const email = (attendance as ClinicAttendanceDetailResponse & { email?: string }).email;
+  return email && email.trim().length > 0 ? email : null;
+};
 
 const getSessionStartAt = (date?: string, time?: string): Date | null => {
   if (!date || !time) {
@@ -93,7 +141,7 @@ export default function AssistantClinicAttendancePage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [studentKeyword, setStudentKeyword] = useState("");
-  const [studentList, setStudentList] = useState<StudentCourseListItemResponse[]>([]);
+  const [studentList, setStudentList] = useState<CourseStudentResponse[]>([]);
   const [studentLoading, setStudentLoading] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
@@ -167,6 +215,10 @@ export default function AssistantClinicAttendancePage() {
   const selectedContext = useMemo(
     () => contexts.find((context) => context.key === selectedKey) ?? null,
     [contexts, selectedKey]
+  );
+  const selectedCourseName = useMemo(
+    () => selectedContext?.courses.find((course) => course.courseId === selectedCourseId)?.name ?? "",
+    [selectedContext, selectedCourseId]
   );
 
   const {
@@ -259,14 +311,20 @@ export default function AssistantClinicAttendancePage() {
     }
     setStudentLoading(true);
     try {
-      const result = await fetchStudentCourseRecords({
-        courseId: selectedCourseId,
-        status: "ACTIVE",
-        keyword: studentKeyword || undefined,
-        page: 0,
-        size: 50
-      });
-      setStudentList(result.items ?? []);
+      const result = await fetchCourseStudents({ courseId: selectedCourseId, page: 0, size: 50 });
+      const keyword = studentKeyword.trim();
+      const items = result.items ?? [];
+      if (!keyword) {
+        setStudentList(items);
+      } else {
+        const filtered = items.filter((item) => {
+          const name = item.student?.name ?? "";
+          const phone = item.student?.phoneNumber ?? "";
+          const parentPhone = item.student?.parentPhone ?? "";
+          return [name, phone, parentPhone].some((value) => value.includes(keyword));
+        });
+        setStudentList(filtered);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "학생 목록을 불러오지 못했습니다.";
       showToast("error", message);
@@ -354,7 +412,8 @@ export default function AssistantClinicAttendancePage() {
       });
       const fetchError = getFetchError(response);
       if (fetchError) {
-        if (fetchError.status === 404) {
+        const message = getApiErrorMessage(fetchError, "");
+        if (fetchError.status === 404 || message.includes("기록을 찾을 수 없습니다")) {
           setRecordLoading(false);
           return;
         }
@@ -555,7 +614,9 @@ export default function AssistantClinicAttendancePage() {
                       </p>
                       {session.isCanceled && <Badge variant="secondary">취소됨</Badge>}
                     </div>
-                    <p className="text-xs text-slate-500">정원 {session.capacity ?? "-"}</p>
+                    <p className="text-xs text-slate-500">
+                      참여 {session.attendanceCount ?? "-"} / {session.capacity ?? "-"}
+                    </p>
                   </button>
                 );
               })}
@@ -581,9 +642,11 @@ export default function AssistantClinicAttendancePage() {
                   ? "세션 시작 10분 전부터 출석 추가/삭제가 제한됩니다."
                   : "출석 추가/삭제 후 기록을 바로 작성할 수 있습니다."}
               </div>
-              <Button onClick={openAddModal} disabled={attendanceLocked}>
-                학생 추가
-              </Button>
+              {!attendanceLocked && (
+                <Button onClick={openAddModal}>
+                  학생 추가
+                </Button>
+              )}
             </div>
           )}
 
@@ -596,9 +659,8 @@ export default function AssistantClinicAttendancePage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>학생</TableHead>
-                  <TableHead>연락처</TableHead>
-                  <TableHead>학교</TableHead>
-                  <TableHead>학년</TableHead>
+                  <TableHead>연락처(학생,학부모)</TableHead>
+                  <TableHead>학교(학년)</TableHead>
                   <TableHead>기록</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
@@ -608,26 +670,28 @@ export default function AssistantClinicAttendancePage() {
                   <TableRow key={attendance.attendanceId}>
                     <TableCell>
                       <div className="font-medium text-slate-900">{attendance.studentName ?? "-"}</div>
-                      <div className="text-xs text-slate-500">{attendance.studentMemberId ?? ""}</div>
+                      {getAttendanceEmail(attendance) && (
+                        <div className="text-xs text-slate-500">{getAttendanceEmail(attendance)}</div>
+                      )}
                     </TableCell>
-                    <TableCell>{attendance.phoneNumber ?? "-"}</TableCell>
-                    <TableCell>{attendance.schoolName ?? "-"}</TableCell>
-                    <TableCell>{attendance.grade ?? "-"}</TableCell>
+                    <TableCell>
+                      <div>{attendance.phoneNumber ?? "-"}</div>
+                      <div className="text-xs text-slate-500">{attendance.parentPhoneNumber ?? "-"}</div>
+                    </TableCell>
+                    <TableCell>{formatSchoolGrade(attendance.schoolName, attendance.grade)}</TableCell>
                     <TableCell>
                       {attendance.recordId ? <Badge>기록 있음</Badge> : <Badge variant="secondary">미작성</Badge>}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" onClick={() => void openRecordModal(attendance)}>
-                          기록
+                          {attendance.recordId ? "수정" : "기록"}
                         </Button>
-                        <Button
-                          variant="ghost"
-                          onClick={() => setDeleteAttendanceTarget(attendance)}
-                          disabled={attendanceLocked}
-                        >
-                          삭제
-                        </Button>
+                        {!attendanceLocked && (
+                          <Button variant="ghost" onClick={() => setDeleteAttendanceTarget(attendance)}>
+                            삭제
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -709,11 +773,11 @@ export default function AssistantClinicAttendancePage() {
                             />
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium text-slate-900">{student.studentName ?? "-"}</div>
-                            <div className="text-xs text-slate-500">{student.courseName ?? ""}</div>
+                            <div className="font-medium text-slate-900">{student.student?.name ?? "-"}</div>
+                            <div className="text-xs text-slate-500">{selectedCourseName}</div>
                           </TableCell>
-                          <TableCell>{student.phoneNumber ?? "-"}</TableCell>
-                          <TableCell>{student.active ? "수강 중" : "비활성"}</TableCell>
+                          <TableCell>{student.student?.phoneNumber ?? "-"}</TableCell>
+                          <TableCell>{student.assignmentActive ? "수강 중" : "비활성"}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -783,7 +847,7 @@ export default function AssistantClinicAttendancePage() {
         onClose={() => setDeleteAttendanceTarget(null)}
         onConfirm={() => void handleDeleteAttendance()}
         title="출석을 삭제할까요?"
-        message="삭제된 출석은 복구할 수 없습니다."
+        message="경고: 삭제된 출석은 복구할 수 없습니다."
         confirmText={isDeletingAttendance ? "삭제 중..." : "삭제"}
         isLoading={isDeletingAttendance}
       />
@@ -793,7 +857,7 @@ export default function AssistantClinicAttendancePage() {
         onClose={() => setRecordDeleteConfirm(false)}
         onConfirm={() => void deleteRecord()}
         title="기록을 삭제할까요?"
-        message="삭제된 기록은 복구할 수 없습니다."
+        message="경고: 삭제된 기록은 복구할 수 없습니다."
         confirmText={isSubmitting ? "삭제 중..." : "삭제"}
         isLoading={isSubmitting}
       />

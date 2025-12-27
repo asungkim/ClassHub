@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/text-field";
-import { TimeSelect } from "@/components/ui/time-select";
 import { EmptyState } from "@/components/shared/empty-state";
 import { WeeklyTimeGrid } from "@/components/shared/weekly-time-grid";
 import type { components } from "@/types/openapi";
@@ -31,7 +30,6 @@ const DAY_OPTIONS = [
   { value: "SUNDAY", label: "일" }
 ] as const;
 
-const TIME_PLACEHOLDER = "--:--";
 const GRID_START_HOUR = 6;
 const GRID_END_HOUR = 22;
 const GRID_HOUR_HEIGHT = 56;
@@ -55,8 +53,6 @@ const DEFAULT_FORM_STATE: SlotFormState = {
   endTime: "10:00",
   defaultCapacity: "6"
 };
-
-const formatTime = (time?: string) => (time && time.length >= 5 ? time.slice(0, 5) : TIME_PLACEHOLDER);
 
 export default function TeacherClinicSlotsPage() {
   const { canRender, fallback } = useRoleGuard("TEACHER");
@@ -143,8 +139,8 @@ export default function TeacherClinicSlotsPage() {
     setEditingSlot(slot);
     setFormState({
       dayOfWeek: slot.dayOfWeek ?? "MONDAY",
-      startTime: slot.startTime ?? "09:00",
-      endTime: slot.endTime ?? "10:00",
+      startTime: formatTimeInput(slot.startTime) || "09:00",
+      endTime: formatTimeInput(slot.endTime) || "10:00",
       defaultCapacity: slot.defaultCapacity?.toString() ?? ""
     });
     setFormError(null);
@@ -366,37 +362,46 @@ export default function TeacherClinicSlotsPage() {
                   endTime: slot.endTime
                 })}
                 getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
-                renderItem={({ item, style }) => (
-                  <div
-                    className="absolute left-1 right-1 rounded-2xl border border-blue-200 bg-blue-50 p-2 text-xs text-slate-700 shadow-sm transition hover:border-blue-300 hover:shadow-md"
-                    style={style}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openEditModal(item)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openEditModal(item);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[14px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
+                renderItem={({ item, style }) => {
+                  const assignedCount = item.defaultAssignedCount ?? 0;
+                  const capacity = item.defaultCapacity ?? 0;
+                  return (
+                    <div
+                      className="absolute left-1 right-1 rounded-2xl border border-blue-200 bg-blue-50 p-2 text-xs text-slate-700 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+                      style={style}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openEditModal(item)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openEditModal(item);
+                        }
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-xs font-semibold text-slate-700 leading-tight break-words">
+                            {formatTimeLabel(item.startTime)} ~ {formatTimeLabel(item.endTime)}
+                          </p>
+                          <p className="text-[10px] text-slate-500">
+                            기본 {assignedCount} / {capacity}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="shrink-0 text-[10px] font-semibold text-rose-500 hover:text-rose-600"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            confirmDelete(item);
+                          }}
+                        >
+                          삭제
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        className="shrink-0 text-[11px] font-semibold text-rose-500 hover:text-rose-600"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          confirmDelete(item);
-                        }}
-                      >
-                        삭제
-                      </button>
                     </div>
-                  </div>
-                )}
+                  );
+                }}
               />
             </div>
           )}
@@ -417,17 +422,30 @@ export default function TeacherClinicSlotsPage() {
             ))}
           </Select>
 
-          <TimeSelect
-            label="시작 시간"
-            value={formState.startTime}
-            onChange={(value) => setFormState((prev) => ({ ...prev, startTime: value }))}
-          />
-
-          <TimeSelect
-            label="종료 시간"
-            value={formState.endTime}
-            onChange={(value) => setFormState((prev) => ({ ...prev, endTime: value }))}
-          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <TimeDropdownSelect
+              label="시작 시간"
+              value={formState.startTime}
+              minHour={GRID_START_HOUR}
+              maxHour={GRID_END_HOUR}
+              onChange={(value) =>
+                setFormState((prev) => {
+                  const next = { ...prev, startTime: value };
+                  if (!prev.endTime || !isEndAfterStart(value, prev.endTime)) {
+                    next.endTime = getNextSlotTime(value);
+                  }
+                  return next;
+                })
+              }
+            />
+            <TimeDropdownSelect
+              label="종료 시간"
+              value={formState.endTime || getNextSlotTime(formState.startTime)}
+              minHour={Math.min(GRID_END_HOUR, Number(formState.startTime.split(":")[0] ?? GRID_START_HOUR))}
+              maxHour={GRID_END_HOUR}
+              onChange={(value) => setFormState((prev) => ({ ...prev, endTime: value }))}
+            />
+          </div>
 
           <TextField
             label="기본 정원"
@@ -461,4 +479,107 @@ export default function TeacherClinicSlotsPage() {
       />
     </div>
   );
+}
+
+type TimeDropdownSelectProps = {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  minHour?: number;
+  maxHour?: number;
+};
+
+function TimeDropdownSelect({
+  label,
+  value,
+  onChange,
+  minHour = GRID_START_HOUR,
+  maxHour = GRID_END_HOUR
+}: TimeDropdownSelectProps) {
+  const [hour, minute] = value.split(":").map((v) => v.padStart(2, "0"));
+  const currentHour = hour || "09";
+  const currentMinute = minute || "00";
+
+  const hourOptions = useMemo(() => {
+    const options: string[] = [];
+    for (let h = minHour; h <= maxHour; h++) {
+      options.push(String(h).padStart(2, "0"));
+    }
+    return options;
+  }, [minHour, maxHour]);
+
+  const minuteOptions = ["00", "10", "20", "30", "40", "50"];
+
+  return (
+    <div className="flex flex-col gap-2">
+      {label ? (
+        <span className="text-sm font-semibold text-slate-700">
+          {label}
+          <span className="ml-1 text-rose-500">*</span>
+        </span>
+      ) : null}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-600">시</label>
+          <Select value={currentHour} onChange={(event) => onChange(`${event.target.value}:${currentMinute}`)}>
+            {hourOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-600">분</label>
+          <Select value={currentMinute} onChange={(event) => onChange(`${currentHour}:${event.target.value}`)}>
+            {minuteOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function isEndAfterStart(start?: string, end?: string) {
+  if (!start || !end) {
+    return false;
+  }
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  const startTotal = startHour * 60 + startMinute;
+  const endTotal = endHour * 60 + endMinute;
+  return endTotal > startTotal;
+}
+
+function getNextSlotTime(value?: string) {
+  if (!value) {
+    return "10:00";
+  }
+  const [hour, minute] = value.split(":").map(Number);
+  let nextHour = hour + 1;
+  if (nextHour > GRID_END_HOUR) {
+    nextHour = GRID_END_HOUR;
+  }
+  return `${String(nextHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function formatTimeInput(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+  if (value.length >= 5) {
+    return value.slice(0, 5);
+  }
+  return value;
+}
+
+function formatTimeLabel(value?: string | null) {
+  if (!value) {
+    return "--:--";
+  }
+  return value.length >= 5 ? value.slice(0, 5) : value;
 }

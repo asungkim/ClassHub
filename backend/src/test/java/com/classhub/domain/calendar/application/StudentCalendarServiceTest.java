@@ -25,6 +25,7 @@ import com.classhub.domain.studentcourse.model.StudentCourseRecord;
 import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -93,6 +94,8 @@ class StudentCalendarServiceTest {
                 .content("memo")
                 .build();
         ReflectionTestUtils.setField(courseProgress, "id", UUID.randomUUID());
+        LocalDateTime courseCreatedAt = LocalDateTime.now().minusDays(1);
+        ReflectionTestUtils.setField(courseProgress, "createdAt", courseCreatedAt);
 
         PersonalProgress personalProgress = PersonalProgress.builder()
                 .studentCourseRecordId(recordId)
@@ -102,7 +105,10 @@ class StudentCalendarServiceTest {
                 .content("memo")
                 .build();
         ReflectionTestUtils.setField(personalProgress, "id", UUID.randomUUID());
+        LocalDateTime personalCreatedAt = LocalDateTime.now();
+        ReflectionTestUtils.setField(personalProgress, "createdAt", personalCreatedAt);
 
+        LocalDateTime recordCreatedAt = LocalDateTime.now().minusHours(3);
         ClinicAttendanceEventProjection clinicEvent = new TestClinicEvent(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -116,7 +122,8 @@ class StudentCalendarServiceTest {
                 "Clinic",
                 assistantId,
                 "clinic memo",
-                "homework"
+                "homework",
+                recordCreatedAt
         );
 
         given(courseProgressRepository.findByCourseIdsAndDateRange(any(), any(), any()))
@@ -143,14 +150,22 @@ class StudentCalendarServiceTest {
         assertThat(response.courseProgress()).hasSize(1);
         assertThat(response.courseProgress().get(0).courseName()).isEqualTo("중3 수학");
         assertThat(response.courseProgress().get(0).content()).isEqualTo("memo");
+        assertThat(response.courseProgress().get(0).writerName()).isEqualTo("TEACHER");
+        assertThat(response.courseProgress().get(0).createdAt()).isEqualTo(courseCreatedAt);
         assertThat(response.personalProgress()).hasSize(1);
         assertThat(response.personalProgress().get(0).courseName()).isEqualTo("중3 수학");
         assertThat(response.personalProgress().get(0).content()).isEqualTo("memo");
+        assertThat(response.personalProgress().get(0).writerId()).isEqualTo(teacherId);
+        assertThat(response.personalProgress().get(0).writerName()).isEqualTo("TEACHER");
+        assertThat(response.personalProgress().get(0).createdAt()).isEqualTo(personalCreatedAt);
         assertThat(response.clinicEvents()).hasSize(1);
         assertThat(response.clinicEvents().get(0).recordSummary().content()).isEqualTo("clinic memo");
         assertThat(response.clinicEvents().get(0).recordSummary().homeworkProgress()).isEqualTo("homework");
+        assertThat(response.clinicEvents().get(0).recordSummary().writerId()).isEqualTo(assistantId);
         assertThat(response.clinicEvents().get(0).recordSummary().writerRole())
                 .isEqualTo(MemberRole.ASSISTANT);
+        assertThat(response.clinicEvents().get(0).recordSummary().writerName()).isEqualTo("ASSISTANT");
+        assertThat(response.clinicEvents().get(0).recordSummary().createdAt()).isEqualTo(recordCreatedAt);
     }
 
     @Test
@@ -212,7 +227,8 @@ class StudentCalendarServiceTest {
             String recordTitle,
             UUID recordWriterId,
             String recordContent,
-            String recordHomeworkProgress
+            String recordHomeworkProgress,
+            LocalDateTime recordCreatedAt
     ) implements ClinicAttendanceEventProjection {
         @Override
         public UUID getClinicSessionId() {
@@ -277,6 +293,11 @@ class StudentCalendarServiceTest {
         @Override
         public String getRecordHomeworkProgress() {
             return recordHomeworkProgress;
+        }
+
+        @Override
+        public LocalDateTime getRecordCreatedAt() {
+            return recordCreatedAt;
         }
     }
 }

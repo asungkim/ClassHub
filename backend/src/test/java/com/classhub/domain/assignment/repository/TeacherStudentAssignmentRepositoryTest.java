@@ -213,4 +213,36 @@ class TeacherStudentAssignmentRepositoryTest {
         assertThat(page.getContent()).hasSize(1);
         assertThat(page.getContent().getFirst().getId()).isEqualTo(assignment.getId());
     }
+
+    @Test
+    void searchDistinctStudentIdsForTeachers_shouldReturnDistinctStudents() {
+        UUID teacherA = UUID.randomUUID();
+        UUID teacherB = UUID.randomUUID();
+        Member student = memberRepository.save(Member.builder()
+                .email("student10@classhub.com")
+                .password("encoded")
+                .name("오학생")
+                .phoneNumber("01099990000")
+                .role(MemberRole.STUDENT)
+                .build());
+        studentInfoRepository.save(StudentInfo.builder()
+                .memberId(student.getId())
+                .schoolName("서초중학교")
+                .grade(StudentGrade.MIDDLE_1)
+                .birthDate(LocalDate.of(2012, 10, 10))
+                .parentPhone("01012121212")
+                .build());
+        repository.save(TeacherStudentAssignment.create(teacherA, student.getId()));
+        repository.save(TeacherStudentAssignment.create(teacherB, student.getId()));
+
+        var page = repository.searchDistinctStudentIdsForTeachers(
+                List.of(teacherA, teacherB),
+                null,
+                null,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().getFirst()).isEqualTo(student.getId());
+    }
 }
