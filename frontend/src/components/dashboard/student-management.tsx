@@ -181,7 +181,7 @@ function StudentsTab({ role, refreshKey }: StudentsTabProps) {
     } finally {
       setCourseOptionsLoading(false);
     }
-  }, [role, showToast]);
+  }, [role]);
 
   useEffect(() => {
     void loadCourseOptions();
@@ -402,6 +402,13 @@ function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
         page,
         size: DASHBOARD_PAGE_SIZE
       });
+      const lastPageIndex = Math.max(0, Math.ceil(result.totalElements / DASHBOARD_PAGE_SIZE) - 1);
+      if (page > lastPageIndex) {
+        setTotal(result.totalElements);
+        setSelectedIds(new Set());
+        setPage(lastPageIndex);
+        return;
+      }
       setRequests(result.items);
       setTotal(result.totalElements);
       setSelectedIds((prev) => {
@@ -775,6 +782,13 @@ function BatchAssignmentTab({ role, refreshKey }: BatchAssignmentTabProps) {
         page,
         size: DASHBOARD_PAGE_SIZE
       });
+      const lastPageIndex = Math.max(0, Math.ceil(result.totalElements / DASHBOARD_PAGE_SIZE) - 1);
+      if (page > lastPageIndex) {
+        setTotal(result.totalElements);
+        setSelectedIds(new Set());
+        setPage(lastPageIndex);
+        return;
+      }
       setStudents(result.items);
       setTotal(result.totalElements);
       setSelectedIds((prev) => {
@@ -1097,14 +1111,32 @@ function StudentDetailModal({
   const [assistantOptions, setAssistantOptions] = useState<AssistantAssignmentResponse[]>([]);
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantError, setAssistantError] = useState<string | null>(null);
-  const [slotOptions, setSlotOptions] = useState<ClinicSlotResponse[]>([]);
-  const [slotLoading, setSlotLoading] = useState(false);
-  const [slotError, setSlotError] = useState<string | null>(null);
+  const [slotOptionsByBranch, setSlotOptionsByBranch] = useState<Record<string, ClinicSlotResponse[]>>({});
+  const [slotLoadingByBranch, setSlotLoadingByBranch] = useState<Record<string, boolean>>({});
+  const [slotErrorByBranch, setSlotErrorByBranch] = useState<Record<string, string>>({});
 
   const courses = detail?.courses ?? [];
   const summaryLabel = courses.length === 0 ? "배치 전" : `배치된 반 ${courses.length}개`;
   const summaryVariant = "secondary";
   const isTeacher = role === "TEACHER";
+  const editingCourse = editingCourseId ? courses.find((course) => course.courseId === editingCourseId) : null;
+  const editingRecordId = editingCourse?.recordId;
+  const editingRecord = editingRecordId ? recordCache[editingRecordId] : null;
+  const editingBranchId = editingRecord?.course?.branchId;
+  const editingSlotOptions = editingBranchId ? slotOptionsByBranch[editingBranchId] ?? [] : [];
+  const editingSlotLoading = editingBranchId ? Boolean(slotLoadingByBranch[editingBranchId]) : false;
+  const editingSlotError = editingBranchId ? slotErrorByBranch[editingBranchId] ?? null : null;
+  const slotById = useMemo(() => {
+    const map = new Map<string, ClinicSlotResponse>();
+    Object.values(slotOptionsByBranch).forEach((slots) => {
+      slots.forEach((slot) => {
+        if (slot.slotId) {
+          map.set(slot.slotId, slot);
+        }
+      });
+    });
+    return map;
+  }, [slotOptionsByBranch]);
 
   useEffect(() => {
     // 학생이 변경되거나 모달이 닫힐 때 상태 리셋
@@ -1179,6 +1211,47 @@ function StudentDetailModal({
   }, [open, detail, courses, recordCache, recordLoadingIds]);
 
   useEffect(() => {
+    if (!detail?.student?.memberId || !open || !isTeacher) {
+      setSlotOptionsByBranch((prev) => Object.keys(prev).length > 0 ? {} : prev);
+      setSlotLoadingByBranch((prev) => Object.keys(prev).length > 0 ? {} : prev);
+      setSlotErrorByBranch((prev) => Object.keys(prev).length > 0 ? {} : prev);
+      return;
+    }
+    const branchIds = new Set<string>();
+    courses.forEach((course) => {
+      const recordId = course.recordId;
+      if (!recordId) return;
+      const record = recordCache[recordId];
+      const branchId = record?.course?.branchId;
+      if (branchId) {
+        branchIds.add(branchId);
+      }
+    });
+    branchIds.forEach((branchId) => {
+      if (slotOptionsByBranch[branchId] || slotLoadingByBranch[branchId]) {
+        return;
+      }
+      setSlotLoadingByBranch((prev) => ({ ...prev, [branchId]: true }));
+      setSlotErrorByBranch((prev) => {
+        const next = { ...prev };
+        delete next[branchId];
+        return next;
+      });
+      fetchClinicSlots({ branchId })
+        .then((result) => {
+          setSlotOptionsByBranch((prev) => ({ ...prev, [branchId]: result }));
+        })
+        .catch((err) => {
+          const message = err instanceof Error ? err.message : "클리닉 슬롯을 불러오지 못했습니다.";
+          setSlotErrorByBranch((prev) => ({ ...prev, [branchId]: message }));
+        })
+        .finally(() => {
+          setSlotLoadingByBranch((prev) => ({ ...prev, [branchId]: false }));
+        });
+    });
+  }, [courses, detail?.student?.memberId, isTeacher, open, recordCache]);
+
+  useEffect(() => {
     if (!open || !isTeacher) {
       return;
     }
@@ -1196,37 +1269,6 @@ function StudentDetailModal({
         setAssistantLoading(false);
       });
   }, [open, isTeacher]);
-
-  useEffect(() => {
-    if (!open || !isTeacher || !editingCourseId) {
-      return;
-    }
-    // editingCourseId가 변경될 때만 실행되도록 의존성 최소화
-    const course = courses.find((c) => c.courseId === editingCourseId);
-    const recordId = course?.recordId;
-    const record = recordId ? recordCache[recordId] : null;
-    const branchId = record?.course?.branchId;
-
-    if (!branchId) {
-      setSlotOptions([]);
-      return;
-    }
-
-    setSlotLoading(true);
-    setSlotError(null);
-    fetchClinicSlots({ branchId })
-      .then((result) => {
-        setSlotOptions(result);
-      })
-      .catch((err) => {
-        const message = err instanceof Error ? err.message : "클리닉 슬롯을 불러오지 못했습니다.";
-        setSlotError(message);
-      })
-      .finally(() => {
-        setSlotLoading(false);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, isTeacher, editingCourseId]);
 
   useEffect(() => {
     if (!editingCourseId) {
@@ -1266,7 +1308,7 @@ function StudentDetailModal({
     if (!slotId) {
       return "미지정";
     }
-    const slot = slotOptions.find((option) => option.slotId === slotId);
+    const slot = slotById.get(slotId);
     if (!slot) {
       return slotId;
     }
@@ -1574,10 +1616,10 @@ function StudentDetailModal({
                                     <Select
                                       value={clinicInput}
                                       onChange={(event) => setClinicInput(event.target.value)}
-                                      disabled={saving || slotLoading || !isTeacher}
+                                      disabled={saving || editingSlotLoading || !isTeacher}
                                     >
                                       {!clinicInput && <option value="">미지정</option>}
-                                      {slotOptions.map((slot, slotIndex) => {
+                                      {editingSlotOptions.map((slot, slotIndex) => {
                                         const slotId = slot.slotId ?? `slot-${slotIndex}`;
                                         return (
                                           <option key={slotId} value={slot.slotId ?? ""}>
@@ -1586,7 +1628,7 @@ function StudentDetailModal({
                                         );
                                       })}
                                     </Select>
-                                    {slotError && <InlineError message={slotError} className="mt-2" />}
+                                    {editingSlotError && <InlineError message={editingSlotError} className="mt-2" />}
                                   </Field>
                                   <Field label="Teacher Notes">
                                     <textarea
@@ -1686,28 +1728,34 @@ function Pagination({
   if (totalPages <= 1) {
     return null;
   }
+  const isFirstPage = currentPage <= 0;
+  const isLastPage = currentPage >= totalPages - 1;
   return (
     <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3">
       <p className="text-xs font-medium text-slate-500">
         페이지 {currentPage + 1} / {totalPages}
       </p>
       <div className="flex gap-2">
-        <Button
-          variant="secondary"
-          className="h-9 px-4 text-xs"
-          onClick={() => onPageChange(Math.max(0, currentPage - 1))}
-          disabled={disabled || currentPage === 0}
-        >
-          이전
-        </Button>
-        <Button
-          variant="secondary"
-          className="h-9 px-4 text-xs"
-          onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
-          disabled={disabled || currentPage >= totalPages - 1}
-        >
-          다음
-        </Button>
+        {!isFirstPage && (
+          <Button
+            variant="secondary"
+            className="h-9 px-4 text-xs"
+            onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+            disabled={disabled}
+          >
+            이전
+          </Button>
+        )}
+        {!isLastPage && (
+          <Button
+            variant="secondary"
+            className="h-9 px-4 text-xs"
+            onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
+            disabled={disabled}
+          >
+            다음
+          </Button>
+        )}
       </div>
     </div>
   );

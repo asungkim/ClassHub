@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import { InlineError } from "@/components/ui/inline-error";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
@@ -50,6 +49,7 @@ export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: T
   const [courseTitle, setCourseTitle] = useState("");
   const [courseContent, setCourseContent] = useState("");
   const [students, setStudents] = useState<CourseStudentResponse[]>([]);
+  const [studentKeyword, setStudentKeyword] = useState("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [personalInputs, setPersonalInputs] = useState<Record<string, PersonalInput>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -65,6 +65,17 @@ export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: T
     }, {});
   }, [students]);
 
+  const filteredStudents = useMemo(() => {
+    const keyword = studentKeyword.trim().toLowerCase();
+    if (!keyword) {
+      return students;
+    }
+    return students.filter((student) => {
+      const name = student.student?.name ?? "";
+      return name.toLowerCase().includes(keyword);
+    });
+  }, [studentKeyword, students]);
+
   const isDirty =
     Boolean(courseTitle.trim()) ||
     Boolean(courseContent.trim()) ||
@@ -76,6 +87,7 @@ export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: T
     setCourseTitle("");
     setCourseContent("");
     setStudents([]);
+    setStudentKeyword("");
     setSelectedStudentIds([]);
     setPersonalInputs({});
     setSubmitError(null);
@@ -122,6 +134,7 @@ export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: T
     async (courseId: string) => {
       if (!courseId) {
         setStudents([]);
+        setStudentKeyword("");
         setSelectedStudentIds([]);
         setPersonalInputs({});
         return;
@@ -129,6 +142,7 @@ export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: T
       try {
         const response = await fetchCourseStudents({ courseId, page: 0, size: 50 });
         setStudents(response.items);
+        setStudentKeyword("");
         setSelectedStudentIds([]);
         setPersonalInputs({});
       } catch (error) {
@@ -365,34 +379,51 @@ export function TeacherLessonComposeModal({ open, onClose, role = "TEACHER" }: T
               <h3 className="text-lg font-semibold text-slate-900">학생별 개인 진도</h3>
               <p className="text-sm text-slate-500">선택한 학생에 대해서만 개인 진도를 입력합니다.</p>
             </div>
+            <TextField
+              label="학생 이름 검색"
+              placeholder="이름을 입력해 검색하세요."
+              value={studentKeyword}
+              onChange={(event) => setStudentKeyword(event.target.value)}
+            />
             <div className="grid gap-2 md:grid-cols-2">
-              {students.map((student) => {
+              {filteredStudents.map((student) => {
                 const recordId = student.recordId ?? "";
-                const isChecked = Boolean(recordId && selectedStudentIds.includes(recordId));
+                const isSelected = Boolean(recordId && selectedStudentIds.includes(recordId));
                 const isInactive = student.assignmentActive === false;
                 return (
                   <div key={recordId} className="rounded-2xl border border-slate-200 px-4 py-3">
-                    <Checkbox
-                      checked={isChecked}
-                      onChange={() => recordId && toggleStudent(recordId)}
-                      label={
-                        <span className="flex flex-col text-left">
-                          <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                            {student.student?.name ?? "학생"}
-                            {isInactive && <Badge variant="secondary">휴원</Badge>}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {formatStudentSchoolGrade(student.student)}
-                          </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col text-left">
+                        <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                          {student.student?.name ?? "학생"}
+                          {isInactive && <Badge variant="secondary">휴원</Badge>}
                         </span>
-                      }
-                    />
+                        <span className="text-xs text-slate-500">
+                          {formatStudentSchoolGrade(student.student)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isSelected && <Badge variant="success">선택됨</Badge>}
+                        <Button
+                          variant={isSelected ? "ghost" : "secondary"}
+                          className="h-8 px-3 text-xs"
+                          onClick={() => recordId && toggleStudent(recordId)}
+                        >
+                          {isSelected ? "해제" : "선택"}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
               {students.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
                   선택한 반에 학생이 없습니다.
+                </div>
+              ) : null}
+              {students.length > 0 && filteredStudents.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
+                  검색 결과가 없습니다.
                 </div>
               ) : null}
             </div>

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
-import { useDebounce } from "@/hooks/use-debounce";
 import clsx from "clsx";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
@@ -36,7 +35,6 @@ function AssistantCourseContent() {
   const [status, setStatus] = useState<CourseStatusFilter>("ALL");
   const [teacherId, setTeacherId] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
-  const keyword = useDebounce(keywordInput.trim(), 300);
   const [page, setPage] = useState(0);
 
   const [courses, setCourses] = useState<CourseWithTeacherResponse[]>([]);
@@ -53,7 +51,7 @@ function AssistantCourseContent() {
       const result = await fetchAssistantCourses({
         teacherId: teacherId || undefined,
         status,
-        keyword: keyword || undefined,
+        keyword: keywordInput.trim() || undefined,
         page,
         size: DASHBOARD_PAGE_SIZE
       });
@@ -77,7 +75,7 @@ function AssistantCourseContent() {
     } finally {
       setLoading(false);
     }
-  }, [teacherId, status, keyword, page, showToast]);
+  }, [teacherId, status, keywordInput, page, showToast]);
 
   useEffect(() => {
     void loadCourses();

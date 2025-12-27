@@ -327,9 +327,6 @@ export default function StudentClinicSchedulePage() {
           {selectedCourseContext ? (
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
               <Badge variant="secondary">{selectedCourseContext.courseName ?? "선택된 반"}</Badge>
-              <span>
-                {selectedCourseContext.teacherName ?? "선생님"} · {selectedCourseContext.branchName ?? "지점"}
-              </span>
               <span className="text-xs text-slate-400">기본 슬롯은 파란색으로 표시됩니다. 선택하지 않았으면 아래에서 선택 해주세요.</span>
             </div>
           ) : null}

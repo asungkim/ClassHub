@@ -7864,3 +7864,82 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/global/init/InitDataSmokeTest.java`
 - MCP 사용: 없음
 - 다음 단계: 필요 시 TeacherStudentAssignment/StudentCourseAssignment 시드 확장 검토
+## [2025-12-27 20:52] 학생 관리/진도 모달 UI 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 통합 수업 모달의 개인 진도 선택을 이름 검색 기반으로 변경
+- 학생 관리 탭 페이징 버튼 노출 조건 및 마지막 페이지 처리 개선
+
+### Details
+- 작업 사유: 체크박스 대신 검색 기반 선택, 페이징 UX 개선 요구 반영
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/progress/teacher-lesson-compose-modal.tsx`
+  - `frontend/src/components/dashboard/student-management.tsx`
+- MCP 사용: 없음
+- 다음 단계: 통합 수업 모달 검색/선택 흐름과 신청 처리·반 배치 마지막 페이지 동작 확인
+## [2025-12-27 20:54] 조교 반 목록 검색 디바운스 제거
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 조교 반 목록 검색을 입력 즉시 반영하도록 디바운스 제거
+
+### Details
+- 작업 사유: 검색 지연 없이 즉시 반영되도록 UX 개선
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/assistant/courses/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 조교 반 목록 검색 입력 시 즉시 결과 반영 확인
+## [2025-12-27 21:00] 학생 상세 모달 클리닉 슬롯 표시 수정
+
+### Type
+BUGFIX
+
+### Summary
+- 학생 상세 모달에서 기본 클리닉 슬롯을 UUID 대신 시간표 라벨로 표시
+
+### Details
+- 작업 사유: 기본 클리닉 슬롯이 UUID로 노출되는 문제 수정
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/student-management.tsx`
+- MCP 사용: 없음
+- 다음 단계: 학생 상세 모달에서 슬롯 라벨 표시 확인
+## [2025-12-27 22:28] 휴원/재원 및 반 보관 정책 반영
+
+### Type
+DESIGN
+
+### Summary
+- 휴원/재원 시 StudentCourseRecord/ClinicAttendance 연동 규칙 추가
+- 반 종료+7일 보관 모드 및 자동 배치 중단, 경고 UI 요구 반영
+
+### Details
+- 작업 사유: 휴원/재원 처리 및 반 종료 정책 요구사항/스펙 동기화
+- 영향받은 테스트: 없음 (문서 변경)
+- 수정한 파일:
+  - `docs/requirement/v1.5.md`
+  - `docs/spec/v1.5.md`
+- MCP 사용: 없음
+- 다음 단계: 백엔드 플랜 업데이트 후 구현 착수
+## [2025-12-27 22:29] 휴원/재원 연동 및 반 자동 보관 백엔드 플랜 작성
+
+### Type
+DESIGN
+
+### Summary
+- StudentCourseAssignment 휴원/재원 연동 및 Course 자동 보관 설계
+
+### Details
+- 작업 사유: 휴원/재원 정책 및 반 보관 규칙 구현을 위한 계획 수립
+- 영향받은 테스트: 없음 (설계 단계)
+- 수정한 파일:
+  - `docs/plan/backend/season2/course-holdoff-and-leave_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 사용자 리뷰 후 승인 시 TDD 구현 시작
