@@ -220,13 +220,14 @@ export default function StudentClinicSchedulePage() {
       showToast("success", "기본 슬롯이 변경되었습니다.");
       closeConfirm();
       await refresh();
+      await refreshSlots();
     } catch (err) {
       const message = err instanceof Error ? err.message : "기본 슬롯을 변경하지 못했습니다.";
       showToast("error", message);
     } finally {
       setIsUpdating(false);
     }
-  }, [closeConfirm, pendingSlot?.slotId, refresh, selectedCourseId, showToast]);
+  }, [closeConfirm, pendingSlot?.slotId, refresh, refreshSlots, selectedCourseId, showToast]);
 
   if (!canRender) {
     return fallback;
@@ -374,6 +375,9 @@ export default function StudentClinicSchedulePage() {
                 getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
                 renderItem={({ item, style }) => {
                   const isDefault = item.slotId && item.slotId === selectedCourseContext?.defaultClinicSlotId;
+                  const assignedCount = item.defaultAssignedCount ?? 0;
+                  const capacity = item.defaultCapacity ?? 0;
+                  const isFull = capacity > 0 && assignedCount >= capacity;
                   const isDisabled = isDefault || isUpdating;
                   return (
                     <button
@@ -385,23 +389,34 @@ export default function StudentClinicSchedulePage() {
                         "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
                         isDefault
                           ? "cursor-default border-blue-200 bg-blue-50/70 text-slate-700"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                          : isFull
+                            ? "border-rose-200 bg-rose-50 text-slate-700"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
                         isDisabled && "opacity-60"
                       )}
                       style={style}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold leading-tight">
-                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-xs font-semibold leading-tight break-words">
+                            {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
                           </p>
-                          <p className="text-[11px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
+                          <p className="text-[10px] text-slate-500">
+                            기본 {assignedCount}/{capacity}
+                          </p>
                         </div>
-                        {isDefault && (
-                          <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                            기본
-                          </span>
-                        )}
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          {isDefault && (
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                              기본
+                            </span>
+                          )}
+                          {isFull && (
+                            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+                              만석
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
@@ -430,6 +445,9 @@ export default function StudentClinicSchedulePage() {
               <p className="font-semibold">
                 {getDayLabel(pendingSlot.dayOfWeek)} {formatTime(pendingSlot.startTime)} -{" "}
                 {formatTime(pendingSlot.endTime)}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                기본 {pendingSlot.defaultAssignedCount ?? 0}/{pendingSlot.defaultCapacity ?? 0}
               </p>
             </div>
           ) : null}

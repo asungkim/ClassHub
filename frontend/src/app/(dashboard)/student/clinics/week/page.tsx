@@ -316,6 +316,7 @@ export default function StudentClinicWeekPage() {
       showToast("success", "참석 신청이 완료되었습니다.");
       closeAddConfirm();
       await refreshAttendances();
+      await refreshSessions();
     } catch (err) {
       const message = err instanceof Error ? err.message : "참석 신청에 실패했습니다.";
       showToast("error", message);
@@ -339,6 +340,7 @@ export default function StudentClinicWeekPage() {
       resetMoveMode();
       setSelectedSession(pendingMoveTarget);
       await refreshAttendances();
+      await refreshSessions();
     } catch (err) {
       const message = err instanceof Error ? err.message : "세션 변경에 실패했습니다.";
       showToast("error", message);
@@ -500,6 +502,9 @@ export default function StudentClinicWeekPage() {
                   const isMoveCandidate = isMoveMode && !isAttending && !item.isCanceled && !isLocked;
                   const isMoveDisabled = isMoveMode && !isMoveSource && !isMoveCandidate;
                   const isCanceled = Boolean(item.isCanceled);
+                  const attendanceCount = item.attendanceCount ?? 0;
+                  const capacity = item.capacity ?? 0;
+                  const isFull = !isCanceled && capacity > 0 && attendanceCount >= capacity;
 
                   const statusLabel = isCanceled
                     ? { text: "취소", className: "bg-slate-100 text-slate-500" }
@@ -510,6 +515,7 @@ export default function StudentClinicWeekPage() {
                         : isLocked
                           ? { text: "잠금", className: "bg-slate-100 text-slate-500" }
                           : null;
+                  const fullLabel = isFull ? { text: "만석", className: "bg-rose-100 text-rose-700" } : null;
 
                   return (
                     <button
@@ -533,22 +539,36 @@ export default function StudentClinicWeekPage() {
                       style={style}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold leading-tight">
-                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-xs font-semibold leading-tight break-words">
+                            {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
                           </p>
-                          <p className="text-[11px] text-slate-500">정원 {item.capacity ?? "-"}</p>
+                          <p className="text-[10px] text-slate-500">
+                            참석 {attendanceCount}/{capacity}
+                          </p>
                         </div>
-                        {statusLabel && (
-                          <span
-                            className={clsx(
-                              "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                              statusLabel.className
-                            )}
-                          >
-                            {statusLabel.text}
-                          </span>
-                        )}
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          {statusLabel && (
+                            <span
+                              className={clsx(
+                                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                statusLabel.className
+                              )}
+                            >
+                              {statusLabel.text}
+                            </span>
+                          )}
+                          {fullLabel && (
+                            <span
+                              className={clsx(
+                                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                fullLabel.className
+                              )}
+                            >
+                              {fullLabel.text}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
@@ -621,6 +641,9 @@ export default function StudentClinicWeekPage() {
                 {getDayLabel(getDayKeyFromDate(pendingAddSession.date))} {formatTime(pendingAddSession.startTime)} -{" "}
                 {formatTime(pendingAddSession.endTime)}
               </p>
+              <p className="mt-1 text-xs text-slate-500">
+                참석 {pendingAddSession.attendanceCount ?? 0}/{pendingAddSession.capacity ?? 0}
+              </p>
             </div>
           ) : null}
           <div className="flex justify-end gap-2 pt-2">
@@ -643,6 +666,9 @@ export default function StudentClinicWeekPage() {
               <p className="font-semibold">
                 {getDayLabel(getDayKeyFromDate(pendingMoveTarget.date))} {formatTime(pendingMoveTarget.startTime)} -{" "}
                 {formatTime(pendingMoveTarget.endTime)}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                참석 {pendingMoveTarget.attendanceCount ?? 0}/{pendingMoveTarget.capacity ?? 0}
               </p>
             </div>
           ) : null}

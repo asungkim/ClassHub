@@ -362,37 +362,46 @@ export default function TeacherClinicSlotsPage() {
                   endTime: slot.endTime
                 })}
                 getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
-                renderItem={({ item, style }) => (
-                  <div
-                    className="absolute left-1 right-1 rounded-2xl border border-blue-200 bg-blue-50 p-2 text-xs text-slate-700 shadow-sm transition hover:border-blue-300 hover:shadow-md"
-                    style={style}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openEditModal(item)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openEditModal(item);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[14px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
+                renderItem={({ item, style }) => {
+                  const assignedCount = item.defaultAssignedCount ?? 0;
+                  const capacity = item.defaultCapacity ?? 0;
+                  return (
+                    <div
+                      className="absolute left-1 right-1 rounded-2xl border border-blue-200 bg-blue-50 p-2 text-xs text-slate-700 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+                      style={style}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openEditModal(item)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openEditModal(item);
+                        }
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-xs font-semibold text-slate-700 leading-tight break-words">
+                            {formatTimeLabel(item.startTime)} ~ {formatTimeLabel(item.endTime)}
+                          </p>
+                          <p className="text-[10px] text-slate-500">
+                            기본 {assignedCount} / {capacity}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="shrink-0 text-[10px] font-semibold text-rose-500 hover:text-rose-600"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            confirmDelete(item);
+                          }}
+                        >
+                          삭제
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        className="shrink-0 text-[11px] font-semibold text-rose-500 hover:text-rose-600"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          confirmDelete(item);
-                        }}
-                      >
-                        삭제
-                      </button>
                     </div>
-                  </div>
-                )}
+                  );
+                }}
               />
             </div>
           )}
@@ -566,4 +575,11 @@ function formatTimeInput(value?: string | null) {
     return value.slice(0, 5);
   }
   return value;
+}
+
+function formatTimeLabel(value?: string | null) {
+  if (!value) {
+    return "--:--";
+  }
+  return value.length >= 5 ? value.slice(0, 5) : value;
 }

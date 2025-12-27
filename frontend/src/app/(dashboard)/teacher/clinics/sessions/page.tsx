@@ -363,6 +363,8 @@ export default function TeacherClinicSessionsPage() {
                 renderItem={({ item, style }) => {
                   const isCanceled = Boolean(item.isCanceled);
                   const isEmergency = item.sessionType === "EMERGENCY";
+                  const attendanceCount = item.attendanceCount ?? 0;
+                  const capacity = item.capacity ?? 0;
                   return (
                     <div
                       className={clsx(
@@ -376,12 +378,12 @@ export default function TeacherClinicSessionsPage() {
                       style={style}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">
-                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-xs font-semibold leading-tight break-words">
+                            {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
                           </p>
-                          <p className="text-[11px]">
-                            {isEmergency ? "긴급" : "정규"} · 정원 {item.capacity ?? "-"}
+                          <p className="text-[10px]">
+                            {isEmergency ? "긴급" : "정규"} · 참석 {attendanceCount}/{capacity}
                           </p>
                         </div>
                         {!isCanceled && (

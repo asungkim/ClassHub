@@ -325,17 +325,23 @@ export default function AssistantClinicSlotsPage() {
                   endTime: slot.endTime
                 })}
                 getItemKey={(slot, index) => slot.slotId ?? `${slot.dayOfWeek}-${slot.startTime}-${index}`}
-                renderItem={({ item, style }) => (
-                  <div
-                    className="absolute left-1 right-1 rounded-2xl border border-slate-200 bg-white p-2 text-xs text-slate-700 shadow-sm"
-                    style={style}
-                  >
-                    <p className="truncate text-sm font-semibold text-slate-900">
-                      {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                renderItem={({ item, style }) => {
+                  const assignedCount = item.defaultAssignedCount ?? 0;
+                  const capacity = item.defaultCapacity ?? 0;
+                  return (
+                    <div
+                      className="absolute left-1 right-1 rounded-2xl border border-slate-200 bg-white p-2 text-xs text-slate-700 shadow-sm"
+                      style={style}
+                    >
+                    <p className="text-xs font-semibold text-slate-900 leading-tight break-words">
+                      {formatTime(item.startTime)} ~ {formatTime(item.endTime)}
                     </p>
-                    <p className="text-[11px] text-slate-500">정원 {item.defaultCapacity ?? "-"}</p>
+                    <p className="text-[10px] text-slate-500">
+                      기본 {assignedCount} / {capacity}
+                    </p>
                   </div>
-                )}
+                );
+                }}
               />
             </div>
           )}

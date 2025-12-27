@@ -6936,3 +6936,57 @@ DESIGN
 - 수정한 파일:
   - `docs/plan/frontend/season2/clinic-slot-session-card_ui_plan.md`
 - 다음 단계: 1단계(선생님/조교) 구현 승인 후 작업 시작
+## [2025-12-27 01:48] 클리닉 슬롯/세션 카드 카운트 표시(선생님/조교)
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 선생님/조교 클리닉 슬롯 카드에 기본 설정 인원/정원 표시
+- 선생님/조교 세션 카드에 참석 인원/정원 표시
+- 시간 문자열이 잘리지 않도록 표시 방식 개선
+
+### Details
+- 작업 사유: 슬롯/세션 카드에서 시간과 인원 정보를 명확히 표시하기 위해
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: 선생님/조교 카드 렌더링 확인 후 학생 단계 진행
+## [2025-12-27 01:56] 클리닉 카드 시간 표시 가독성 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 슬롯/세션 카드 시간 폰트를 축소하고 줄바꿈 허용
+- 삭제/취소 버튼이 시간 표시를 가리지 않도록 레이아웃 개선
+
+### Details
+- 작업 사유: 시간 표시가 버튼을 가리는 문제 및 가독성 개선 요청 반영
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/slots/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/sessions/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/sessions/page.tsx`
+- 다음 단계: 슬롯/세션 카드에서 시간과 버튼 겹침 여부 확인
+## [2025-12-27 02:10] 학생 클리닉 슬롯/세션 카운트 표시
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학생 기본 슬롯 카드에 기본 설정 인원/정원 표시 및 만석 배지 추가
+- 학생 주간 세션 카드와 확인 모달에 참석 인원/정원 표시
+- 슬롯 변경 및 참석/이동 시 세션/슬롯 재조회로 카운트 갱신
+
+### Details
+- 작업 사유: 학생 화면에서도 카운트와 만석 상태를 확인할 수 있도록 UX 개선
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/student/clinics/schedule/page.tsx`
+  - `frontend/src/app/(dashboard)/student/clinics/week/page.tsx`
+- 다음 단계: 학생 화면에서 카운트/만석 표시 및 갱신 동작 확인
