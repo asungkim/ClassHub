@@ -69,7 +69,7 @@ public class CourseAssignmentController {
     }
 
     @GetMapping("/{courseId}/students")
-    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("hasAnyAuthority('TEACHER','ASSISTANT')")
     @Operation(summary = "반 수강 학생 조회")
     public RsData<PageResponse<CourseStudentResponse>> getCourseStudents(
             @AuthenticationPrincipal MemberPrincipal principal,

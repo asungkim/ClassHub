@@ -7281,3 +7281,55 @@ DESIGN
   - `docs/plan/backend/season2/assistant-permission-expansion_plan.md`
 - MCP 사용: 없음
 - 다음 단계: 설계 승인 후 TDD 기반 구현 진행
+## [2025-12-27 17:05] 조교 권한 확장 설계에 작성자 수정/삭제 정책 반영
+
+### Type
+DESIGN
+
+### Summary
+- 조교는 본인 작성 기록만 수정/삭제, 교사는 배정 범위 내 전체 수정/삭제 정책 추가
+- 동일 정책을 ClinicRecord에 적용하도록 설계 문서 보강
+
+### Details
+- 작업 사유: 권한 확장 시 수정/삭제 범위 명확화 요청 반영
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/backend/season2/assistant-permission-expansion_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 설계 승인 후 TDD 기반 구현 진행
+## [2025-12-27 17:06] 조교 권한 확장 설계 단계화
+
+### Type
+DESIGN
+
+### Summary
+- 구현 범위를 3단계로 분리하여 진행 순서를 명확화
+
+### Details
+- 작업 사유: 구현량이 많아 단계별 진행 계획 필요
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/backend/season2/assistant-permission-expansion_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 설계 승인 후 TDD 기반 구현 진행
+## [2025-12-27 17:10] 조교 반 학생 조회 권한 확대
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 반 학생 조회 API에 ASSISTANT 권한 허용
+- 서비스 권한 검증을 조교 배정 관계까지 확장
+- 조교 권한 관련 테스트 추가
+
+### Details
+- 작업 사유: 조교 출석 추가 화면에서 학생 목록 조회 필요
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.course.application.CourseAssignmentServiceTest" --tests "com.classhub.domain.course.web.CourseAssignmentControllerTest"`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/course/web/CourseAssignmentController.java`
+  - `backend/src/main/java/com/classhub/domain/course/application/CourseAssignmentService.java`
+  - `backend/src/test/java/com/classhub/domain/course/application/CourseAssignmentServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/course/web/CourseAssignmentControllerTest.java`
+- MCP 사용: 없음
+- 다음 단계: Stage 2(Progress 권한 확대 + 작성자 정책) 구현

@@ -164,4 +164,43 @@ class CourseAssignmentControllerTest {
 
         verify(courseAssignmentService).getCourseStudents(eq(teacherPrincipal), eq(courseId), eq(0), eq(20));
     }
+
+    @Test
+    void getCourseStudents_shouldReturnAssignmentsForAssistant() throws Exception {
+        MemberPrincipal assistantPrincipal = new MemberPrincipal(UUID.randomUUID(), MemberRole.ASSISTANT);
+        UsernamePasswordAuthenticationToken assistantToken = new UsernamePasswordAuthenticationToken(
+                assistantPrincipal,
+                null,
+                List.of(new SimpleGrantedAuthority("ASSISTANT"))
+        );
+        StudentSummaryResponse summary = StudentSummaryResponse.builder()
+                .memberId(UUID.randomUUID())
+                .name("학생")
+                .email("student@classhub.com")
+                .phoneNumber("01000001111")
+                .schoolName("중앙중학교")
+                .grade("MIDDLE_1")
+                .build();
+        CourseStudentResponse item = new CourseStudentResponse(UUID.randomUUID(), true, summary);
+        PageResponse<CourseStudentResponse> page = new PageResponse<>(
+                List.of(item),
+                0,
+                20,
+                1,
+                1,
+                true,
+                true
+        );
+        UUID courseId = UUID.randomUUID();
+        given(courseAssignmentService.getCourseStudents(eq(assistantPrincipal), eq(courseId), eq(0), eq(20)))
+                .willReturn(page);
+
+        mockMvc.perform(get("/api/v1/courses/{courseId}/students", courseId)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(assistantToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(RsCode.SUCCESS.getCode()))
+                .andExpect(jsonPath("$.data.content[0].student.name").value("학생"));
+
+        verify(courseAssignmentService).getCourseStudents(eq(assistantPrincipal), eq(courseId), eq(0), eq(20));
+    }
 }

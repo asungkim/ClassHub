@@ -141,7 +141,7 @@ public class CourseAssignmentService {
                                                                  int size) {
         PageRequest pageable = PageRequest.of(page, size);
         Course course = loadCourse(courseId);
-        ensureTeacherPermission(principal, course.getTeacherMemberId());
+        ensurePermission(principal, course.getTeacherMemberId());
 
         Page<StudentCourseAssignment> assignmentPage = studentCourseAssignmentRepository
                 .findByCourseId(courseId, pageable);

@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.model.TeacherStudentAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
@@ -240,6 +241,52 @@ class CourseAssignmentServiceTest {
         assertThat(mapped.get(studentId2).assignmentActive()).isFalse();
         assertThat(mapped.get(studentId).recordId()).isEqualTo(record1.getId());
         assertThat(mapped.get(studentId2).recordId()).isEqualTo(record2.getId());
+    }
+
+    @Test
+    void getCourseStudents_shouldReturnForAssistantWithAssignment() {
+        MemberPrincipal principal = new MemberPrincipal(assistantId, MemberRole.ASSISTANT);
+        TeacherAssistantAssignment assignment = TeacherAssistantAssignment.create(teacherId, assistantId);
+        given(courseRepository.findById(course.getId())).willReturn(Optional.of(course));
+        given(assistantAssignmentRepository.findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(
+                teacherId,
+                assistantId
+        )).willReturn(Optional.of(assignment));
+
+        StudentCourseAssignment courseAssignment = StudentCourseAssignment.create(studentId, course.getId(), teacherId, null);
+        given(studentCourseAssignmentRepository.findByCourseId(eq(course.getId()), any()))
+                .willReturn(new PageImpl<>(List.of(courseAssignment), PageRequest.of(0, 10), 1));
+        given(memberRepository.findAllById(any())).willReturn(List.of(student));
+        given(studentInfoRepository.findByMemberIdIn(any())).willReturn(List.of(studentInfo));
+
+        StudentCourseRecord record = StudentCourseRecord.create(studentId, course.getId(), null, null, null);
+        ReflectionTestUtils.setField(record, "id", UUID.randomUUID());
+        given(studentCourseRecordRepository.findActiveByCourseIdAndStudentIds(eq(course.getId()), any()))
+                .willReturn(List.of(record));
+
+        PageResponse<CourseStudentResponse> response = courseAssignmentService.getCourseStudents(
+                principal,
+                course.getId(),
+                0,
+                10
+        );
+
+        assertThat(response.content()).hasSize(1);
+        assertThat(response.content().getFirst().recordId()).isEqualTo(record.getId());
+    }
+
+    @Test
+    void getCourseStudents_shouldThrow_whenAssistantNotAssigned() {
+        MemberPrincipal principal = new MemberPrincipal(assistantId, MemberRole.ASSISTANT);
+        given(courseRepository.findById(course.getId())).willReturn(Optional.of(course));
+        given(assistantAssignmentRepository.findByTeacherMemberIdAndAssistantMemberIdAndDeletedAtIsNull(
+                teacherId,
+                assistantId
+        )).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courseAssignmentService.getCourseStudents(principal, course.getId(), 0, 10))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("rsCode", RsCode.FORBIDDEN);
     }
 
     @Test
