@@ -7177,3 +7177,107 @@ BEHAVIORAL
   - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
 - MCP 사용: 없음
 - 다음 단계: 필요 시 삭제된 기능 화면 동작 확인
+## [2025-12-27 15:13] 클리닉 출석 명단 표시/삭제/기록 UX 보완
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 출석 명단에서 UUID 제거, 이메일이 있으면 표시
+- 기록 조회 시 미존재 오류를 무시해 작성 플로우 유지
+- 학년 표기 영어 코드 → 한글 표기로 변환
+- 출석/기록 삭제 경고 문구 강화
+
+### Details
+- 작업 사유: 출석 명단 UI 가독성 및 기록/삭제 UX 문제 개선
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 교사/조교 출석 명단 화면 수동 확인
+## [2025-12-27 15:17] 출석 명단 연락처/학교 표시 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 학교/학년을 "학교(학년)"으로 합쳐 표시
+- 연락처를 학생/학부모 2줄 표시로 변경
+
+### Details
+- 작업 사유: 출석 명단 가독성 개선 및 요청된 표기 방식 반영
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 교사/조교 출석 명단 화면 수동 확인
+## [2025-12-27 16:02] 캘린더 기록 작성자/시간 표시 및 클리닉 수정/삭제 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 캘린더 공통/개인/클리닉 기록에 작성자 이름/역할 및 작성시간 노출
+- 클리닉 기록 수정/삭제 버튼 추가 및 수정 모달 제공
+- 학생 캘린더 응답에 작성자 이름/작성시간 필드 확장
+
+### Details
+- 작업 사유: 캘린더 기록 정보 가독성 개선 및 클리닉 기록 관리 기능 보강
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.calendar.application.StudentCalendarServiceTest" --tests "com.classhub.domain.calendar.web.StudentCalendarControllerTest"`
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/calendar/dto/StudentCalendarResponse.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/mapper/StudentCalendarMapper.java`
+  - `backend/src/main/java/com/classhub/domain/calendar/application/StudentCalendarService.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceRepository.java`
+  - `backend/src/main/java/com/classhub/domain/clinic/attendance/repository/ClinicAttendanceEventProjection.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/application/StudentCalendarServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/calendar/web/StudentCalendarControllerTest.java`
+  - `frontend/src/components/dashboard/calendar/calendar-day-detail-modal.tsx`
+  - `frontend/src/components/dashboard/calendar/student-calendar-page.tsx`
+  - `frontend/src/lib/progress-api.ts`
+  - `frontend/src/types/openapi.json`
+  - `frontend/src/types/openapi.d.ts`
+  - `frontend/src/types/progress.ts`
+- MCP 사용: 없음
+- 다음 단계: 캘린더 상세 모달에서 클리닉 기록 수정/삭제 UX 수동 확인
+## [2025-12-27 16:41] 캘린더 작성자/작성일 표기 보완 및 오늘의 출석부 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 캘린더 상세 모달에 작성자 이름(역할)과 작성일 표기 보완
+- 오늘의 출석부에서 참여/정원 표기 및 기록/수정 버튼 규칙 반영
+
+### Details
+- 작업 사유: 캘린더 기록 정보 표기 누락 및 출석부 버튼 노출 규칙 개선 요청 반영
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+  - 수동 테스트 미실행
+- 수정한 파일:
+  - `frontend/src/components/dashboard/calendar/calendar-day-detail-modal.tsx`
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 캘린더 상세 모달 및 오늘의 출석부 화면 수동 확인
+## [2025-12-27 16:48] 조교 권한 확장(반 학생/진도) 백엔드 설계
+
+### Type
+DESIGN
+
+### Summary
+- 조교 권한을 반 학생 조회와 진도 CRUD까지 확장하는 백엔드 설계 문서 작성
+
+### Details
+- 작업 사유: 조교가 배정 반 학생 조회 및 진도 작성/수정/삭제를 수행할 수 있도록 권한 확장 필요
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/backend/season2/assistant-permission-expansion_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 설계 승인 후 TDD 기반 구현 진행

@@ -8,8 +8,18 @@ import { StudentInfoCard } from "@/components/dashboard/calendar/student-info-ca
 import { MonthlyCalendarGrid } from "@/components/dashboard/calendar/monthly-calendar-grid";
 import { CalendarDayDetailModal } from "@/components/dashboard/calendar/calendar-day-detail-modal";
 import { ProgressEditModal } from "@/components/dashboard/progress/progress-edit-modal";
+import { Button } from "@/components/ui/button";
+import { InlineError } from "@/components/ui/inline-error";
+import { Modal } from "@/components/ui/modal";
+import { TextField } from "@/components/ui/text-field";
 import { fetchTeacherStudents } from "@/lib/dashboard-api";
-import { deleteCourseProgress, deletePersonalProgress, fetchStudentCalendar } from "@/lib/progress-api";
+import {
+  deleteClinicRecord,
+  deleteCourseProgress,
+  deletePersonalProgress,
+  fetchStudentCalendar,
+  updateClinicRecord
+} from "@/lib/progress-api";
 import { formatDateYmdKst } from "@/utils/date";
 import { formatStudentGrade } from "@/utils/student";
 import type { StudentSummaryResponse } from "@/types/dashboard";
@@ -56,6 +66,16 @@ type EditTarget = {
   initialContent?: string;
 };
 
+type ClinicEditFormState = {
+  title: string;
+  content: string;
+  homeworkProgress: string;
+};
+
+type ClinicEditTarget = {
+  recordId: string;
+};
+
 type StudentCalendarPageProps = {
   role: CalendarRole;
 };
@@ -76,6 +96,14 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
   const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [clinicEditTarget, setClinicEditTarget] = useState<ClinicEditTarget | null>(null);
+  const [clinicEditForm, setClinicEditForm] = useState<ClinicEditFormState>({
+    title: "",
+    content: "",
+    homeworkProgress: ""
+  });
+  const [clinicEditError, setClinicEditError] = useState<string | null>(null);
+  const [clinicEditLoading, setClinicEditLoading] = useState(false);
 
   const monthLabel = formatMonthLabel(currentMonth);
   const canMovePrev = canMoveMonth(currentMonth, -1);
@@ -188,6 +216,48 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
     }
   };
 
+  const handleDeleteClinicRecord = async (recordId: string) => {
+    if (!canEdit) {
+      return;
+    }
+    try {
+      await deleteClinicRecord(recordId);
+      showToast("success", "클리닉 기록을 삭제했습니다.");
+      await loadCalendar();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "클리닉 기록을 삭제하지 못했습니다.";
+      showToast("error", message);
+    }
+  };
+
+  const handleSaveClinicRecord = async () => {
+    if (!clinicEditTarget) {
+      return;
+    }
+    if (!clinicEditForm.title.trim() || !clinicEditForm.content.trim()) {
+      setClinicEditError("제목과 내용을 입력해주세요.");
+      return;
+    }
+    setClinicEditLoading(true);
+    setClinicEditError(null);
+    try {
+      await updateClinicRecord(clinicEditTarget.recordId, {
+        title: clinicEditForm.title,
+        content: clinicEditForm.content,
+        homeworkProgress: clinicEditForm.homeworkProgress || undefined
+      });
+      showToast("success", "클리닉 기록을 수정했습니다.");
+      setClinicEditTarget(null);
+      await loadCalendar();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "클리닉 기록을 수정하지 못했습니다.";
+      setClinicEditError(message);
+      showToast("error", message);
+    } finally {
+      setClinicEditLoading(false);
+    }
+  };
+
   if (calendarError && !calendarData) {
     return (
       <ErrorState
@@ -257,8 +327,27 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
             initialContent: event.content ?? ""
           });
         }}
+        onEditClinic={(event) => {
+          const recordSummary = event.recordSummary;
+          if (!recordSummary?.id) {
+            return;
+          }
+          setClinicEditTarget({ recordId: recordSummary.id });
+          setClinicEditForm({
+            title: recordSummary.title ?? "",
+            content: recordSummary.content ?? "",
+            homeworkProgress: recordSummary.homeworkProgress ?? ""
+          });
+          setClinicEditError(null);
+        }}
         onDeleteCourse={(event) => event.id && void handleDeleteCourseProgress(event.id)}
         onDeletePersonal={(event) => event.id && void handleDeletePersonalProgress(event.id)}
+        onDeleteClinic={(event) => {
+          const recordId = event.recordSummary?.id;
+          if (recordId) {
+            void handleDeleteClinicRecord(recordId);
+          }
+        }}
       />
 
       <ProgressEditModal
@@ -270,6 +359,47 @@ export function StudentCalendarPage({ role }: StudentCalendarPageProps) {
           await loadCalendar();
         }}
       />
+
+      <Modal
+        open={Boolean(clinicEditTarget)}
+        onClose={() => {
+          if (!clinicEditLoading) {
+            setClinicEditTarget(null);
+          }
+        }}
+        title="클리닉 기록 수정"
+        size="md"
+      >
+        <div className="space-y-4">
+          <TextField
+            label="제목"
+            value={clinicEditForm.title}
+            onChange={(event) => setClinicEditForm((prev) => ({ ...prev, title: event.target.value }))}
+          />
+          <label className="flex flex-col gap-2 text-sm text-slate-700">
+            내용
+            <textarea
+              value={clinicEditForm.content}
+              onChange={(event) => setClinicEditForm((prev) => ({ ...prev, content: event.target.value }))}
+              className="min-h-[140px] rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            />
+          </label>
+          <TextField
+            label="과제 진행"
+            value={clinicEditForm.homeworkProgress}
+            onChange={(event) => setClinicEditForm((prev) => ({ ...prev, homeworkProgress: event.target.value }))}
+          />
+          {clinicEditError && <InlineError message={clinicEditError} />}
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setClinicEditTarget(null)} disabled={clinicEditLoading}>
+              취소
+            </Button>
+            <Button onClick={() => void handleSaveClinicRecord()} disabled={clinicEditLoading}>
+              {clinicEditLoading ? "저장 중..." : "저장"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {calendarLoading ? (
         <ErrorState title="캘린더를 불러오는 중" description="잠시만 기다려 주세요." />

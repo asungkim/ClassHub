@@ -80,7 +80,8 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
                 cr.title AS recordTitle,
                 cr.writerId AS recordWriterId,
                 cr.content AS recordContent,
-                cr.homeworkProgress AS recordHomeworkProgress
+                cr.homeworkProgress AS recordHomeworkProgress,
+                cr.createdAt AS recordCreatedAt
             FROM ClinicAttendance ca
             JOIN StudentCourseRecord scr ON scr.id = ca.studentCourseRecordId
             JOIN ClinicSession cs ON cs.id = ca.clinicSessionId

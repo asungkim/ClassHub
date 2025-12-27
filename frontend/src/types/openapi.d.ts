@@ -2034,8 +2034,11 @@ export interface components {
             title?: string;
             content?: string;
             homeworkProgress?: string;
+            writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+            /** Format: date-time */
+            createdAt?: string;
         };
         CourseProgressEvent: {
             /** Format: uuid */
@@ -2049,8 +2052,11 @@ export interface components {
             content?: string;
             /** Format: uuid */
             writerId?: string;
+            writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+            /** Format: date-time */
+            createdAt?: string;
         };
         PersonalProgressEvent: {
             /** Format: uuid */
@@ -2064,8 +2070,11 @@ export interface components {
             date?: string;
             title?: string;
             content?: string;
+            writerName?: string;
             /** @enum {string} */
             writerRole?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+            /** Format: date-time */
+            createdAt?: string;
         };
         RsDataStudentCalendarResponse: {
             /** Format: int32 */

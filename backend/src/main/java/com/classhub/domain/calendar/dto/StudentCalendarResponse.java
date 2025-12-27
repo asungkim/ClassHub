@@ -2,6 +2,7 @@ package com.classhub.domain.calendar.dto;
 
 import com.classhub.domain.member.model.MemberRole;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,9 @@ public record StudentCalendarResponse(
             String title,
             String content,
             UUID writerId,
-            MemberRole writerRole
+            String writerName,
+            MemberRole writerRole,
+            LocalDateTime createdAt
     ) {
     }
 
@@ -34,7 +37,9 @@ public record StudentCalendarResponse(
             LocalDate date,
             String title,
             String content,
-            MemberRole writerRole
+            String writerName,
+            MemberRole writerRole,
+            LocalDateTime createdAt
     ) {
     }
 
@@ -56,7 +61,9 @@ public record StudentCalendarResponse(
             String title,
             String content,
             String homeworkProgress,
-            MemberRole writerRole
+            String writerName,
+            MemberRole writerRole,
+            LocalDateTime createdAt
     ) {
     }
 }

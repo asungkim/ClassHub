@@ -80,14 +80,18 @@ public class StudentCalendarService {
         enforceEventLimit(courseProgresses.size() + personalProgresses.size() + clinicEvents.size());
 
         Map<UUID, Course> courseMap = loadCourses(courseIds);
-        Map<UUID, MemberRole> roleMap = loadWriterRoles(courseProgresses, personalProgresses, clinicEvents);
+        Map<UUID, Member> writerMap = loadWriterMap(courseProgresses, personalProgresses, clinicEvents);
+        Map<UUID, MemberRole> roleMap = writerMap.values().stream()
+                .collect(Collectors.toMap(Member::getId, Member::getRole));
+        Map<UUID, String> nameMap = writerMap.values().stream()
+                .collect(Collectors.toMap(Member::getId, Member::getName));
 
         List<StudentCalendarResponse.CourseProgressEvent> courseProgressEvents =
-                studentCalendarMapper.toCourseProgressEvents(courseProgresses, courseMap, roleMap);
+                studentCalendarMapper.toCourseProgressEvents(courseProgresses, courseMap, roleMap, nameMap);
         List<StudentCalendarResponse.PersonalProgressEvent> personalProgressEvents =
-                studentCalendarMapper.toPersonalProgressEvents(personalProgresses, recordCourseMap, courseMap, roleMap);
+                studentCalendarMapper.toPersonalProgressEvents(personalProgresses, recordCourseMap, courseMap, roleMap, nameMap);
         List<StudentCalendarResponse.ClinicEvent> clinicEventResponses =
-                studentCalendarMapper.toClinicEvents(clinicEvents, roleMap);
+                studentCalendarMapper.toClinicEvents(clinicEvents, roleMap, nameMap);
 
         return new StudentCalendarResponse(
                 studentId,
@@ -134,9 +138,9 @@ public class StudentCalendarService {
         return courseMap;
     }
 
-    private Map<UUID, MemberRole> loadWriterRoles(Collection<CourseProgress> courseProgresses,
-                                                  Collection<PersonalProgress> personalProgresses,
-                                                  Collection<ClinicAttendanceEventProjection> clinicEvents) {
+    private Map<UUID, Member> loadWriterMap(Collection<CourseProgress> courseProgresses,
+                                            Collection<PersonalProgress> personalProgresses,
+                                            Collection<ClinicAttendanceEventProjection> clinicEvents) {
         Set<UUID> writerIds = courseProgresses.stream()
                 .map(CourseProgress::getWriterId)
                 .collect(Collectors.toSet());
@@ -151,11 +155,11 @@ public class StudentCalendarService {
             return Map.of();
         }
         List<Member> members = memberRepository.findAllById(writerIds);
-        Map<UUID, MemberRole> roleMap = members.stream()
-                .collect(Collectors.toMap(Member::getId, Member::getRole));
-        if (roleMap.size() != writerIds.size()) {
+        Map<UUID, Member> memberMap = members.stream()
+                .collect(Collectors.toMap(Member::getId, Function.identity()));
+        if (memberMap.size() != writerIds.size()) {
             throw new BusinessException(RsCode.INTERNAL_SERVER);
         }
-        return roleMap;
+        return memberMap;
     }
 }

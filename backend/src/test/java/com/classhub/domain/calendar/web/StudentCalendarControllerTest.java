@@ -17,6 +17,7 @@ import com.classhub.domain.calendar.dto.StudentCalendarResponse.CourseProgressEv
 import com.classhub.domain.calendar.dto.StudentCalendarResponse.PersonalProgressEvent;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.List;
@@ -69,7 +70,9 @@ class StudentCalendarControllerTest {
                 "3주차",
                 "공통 내용",
                 teacherPrincipal.id(),
-                MemberRole.TEACHER
+                "Kim",
+                MemberRole.TEACHER,
+                LocalDateTime.of(2024, Month.MARCH, 2, 9, 0)
         );
         PersonalProgressEvent personalEvent = new PersonalProgressEvent(
                 UUID.randomUUID(),
@@ -79,14 +82,18 @@ class StudentCalendarControllerTest {
                 LocalDate.of(2024, Month.MARCH, 3),
                 "개별",
                 "개인 내용",
-                MemberRole.ASSISTANT
+                "Lee",
+                MemberRole.ASSISTANT,
+                LocalDateTime.of(2024, Month.MARCH, 3, 10, 30)
         );
         ClinicRecordSummary recordSummary = new ClinicRecordSummary(
                 UUID.randomUUID(),
                 "클리닉",
                 "클리닉 내용",
                 "숙제",
-                MemberRole.TEACHER
+                "Park",
+                MemberRole.TEACHER,
+                LocalDateTime.of(2024, Month.MARCH, 4, 18, 30)
         );
         ClinicEvent clinicEvent = new ClinicEvent(
                 UUID.randomUUID(),

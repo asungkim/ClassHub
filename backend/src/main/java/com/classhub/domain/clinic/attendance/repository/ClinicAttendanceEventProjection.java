@@ -1,6 +1,7 @@
 package com.classhub.domain.clinic.attendance.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
 
@@ -30,4 +31,6 @@ public interface ClinicAttendanceEventProjection {
     String getRecordContent();
 
     String getRecordHomeworkProgress();
+
+    LocalDateTime getRecordCreatedAt();
 }
