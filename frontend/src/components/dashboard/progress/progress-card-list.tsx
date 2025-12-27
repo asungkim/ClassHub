@@ -13,9 +13,21 @@ type ProgressCardListProps = {
   onLoadMore?: () => void;
   hasMore?: boolean;
   loadingMore?: boolean;
+  onEdit?: (item: ProgressItem) => void;
+  onDelete?: (item: ProgressItem) => void;
+  canEditDelete?: (item: ProgressItem) => boolean;
 };
 
-export function ProgressCardList({ items, emptyMessage, onLoadMore, hasMore, loadingMore }: ProgressCardListProps) {
+export function ProgressCardList({
+  items,
+  emptyMessage,
+  onLoadMore,
+  hasMore,
+  loadingMore,
+  onEdit,
+  onDelete,
+  canEditDelete
+}: ProgressCardListProps) {
   if (items.length === 0) {
     return (
       <Card title="진도 기록" description={emptyMessage}>
@@ -26,32 +38,49 @@ export function ProgressCardList({ items, emptyMessage, onLoadMore, hasMore, loa
 
   return (
     <div className="space-y-4">
-      {items.map((item) => (
-        <Card key={item.id}>
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-slate-400">수업 날짜</span>
-                <span className="text-sm font-semibold text-slate-700">{formatDateLabelKst(item.date)}</span>
+      {items.map((item) => {
+        const showActions = canEditDelete?.(item) ?? false;
+        return (
+          <Card key={item.id}>
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[11px] font-medium text-slate-400">수업 날짜</span>
+                  <span className="text-sm font-semibold text-slate-700">{formatDateLabelKst(item.date)}</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  작성자: {item.writerName}({formatRole(item.writerRole)})
+                </p>
               </div>
-              <p className="text-xs text-slate-400">
-                작성자: {item.writerName}({formatRole(item.writerRole)})
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-base font-semibold text-slate-900">{item.title ?? "제목 없음"}</p>
-              <p className="text-sm text-slate-600 whitespace-pre-line">
-                {item.content || "내용이 없습니다."}
-              </p>
-            </div>
-            {item.createdAt ? (
-              <div className="flex justify-end text-[11px] text-slate-400">
-                작성일 {formatDateTimeLabelKst(item.createdAt)}
+              <div className="space-y-2">
+                <p className="text-base font-semibold text-slate-900">{item.title ?? "제목 없음"}</p>
+                <p className="text-sm text-slate-600 whitespace-pre-line">{item.content || "내용이 없습니다."}</p>
               </div>
-            ) : null}
-          </div>
-        </Card>
-      ))}
+              <div className="flex items-center justify-between gap-2">
+                {item.createdAt ? (
+                  <div className="text-[11px] text-slate-400">작성일 {formatDateTimeLabelKst(item.createdAt)}</div>
+                ) : (
+                  <div />
+                )}
+                {showActions && (
+                  <div className="flex gap-2">
+                    {onEdit && (
+                      <Button variant="secondary" onClick={() => onEdit(item)}>
+                        수정
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button variant="secondary" onClick={() => onDelete(item)}>
+                        삭제
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        );
+      })}
       {hasMore && onLoadMore ? (
         <div className="flex justify-center">
           <Button variant="secondary" onClick={onLoadMore} disabled={loadingMore}>

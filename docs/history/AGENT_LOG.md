@@ -7037,3 +7037,84 @@ DESIGN
 - 수정한 파일:
   - `docs/plan/backend/season2/feedback-management_plan.md`
 - 다음 단계: PLAN 재확인 후 승인 시 TDD 구현 착수
+## [2025-12-27 11:37] Feedback 백엔드 API 및 해결 처리 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Feedback 생성/목록/해결 API 추가 및 작성자 연락처 포함 응답 구현
+- Feedback 엔티티에 resolvedAt/resolvedByMemberId 필드 추가
+- Feedback Repository/Service/Controller 테스트 작성
+
+### Details
+- 작업 사유: 피드백 제출/해결 상태 관리 및 작성자 대시보드 확인 요구사항 반영
+- 영향받은 테스트: 신규 작성 (미실행)
+  - `backend/src/test/java/com/classhub/domain/feedback/repository/FeedbackRepositoryTest.java`
+  - `backend/src/test/java/com/classhub/domain/feedback/application/FeedbackServiceTest.java`
+  - `backend/src/test/java/com/classhub/domain/feedback/web/FeedbackControllerTest.java`
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/feedback/model/Feedback.java`
+  - `backend/src/main/java/com/classhub/domain/feedback/repository/FeedbackRepository.java`
+  - `backend/src/main/java/com/classhub/domain/feedback/application/FeedbackService.java`
+  - `backend/src/main/java/com/classhub/domain/feedback/web/FeedbackController.java`
+  - `backend/src/main/java/com/classhub/domain/feedback/dto/request/FeedbackCreateRequest.java`
+  - `backend/src/main/java/com/classhub/domain/feedback/dto/response/FeedbackResponse.java`
+  - `backend/src/main/java/com/classhub/domain/feedback/dto/response/FeedbackWriterResponse.java`
+  - `backend/src/main/java/com/classhub/global/response/RsCode.java`
+- 다음 단계: 테스트 실행 및 실패 항목 보완
+## [2025-12-27 11:49] Feedback 프론트엔드 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- 작성자/관리자 피드백 UI 설계 및 대시보드 알림 카드 계획
+- 상태/데이터 흐름 및 테스트 계획 정의
+
+### Details
+- 작업 사유: 피드백 기능 프론트 화면 설계 필요
+- 영향받은 테스트: 문서 변경만 (미실행)
+- 수정한 파일:
+  - `docs/plan/frontend/season2/feedback-ui_plan.md`
+- 다음 단계: PLAN 승인 후 UI 구현 착수
+## [2025-12-27 11:58] Feedback 프론트엔드 PLAN 개선 반영
+
+### Type
+DESIGN
+
+### Summary
+- 전역 피드백 런처(우측 하단 ? 버튼)로 진입 방식 변경
+- 작성자 대시보드에 피드백 상태 요약 리스트 계획 추가
+- 관리자 피드백 페이지 접근 메뉴 및 상태 흐름 보강
+
+### Details
+- 작업 사유: 사용자 요청에 따라 피드백 진입/표시 방식 개선
+- 영향받은 테스트: 문서 변경만 (미실행)
+- 수정한 파일:
+  - `docs/plan/frontend/season2/feedback-ui_plan.md`
+- 다음 단계: PLAN 승인 후 UI 구현 착수
+## [2025-12-27 12:10] 피드백 전역 런처 및 대시보드/관리자 UI 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 전역 ? 버튼 + 메모장 모달로 피드백 제출 UI 추가
+- 작성자 대시보드에 피드백 요약 리스트 표시
+- 관리자 피드백 관리 페이지 및 사이드바 메뉴 추가
+
+### Details
+- 작업 사유: 모든 화면에서 피드백 제출 및 상태 확인 요구사항 반영
+- 영향받은 테스트: 미실행
+- 수정한 파일:
+  - `frontend/src/components/ui/app-chrome.tsx`
+  - `frontend/src/components/dashboard/sidebar.tsx`
+  - `frontend/src/app/(dashboard)/admin/feedback/page.tsx`
+  - `frontend/src/app/(dashboard)/teacher/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/page.tsx`
+  - `frontend/src/app/(dashboard)/student/page.tsx`
+  - `frontend/src/hooks/feedback/use-feedback-summary.ts`
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+- 다음 단계: 프론트 빌드 및 화면 확인(대시보드/관리자)

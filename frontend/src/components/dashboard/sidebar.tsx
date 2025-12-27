@@ -73,7 +73,6 @@ const menuByRole: Record<Role, MenuItem[]> = {
   STUDENT: [
     { href: "/student", label: "대시보드", icon: "📊" },
     { href: "/student/my-courses", label: "내 수업", icon: "🎓" },
-    { href: "/student/teachers", label: "선생님 관리", icon: "🧑‍🏫" },
     {
       label: "클리닉",
       icon: "🩺",
@@ -81,12 +80,14 @@ const menuByRole: Record<Role, MenuItem[]> = {
         { href: "/student/clinics/schedule", label: "클리닉 시간표", icon: "🧭" },
         { href: "/student/clinics/week", label: "이번 주 클리닉", icon: "🗓️" }
       ]
-    }
+    },
+    { href: "/student/teachers", label: "선생님 관리", icon: "🧑‍🏫" },
   ],
   SUPER_ADMIN: [
     { href: "/admin", label: "대시보드", icon: "📊" },
     { href: "/admin/companies", label: "학원 검증", icon: "🏢" },
     { href: "/admin/branches", label: "지점 검증", icon: "🏪" },
+    { href: "/admin/feedback", label: "피드백 관리", icon: "💬" },
   ],
 };
 

@@ -69,3 +69,10 @@ export type TeacherStudentDetailResponse = components["schemas"]["TeacherStudent
 export type StudentEnrollmentRequestCreateRequest = components["schemas"]["StudentEnrollmentRequestCreateRequest"];
 export type StudentEnrollmentRequestResponse = components["schemas"]["StudentEnrollmentRequestResponse"];
 export type StudentEnrollmentRequestPage = components["schemas"]["PageResponseStudentEnrollmentRequestResponse"];
+
+export type FeedbackCreateRequest = components["schemas"]["FeedbackCreateRequest"];
+export type FeedbackResponse = components["schemas"]["FeedbackResponse"];
+export type FeedbackWriterResponse = components["schemas"]["FeedbackWriterResponse"];
+export type FeedbackPage = components["schemas"]["PageResponseFeedbackResponse"];
+export type FeedbackStatus = NonNullable<FeedbackResponse["status"]>;
+export type FeedbackFilter = "ALL" | FeedbackStatus;

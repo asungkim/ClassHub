@@ -38,7 +38,10 @@ import type {
   TeacherBranchAssignmentCreateRequest,
   TeacherBranchAssignmentStatusUpdateRequest,
   TeacherEnrollmentRequestResponse,
-  VerificationFilter
+  VerificationFilter,
+  FeedbackCreateRequest,
+  FeedbackResponse,
+  FeedbackFilter
 } from "@/types/dashboard";
 
 type ListResult<T> = {
@@ -213,6 +216,74 @@ export async function fetchAdminBranches(params: {
     items: (pageData?.content ?? []) as BranchResponse[],
     totalElements: pageData?.totalElements ?? 0
   };
+}
+
+export async function createFeedback(body: FeedbackCreateRequest): Promise<FeedbackResponse> {
+  const response = await api.POST("/api/v1/feedback", { body });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백을 등록하지 못했습니다."));
+  }
+  return response.data.data as FeedbackResponse;
+}
+
+export async function fetchMyFeedbacks(params: {
+  status?: FeedbackFilter;
+  page: number;
+  size?: number;
+}): Promise<ListResult<FeedbackResponse>> {
+  const { status, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/feedback/me", {
+    params: {
+      query: {
+        status: status === "ALL" ? undefined : status,
+        page,
+        size
+      }
+    }
+  });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백 목록을 불러오지 못했습니다."));
+  }
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as FeedbackResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function fetchAdminFeedbacks(params: {
+  status: FeedbackFilter;
+  page: number;
+  size?: number;
+}): Promise<ListResult<FeedbackResponse>> {
+  const { status, page, size = DASHBOARD_PAGE_SIZE } = params;
+  const response = await api.GET("/api/v1/feedback", {
+    params: {
+      query: {
+        status: status === "ALL" ? undefined : status,
+        page,
+        size
+      }
+    }
+  });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백 목록을 불러오지 못했습니다."));
+  }
+  const pageData = response.data.data;
+  return {
+    items: (pageData?.content ?? []) as FeedbackResponse[],
+    totalElements: pageData?.totalElements ?? 0
+  };
+}
+
+export async function resolveFeedback(feedbackId: string): Promise<FeedbackResponse> {
+  const response = await api.PATCH("/api/v1/feedback/{feedbackId}/resolve", {
+    params: { path: { feedbackId } }
+  });
+  if (response.error || !response.data?.data) {
+    throw new Error(getApiErrorMessage(response.error, "피드백 상태를 변경하지 못했습니다."));
+  }
+  return response.data.data as FeedbackResponse;
 }
 
 export async function updateAdminBranchStatus(branchId: string, payload: BranchVerifiedStatusRequest) {

@@ -184,6 +184,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 피드백 목록 조회
+         * @description SuperAdmin이 전체 피드백을 상태로 필터링해 조회한다.
+         */
+        get: operations["getFeedbacksForAdmin"];
+        put?: never;
+        /**
+         * 피드백 작성
+         * @description Teacher/Assistant/Student가 피드백을 등록한다.
+         */
+        post: operations["createFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/courses": {
         parameters: {
             query?: never;
@@ -616,6 +640,26 @@ export interface paths {
         patch: operations["updatePersonalProgress"];
         trace?: never;
     };
+    "/api/v1/feedback/{feedbackId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 피드백 해결 처리
+         * @description SuperAdmin이 피드백을 해결 상태로 전환한다.
+         */
+        patch: operations["resolveFeedback"];
+        trace?: never;
+    };
     "/api/v1/courses/{courseId}": {
         parameters: {
             query?: never;
@@ -905,6 +949,26 @@ export interface paths {
         };
         /** 학생 클리닉 컨텍스트 조회 */
         get: operations["getClinicContexts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/feedback/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 피드백 목록 조회
+         * @description 작성자가 본인 피드백 목록을 상태로 필터링해 조회한다.
+         */
+        get: operations["getMyFeedbacks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1406,6 +1470,38 @@ export interface components {
             /** Format: date */
             birthDate: string;
             parentPhone: string;
+        };
+        FeedbackCreateRequest: {
+            content: string;
+        };
+        FeedbackResponse: {
+            /** Format: uuid */
+            feedbackId?: string;
+            content?: string;
+            /** @enum {string} */
+            status?: "SUBMITTED" | "RESOLVED";
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            /** Format: uuid */
+            resolvedByMemberId?: string;
+            writer?: components["schemas"]["FeedbackWriterResponse"];
+        };
+        FeedbackWriterResponse: {
+            /** Format: uuid */
+            memberId?: string;
+            name?: string;
+            email?: string;
+            phoneNumber?: string;
+            /** @enum {string} */
+            role?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+        };
+        RsDataFeedbackResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["FeedbackResponse"];
         };
         CourseCreateRequest: {
             /** Format: uuid */
@@ -2083,6 +2179,25 @@ export interface components {
             message?: string;
             data?: components["schemas"]["ProgressSliceResponsePersonalProgressResponse"];
         };
+        PageResponseFeedbackResponse: {
+            content?: components["schemas"]["FeedbackResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            first?: boolean;
+            last?: boolean;
+        };
+        RsDataPageResponseFeedbackResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["PageResponseFeedbackResponse"];
+        };
         PageResponseCourseResponse: {
             content?: components["schemas"]["CourseResponse"][];
             /** Format: int32 */
@@ -2638,6 +2753,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataLoginResponse"];
+                };
+            };
+        };
+    };
+    getFeedbacksForAdmin: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseFeedbackResponse"];
+                };
+            };
+        };
+    };
+    createFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataFeedbackResponse"];
                 };
             };
         };
@@ -3392,6 +3555,28 @@ export interface operations {
             };
         };
     };
+    resolveFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataFeedbackResponse"];
+                };
+            };
+        };
+    };
     getCourse: {
         parameters: {
             query?: never;
@@ -3869,6 +4054,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataListStudentClinicContextResponse"];
+                };
+            };
+        };
+    };
+    getMyFeedbacks: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataPageResponseFeedbackResponse"];
                 };
             };
         };

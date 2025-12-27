@@ -925,7 +925,17 @@ function CourseFormModalContent({
   const scheduleValues = watch("schedules");
 
   const handleAddSchedule = () => {
-    append(createDefaultSchedule());
+    // 마지막 스케줄을 복사해서 추가
+    const lastSchedule = scheduleValues?.[scheduleValues.length - 1];
+    if (lastSchedule) {
+      append({
+        dayOfWeek: lastSchedule.dayOfWeek,
+        startTime: lastSchedule.startTime,
+        endTime: lastSchedule.endTime
+      });
+    } else {
+      append(createDefaultSchedule());
+    }
   };
 
   const handleRemoveSchedule = (index: number) => {
