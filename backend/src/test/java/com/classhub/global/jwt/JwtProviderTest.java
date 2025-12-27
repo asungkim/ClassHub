@@ -31,6 +31,7 @@ class JwtProviderTest {
         assertThat(principal.id()).isEqualTo(memberId);
         assertThat(principal.role()).isEqualTo(role);
         assertThat(jwtProvider.getClaims(token).get("role", String.class)).isEqualTo(role.name());
+        assertThat(jwtProvider.getClaims(token).get("tokenType", String.class)).isEqualTo("ACCESS");
     }
 
     @Test
@@ -43,6 +44,7 @@ class JwtProviderTest {
         assertThat(jwtProvider.getUserId(refreshToken)).isEqualTo(memberId);
         assertThat(jwtProvider.getClaims(refreshToken).get("role")).isNull();
         assertThat(jwtProvider.getClaims(refreshToken).get("authority")).isNull();
+        assertThat(jwtProvider.getClaims(refreshToken).get("tokenType", String.class)).isEqualTo("REFRESH");
     }
 
     @Test

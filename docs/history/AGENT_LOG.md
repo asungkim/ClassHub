@@ -7118,3 +7118,62 @@ BEHAVIORAL
   - `frontend/src/lib/dashboard-api.ts`
   - `frontend/src/types/dashboard.ts`
 - 다음 단계: 프론트 빌드 및 화면 확인(대시보드/관리자)
+## [2025-12-27 12:26] 보안 하드닝 PLAN 작성
+
+### Type
+DESIGN
+
+### Summary
+- Refresh 토큰 구분/회전, 로그아웃 강화, 프런트 재시도/로그아웃 보완 계획 수립
+
+### Details
+- 작업 사유: 토큰 재발급/로그아웃 보안 취약점 보완 필요
+- 영향받은 테스트: 문서 변경만 (미실행)
+- 수정한 파일:
+  - `docs/plan/backend/season2/security-auth-hardening_plan.md`
+- 다음 단계: PLAN 승인 후 백엔드/프런트 순차 구현
+## [2025-12-27 12:54] 인증 토큰 최소 보안 보완 적용
+
+### Type
+BEHAVIORAL
+
+### Summary
+- Refresh 토큰 타입 검증 및 비활성 회원 재발급 차단
+- 프런트 로그아웃/리프레시 재시도 및 요청 재시도 안정화
+- Mock 토큰 사용 범위를 개발 환경으로 제한
+
+### Details
+- 작업 사유: 최소 수준의 보안 보완으로 토큰 오용/무한 재시도 위험 완화
+- 영향받은 테스트:
+  - `GRADLE_USER_HOME=../.gradle-local ./gradlew test --tests "com.classhub.domain.auth.application.AuthServiceTest" --tests "com.classhub.global.jwt.JwtProviderTest"`
+  - `npm run build -- --webpack` (실패: `frontend/src/lib/dashboard-api.ts` 타입 에러)
+- 수정한 파일:
+  - `backend/src/main/java/com/classhub/domain/auth/application/AuthService.java`
+  - `backend/src/main/java/com/classhub/global/jwt/JwtProvider.java`
+  - `backend/src/test/java/com/classhub/domain/auth/application/AuthServiceTest.java`
+  - `backend/src/test/java/com/classhub/global/jwt/JwtProviderTest.java`
+  - `frontend/src/lib/api.ts`
+  - `frontend/src/components/session/session-provider.tsx`
+- MCP 사용: 없음
+- 다음 단계: 프런트 빌드 실패 원인(대시보드 API 타입) 정리/수정 여부 결정
+## [2025-12-27 13:06] OpenAPI 갱신에 맞춘 대시보드 API 정리
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 삭제된 enrollment/public course/student-courses API 클라이언트 제거
+- 클리닉 출석 추가 화면에서 학생 목록을 기존 course 학생 목록 API로 전환
+- OpenAPI 미존재 스키마 타입 정리
+
+### Details
+- 작업 사유: OpenAPI 갱신으로 제거된 엔드포인트/스키마와 프런트 코드 불일치 해소
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/lib/dashboard-api.ts`
+  - `frontend/src/types/dashboard.ts`
+  - `frontend/src/app/(dashboard)/teacher/clinics/attendance/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/clinics/attendance/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 필요 시 삭제된 기능 화면 동작 확인

@@ -64,7 +64,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setError(null);
 
         // Mock 토큰이 있으면 사용
-        if (env.mockToken) {
+        if (env.mockToken && process.env.NODE_ENV === "development") {
           setAuthToken(env.mockToken);
         } else {
           // Refresh 토큰으로 access 토큰 발급

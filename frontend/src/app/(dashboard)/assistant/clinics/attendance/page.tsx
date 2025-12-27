@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRoleGuard } from "@/hooks/use-role-guard";
 import { useClinicSessions } from "@/hooks/clinic/use-clinic-sessions";
-import { fetchAssistantCourses, fetchStudentCourseRecords } from "@/lib/dashboard-api";
+import { fetchAssistantCourses, fetchCourseStudents } from "@/lib/dashboard-api";
 import { api } from "@/lib/api";
 import { getApiErrorMessage, getFetchError } from "@/lib/api-error";
 import { useToast } from "@/components/ui/toast";
@@ -19,7 +19,7 @@ import { TextField } from "@/components/ui/text-field";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { components } from "@/types/openapi";
-import type { CourseWithTeacherResponse, StudentCourseListItemResponse } from "@/types/dashboard";
+import type { CourseStudentResponse, CourseWithTeacherResponse } from "@/types/dashboard";
 
 const ATTENDANCE_LOCK_MINUTES = 10;
 
@@ -93,7 +93,7 @@ export default function AssistantClinicAttendancePage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [studentKeyword, setStudentKeyword] = useState("");
-  const [studentList, setStudentList] = useState<StudentCourseListItemResponse[]>([]);
+  const [studentList, setStudentList] = useState<CourseStudentResponse[]>([]);
   const [studentLoading, setStudentLoading] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
@@ -167,6 +167,10 @@ export default function AssistantClinicAttendancePage() {
   const selectedContext = useMemo(
     () => contexts.find((context) => context.key === selectedKey) ?? null,
     [contexts, selectedKey]
+  );
+  const selectedCourseName = useMemo(
+    () => selectedContext?.courses.find((course) => course.courseId === selectedCourseId)?.name ?? "",
+    [selectedContext, selectedCourseId]
   );
 
   const {
@@ -259,14 +263,20 @@ export default function AssistantClinicAttendancePage() {
     }
     setStudentLoading(true);
     try {
-      const result = await fetchStudentCourseRecords({
-        courseId: selectedCourseId,
-        status: "ACTIVE",
-        keyword: studentKeyword || undefined,
-        page: 0,
-        size: 50
-      });
-      setStudentList(result.items ?? []);
+      const result = await fetchCourseStudents({ courseId: selectedCourseId, page: 0, size: 50 });
+      const keyword = studentKeyword.trim();
+      const items = result.items ?? [];
+      if (!keyword) {
+        setStudentList(items);
+      } else {
+        const filtered = items.filter((item) => {
+          const name = item.student?.name ?? "";
+          const phone = item.student?.phoneNumber ?? "";
+          const parentPhone = item.student?.parentPhone ?? "";
+          return [name, phone, parentPhone].some((value) => value.includes(keyword));
+        });
+        setStudentList(filtered);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "학생 목록을 불러오지 못했습니다.";
       showToast("error", message);
@@ -709,11 +719,11 @@ export default function AssistantClinicAttendancePage() {
                             />
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium text-slate-900">{student.studentName ?? "-"}</div>
-                            <div className="text-xs text-slate-500">{student.courseName ?? ""}</div>
+                            <div className="font-medium text-slate-900">{student.student?.name ?? "-"}</div>
+                            <div className="text-xs text-slate-500">{selectedCourseName}</div>
                           </TableCell>
-                          <TableCell>{student.phoneNumber ?? "-"}</TableCell>
-                          <TableCell>{student.active ? "수강 중" : "비활성"}</TableCell>
+                          <TableCell>{student.student?.phoneNumber ?? "-"}</TableCell>
+                          <TableCell>{student.assignmentActive ? "수강 중" : "비활성"}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
