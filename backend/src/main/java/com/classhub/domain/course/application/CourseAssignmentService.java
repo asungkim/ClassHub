@@ -4,6 +4,8 @@ import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.model.TeacherStudentAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.dto.response.CourseStudentResponse;
 import com.classhub.domain.course.model.Course;
@@ -53,6 +55,8 @@ public class CourseAssignmentService {
     private final MemberRepository memberRepository;
     private final StudentInfoRepository studentInfoRepository;
     private final CourseViewAssembler courseViewAssembler;
+    private final ClinicAttendanceRepository clinicAttendanceRepository;
+    private final ClinicDefaultSlotService clinicDefaultSlotService;
 
     public PageResponse<CourseResponse> getAssignableCourses(MemberPrincipal principal,
                                                              UUID branchId,
@@ -229,6 +233,12 @@ public class CourseAssignmentService {
         if (!assignment.isActive()) {
             assignment.activate();
             studentCourseAssignmentRepository.save(assignment);
+            StudentCourseRecord record = loadRecord(assignment);
+            if (record.isDeleted()) {
+                record.restore();
+            }
+            studentCourseRecordRepository.save(record);
+            clinicDefaultSlotService.createAttendancesForCurrentWeekIfPossible(record, course);
         }
         return StudentCourseAssignmentResponse.from(assignment);
     }
@@ -242,6 +252,13 @@ public class CourseAssignmentService {
         if (assignment.isActive()) {
             assignment.deactivate();
             studentCourseAssignmentRepository.save(assignment);
+            StudentCourseRecord record = loadRecord(assignment);
+            if (!record.isDeleted()) {
+                record.delete();
+            }
+            studentCourseRecordRepository.save(record);
+            LocalDateTime now = LocalDateTime.now(KstTime.clock());
+            clinicAttendanceRepository.deleteUpcomingAttendances(record.getId(), now.toLocalDate(), now.toLocalTime());
         }
         return StudentCourseAssignmentResponse.from(assignment);
     }
@@ -258,6 +275,12 @@ public class CourseAssignmentService {
     private StudentCourseAssignment loadAssignment(UUID assignmentId) {
         return studentCourseAssignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new BusinessException(RsCode.STUDENT_COURSE_ASSIGNMENT_NOT_FOUND));
+    }
+
+    private StudentCourseRecord loadRecord(StudentCourseAssignment assignment) {
+        return studentCourseRecordRepository
+                .findByStudentMemberIdAndCourseId(assignment.getStudentMemberId(), assignment.getCourseId())
+                .orElseThrow(RsCode.STUDENT_COURSE_RECORD_NOT_FOUND::toException);
     }
 
     private void ensureCourseNotEnded(Course course) {

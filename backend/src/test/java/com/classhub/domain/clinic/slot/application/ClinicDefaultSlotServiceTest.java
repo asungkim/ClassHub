@@ -201,6 +201,29 @@ class ClinicDefaultSlotServiceTest {
         verify(clinicSessionRepository, never()).findBySlotIdAndDateRange(any(), any(), any());
     }
 
+    @Test
+    void applyDefaultSlot_shouldSkipAttendanceCreation_whenCourseDeleted() {
+        UUID studentId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID branchId = UUID.randomUUID();
+        UUID slotId = UUID.randomUUID();
+        StudentCourseRecord record = createRecord(studentId, courseId, null);
+        Course course = createCourse(courseId, teacherId, branchId);
+        course.deactivate();
+        ClinicSlot slot = createSlot(slotId, teacherId, branchId, DayOfWeek.TUESDAY);
+
+        given(clinicSlotRepository.findByIdAndDeletedAtIsNullForUpdate(slotId)).willReturn(Optional.of(slot));
+        given(recordRepository.findByStudentMemberIdAndDeletedAtIsNull(studentId))
+                .willReturn(List.of(record));
+        given(recordRepository.countByDefaultClinicSlotIdAndDeletedAtIsNull(slotId)).willReturn(0L);
+
+        clinicDefaultSlotService.applyDefaultSlot(record, course, slotId);
+
+        assertThat(record.getDefaultClinicSlotId()).isEqualTo(slotId);
+        verify(clinicSessionRepository, never()).findBySlotIdAndDateRange(any(), any(), any());
+    }
+
     private StudentCourseRecord createRecord(UUID studentId, UUID courseId, UUID defaultSlotId) {
         StudentCourseRecord record = StudentCourseRecord.create(studentId, courseId, null, defaultSlotId, null);
         ReflectionTestUtils.setField(record, "id", UUID.randomUUID());

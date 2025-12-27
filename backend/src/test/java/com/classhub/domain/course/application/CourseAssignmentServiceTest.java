@@ -12,6 +12,8 @@ import com.classhub.domain.assignment.model.TeacherAssistantAssignment;
 import com.classhub.domain.assignment.model.TeacherStudentAssignment;
 import com.classhub.domain.assignment.repository.TeacherAssistantAssignmentRepository;
 import com.classhub.domain.assignment.repository.TeacherStudentAssignmentRepository;
+import com.classhub.domain.clinic.attendance.repository.ClinicAttendanceRepository;
+import com.classhub.domain.clinic.slot.application.ClinicDefaultSlotService;
 import com.classhub.domain.course.dto.response.CourseResponse;
 import com.classhub.domain.course.dto.response.CourseStudentResponse;
 import com.classhub.domain.course.model.Course;
@@ -34,6 +36,7 @@ import com.classhub.global.exception.BusinessException;
 import com.classhub.global.response.PageResponse;
 import com.classhub.global.response.RsCode;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,6 +71,10 @@ class CourseAssignmentServiceTest {
     private StudentInfoRepository studentInfoRepository;
     @Mock
     private CourseViewAssembler courseViewAssembler;
+    @Mock
+    private ClinicAttendanceRepository clinicAttendanceRepository;
+    @Mock
+    private ClinicDefaultSlotService clinicDefaultSlotService;
 
     @InjectMocks
     private CourseAssignmentService courseAssignmentService;
@@ -295,17 +302,26 @@ class CourseAssignmentServiceTest {
         StudentCourseAssignment assignment = StudentCourseAssignment.create(studentId, course.getId(), teacherId, null);
         assignment.deactivate();
         ReflectionTestUtils.setField(assignment, "id", UUID.randomUUID());
+        StudentCourseRecord record = StudentCourseRecord.create(studentId, course.getId(), null, UUID.randomUUID(), null);
+        record.delete();
+        ReflectionTestUtils.setField(record, "id", UUID.randomUUID());
         given(studentCourseAssignmentRepository.findById(assignment.getId()))
                 .willReturn(Optional.of(assignment));
         given(courseRepository.findById(course.getId())).willReturn(Optional.of(course));
         given(studentCourseAssignmentRepository.save(assignment)).willReturn(assignment);
+        given(studentCourseRecordRepository.findByStudentMemberIdAndCourseId(studentId, course.getId()))
+                .willReturn(Optional.of(record));
+        given(studentCourseRecordRepository.save(record)).willReturn(record);
 
         StudentCourseAssignmentResponse response = courseAssignmentService.activateAssignment(principal, assignment.getId());
 
         assertThat(response.assignmentId()).isEqualTo(assignment.getId());
         assertThat(response.active()).isTrue();
         assertThat(assignment.isActive()).isTrue();
+        assertThat(record.isDeleted()).isFalse();
         verify(studentCourseAssignmentRepository).save(assignment);
+        verify(studentCourseRecordRepository).save(record);
+        verify(clinicDefaultSlotService).createAttendancesForCurrentWeekIfPossible(record, course);
     }
 
     @Test
@@ -313,17 +329,26 @@ class CourseAssignmentServiceTest {
         MemberPrincipal principal = new MemberPrincipal(teacherId, MemberRole.TEACHER);
         StudentCourseAssignment assignment = StudentCourseAssignment.create(studentId, course.getId(), teacherId, null);
         ReflectionTestUtils.setField(assignment, "id", UUID.randomUUID());
+        StudentCourseRecord record = StudentCourseRecord.create(studentId, course.getId(), null, null, null);
+        ReflectionTestUtils.setField(record, "id", UUID.randomUUID());
         given(studentCourseAssignmentRepository.findById(assignment.getId()))
                 .willReturn(Optional.of(assignment));
         given(courseRepository.findById(course.getId())).willReturn(Optional.of(course));
         given(studentCourseAssignmentRepository.save(assignment)).willReturn(assignment);
+        given(studentCourseRecordRepository.findByStudentMemberIdAndCourseId(studentId, course.getId()))
+                .willReturn(Optional.of(record));
+        given(studentCourseRecordRepository.save(record)).willReturn(record);
 
         StudentCourseAssignmentResponse response = courseAssignmentService.deactivateAssignment(principal, assignment.getId());
 
         assertThat(response.assignmentId()).isEqualTo(assignment.getId());
         assertThat(response.active()).isFalse();
         assertThat(assignment.isActive()).isFalse();
+        assertThat(record.isDeleted()).isTrue();
         verify(studentCourseAssignmentRepository).save(assignment);
+        verify(studentCourseRecordRepository).save(record);
+        verify(clinicAttendanceRepository)
+                .deleteUpcomingAttendances(eq(record.getId()), any(LocalDate.class), any(LocalTime.class));
     }
 
     @Test

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -95,6 +96,21 @@ public interface ClinicAttendanceRepository extends JpaRepository<ClinicAttendan
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            DELETE FROM ClinicAttendance ca
+            WHERE ca.studentCourseRecordId = :recordId
+              AND ca.clinicSessionId IN (
+                SELECT cs.id
+                FROM ClinicSession cs
+                WHERE cs.date > :date
+                   OR (cs.date = :date AND cs.startTime >= :time)
+              )
+            """)
+    int deleteUpcomingAttendances(@Param("recordId") UUID recordId,
+                                  @Param("date") LocalDate date,
+                                  @Param("time") LocalTime time);
 
     @Query("""
             SELECT COUNT(ca)

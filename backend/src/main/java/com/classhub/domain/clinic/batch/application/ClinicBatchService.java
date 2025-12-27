@@ -180,7 +180,7 @@ public class ClinicBatchService {
     private List<ClinicAttendance> createAttendancesForSession(ClinicSession session, UUID slotId) {
         List<ClinicAttendance> created = new ArrayList<>();
         List<StudentCourseRecord> records = studentCourseRecordRepository
-                .findByDefaultClinicSlotIdAndDeletedAtIsNull(slotId);
+                .findActiveByDefaultClinicSlotId(slotId);
         long currentCount = clinicAttendanceRepository.countByClinicSessionId(session.getId());
         for (StudentCourseRecord record : records) {
             if (currentCount >= session.getCapacity()) {

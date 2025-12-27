@@ -69,10 +69,32 @@ public class ClinicDefaultSlotService {
 
         boolean wasUnset = record.getDefaultClinicSlotId() == null;
         record.updateDefaultClinicSlot(defaultSlotId);
-        if (wasUnset) {
+        if (wasUnset && !course.isDeleted()) {
             createAttendancesForCurrentWeek(record, slot);
         }
         return record;
+    }
+
+    public void createAttendancesForCurrentWeekIfPossible(StudentCourseRecord record, Course course) {
+        if (record == null || course == null) {
+            throw new BusinessException(RsCode.BAD_REQUEST);
+        }
+        if (record.isDeleted() || course.isDeleted()) {
+            return;
+        }
+        UUID slotId = record.getDefaultClinicSlotId();
+        if (slotId == null) {
+            return;
+        }
+        ClinicSlot slot = clinicSlotRepository.findByIdAndDeletedAtIsNull(slotId).orElse(null);
+        if (slot == null) {
+            return;
+        }
+        if (!Objects.equals(slot.getTeacherMemberId(), course.getTeacherMemberId())
+                || !Objects.equals(slot.getBranchId(), course.getBranchId())) {
+            return;
+        }
+        createAttendancesForCurrentWeek(record, slot);
     }
 
     private void ensureSlotMatchesCourse(ClinicSlot slot, Course course) {

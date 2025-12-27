@@ -81,6 +81,27 @@ class StudentCourseRecordRepositoryTest {
         assertThat(counts.get(slotB)).isEqualTo(1L);
     }
 
+    @Test
+    void findActiveByDefaultClinicSlotId_shouldExcludeArchivedCourses() {
+        UUID slotId = UUID.randomUUID();
+        Course activeCourse = courseRepository.save(createCourse());
+        Course archivedCourse = courseRepository.save(createCourse());
+        archivedCourse.deactivate();
+        courseRepository.save(archivedCourse);
+
+        StudentCourseRecord activeRecord = studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), activeCourse.getId(), null, slotId, null)
+        );
+        studentCourseRecordRepository.save(
+                StudentCourseRecord.create(UUID.randomUUID(), archivedCourse.getId(), null, slotId, null)
+        );
+
+        List<StudentCourseRecord> records = studentCourseRecordRepository.findActiveByDefaultClinicSlotId(slotId);
+
+        assertThat(records).hasSize(1);
+        assertThat(records.getFirst().getId()).isEqualTo(activeRecord.getId());
+    }
+
     private Course createCourse() {
         return Course.create(
                 UUID.randomUUID(),

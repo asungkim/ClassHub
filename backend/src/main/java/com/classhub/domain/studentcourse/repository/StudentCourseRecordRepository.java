@@ -23,6 +23,16 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
     List<StudentCourseRecord> findByDefaultClinicSlotIdAndDeletedAtIsNull(UUID defaultClinicSlotId);
 
     @Query("""
+            SELECT scr
+            FROM StudentCourseRecord scr
+            JOIN Course c ON c.id = scr.courseId
+            WHERE scr.defaultClinicSlotId = :slotId
+              AND scr.deletedAt IS NULL
+              AND c.deletedAt IS NULL
+            """)
+    List<StudentCourseRecord> findActiveByDefaultClinicSlotId(@Param("slotId") UUID slotId);
+
+    @Query("""
             SELECT scr.defaultClinicSlotId AS slotId,
                    COUNT(scr) AS count
             FROM StudentCourseRecord scr
@@ -116,6 +126,9 @@ public interface StudentCourseRecordRepository extends JpaRepository<StudentCour
 
     Optional<StudentCourseRecord> findByStudentMemberIdAndCourseIdAndDeletedAtIsNull(UUID studentMemberId,
                                                                                       UUID courseId);
+
+    Optional<StudentCourseRecord> findByStudentMemberIdAndCourseId(UUID studentMemberId,
+                                                                    UUID courseId);
 
     List<StudentCourseRecord> findByStudentMemberIdAndDeletedAtIsNull(UUID studentMemberId);
 

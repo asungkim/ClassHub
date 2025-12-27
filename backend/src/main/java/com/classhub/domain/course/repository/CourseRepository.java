@@ -237,6 +237,8 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
                                                             @Param("today") LocalDate today,
                                                             Pageable pageable);
 
+    List<Course> findByEndDateLessThanEqualAndDeletedAtIsNull(LocalDate endDate);
+
     java.util.Optional<Course> findByTeacherMemberIdAndBranchIdAndName(UUID teacherMemberId,
                                                                        UUID branchId,
                                                                        String name);

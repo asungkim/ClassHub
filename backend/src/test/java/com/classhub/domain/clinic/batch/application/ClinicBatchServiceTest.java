@@ -173,7 +173,7 @@ class ClinicBatchServiceTest {
         given(clinicSlotRepository.findByDeletedAtIsNull()).willReturn(List.of(slot));
         given(clinicSessionRepository.findBySlotIdAndDateAndDeletedAtIsNull(slot.getId(), sessionDate))
                 .willReturn(Optional.of(session));
-        given(studentCourseRecordRepository.findByDefaultClinicSlotIdAndDeletedAtIsNull(slot.getId()))
+        given(studentCourseRecordRepository.findActiveByDefaultClinicSlotId(slot.getId()))
                 .willReturn(List.of(recordOne, recordTwo));
         given(clinicAttendanceRepository.countByClinicSessionId(session.getId())).willReturn(0L);
         given(clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(session.getId(), recordOne.getId()))
@@ -207,7 +207,7 @@ class ClinicBatchServiceTest {
         given(clinicSlotRepository.findByDeletedAtIsNull()).willReturn(List.of(slot));
         given(clinicSessionRepository.findBySlotIdAndDateAndDeletedAtIsNull(slot.getId(), sessionDate))
                 .willReturn(Optional.of(session));
-        given(studentCourseRecordRepository.findByDefaultClinicSlotIdAndDeletedAtIsNull(slot.getId()))
+        given(studentCourseRecordRepository.findActiveByDefaultClinicSlotId(slot.getId()))
                 .willReturn(List.of(recordOne, recordTwo));
         given(clinicAttendanceRepository.countByClinicSessionId(session.getId())).willReturn(0L);
         given(clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(session.getId(), recordOne.getId()))
@@ -241,7 +241,7 @@ class ClinicBatchServiceTest {
         given(clinicSlotRepository.findByDeletedAtIsNull()).willReturn(List.of(slot));
         given(clinicSessionRepository.findBySlotIdAndDateAndDeletedAtIsNull(slot.getId(), sessionDate))
                 .willReturn(Optional.of(session));
-        given(studentCourseRecordRepository.findByDefaultClinicSlotIdAndDeletedAtIsNull(slot.getId()))
+        given(studentCourseRecordRepository.findActiveByDefaultClinicSlotId(slot.getId()))
                 .willReturn(List.of(recordOne, recordTwo));
         given(clinicAttendanceRepository.countByClinicSessionId(session.getId())).willReturn(0L);
         given(clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(session.getId(), recordOne.getId()))
@@ -287,7 +287,7 @@ class ClinicBatchServiceTest {
             ReflectionTestUtils.setField(session, "id", UUID.randomUUID());
             return session;
         });
-        given(studentCourseRecordRepository.findByDefaultClinicSlotIdAndDeletedAtIsNull(slot.getId()))
+        given(studentCourseRecordRepository.findActiveByDefaultClinicSlotId(slot.getId()))
                 .willReturn(List.of(recordOne, recordTwo));
         given(clinicAttendanceRepository.countByClinicSessionId(any())).willReturn(0L);
         given(clinicAttendanceRepository.existsByClinicSessionIdAndStudentCourseRecordId(any(), any()))
