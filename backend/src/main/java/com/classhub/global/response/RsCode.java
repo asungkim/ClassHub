@@ -87,6 +87,10 @@ public enum RsCode {
     TEACHER_STUDENT_ALREADY_ASSIGNED(RsConstant.CONFLICT, "이미 연결된 선생님입니다."),
     INVALID_TEACHER_STUDENT_REQUEST_STATE(RsConstant.BAD_REQUEST, "현재 상태에서는 처리할 수 없습니다."),
 
+    // ===== Feedback =====
+    FEEDBACK_NOT_FOUND(RsConstant.NOT_FOUND, "피드백을 찾을 수 없습니다."),
+    FEEDBACK_ALREADY_RESOLVED(RsConstant.CONFLICT, "이미 해결된 피드백입니다."),
+
     STUDENT_COURSE_RECORD_NOT_FOUND(RsConstant.NOT_FOUND, "학생 수업 기록을 찾을 수 없습니다.");
 
     private final Integer code;
