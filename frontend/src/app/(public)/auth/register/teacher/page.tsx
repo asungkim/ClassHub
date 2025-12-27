@@ -24,6 +24,8 @@ export default function TeacherRegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
@@ -198,7 +200,7 @@ export default function TeacherRegisterPage() {
 
               <TextField
                 label="비밀번호"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -206,6 +208,16 @@ export default function TeacherRegisterPage() {
                 error={fieldErrors.password}
                 required
                 aria-describedby={fieldErrors.password ? "password-error" : undefined}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="rounded-full p-1 text-slate-400 transition hover:text-slate-600"
+                    aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                  >
+                    {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                  </button>
+                }
               />
 
               {password && (
@@ -218,7 +230,7 @@ export default function TeacherRegisterPage() {
               <div>
                 <TextField
                   label="비밀번호 확인"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -226,6 +238,16 @@ export default function TeacherRegisterPage() {
                   error={fieldErrors.confirmPassword}
                   required
                   aria-describedby={fieldErrors.confirmPassword ? "confirm-password-error" : undefined}
+                  rightElement={
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className="rounded-full p-1 text-slate-400 transition hover:text-slate-600"
+                      aria-label={showConfirmPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                    >
+                      {showConfirmPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                    </button>
+                  }
                 />
                 {confirmPassword && password && !passwordsMatch && (
                   <p className="mt-2 text-xs font-semibold text-rose-600">비밀번호가 일치하지 않습니다.</p>
@@ -335,6 +357,26 @@ function CheckCircleIcon(props: React.SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
       <circle cx="12" cy="12" r="10" />
       <polyline points="9 12 11 14 15 10" />
+    </svg>
+  );
+}
+
+function EyeIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <path d="M3 5l18 14" />
+      <path d="M10.8 10.8a3 3 0 0 0 4.2 4.2" />
+      <path d="M9.5 5.5A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a18.7 18.7 0 0 1-4.1 4.9" />
+      <path d="M6.3 6.3A18.7 18.7 0 0 0 2 12s3.5 6 10 6a9.9 9.9 0 0 0 5.1-1.4" />
     </svg>
   );
 }

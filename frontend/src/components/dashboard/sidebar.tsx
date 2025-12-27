@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { useState } from "react";
 import { useSession } from "@/components/session/session-provider";
-import { getDashboardRoute } from "@/lib/routes";
+import { getDashboardRoute, getProfileRoute } from "@/lib/routes";
 import type { Role } from "@/lib/routes";
 
 type MenuItem = {
@@ -97,7 +97,10 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
   const role = member?.role as Role | undefined;
   const menu = role ? menuByRole[role] : [];
   const dashboardHref = (role ? getDashboardRoute(role) : "/") as Route;
+  const profileHref = (role ? getProfileRoute(role) : "/") as Route;
   const initials = member?.name?.[0] ?? "게";
+  const roleLabel = roleToLabel(role);
+  const nameWithRole = member?.name ? `${member.name} ${roleLabel}` : roleLabel;
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   return (
@@ -111,22 +114,25 @@ export function DashboardSidebar({ onNavigate }: DashboardSidebarProps) {
           <Link href={dashboardHref} className="text-sm font-semibold text-slate-900">
             ClassHub
           </Link>
-          <p className="text-xs text-slate-500">{roleToLabel(role)}</p>
         </div>
       </div>
 
       {/* 사용자 카드 */}
-      <div className="mx-5 mt-4 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3">
+      <Link
+        href={profileHref}
+        onClick={onNavigate}
+        className="mx-5 mt-4 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 transition hover:border-blue-200 hover:bg-blue-50/40"
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-lg font-semibold text-white shadow">
             {initials}
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-900">{member?.name ?? "게스트"}</p>
+            <p className="text-sm font-semibold text-slate-900">{nameWithRole}</p>
             <p className="text-xs text-slate-500">{member?.email ?? "-"}</p>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* 메뉴 */}
       <nav className="mt-4 flex-1 space-y-1 overflow-y-auto px-4 pb-6">

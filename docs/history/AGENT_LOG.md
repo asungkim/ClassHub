@@ -7582,3 +7582,112 @@ DESIGN
   - `docs/plan/frontend/season2/member-profile-temp-password-ui_plan.md`
 - MCP 사용: 없음
 - 다음 단계: 계획 승인 후 프런트 구현 진행
+## [2025-12-27 18:40] 내 정보/임시 비밀번호 프런트 화면 구현
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 내 정보 조회/수정 페이지(teacher/assistant/student) 추가
+- 임시 비밀번호 발급 페이지와 로그인 안내 모달 동선 구현
+- 사이드바 사용자 카드에서 내 정보로 이동
+
+### Details
+- 작업 사유: 내 정보/임시 비밀번호 UI 요구사항 반영
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/lib/routes.ts`
+  - `frontend/src/components/dashboard/sidebar.tsx`
+  - `frontend/src/components/dashboard/member-profile.tsx`
+  - `frontend/src/app/(dashboard)/teacher/profile/page.tsx`
+  - `frontend/src/app/(dashboard)/assistant/profile/page.tsx`
+  - `frontend/src/app/(dashboard)/student/profile/page.tsx`
+  - `frontend/src/app/(dashboard)/layout.tsx`
+  - `frontend/src/app/(public)/page.tsx`
+  - `frontend/src/app/(public)/auth/temp-password/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 역할별 수동 QA 및 비밀번호 변경 플로우 점검
+## [2025-12-27 19:23] 내 정보 입력 UX 보완 및 비밀번호 규칙 표시
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 전화번호 입력 힌트를 숫자 입력 안내로 변경
+- 내 정보 비밀번호 입력에 규칙 리스트 노출
+
+### Details
+- 작업 사유: 입력 UX 개선 및 비밀번호 검증 강화 요청 반영
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/dashboard/member-profile.tsx`
+  - `frontend/src/app/(public)/auth/temp-password/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: 역할별 수동 QA 진행
+## [2025-12-27 19:30] 비밀번호 보기 버튼 클릭 영역 개선
+
+### Type
+BEHAVIORAL
+
+### Summary
+- TextField 우측 아이콘이 입력 필드에 가려지지 않도록 레이어 조정
+
+### Details
+- 작업 사유: 내 정보 화면에서 비밀번호 보기 버튼 클릭 불편 개선
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/ui/text-field.tsx`
+- MCP 사용: 없음
+- 다음 단계: 내 정보 화면에서 비밀번호 토글 클릭 동작 확인
+## [2025-12-27 19:36] 비밀번호 토글 클릭 개선 및 학생 회원가입 토글 추가
+
+### Type
+BEHAVIORAL
+
+### Summary
+- TextField 라벨 구조 변경으로 비밀번호 토글 클릭 안정화
+- 학생 회원가입 폼에 비밀번호 표시 토글 추가
+
+### Details
+- 작업 사유: /profile 및 /register 비밀번호 토글 클릭 이슈 수정
+- 영향받은 테스트:
+  - `npm run build -- --webpack`
+- 수정한 파일:
+  - `frontend/src/components/ui/text-field.tsx`
+  - `frontend/src/app/(public)/auth/register/student/page.tsx`
+- MCP 사용: 없음
+- 다음 단계: /profile, /register 페이지에서 토글 클릭 동작 수동 확인
+## [2025-12-27 19:55] 사이드바 브랜드 영역에 이름+역할 표시
+
+### Type
+BEHAVIORAL
+
+### Summary
+- ClassHub 하단 텍스트를 이름+역할 형식으로 변경
+
+### Details
+- 작업 사유: 사이드바에서 역할 대신 이름과 역할을 함께 노출하도록 UI 개선
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/sidebar.tsx`
+- MCP 사용: 없음
+- 다음 단계: 사이드바 상단 브랜드 영역 표시 확인
+## [2025-12-27 19:56] 사이드바 사용자 카드에 이름+역할 표시
+
+### Type
+BEHAVIORAL
+
+### Summary
+- 상단 브랜드 영역 역할 표시 제거
+- 사용자 카드에 이름+역할 행 추가
+
+### Details
+- 작업 사유: 역할 표시는 사용자 카드에 통합하고 브랜드 영역에서는 제거
+- 영향받은 테스트: 없음 (미실행)
+- 수정한 파일:
+  - `frontend/src/components/dashboard/sidebar.tsx`
+- MCP 사용: 없음
+- 다음 단계: 사이드바 사용자 카드 텍스트 표시 확인
