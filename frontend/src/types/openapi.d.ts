@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/api/v1/members/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 정보 조회
+         * @description 로그인 사용자 기준으로 내 정보를 조회한다.
+         */
+        get: operations["getProfile"];
+        /**
+         * 내 정보 수정
+         * @description 로그인 사용자 기준으로 내 정보를 수정한다.
+         */
+        put: operations["updateProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teachers/me/branches": {
         parameters: {
             query?: never;
@@ -396,6 +420,26 @@ export interface paths {
          * @description Teacher가 기존 학원에 새로운 지점을 추가한다.
          */
         post: operations["createBranch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/temp-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 임시 비밀번호 발급
+         * @description 이메일과 전화번호로 본인 확인 후 임시 비밀번호를 발급한다.
+         */
+        post: operations["issueTempPassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1231,6 +1275,49 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        MemberProfileUpdateRequest: {
+            /** Format: email */
+            email?: string;
+            name?: string;
+            phoneNumber?: string;
+            password?: string;
+            studentInfo?: components["schemas"]["StudentInfoUpdateRequest"];
+        };
+        StudentInfoUpdateRequest: {
+            schoolName?: string;
+            /** @enum {string} */
+            grade?: "ELEMENTARY_1" | "ELEMENTARY_2" | "ELEMENTARY_3" | "ELEMENTARY_4" | "ELEMENTARY_5" | "ELEMENTARY_6" | "MIDDLE_1" | "MIDDLE_2" | "MIDDLE_3" | "HIGH_1" | "HIGH_2" | "HIGH_3" | "GAP_YEAR";
+            /** Format: date */
+            birthDate?: string;
+            parentPhone?: string;
+        };
+        MemberProfileInfo: {
+            /** Format: uuid */
+            memberId?: string;
+            email?: string;
+            name?: string;
+            phoneNumber?: string;
+            /** @enum {string} */
+            role?: "TEACHER" | "ASSISTANT" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+        };
+        MemberProfileResponse: {
+            member?: components["schemas"]["MemberProfileInfo"];
+            studentInfo?: components["schemas"]["StudentInfoResponse"];
+        };
+        RsDataMemberProfileResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["MemberProfileResponse"];
+        };
+        StudentInfoResponse: {
+            schoolName?: string;
+            /** @enum {string} */
+            grade?: "ELEMENTARY_1" | "ELEMENTARY_2" | "ELEMENTARY_3" | "ELEMENTARY_4" | "ELEMENTARY_5" | "ELEMENTARY_6" | "MIDDLE_1" | "MIDDLE_2" | "MIDDLE_3" | "HIGH_1" | "HIGH_2" | "HIGH_3" | "GAP_YEAR";
+            /** Format: date */
+            birthDate?: string;
+            parentPhone?: string;
+        };
         BranchInput: {
             /** Format: uuid */
             companyId: string;
@@ -1753,6 +1840,20 @@ export interface components {
             code?: number;
             message?: string;
             data?: components["schemas"]["BranchResponse"];
+        };
+        TempPasswordRequest: {
+            /** Format: email */
+            email: string;
+            phoneNumber: string;
+        };
+        RsDataTempPasswordResponse: {
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            data?: components["schemas"]["TempPasswordResponse"];
+        };
+        TempPasswordResponse: {
+            tempPassword?: string;
         };
         LogoutRequest: {
             refreshToken?: string;
@@ -2407,6 +2508,50 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataMemberProfileResponse"];
+                };
+            };
+        };
+    };
+    updateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberProfileUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataMemberProfileResponse"];
+                };
+            };
+        };
+    };
     getAssignments: {
         parameters: {
             query?: {
@@ -3212,6 +3357,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RsDataBranchResponse"];
+                };
+            };
+        };
+    };
+    issueTempPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TempPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataTempPasswordResponse"];
                 };
             };
         };

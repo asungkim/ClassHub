@@ -7551,3 +7551,34 @@ BEHAVIORAL
   - `backend/src/test/java/com/classhub/domain/auth/web/AuthControllerTest.java`
 - MCP 사용: 없음
 - 다음 단계: OpenAPI 스키마 및 프런트 타입 갱신 후 UI 연동
+## [2025-12-27 18:21] 내 정보/임시 비밀번호 프런트 계획 작성
+
+### Type
+DESIGN
+
+### Summary
+- 내 정보 페이지와 임시 비밀번호 발급 화면의 UI/흐름 설계
+- 사이드바 사용자 카드 진입 동선 포함
+
+### Details
+- 작업 사유: v1.5 스펙 기반 프런트 설계 요청 반영
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/member-profile-temp-password-ui_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 계획 승인 후 프런트 구현 진행
+## [2025-12-27 18:25] 임시 비밀번호 로그인 안내 플로우 반영
+
+### Type
+DESIGN
+
+### Summary
+- 임시 비밀번호 로그인 시 모달 안내 후 프로필로 이동하는 UI 플로우 추가
+
+### Details
+- 작업 사유: 임시 비밀번호 로그인 직후 비밀번호 변경 유도 요구사항 반영
+- 영향받은 테스트: 없음
+- 수정한 파일:
+  - `docs/plan/frontend/season2/member-profile-temp-password-ui_plan.md`
+- MCP 사용: 없음
+- 다음 단계: 계획 승인 후 프런트 구현 진행
